@@ -4,6 +4,7 @@ import Nav, { type TabId } from "./components/Nav";
 import Queue from "./components/Queue";
 import Review, { reviewItems } from "./components/Review";
 import MetricsView from "./components/Metrics";
+import RunDetail from "./components/RunDetail";
 import Settings from "./components/Settings";
 import { useAppState } from "./state";
 
@@ -55,7 +56,7 @@ export default function App() {
       </header>
       <div id="main">
         {openRun ? (
-          <div className="empty">Run detail placeholder — added in Task 11.</div>
+          <RunDetail ticket={openRun.ticket} runId={openRun.runId} onBack={() => setOpenRun(null)} onChanged={reload} />
         ) : (
           <>
             {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
