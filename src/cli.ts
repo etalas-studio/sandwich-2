@@ -180,7 +180,7 @@ function cmdServe(flags: Flags): number {
     configPath: resolve(flags.config),
     queuePath: resolve(flags.queue),
     port: flags.port,
-    webRoot: resolve("web"),
+    webRoot: resolve("web/dist"),
   });
   return 0;
 }

@@ -8,7 +8,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm --prefix web run build",
+    "dev:web": "npm --prefix web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "selftest": "tsc -p tsconfig.json && node dist/selftest.js",
     "run:queue": "node dist/cli.js run",
