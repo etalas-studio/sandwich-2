@@ -3,6 +3,7 @@ import Board from "./components/Board";
 import Nav, { type TabId } from "./components/Nav";
 import Queue from "./components/Queue";
 import Review, { reviewItems } from "./components/Review";
+import MetricsView from "./components/Metrics";
 import { useAppState } from "./state";
 
 interface OpenRun {
@@ -59,8 +60,9 @@ export default function App() {
             {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
             {tab === "queue" && <Queue state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
             {tab === "review" && <Review state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} />}
-            {tab !== "board" && tab !== "queue" && tab !== "review" && (
-              <div className="empty">Tab "{tab}" placeholder — added in Tasks 9–10.</div>
+            {tab === "metrics" && <MetricsView metrics={state.metrics} />}
+            {tab !== "board" && tab !== "queue" && tab !== "review" && tab !== "metrics" && (
+              <div className="empty">Tab "{tab}" placeholder — added in Task 10.</div>
             )}
           </>
         )}
