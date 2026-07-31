@@ -12,7 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tsbuildinfo-node/tsconfig.tsbuildinfo"
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

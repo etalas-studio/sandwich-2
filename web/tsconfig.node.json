@@ -6,6 +6,7 @@
     "strict": true,
     "skipLibCheck": true,
     "composite": true,
+    "outDir": "./node_modules/.tsbuildinfo-node",
     "allowSyntheticDefaultImports": true
   },
   "include": ["vite.config.ts"]
