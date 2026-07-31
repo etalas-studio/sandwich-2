@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Board from "./components/Board";
 import Nav, { type TabId } from "./components/Nav";
+import Queue from "./components/Queue";
 import { useAppState } from "./state";
 
 interface OpenRun {
@@ -57,7 +58,8 @@ export default function App() {
         ) : (
           <>
             {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
-            {tab !== "board" && <div className="empty">Tab "{tab}" placeholder — added in Tasks 7–10.</div>}
+            {tab === "queue" && <Queue state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
+            {tab !== "board" && tab !== "queue" && <div className="empty">Tab "{tab}" placeholder — added in Tasks 8–10.</div>}
           </>
         )}
       </div>
