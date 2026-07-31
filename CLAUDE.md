@@ -34,7 +34,7 @@ Karena itu urutannya: **agent menulis characterization test dulu, baru mengubah 
 | Orchestrator dua tahap (rencana → approve → implementasi) | jalan, typecheck bersih |
 | Guardrail + klasifikasi jalur | jalan, 38 selftest lolos |
 | Backend API + SSE | jalan, semua endpoint diuji manual |
-| UI 5 layar (React + Vite, `web/src/`) | jalan; diverifikasi manual di browser 5 tab + detail run |
+| UI 5 layar (React + Vite, `web/src/`) | jalan; diverifikasi manual di browser untuk 5 tab + detail run (status `error`); form review & tombol approve/reject belum diuji dengan data nyata — belum ada run yang sampai `awaiting_plan_approval` atau `ready_for_review` |
 | Pembukaan PR otomatis | **belum ada** — butuh kredensial Bitbucket |
 | Pencatatan biaya/token | **belum ada** — datanya ada di transcript, belum diringkas |
 | Intake Jira otomatis | **belum ada** — `queue.json` masih manual, dan itu disengaja untuk pilot |

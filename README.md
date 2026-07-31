@@ -36,28 +36,30 @@ Mesinnya harus **persisten** — bukan container CI sekali pakai — karena logi
 
 ## Melihat UI-nya
 
-Dua perintah, tidak ada build step untuk frontend:
+Dua perintah:
 
 ```bash
 npm install && npm run build     # sekali saja
 node dist/cli.js serve           # lalu buka http://127.0.0.1:4319
 ```
 
-UI-nya satu file, `web/index.html` — tanpa React, tanpa bundler, tanpa dependency. Diserve langsung oleh server. Kalau file itu diedit, cukup refresh browser; tidak perlu build ulang.
+UI-nya aplikasi React + TypeScript + Vite di `web/` — `package.json` sendiri, terpisah dari root (lihat CLAUDE.md keputusan #5: root tetap nol dependency runtime, dependency React/Vite hanya ada di `web/package.json`). `npm install` di root sekarang juga menjalankan `npm install` di `web/` lewat `postinstall`, dan `npm run build` di root menjalankan `tsc` untuk orchestrator lalu `vite build` di `web/`, menghasilkan `web/dist/` — itu yang diserve `node dist/cli.js serve`.
 
-Lima layar: **Papan** (kanban), **Antrean** (list, tarik baris untuk mengubah prioritas), **Review** (yang menunggu kamu), **Metrik**, **Setelan** (batas aman dan daftar cegat, read-only).
+Kalau lagi ngoprek frontend, edit source-nya butuh build ulang (`npm run build`) supaya `web/dist/` ikut berubah — atau pakai `npm run dev:web` dari root untuk mode hot-reload Vite (port 5173, proxy `/api` ke backend di `127.0.0.1:4319`) selama development aktif.
+
+Lima layar: **Board** (kanban), **Queue** (list, tarik baris untuk mengubah prioritas), **Review** (yang menunggu kamu), **Metrics**, **Settings** (batas aman dan daftar cegat, read-only).
 
 Progress muncul otomatis lewat SSE — tidak perlu refresh saat percobaan sedang jalan.
 
 ### Demo tanpa `RAILS_MASTER_KEY`
 
-`queue.json` sudah berisi **10 tiket asli** dari Jira project RR. Setiap percobaan memakai kuota model, jadi tab Antrean pakai **checkbox** — hanya yang dicentang yang jalan. Tidak ada tombol "jalankan semua", itu memang dibuang.
+`queue.json` sudah berisi **10 tiket asli** dari Jira project RR. Setiap percobaan memakai kuota model, jadi tab Queue pakai **checkbox** — hanya yang dicentang yang jalan. Tidak ada tombol "jalankan semua", itu memang dibuang.
 
 1. `node dist/cli.js serve`, buka `http://127.0.0.1:4319`
-2. Tab **Antrean** — centang 1–2 tiket, klik **Jalankan terpilih**. Ada konfirmasi berisi daftar tiketnya sebelum jalan
-3. Progress muncul sendiri lewat SSE. Kartu pindah ke kolom **Menunggu kamu** di tab Papan
+2. Tab **Queue** — centang 1–2 tiket, klik **Run N selected**. Ada konfirmasi berisi daftar tiketnya sebelum jalan
+3. Progress muncul sendiri lewat SSE. Kartu pindah ke kolom **Waiting on you** di tab Board
 4. Buka kartunya — di situ rencana asli dari Claude Code: file mana yang akan disentuh, test apa yang akan ditulis, dan risikonya
-5. **Tolak rencana** aman dicoba — worktree dibuang, repo klien tidak tersentuh
+5. **Reject plan** aman dicoba — worktree dibuang, repo klien tidak tersentuh
 
 Yang belum bisa: **Approve** melanjutkan ke tahap ngoding, dan itu menjalankan rspec — butuh `RAILS_MASTER_KEY` dan docker. Sampai itu ada, berhenti di langkah 4.
 
