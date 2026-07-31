@@ -34,7 +34,7 @@ Karena itu urutannya: **agent menulis characterization test dulu, baru mengubah 
 | Orchestrator dua tahap (rencana → approve → implementasi) | jalan, typecheck bersih |
 | Guardrail + klasifikasi jalur | jalan, 38 selftest lolos |
 | Backend API + SSE | jalan, semua endpoint diuji manual |
-| UI 5 layar (`web/index.html`) | jalan; **belum pernah diverifikasi tampilannya di browser** |
+| UI 5 layar (React + Vite, `web/src/`) | jalan; diverifikasi manual di browser 5 tab + detail run |
 | Pembukaan PR otomatis | **belum ada** — butuh kredensial Bitbucket |
 | Pencatatan biaya/token | **belum ada** — datanya ada di transcript, belum diringkas |
 | Intake Jira otomatis | **belum ada** — `queue.json` masih manual, dan itu disengaja untuk pilot |
@@ -89,7 +89,7 @@ node dist/cli.js run --ticket RR-7338
 | `src/selftest.ts` | 38 pemeriksaan, tanpa dependency |
 | `config/pipeline.json` | Satu-satunya file yang perlu diedit rutin. 41 path daftar cegat |
 | `queue.json` | Antrean tiket, manual. Gitignored |
-| `web/index.html` | Seluruh UI, satu file |
+| `web/` | Frontend React + TypeScript + Vite. `npm install` & `npm run build` terpisah dari root |
 | `runs/` | Rekaman percobaan. Gitignored |
 | `docs/` | Konteks analisis dan keputusan |
 
