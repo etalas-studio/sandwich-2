@@ -2,6 +2,7 @@ import { useState } from "react";
 import Board from "./components/Board";
 import Nav, { type TabId } from "./components/Nav";
 import Queue from "./components/Queue";
+import Review, { reviewItems } from "./components/Review";
 import { useAppState } from "./state";
 
 interface OpenRun {
@@ -34,9 +35,7 @@ export default function App() {
     );
   }
 
-  const reviewCount = state.runs.filter(
-    (r) => r.outcome === "awaiting_plan_approval" || (r.outcome === "ready_for_review" && r.humanEditedLines === null),
-  ).length;
+  const reviewCount = reviewItems(state.runs).length;
 
   const repoLabel = `${state.config.repoPath.split("/").slice(-1)[0]} · ${state.config.baseBranch}`;
 
@@ -59,7 +58,10 @@ export default function App() {
           <>
             {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
             {tab === "queue" && <Queue state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
-            {tab !== "board" && tab !== "queue" && <div className="empty">Tab "{tab}" placeholder — added in Tasks 8–10.</div>}
+            {tab === "review" && <Review state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} />}
+            {tab !== "board" && tab !== "queue" && tab !== "review" && (
+              <div className="empty">Tab "{tab}" placeholder — added in Tasks 9–10.</div>
+            )}
           </>
         )}
       </div>
