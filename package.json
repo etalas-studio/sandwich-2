@@ -8,6 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "postinstall": "npm --prefix web install",
     "build": "tsc -p tsconfig.json && npm --prefix web run build",
     "dev:web": "npm --prefix web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
