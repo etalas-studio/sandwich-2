@@ -93,7 +93,9 @@ export default function Board({ state, onOpenRun, reload }: BoardProps) {
             {items.length === 0 ? (
               <div className="hint">empty</div>
             ) : (
-              items.map((item) => <Card key={item.ticket.key} item={item} onOpenRun={onOpenRun} onStart={startOne} />)
+              items.map((item) => (
+                <Card key={item.run?.runId ?? item.ticket.key} item={item} onOpenRun={onOpenRun} onStart={startOne} />
+              ))
             )}
           </div>
         ))}
