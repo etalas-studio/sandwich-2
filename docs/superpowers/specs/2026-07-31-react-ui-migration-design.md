@@ -88,6 +88,8 @@ Rewrite penuh dalam satu langkah (bukan screen-by-screen) — state model dipaka
 
 **Tidak termasuk lingkup ini**: fitur baru apa pun (panel biaya/token, editor rencana interaktif, dll.) — itu dibangun setelah fondasi ini selesai.
 
+**Bahasa UI copy**: semua string yang ditulis ulang di komponen baru (label tab, tombol, hint, pesan) ditulis dalam **bahasa Inggris**, bukan port 1:1 dari teks Indonesia yang ada sekarang. Ini bagian dari inisiatif terpisah untuk menerjemahkan seluruh proyek ke bahasa Inggris (docs/CLAUDE.md/komentar kode) — UI copy digabung ke migrasi ini karena komponennya ditulis ulang dari nol; sisanya (docs, CLAUDE.md, komentar `src/*.ts`) jadi plan terpisah karena tidak bergantung pada migrasi ini.
+
 ## Langkah migrasi
 
 1. Scaffold `web/` sebagai proyek Vite+React+TS baru; `web/dist` masuk root `.gitignore`
