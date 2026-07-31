@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Board from "./components/Board";
 import Nav, { type TabId } from "./components/Nav";
 import { useAppState } from "./state";
 
@@ -54,7 +55,10 @@ export default function App() {
         {openRun ? (
           <div className="empty">Run detail placeholder — added in Task 11.</div>
         ) : (
-          <div className="empty">Tab "{tab}" placeholder — added in Tasks 6–10.</div>
+          <>
+            {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
+            {tab !== "board" && <div className="empty">Tab "{tab}" placeholder — added in Tasks 7–10.</div>}
+          </>
         )}
       </div>
     </div>
