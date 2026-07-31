@@ -1,0 +1,111 @@
+{
+  "repoPath": "../runchise",
+  "worktreeRoot": ".work/worktrees",
+  "runsRoot": "runs",
+  "baseBranch": "master",
+  "branchPrefix": "agent/",
+
+  "limits": {
+    "maxFilesChanged": 8,
+    "maxDiffLines": 300,
+    "planTimeoutMs": 600000,
+    "implementTimeoutMs": 1200000,
+    "rspecTimeoutMs": 1800000,
+    "maxCiRetries": 2
+  },
+
+  "engine": {
+    "name": "claude-code",
+    "planAllowedTools": "Read,Grep,Glob",
+    "implementAllowedTools": "Read,Grep,Glob,Edit,Write,Bash",
+    "plan": {
+      "bin": "claude",
+      "args": [
+        "-p",
+        "{{prompt}}",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--allowedTools",
+        "{{allowedTools}}",
+        "--max-turns",
+        "30"
+      ]
+    },
+    "implement": {
+      "bin": "claude",
+      "args": [
+        "-p",
+        "{{prompt}}",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--allowedTools",
+        "{{allowedTools}}",
+        "--max-turns",
+        "80"
+      ]
+    }
+  },
+
+  "rspecCommand": {
+    "bin": "bundle",
+    "args": ["exec", "rspec", "--format", "json", "--out", "{{outFile}}", "{{targets}}"]
+  },
+
+  "laneRules": {
+    "lane1Enabled": false,
+    "lane1MaxDiffLines": 50,
+    "lane1RequiresNewTests": true,
+    "coveredPathPrefixes": [
+      "app/helpers/",
+      "app/domains/excel_generators/"
+    ]
+  },
+
+  "blocklist": [
+    { "pattern": "app/domains/accounting/", "reason": "domain akuntansi — menyentuh angka uang klien" },
+    { "pattern": "app/domains/jurnal/", "reason": "jurnal akuntansi — rasio tes 3%, tidak ada jaring keselamatan" },
+    { "pattern": "db/migrate/", "reason": "migrasi database — tidak reversibel dengan aman" },
+
+    { "pattern": "app/domains/grab_food/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/grab_express/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/gobiz/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/gosend/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/shopee_food/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/lala_move/", "reason": "integrasi pihak ketiga" },
+    { "pattern": "app/domains/bca/", "reason": "integrasi pembayaran" },
+    { "pattern": "app/domains/bni_qris/", "reason": "integrasi pembayaran" },
+    { "pattern": "app/domains/bri_tax_integration/", "reason": "integrasi pajak" },
+    { "pattern": "app/domains/faspay/", "reason": "integrasi pembayaran" },
+    { "pattern": "app/domains/edc_payment/", "reason": "integrasi pembayaran" },
+    { "pattern": "app/domains/midtrans/", "reason": "integrasi pembayaran" },
+    { "pattern": "app/domains/mandiri/", "reason": "integrasi pembayaran" },
+
+    { "pattern": "app/models/concerns/product_logic.rb", "reason": "2648 baris, concern dipakai banyak model" },
+    { "pattern": "app/models/order_transaction.rb", "reason": "2437 baris" },
+    { "pattern": "app/helpers/notification_helper.rb", "reason": "2007 baris" },
+    { "pattern": "app/queries/product_query.rb", "reason": "1719 baris" },
+    { "pattern": "app/models/concerns/sale_transaction_logic.rb", "reason": "1620 baris, concern dipakai banyak model" },
+    { "pattern": "app/controllers/api/orders_controller.rb", "reason": "1564 baris" },
+    { "pattern": "app/domains/restaurant/services/report/product_stock/clickhouse/product_stock_query.rb", "reason": "1499 baris" },
+    { "pattern": "app/models/access_list.rb", "reason": "1482 baris" },
+    { "pattern": "app/models/delivery_transaction.rb", "reason": "1400 baris" },
+    { "pattern": "app/demos/food_stall.rb", "reason": "1354 baris" },
+    { "pattern": "app/queries/reports/product_stock_query.rb", "reason": "1320 baris" },
+    { "pattern": "app/controllers/api/products_controller.rb", "reason": "1196 baris" },
+    { "pattern": "app/domains/restaurant/services/report/sales_by/estimate_cost_query_sales_by_products.rb", "reason": "1133 baris" },
+    { "pattern": "app/domains/dine_in/services/merged_open_bill_apply_adjusment.rb", "reason": "1103 baris" },
+    { "pattern": "app/models/order_transaction_line.rb", "reason": "1051 baris" },
+    { "pattern": "app/domains/pdf_generators/daily_sales/report_daily_sales.rb", "reason": "1031 baris" },
+    { "pattern": "app/domains/restaurant/services/report/sales_by/clickhouse/estimate_cost_query_sales_by_products.rb", "reason": "1025 baris" },
+    { "pattern": "app/models/customer_order.rb", "reason": "995 baris" },
+    { "pattern": "app/domains/preorder/models/customer_preorder.rb", "reason": "993 baris" },
+    { "pattern": "app/controllers/api/sale_transactions_controller.rb", "reason": "951 baris" },
+    { "pattern": "app/domains/customer_order/modules/builder.rb", "reason": "948 baris" },
+    { "pattern": "app/models/concerns/location_logic.rb", "reason": "940 baris, concern dipakai banyak model" },
+    { "pattern": "app/models/concerns/taking_logic.rb", "reason": "848 baris, concern dipakai banyak model" },
+    { "pattern": "app/models/brand.rb", "reason": "813 baris" },
+    { "pattern": "app/queries/reports/order_query.rb", "reason": "803 baris" }
+  ]
+}

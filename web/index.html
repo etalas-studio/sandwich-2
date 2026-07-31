@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent pipeline — Runchise</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --card: #fff; --line: #e4e2dd; --line2: #cfccc4;
+    --tx: #21201c; --tx2: #6b6862; --tx3: #97948c;
+    --warn-bg: #fdf3e2; --warn-tx: #8a5a08; --warn-line: #e8c785;
+    --ok-bg: #eaf4ea; --ok-tx: #2b6b34; --ok-line: #a9cfad;
+    --bad-bg: #fceceb; --bad-tx: #8f2e2a; --bad-line: #e3aca8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191917; --card: #232320; --line: #35342f; --line2: #4a483f;
+      --tx: #eeece6; --tx2: #a9a69d; --tx3: #7c7a72;
+      --warn-bg: #2f2512; --warn-tx: #e8c785; --warn-line: #6b5420;
+      --ok-bg: #1a2b1d; --ok-tx: #a9cfad; --ok-line: #385a3d;
+      --bad-bg: #2e1a19; --bad-tx: #e3aca8; --bad-line: #5e2f2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--tx);
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 18px 22px 60px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 500; }
+  .repo { font: 11px var(--mono); color: var(--tx3); }
+  nav { display: flex; gap: 2px; margin-left: auto; flex-wrap: wrap; }
+  nav button { font-size: 12px; padding: 6px 11px; border: 1px solid transparent;
+    background: none; color: var(--tx2); border-radius: 7px; cursor: pointer; }
+  nav button:hover { background: var(--card); color: var(--tx); }
+  nav button.on { background: var(--card); border-color: var(--line2); color: var(--tx); }
+  .pill { font-size: 10px; padding: 1px 6px; border-radius: 9px;
+    background: var(--warn-bg); color: var(--warn-tx); margin-left: 5px; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 12px 0 14px; flex-wrap: wrap; }
+  button.act { font-size: 12px; padding: 6px 12px; border: 1px solid var(--line2);
+    background: var(--card); color: var(--tx); border-radius: 7px; cursor: pointer; }
+  button.act:hover { border-color: var(--tx3); }
+  button.act:disabled { opacity: .45; cursor: not-allowed; }
+  button.act.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-tx); }
+  button.act.bad { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-tx); }
+  .status { font-size: 12px; color: var(--tx3); margin-left: auto; }
+  .cols { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .col h3 { font-size: 11px; font-weight: 400; color: var(--tx2); margin: 0 0 8px;
+    text-transform: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+    padding: 9px 10px; margin-bottom: 7px; cursor: pointer; }
+  .card:hover { border-color: var(--line2); }
+  .card.w { border-color: var(--warn-line); }
+  .card.b { border-color: var(--bad-line); }
+  .key { font: 11px var(--mono); color: var(--tx2); }
+  .ttl { font-size: 12px; line-height: 1.4; margin-top: 3px; }
+  .meta { font: 10px var(--mono); color: var(--tx3); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 6px;
+    background: var(--bg); color: var(--tx2); border: 1px solid var(--line); margin: 5px 4px 0 0; }
+  .tag.w { background: var(--warn-bg); color: var(--warn-tx); border-color: var(--warn-line); }
+  .tag.g { background: var(--ok-bg); color: var(--ok-tx); border-color: var(--ok-line); }
+  .tag.r { background: var(--bad-bg); color: var(--bad-tx); border-color: var(--bad-line); }
+  .prog { height: 3px; background: var(--bg); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .prog i { display: block; height: 100%; background: var(--tx3); animation: sl 1.6s ease-in-out infinite; }
+  @keyframes sl { 0% { width: 10%; } 50% { width: 85%; } 100% { width: 10%; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; font-weight: 400; color: var(--tx2); }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.drag { opacity: .4; }
+  tr.row { cursor: grab; }
+  tr.row.on { background: var(--warn-bg); }
+  tr.row.on td { border-color: var(--warn-line); }
+  input[type=checkbox] { width: 15px; height: 15px; padding: 0; cursor: pointer; accent-color: #8a5a08; }
+  input[type=checkbox]:disabled { cursor: not-allowed; opacity: .4; }
+  .cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+    padding: 11px 15px; min-width: 150px; }
+  .kpi .k { font-size: 11px; color: var(--tx2); }
+  .kpi .v { font-size: 21px; margin-top: 2px; }
+  .kpi .h { font-size: 10px; color: var(--tx3); margin-top: 2px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+    padding: 14px 16px; margin-bottom: 12px; }
+  .panel h4 { margin: 0 0 8px; font-size: 12px; font-weight: 500; color: var(--tx2); }
+  pre { margin: 0; font: 11px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
+  .diff div { font: 11px/1.45 var(--mono); white-space: pre-wrap; word-break: break-word; }
+  .diff .a { color: var(--ok-tx); }
+  .diff .d { color: var(--bad-tx); }
+  .diff .h { color: var(--tx3); }
+  .two { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+  label { display: block; font-size: 11px; color: var(--tx2); margin-bottom: 4px; }
+  input, textarea, select { width: 100%; padding: 7px 9px; font-size: 13px; font-family: inherit;
+    background: var(--bg); color: var(--tx); border: 1px solid var(--line2); border-radius: 7px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .empty { color: var(--tx3); font-size: 13px; padding: 30px 0; }
+  .back { font-size: 12px; color: var(--tx2); cursor: pointer; margin-bottom: 10px;
+    display: inline-block; }
+  .hint { font-size: 11px; color: var(--tx3); margin-top: 6px; }
+  @media (max-width: 1100px) { .cols { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .two, .grid3 { grid-template-columns: minmax(0,1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="brand">Agent pipeline</span>
+    <span class="repo" id="repo">memuat…</span>
+    <nav id="nav"></nav>
+  </header>
+  <div id="main"><div class="empty">Memuat…</div></div>
+</div>
+
+<script>
+const TABS = [
+  ["board", "Papan"],
+  ["queue", "Antrean"],
+  ["review", "Review"],
+  ["metrics", "Metrik"],
+  ["settings", "Setelan"],
+];
+
+const OUTCOME = {
+  plan_failed: "rencana gagal", plan_timeout: "rencana timeout",
+  plan_out_of_scope: "di luar lingkup", awaiting_plan_approval: "menunggu approve",
+  plan_rejected: "rencana ditolak", implementing: "sedang dikerjakan",
+  no_changes: "tidak ada perubahan", guardrail_blocked: "kena batas aman",
+  tests_failed: "test merah", ready_for_review: "siap direview", error: "error",
+};
+
+let S = { tickets: [], runs: [], jobs: [], metrics: null, config: null };
+let tab = "board";
+let openRun = null;
+let busy = false;
+let cfg = null;
+// Tiket yang dicentang. Sengaja tidak persist — tiap sesi mulai dari kosong,
+// supaya tidak ada percobaan yang jalan karena centang sisa kemarin.
+let sel = new Set();
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = (id) => document.getElementById(id);
+const pct = (v) => v === null || v === undefined ? "—" : Math.round(v * 100) + "%";
+const mins = (s) => s === null || s === undefined ? "—" : (s / 60).toFixed(1) + " mnt";
+
+async function api(path, method, body) {
+  const res = await fetch(path, {
+    method: method || "GET",
+    headers: body ? { "content-type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+  return data;
+}
+
+async function load() {
+  S = await api("/api/state");
+  $("repo").textContent = S.config.repoPath.split("/").slice(-1)[0] + " · " + S.config.baseBranch;
+  render();
+}
+
+// Percobaan terakhir per tiket. runs.jsonl append-only, jadi urutan = urutan tulis.
+function latestByTicket() {
+  const map = new Map();
+  for (const r of S.runs) map.set(r.ticket, r);
+  return map;
+}
+
+function activeJob(ticket) {
+  return S.jobs.find((j) => j.ticket === ticket && (j.state === "running" || j.state === "queued"));
+}
+
+function render() {
+  $("nav").innerHTML = TABS.map(([id, label]) => {
+    const n = id === "review" ? reviewItems().length : 0;
+    return `<button class="${tab === id ? "on" : ""}" onclick="go('${id}')">${label}${
+      n ? `<span class="pill">${n}</span>` : ""}</button>`;
+  }).join("");
+
+  if (openRun) return renderDetail();
+  const view = { board: renderBoard, queue: renderQueue, review: renderReview,
+    metrics: renderMetrics, settings: renderSettings }[tab];
+  view();
+}
+
+function go(t) { tab = t; openRun = null; render(); }
+window.go = go;
+
+function toolbar(extra) {
+  const running = S.jobs.filter((j) => j.state === "running").length;
+  const queued = S.jobs.filter((j) => j.state === "queued").length;
+  return `<div class="bar">
+    ${extra || ""}
+    <span class="status">${running} jalan · ${queued} antre · dijalankan serial</span>
+  </div>`;
+}
+
+// ---- Papan ---------------------------------------------------------------
+function renderBoard() {
+  const latest = latestByTicket();
+  const cols = [
+    ["Antrean", [], "n"], ["Menunggu kamu", [], "w"], ["Jalan", [], "n"],
+    ["Siap review", [], "g"], ["Selesai / berhenti", [], "n"],
+  ];
+
+  for (const t of S.tickets) {
+    const job = activeJob(t.key);
+    const run = latest.get(t.key);
+    if (job) { cols[2][1].push({ t, run, job }); continue; }
+    if (run && run.outcome === "awaiting_plan_approval") { cols[1][1].push({ t, run }); continue; }
+    if (run && run.outcome === "ready_for_review" && run.merged === null) { cols[3][1].push({ t, run }); continue; }
+    if (run && run.outcome !== "no_changes") { cols[4][1].push({ t, run }); continue; }
+    cols[0][1].push({ t, run });
+  }
+
+  const runsWithoutTicket = S.runs.filter((r) => !S.tickets.some((t) => t.key === r.ticket));
+  for (const run of runsWithoutTicket) cols[4][1].push({ t: { key: run.ticket, summary: "(tidak lagi di antrean)" }, run });
+
+  $("main").innerHTML = toolbar(`
+    <span class="hint">Pilih tiket yang mau dijalankan di tab <b>Antrean</b> — sengaja tidak ada tombol "jalankan semua" di sini.</span>
+  `) + `<div class="cols">` + cols.map(([name, items]) => `
+    <div class="col"><h3>${name} · ${items.length}</h3>
+      ${items.length === 0 ? '<div class="hint">kosong</div>' : items.map(cardHtml).join("")}
+    </div>`).join("") + `</div>`;
+}
+
+function cardHtml({ t, run, job }) {
+  const cls = job ? "" : run && run.outcome === "awaiting_plan_approval" ? "w"
+    : run && (run.outcome === "guardrail_blocked" || run.outcome === "tests_failed" || run.outcome === "error") ? "b" : "";
+  const click = run ? `onclick="openDetail('${t.key}','${run.runId}')"` : `onclick="startOne('${t.key}')"`;
+
+  let body = "";
+  if (job) {
+    body = `<div class="meta">${esc(job.step)}${job.detail ? " · " + esc(job.detail) : ""}</div>
+      <div class="prog"><i></i></div>`;
+  } else if (run) {
+    const tags = [];
+    if (run.lane) tags.push(`<span class="tag ${run.lane === 3 ? "r" : run.lane === 1 ? "g" : ""}">Jalur ${run.lane}</span>`);
+    tags.push(`<span class="tag ${run.outcome === "ready_for_review" ? "g" : run.outcome === "awaiting_plan_approval" ? "w" : ""}">${OUTCOME[run.outcome] || run.outcome}</span>`);
+    body = tags.join("") +
+      (run.filesChanged ? `<div class="meta">${run.filesChanged} file · ${run.diffLines} baris${run.addedTestFiles ? " · " + run.addedTestFiles + " spec baru" : ""}</div>` : "") +
+      (run.blockedBy.length ? `<div class="meta" style="color:var(--bad-tx)">${esc(run.blockedBy[0])}</div>` : "");
+  } else {
+    body = `<div class="hint">klik untuk mulai</div>`;
+  }
+
+  return `<div class="card ${cls}" ${click}>
+    <div class="key">${esc(t.key)}</div>
+    <div class="ttl">${esc((t.summary || "").slice(0, 78))}</div>${body}</div>`;
+}
+
+async function startOne(key) {
+  if (busy) return;
+  busy = true; render();
+  try { await api("/api/runs", "POST", { ticket: key }); } catch (e) { alert(e.message); }
+  busy = false; await load();
+}
+window.startOne = startOne;
+
+// Hanya menjalankan yang dicentang, dan minta konfirmasi berisi daftar tiketnya.
+// Sengaja bertele-tele: tiap percobaan memakai kuota model, jadi jangan sampai
+// jalan karena kepencet.
+async function startSelected() {
+  const keys = S.tickets.map((t) => t.key).filter((k) => sel.has(k));
+  if (keys.length === 0) return;
+  if (!confirm(`Jalankan tahap rencana untuk ${keys.length} tiket?\n\n${keys.join("\n")}`)) return;
+
+  busy = true; render();
+  for (const key of keys) {
+    try { await api("/api/runs", "POST", { ticket: key }); }
+    catch (e) { alert(`${key}: ${e.message}`); break; }
+  }
+  sel.clear();
+  busy = false;
+  await load();
+}
+window.startSelected = startSelected;
+
+function toggleSel(key) {
+  if (sel.has(key)) sel.delete(key); else sel.add(key);
+  render();
+}
+window.toggleSel = toggleSel;
+
+// Centang semua hanya memilih tiket yang BELUM pernah dipakai — supaya tidak
+// diam-diam menjalankan ulang percobaan yang sudah ada hasilnya.
+function toggleSelAll() {
+  const fresh = freshTickets().map((t) => t.key);
+  const allOn = fresh.length > 0 && fresh.every((k) => sel.has(k));
+  if (allOn) fresh.forEach((k) => sel.delete(k));
+  else fresh.forEach((k) => sel.add(k));
+  render();
+}
+window.toggleSelAll = toggleSelAll;
+
+function freshTickets() {
+  const latest = latestByTicket();
+  return S.tickets.filter((t) => {
+    if (activeJob(t.key)) return false;
+    const r = latest.get(t.key);
+    return !r || r.outcome === "no_changes";
+  });
+}
+
+// ---- Antrean (prioritas = urutan) ---------------------------------------
+let dragKey = null;
+
+function renderQueue() {
+  const latest = latestByTicket();
+  const fresh = freshTickets().map((t) => t.key);
+  const allOn = fresh.length > 0 && fresh.every((k) => sel.has(k));
+  const chosen = S.tickets.filter((t) => sel.has(t.key)).length;
+
+  $("main").innerHTML = toolbar(`
+    <button class="act warn" onclick="startSelected()" ${chosen === 0 || busy ? "disabled" : ""}>
+      Jalankan ${chosen || ""} terpilih</button>
+    <button class="act" onclick="toggleSelAll()">${allOn ? "Hapus centang" : "Centang yang belum dipakai"}</button>
+  `) + `
+    <div class="hint" style="margin-bottom:10px">Centang tiket yang mau dijalankan — tiap percobaan memakai kuota model, jadi pilih yang perlu saja. Urutan baris = urutan eksekusi; tarik baris untuk mengubah prioritas.</div>
+    <table><thead><tr><th style="width:28px"></th><th style="width:26px"></th><th>Tiket</th><th>Judul</th><th>Status terakhir</th><th class="n">File</th><th class="n">Baris</th><th></th></tr></thead>
+    <tbody id="qbody">` + S.tickets.map((t, i) => {
+      const r = latest.get(t.key);
+      const j = activeJob(t.key);
+      const used = !!r && r.outcome !== "no_changes";
+      const on = sel.has(t.key);
+      return `<tr class="row ${on ? "on" : ""}" draggable="true" data-key="${esc(t.key)}">
+        <td><input type="checkbox" ${on ? "checked" : ""} ${j ? "disabled" : ""}
+          onclick="event.stopPropagation();toggleSel('${t.key}')"></td>
+        <td style="color:var(--tx3);font-size:11px">${i + 1}</td>
+        <td class="key">${t.url ? `<a href="${esc(t.url)}" target="_blank">${esc(t.key)}</a>` : esc(t.key)}</td>
+        <td style="font-size:12px">${esc((t.summary || "").slice(0, 78))}</td>
+        <td style="font-size:12px">${j ? esc(j.step) : used ? (OUTCOME[r.outcome] || r.outcome) : "belum pernah"}</td>
+        <td class="n">${r ? r.filesChanged : "—"}</td>
+        <td class="n">${r ? r.diffLines : "—"}</td>
+        <td>${r ? `<button class="act" onclick="openDetail('${t.key}','${r.runId}')">Buka</button>`
+          : `<button class="act" onclick="startOne('${t.key}')">Mulai</button>`}</td>
+      </tr>`;
+    }).join("") + `</tbody></table>
+    <div class="hint" style="margin-top:10px">${fresh.length} dari ${S.tickets.length} tiket belum pernah dipakai. "Centang yang belum dipakai" tidak akan memilih tiket yang sudah ada hasilnya.</div>`;
+
+  const body = $("qbody");
+  body.querySelectorAll("tr.row").forEach((tr) => {
+    tr.ondragstart = () => { dragKey = tr.dataset.key; tr.classList.add("drag"); };
+    tr.ondragend = () => tr.classList.remove("drag");
+    tr.ondragover = (e) => e.preventDefault();
+    tr.ondrop = async (e) => {
+      e.preventDefault();
+      const target = tr.dataset.key;
+      if (!dragKey || dragKey === target) return;
+      const order = S.tickets.map((t) => t.key).filter((k) => k !== dragKey);
+      order.splice(order.indexOf(target), 0, dragKey);
+      await api("/api/queue/reorder", "POST", { order });
+      await load();
+    };
+  });
+}
+
+// ---- Kotak review -------------------------------------------------------
+function reviewItems() {
+  return S.runs.filter((r) =>
+    r.outcome === "awaiting_plan_approval" ||
+    (r.outcome === "ready_for_review" && r.humanEditedLines === null));
+}
+
+function renderReview() {
+  const items = reviewItems();
+  $("main").innerHTML = toolbar("") + (items.length === 0
+    ? `<div class="empty">Tidak ada yang menunggu kamu.</div>`
+    : `<div class="hint" style="margin-bottom:10px">Tanpa mengisi hasil review, autonomy rate tidak bisa dihitung — dan itu metrik utama pilot.</div>` +
+      items.map((r) => `<div class="panel">
+        <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+          <span class="key">${esc(r.ticket)}</span>
+          <span class="tag ${r.outcome === "awaiting_plan_approval" ? "w" : "g"}">${OUTCOME[r.outcome]}</span>
+          ${r.lane ? `<span class="tag ${r.lane === 3 ? "r" : ""}">Jalur ${r.lane}</span>` : ""}
+          <button class="act" style="margin-left:auto" onclick="openDetail('${r.ticket}','${r.runId}')">
+            ${r.outcome === "awaiting_plan_approval" ? "Baca rencana" : "Isi hasil review"}</button>
+        </div>
+        ${r.notes ? `<div class="hint">${esc(r.notes)}</div>` : ""}
+      </div>`).join(""));
+}
+
+// ---- Metrik -------------------------------------------------------------
+function renderMetrics() {
+  const m = S.metrics;
+  const rows = (obj) => obj.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${v}</td></tr>`).join("");
+  $("main").innerHTML = `
+    <div class="cards">
+      <div class="kpi"><div class="k">Percobaan</div><div class="v">${m.total}</div></div>
+      <div class="kpi"><div class="k">Siap direview</div><div class="v">${m.readyForReview}</div></div>
+      <div class="kpi"><div class="k">Attempt success</div><div class="v">${pct(m.attemptSuccessRate)}</div><div class="h">target Week 3: 60%</div></div>
+      <div class="kpi"><div class="k">Autonomy rate</div><div class="v">${pct(m.autonomyRate)}</div><div class="h">dari ${m.autonomyDenominator} PR merged · target 40%</div></div>
+      <div class="kpi"><div class="k">Median durasi</div><div class="v">${mins(m.medianDurationSec)}</div></div>
+    </div>
+    <div class="two">
+      <div class="panel"><h4>Hasil akhir</h4><table>${rows(m.byOutcome) || "<tr><td>belum ada</td></tr>"}</table></div>
+      <div class="panel"><h4>Jalur gerbang</h4><table>${rows(m.byLane) || "<tr><td>belum ada</td></tr>"}</table></div>
+    </div>
+    <div class="hint">Autonomy rate = persen PR merged yang tidak disentuh manusia sama sekali. Yang penting trennya naik antar minggu, bukan angka absolutnya — dengan belasan percobaan, satu angka belum berarti apa-apa.</div>`;
+}
+
+// ---- Setelan ------------------------------------------------------------
+async function renderSettings() {
+  if (!cfg) { try { cfg = await api("/api/config"); } catch (e) { cfg = null; } }
+  if (!cfg) { $("main").innerHTML = `<div class="empty">Gagal memuat setelan.</div>`; return; }
+  const L = cfg.limits, R = cfg.laneRules;
+  $("main").innerHTML = `
+    <div class="two">
+      <div class="panel"><h4>Batas aman</h4><table>
+        <tr><td>File diubah</td><td class="n">${L.maxFilesChanged}</td></tr>
+        <tr><td>Baris diff</td><td class="n">${L.maxDiffLines}</td></tr>
+        <tr><td>Timeout rencana</td><td class="n">${L.planTimeoutMs / 60000} mnt</td></tr>
+        <tr><td>Timeout implementasi</td><td class="n">${L.implementTimeoutMs / 60000} mnt</td></tr>
+        <tr><td>Timeout rspec</td><td class="n">${L.rspecTimeoutMs / 60000} mnt</td></tr>
+      </table></div>
+      <div class="panel"><h4>Aturan jalur</h4><table>
+        <tr><td>Jalur 1 (tanpa review)</td><td class="n">${R.lane1Enabled ? "AKTIF" : "mati"}</td></tr>
+        <tr><td>Batas diff Jalur 1</td><td class="n">${R.lane1MaxDiffLines}</td></tr>
+        <tr><td>Wajib spec baru</td><td class="n">${R.lane1RequiresNewTests ? "ya" : "tidak"}</td></tr>
+      </table>
+      <div class="hint">Jalur 1 sengaja mati selama pilot. Asimetrinya: auto-merge menghemat beberapa jam, satu bug lolos di domain GL bisa menutup pilot.</div></div>
+    </div>
+    <div class="panel"><h4>Daftar cegat · ${cfg.blocklist.length} path</h4>
+      <table>${cfg.blocklist.map((b) =>
+        `<tr><td class="key">${esc(b.pattern)}</td><td style="font-size:11px;color:var(--tx2)">${esc(b.reason)}</td></tr>`).join("")}</table></div>`;
+}
+
+// ---- Detail percobaan ---------------------------------------------------
+async function openDetail(ticket, runId) {
+  openRun = { ticket, runId, data: null };
+  render();
+  try { openRun.data = await api(`/api/runs/${ticket}/${runId}`); }
+  catch (e) { openRun.error = e.message; }
+  render();
+}
+window.openDetail = openDetail;
+
+function renderDetail() {
+  const d = openRun.data;
+  if (openRun.error) { $("main").innerHTML = `<span class="back" onclick="go('${tab}')">← kembali</span><div class="empty">${esc(openRun.error)}</div>`; return; }
+  if (!d) { $("main").innerHTML = `<span class="back" onclick="go('${tab}')">← kembali</span><div class="empty">Memuat…</div>`; return; }
+
+  const r = d.record;
+  const awaiting = r.outcome === "awaiting_plan_approval";
+  const reviewable = r.outcome === "ready_for_review";
+
+  let actions = "";
+  if (awaiting) {
+    actions = `<button class="act warn" onclick="approve()">Approve rencana → lanjut ngoding</button>
+      <button class="act bad" onclick="reject()">Tolak rencana</button>`;
+  }
+
+  $("main").innerHTML = `
+    <span class="back" onclick="go('${tab}')">← kembali</span>
+    <div class="panel">
+      <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+        <span class="key">${r.ticketUrl ? `<a href="${esc(r.ticketUrl)}" target="_blank">${esc(r.ticket)}</a>` : esc(r.ticket)}</span>
+        <span class="tag ${reviewable ? "g" : awaiting ? "w" : ""}">${OUTCOME[r.outcome] || r.outcome}</span>
+        ${r.lane ? `<span class="tag ${r.lane === 3 ? "r" : r.lane === 1 ? "g" : ""}">Jalur ${r.lane}</span>` : ""}
+        <span class="meta">${r.filesChanged} file · ${r.diffLines} baris · ${r.addedTestFiles} spec baru · ${mins(r.durationSec)}</span>
+      </div>
+      <div class="meta">branch ${esc(r.branch)}</div>
+      ${r.notes ? `<div class="hint">${esc(r.notes)}</div>` : ""}
+      ${r.blockedBy.length ? `<div class="hint" style="color:var(--bad-tx)">Dicegat: ${esc(r.blockedBy.join("; "))}</div>` : ""}
+      ${r.violations.length ? `<div class="hint" style="color:var(--bad-tx)">Pelanggaran: ${esc(r.violations.join("; "))}</div>` : ""}
+      ${actions ? `<div class="bar">${actions}</div>` : ""}
+    </div>
+
+    <div class="two">
+      <div class="panel"><h4>Rencana</h4>
+        ${d.plan ? `<pre>${esc(d.plan)}</pre>` : '<div class="hint">belum ada</div>'}</div>
+      <div class="panel"><h4>Diff</h4>
+        ${d.diff ? `<div class="diff">${diffHtml(d.diff)}</div>` : '<div class="hint">belum ada perubahan</div>'}</div>
+    </div>
+
+    ${r.rspec && r.rspec.ran ? `<div class="panel"><h4>Hasil rspec</h4><table>
+      <tr><td>Contoh dijalankan</td><td class="n">${r.rspec.exampleCount ?? "?"}</td></tr>
+      <tr><td>Gagal</td><td class="n">${r.rspec.failureCount ?? "?"}</td></tr>
+      <tr><td>Durasi</td><td class="n">${r.rspec.durationSec ? r.rspec.durationSec.toFixed(1) + " s" : "—"}</td></tr>
+      <tr><td>Spec dijalankan</td><td style="font:11px var(--mono)">${esc(r.rspec.targets.join(", ")) || "—"}</td></tr>
+    </table></div>` : ""}
+
+    ${d.toolCalls ? `<div class="panel"><h4>Tool call yang dipakai agent</h4><pre>${esc(d.toolCalls)}</pre></div>` : ""}
+    ${d.agentOutput ? `<div class="panel"><h4>Catatan agent</h4><pre>${esc(d.agentOutput.slice(-3000))}</pre></div>` : ""}
+
+    ${reviewable || r.humanEditedLines !== null ? reviewForm(r) : ""}`;
+}
+
+function diffHtml(patch) {
+  return patch.split("\n").slice(0, 600).map((line) => {
+    const c = line.startsWith("+") && !line.startsWith("+++") ? "a"
+      : line.startsWith("-") && !line.startsWith("---") ? "d"
+      : line.startsWith("@@") || line.startsWith("diff ") || line.startsWith("index ") ? "h" : "";
+    return `<div class="${c}">${esc(line) || "&nbsp;"}</div>`;
+  }).join("");
+}
+
+function reviewForm(r) {
+  return `<div class="panel"><h4>Hasil review — hanya bisa diisi manusia</h4>
+    <div class="grid3">
+      <div><label>Baris kode yang kamu ubah setelah PR dibuka</label>
+        <input id="hel" type="number" min="0" value="${r.humanEditedLines ?? ""}" placeholder="0"></div>
+      <div><label>Ronde review</label>
+        <input id="rr" type="number" min="0" value="${r.reviewRounds ?? ""}" placeholder="1"></div>
+      <div><label>Di-merge?</label>
+        <select id="mg">
+          <option value="">belum</option>
+          <option value="yes" ${r.merged === true ? "selected" : ""}>ya</option>
+          <option value="no" ${r.merged === false ? "selected" : ""}>tidak</option>
+        </select></div>
+    </div>
+    <div style="margin-top:10px"><label>Catatan</label>
+      <textarea id="nt" rows="2">${esc(r.notes ?? "")}</textarea></div>
+    <div class="bar"><button class="act" onclick="saveReview()">Simpan hasil review</button></div>
+    <div class="hint">Nol di kolom pertama berarti agent benar-benar mengambil alih kerjaan — itu yang dihitung sebagai autonomy rate.</div>
+  </div>`;
+}
+
+async function approve() {
+  const { ticket, runId } = openRun;
+  try { await api(`/api/runs/${ticket}/${runId}/approve`, "POST", {}); }
+  catch (e) { alert(e.message); return; }
+  openRun = null; tab = "board"; await load();
+}
+window.approve = approve;
+
+async function reject() {
+  const reason = prompt("Alasan menolak rencana?") || "";
+  const { ticket, runId } = openRun;
+  try { await api(`/api/runs/${ticket}/${runId}/reject`, "POST", { reason }); }
+  catch (e) { alert(e.message); return; }
+  openRun = null; await load();
+}
+window.reject = reject;
+
+async function saveReview() {
+  const { ticket, runId } = openRun;
+  const merged = $("mg").value;
+  try {
+    await api(`/api/runs/${ticket}/${runId}/review`, "POST", {
+      humanEditedLines: $("hel").value === "" ? null : Number($("hel").value),
+      reviewRounds: $("rr").value === "" ? null : Number($("rr").value),
+      merged: merged === "" ? null : merged === "yes",
+      notes: $("nt").value,
+    });
+  } catch (e) { alert(e.message); return; }
+  await openDetail(ticket, runId);
+}
+window.saveReview = saveReview;
+
+// ---- Progress langsung lewat SSE ---------------------------------------
+function listen() {
+  const es = new EventSource("/api/events");
+  const refresh = () => { void load(); };
+  es.addEventListener("job", refresh);
+  es.addEventListener("run", refresh);
+  es.onerror = () => { /* EventSource nyambung ulang sendiri */ };
+}
+
+void load().then(listen).catch((e) => {
+  $("main").innerHTML = `<div class="empty">Tidak bisa menghubungi server: ${esc(e.message)}<br>
+    Jalankan <code>node dist/cli.js serve</code> dulu.</div>`;
+});
+</script>
+</body>
+</html>

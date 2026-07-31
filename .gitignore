@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.work/
+runs/
+queue.json
+*.log
+.DS_Store

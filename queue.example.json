@@ -1,0 +1,8 @@
+[
+  {
+    "key": "RR-7338",
+    "url": "https://runchise.atlassian.net/browse/RR-7338",
+    "summary": "Bug: Exported File Name Replaces Mandarin Characters with Underscores (_)",
+    "description": "### Issue\n\nWhen exporting or downloading files, any Mandarin characters included in the file name are replaced with underscores (`_`) instead of being preserved.\n\nThis issue occurs regardless of the system language (Bahasa Indonesia, English, or Mandarin).\n\n**Example**\n\n* **Brand Name:** `Onboard Fajar 库存变动`\n* **Expected File Name:** `Onboard_Fajar_库存变动.xlsx`\n* **Actual File Name:** `Onboard_Fajar_____.xlsx` (Mandarin characters replaced with `_`)\n\n### Expected Behavior\n\n* Preserve all supported Unicode characters (including Mandarin) in exported file names.\n* File names should display correctly across all supported languages without replacing non-Latin characters with underscores.\n* The exported file name should match the original brand name (except for invalid filesystem characters that must still be sanitized).\n\n### Acceptance Criteria\n\n1. Exported file names preserve Mandarin characters.\n2. Exported file names preserve Unicode characters for all supported languages.\n3. Only invalid filename characters (e.g. `\\ / : * ? \" < > |`) are sanitized or replaced.\n4. Export works correctly for all export types (e.g. Onboarding, Stock Product, and other exported reports/files).\n5. The issue is resolved regardless of the selected system language (English, Bahasa Indonesia, or Mandarin)."
+  }
+]
