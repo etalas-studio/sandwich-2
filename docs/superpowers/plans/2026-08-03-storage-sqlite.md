@@ -30,14 +30,14 @@
 - Consumes: nothing.
 - Produces: `better-sqlite3` available as an import in `src/db/` for Task 2.
 
-- [ ] **Step 1: Install `better-sqlite3` and its type declarations**
+- [x] **Step 1: Install `better-sqlite3` and its type declarations**
 
 ```bash
 npm install better-sqlite3
 npm install --save-dev @types/better-sqlite3
 ```
 
-- [ ] **Step 2: Confirm it installed and typechecks are unaffected**
+- [x] **Step 2: Confirm it installed and typechecks are unaffected**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -45,7 +45,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: no errors (this step only adds dependencies, no code changes yet).
 
-- [ ] **Step 3: Confirm `package.json`/`package-lock.json` show exactly two new dependencies**
+- [x] **Step 3: Confirm `package.json`/`package-lock.json` show exactly two new dependencies**
 
 ```bash
 git diff package.json
@@ -53,7 +53,7 @@ git diff package.json
 
 Expected: one line added under `"dependencies"` (`better-sqlite3`) and one line added under `"devDependencies"` (`@types/better-sqlite3`).
 
-- [ ] **Step 4: Confirm the native binary actually loads**
+- [x] **Step 4: Confirm the native binary actually loads**
 
 `better-sqlite3` ships a prebuilt native binding, similar to `node-pty` — worth confirming explicitly rather than assuming, the same way the PTY engine toggle plan checked `node-pty`'s `spawn-helper` executable bit. Unlike `node-pty`, this was confirmed during this plan's planning phase to load cleanly out of the box on this machine (no chmod fix needed) — this step is a repeat of that same confirmation, not a known-broken step to fix.
 
@@ -77,7 +77,7 @@ foreign_keys pragma ok
 
 If this fails instead with a native-binding load error, check `node_modules/better-sqlite3/build/Release/better_sqlite3.node` exists and is readable, and that the Node version matches what the prebuilt binary targets (`node --version`; this project's `engines` field allows Node 20+).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json package-lock.json
@@ -100,7 +100,7 @@ git commit -m "Add better-sqlite3 as a dependency for the embedded SQLite storag
 - Consumes: `better-sqlite3` (Task 1).
 - Produces: `openDb(path: string): Database.Database` from `src/db/connection.ts` — every repository module in Tasks 3–11 takes a `Database.Database` instance obtained this way as its first argument. `Migration` type from `src/db/migrations/types.ts`.
 
-- [ ] **Step 1: Write `src/db/migrations/types.ts`**
+- [x] **Step 1: Write `src/db/migrations/types.ts`**
 
 ```typescript
 export interface Migration {
@@ -110,7 +110,7 @@ export interface Migration {
 }
 ```
 
-- [ ] **Step 2: Write `src/db/migrations/0001_init.ts` — the full schema**
+- [x] **Step 2: Write `src/db/migrations/0001_init.ts` — the full schema**
 
 ```typescript
 import type { Migration } from "./types.js";
@@ -207,7 +207,7 @@ INSERT OR IGNORE INTO instance_settings (id) VALUES (1);
 };
 ```
 
-- [ ] **Step 3: Write `src/db/migrations/index.ts`**
+- [x] **Step 3: Write `src/db/migrations/index.ts`**
 
 ```typescript
 import type { Migration } from "./types.js";
@@ -216,7 +216,7 @@ import { migration0001Init } from "./0001_init.js";
 export const MIGRATIONS: Migration[] = [migration0001Init];
 ```
 
-- [ ] **Step 4: Write `src/db/migrate.ts`**
+- [x] **Step 4: Write `src/db/migrate.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -258,7 +258,7 @@ export function migrate(db: Database.Database): void {
 }
 ```
 
-- [ ] **Step 5: Write `src/db/connection.ts`**
+- [x] **Step 5: Write `src/db/connection.ts`**
 
 ```typescript
 import Database from "better-sqlite3";
@@ -280,7 +280,7 @@ export function openDb(path: string): Database.Database {
 }
 ```
 
-- [ ] **Step 6: Write the failing test `src/db/connection.test.ts`**
+- [x] **Step 6: Write the failing test `src/db/connection.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -346,7 +346,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 7: Run it to confirm it fails (modules don't exist yet — write this test after Steps 1–5 in practice, but verify it before this step if reordering)**
+- [x] **Step 7: Run it to confirm it fails (modules don't exist yet — write this test after Steps 1–5 in practice, but verify it before this step if reordering)**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -354,7 +354,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: passes only once all of Steps 1–5 are in place; if you write the test file first, expect `Cannot find module './connection.js'` until Step 5 lands.
 
-- [ ] **Step 8: Run the test to confirm it passes**
+- [x] **Step 8: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/connection.test.js
@@ -367,7 +367,7 @@ PASS: testMigratingTwiceIsANoOp
 PASS: testInstanceSettingsSeeded
 ```
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/db/migrations/types.ts src/db/migrations/0001_init.ts src/db/migrations/index.ts src/db/migrate.ts src/db/connection.ts src/db/connection.test.ts
@@ -386,7 +386,7 @@ git commit -m "Add SQLite migration runner, connection, and initial schema"
 - Consumes: `openDb` from `src/db/connection.ts` (Task 2).
 - Produces: `Ticket`, `TicketInput`, `upsertTicket(db, input): Ticket`, `getTicketByKey(db, key): Ticket | null`, `listTickets(db): Ticket[]` — consumed by Task 4's `runs` module tests (to satisfy the `ticket_key` foreign key) and by future Ticket intake / Pipeline pieces, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/tickets.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/tickets.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -457,7 +457,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -465,7 +465,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './tickets.js'`.
 
-- [ ] **Step 3: Write `src/db/tickets.ts`**
+- [x] **Step 3: Write `src/db/tickets.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -550,7 +550,7 @@ function mapRow(row: RawTicketRow): Ticket {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/tickets.test.js
@@ -564,7 +564,7 @@ PASS: testListTicketsReturnsAllTickets
 PASS: testGetTicketByKeyReturnsNullWhenMissing
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/tickets.ts src/db/tickets.test.ts
@@ -583,7 +583,7 @@ git commit -m "Add tickets repository module"
 - Consumes: `openDb` (Task 2), `upsertTicket` (Task 3, used only in the test to satisfy the `ticket_key` foreign key).
 - Produces: `Run`, `NewRun`, `RunUpdate`, `insertRun(db, input): Run`, `updateRun(db, id, update): Run`, `getRunById(db, id): Run | null`, `listRunsForTicket(db, ticketKey): Run[]` — consumed by Task 5's `reviews` module tests (to satisfy the `run_id` foreign key) and by the future Pipeline shape piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/runs.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/runs.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -688,7 +688,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -696,7 +696,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './runs.js'`.
 
-- [ ] **Step 3: Write `src/db/runs.ts`**
+- [x] **Step 3: Write `src/db/runs.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -850,7 +850,7 @@ function mapRow(row: RawRunRow): Run {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/runs.test.js
@@ -866,7 +866,7 @@ PASS: testListRunsForTicketReturnsAllAttemptsInOrder
 
 If `testInsertRunFailsForUnknownTicket` doesn't throw, check that `connection.ts`'s `db.pragma("foreign_keys = ON")` (Task 2) actually ran — SQLite does not enforce foreign keys by default.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/runs.ts src/db/runs.test.ts
@@ -885,7 +885,7 @@ git commit -m "Add runs repository module"
 - Consumes: `openDb` (Task 2), `upsertTicket` (Task 3), `insertRun` (Task 4) — both used only in the test to satisfy foreign keys.
 - Produces: `Review`, `NewReview`, `insertReview(db, input): Review`, `getReviewForRun(db, runId): Review | null` — consumed by the future Visibility piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/reviews.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/reviews.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -964,7 +964,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -972,7 +972,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './reviews.js'`.
 
-- [ ] **Step 3: Write `src/db/reviews.ts`**
+- [x] **Step 3: Write `src/db/reviews.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1037,7 +1037,7 @@ function mapRow(row: RawReviewRow): Review {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/reviews.test.js
@@ -1050,7 +1050,7 @@ PASS: testOnlyOneReviewAllowedPerRun
 PASS: testGetReviewForRunReturnsNullWhenNotReviewedYet
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/reviews.ts src/db/reviews.test.ts
@@ -1069,7 +1069,7 @@ git commit -m "Add reviews repository module"
 - Consumes: `openDb` (Task 2).
 - Produces: `ReadinessScan`, `AreaSignal`, `startReadinessScan(db, startedAt): ReadinessScan`, `completeReadinessScan(db, id, input): ReadinessScan`, `getReadinessScanById(db, id): ReadinessScan | null`, `getLatestReadinessScan(db): ReadinessScan | null` — consumed by Task 7's `blocklist_entries` module tests (to satisfy the optional `proposed_by_scan_id` foreign key) and by the future readiness-scan process, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/readiness-scans.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/readiness-scans.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1136,7 +1136,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1144,7 +1144,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './readiness-scans.js'`.
 
-- [ ] **Step 3: Write `src/db/readiness-scans.ts`**
+- [x] **Step 3: Write `src/db/readiness-scans.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1252,7 +1252,7 @@ function mapRow(row: RawRow): ReadinessScan {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/readiness-scans.test.js
@@ -1265,7 +1265,7 @@ PASS: testCompletingAScanRoundTripsAreaSignals
 PASS: testGetLatestReadinessScanReturnsMostRecentlyStarted
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/readiness-scans.ts src/db/readiness-scans.test.ts
@@ -1284,7 +1284,7 @@ git commit -m "Add readiness_scans repository module"
 - Consumes: `openDb` (Task 2), `startReadinessScan` (Task 6, used only in the test to satisfy the optional `proposed_by_scan_id` foreign key).
 - Produces: `BlocklistEntry`, `BlocklistSource`, `NewBlocklistEntry`, `insertBlocklistEntry(db, input): BlocklistEntry`, `listBlocklistEntries(db): BlocklistEntry[]`, `deleteBlocklistEntry(db, id): void` — consumed by the future readiness-scan process and its UI, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/blocklist.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/blocklist.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1352,7 +1352,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1360,7 +1360,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './blocklist.js'`.
 
-- [ ] **Step 3: Write `src/db/blocklist.ts`**
+- [x] **Step 3: Write `src/db/blocklist.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1444,7 +1444,7 @@ function mapRow(row: RawRow): BlocklistEntry {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/blocklist.test.js
@@ -1457,7 +1457,7 @@ PASS: testInsertsAnAgentProposedEntryLinkedToAScan
 PASS: testListAndDeleteBlocklistEntries
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/blocklist.ts src/db/blocklist.test.ts
@@ -1476,7 +1476,7 @@ git commit -m "Add blocklist_entries repository module"
 - Consumes: `openDb` (Task 2).
 - Produces: `Credential`, `upsertCredential(db, name, value): Credential`, `getCredential(db, name): Credential | null`, `listCredentialNames(db): string[]` — consumed by the future Credentials UI piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/credentials.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/credentials.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1533,7 +1533,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1541,7 +1541,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './credentials.js'`.
 
-- [ ] **Step 3: Write `src/db/credentials.ts`**
+- [x] **Step 3: Write `src/db/credentials.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1599,7 +1599,7 @@ function mapRow(row: RawRow): Credential {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/credentials.test.js
@@ -1612,7 +1612,7 @@ PASS: testUpsertOverwritesValueButKeepsCreatedAt
 PASS: testListCredentialNamesReturnsNamesOnly
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/credentials.ts src/db/credentials.test.ts
@@ -1631,7 +1631,7 @@ git commit -m "Add credentials repository module"
 - Consumes: `openDb` (Task 2).
 - Produces: `User`, `NewUser`, `createUser(db, input): User`, `getUserById(db, id): User | null`, `getUserByUsername(db, username): User | null` — consumed by Task 10's `sessions` module tests (to satisfy the `user_id` foreign key) and by the future Auth piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/users.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/users.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1688,7 +1688,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1696,7 +1696,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './users.js'`.
 
-- [ ] **Step 3: Write `src/db/users.ts`**
+- [x] **Step 3: Write `src/db/users.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1763,7 +1763,7 @@ function mapRow(row: RawRow): User {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/users.test.js
@@ -1776,7 +1776,7 @@ PASS: testDuplicateUsernameIsRejected
 PASS: testDuplicateEmailIsRejected
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/users.ts src/db/users.test.ts
@@ -1795,7 +1795,7 @@ git commit -m "Add users repository module"
 - Consumes: `openDb` (Task 2), `createUser` (Task 9, used only in the test to satisfy the `user_id` foreign key).
 - Produces: `Session`, `createSession(db, userId, expiresAt): Session`, `getSessionByToken(db, token): Session | null`, `deleteSession(db, token): void` — consumed by the future Auth piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/sessions.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/sessions.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1857,7 +1857,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1865,7 +1865,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './sessions.js'`.
 
-- [ ] **Step 3: Write `src/db/sessions.ts`**
+- [x] **Step 3: Write `src/db/sessions.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1912,7 +1912,7 @@ function mapRow(row: RawRow): Session {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/sessions.test.js
@@ -1925,7 +1925,7 @@ PASS: testDeletingASessionRemovesIt
 PASS: testCreateSessionFailsForUnknownUser
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/sessions.ts src/db/sessions.test.ts
@@ -1944,7 +1944,7 @@ git commit -m "Add sessions repository module"
 - Consumes: `openDb` (Task 2) — relies on the singleton row seeded by the `0001_init` migration (Task 2, Step 2).
 - Produces: `InstanceSettings`, `getInstanceSettings(db): InstanceSettings`, `completeFirstRun(db, repoPath, completedAt): InstanceSettings` — consumed by the future first-run-setup UI piece, not part of this plan.
 
-- [ ] **Step 1: Write the failing test `src/db/settings.test.ts`**
+- [x] **Step 1: Write the failing test `src/db/settings.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1987,7 +1987,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -1995,7 +1995,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './settings.js'`.
 
-- [ ] **Step 3: Write `src/db/settings.ts`**
+- [x] **Step 3: Write `src/db/settings.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -2035,7 +2035,7 @@ interface RawRow {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/db/settings.test.js
@@ -2047,7 +2047,7 @@ PASS: testFreshInstanceHasNoRepoPathYet
 PASS: testCompleteFirstRunSetsRepoPathAndTimestamp
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/settings.ts src/db/settings.test.ts
@@ -2067,7 +2067,7 @@ git commit -m "Add instance_settings repository module"
 - Consumes: nothing new.
 - Produces: nothing — this task only updates status tracking and runs full verification.
 
-- [ ] **Step 1: Run the full build and existing self-test to confirm nothing regressed**
+- [x] **Step 1: Run the full build and existing self-test to confirm nothing regressed**
 
 ```bash
 npm run build
@@ -2076,7 +2076,7 @@ npm run selftest
 
 Expected: both succeed exactly as before this plan started — this plan added new files only, and touched no file the prior attempt's pipeline (`src/*.ts` outside `src/db/`, `src/engine/`) depends on.
 
-- [ ] **Step 2: Run every new test file added by this plan**
+- [x] **Step 2: Run every new test file added by this plan**
 
 ```bash
 node dist/db/connection.test.js
@@ -2093,7 +2093,7 @@ node dist/db/settings.test.js
 
 Expected: every line printed is a `PASS: ...` line, no `AssertionError` or uncaught exception.
 
-- [ ] **Step 3: Append CHANGELOG entries for every task in this plan**
+- [x] **Step 3: Append CHANGELOG entries for every task in this plan**
 
 Add to `CHANGELOG.md`, following the format already established there (`- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`):
 
@@ -2111,16 +2111,16 @@ Add to `CHANGELOG.md`, following the format already established there (`- YYYY-M
 - 2026-08-03: [storage-sqlite] | @potensio - Added instance_settings repository module (src/db/settings.ts)
 ```
 
-- [ ] **Step 4: Check off every task box in this plan file**
+- [x] **Step 4: Check off every task box in this plan file**
 
 Edit `docs/superpowers/plans/2026-08-03-storage-sqlite.md`: change every `- [ ]` step checkbox in Tasks 1–12 to `- [x]`.
 
-- [ ] **Step 5: Flip the Storage checkbox in `docs/roadmap.md`**
+- [x] **Step 5: Flip the Storage checkbox in `docs/roadmap.md`**
 
 In `docs/roadmap.md`, change:
 
 ```
-- [ ] Storage (embedded SQLite) — no plan yet
+- [x] Storage (embedded SQLite) — no plan yet
 ```
 
 to:
@@ -2129,7 +2129,7 @@ to:
 - [x] Storage (embedded SQLite) — `docs/superpowers/plans/2026-08-03-storage-sqlite.md` (done)
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add CHANGELOG.md docs/roadmap.md docs/superpowers/plans/2026-08-03-storage-sqlite.md
