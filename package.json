@@ -19,8 +19,8 @@
     "serve:legacy": "node dist/cli.js serve",
     "start:legacy": "npm run build && npm run serve:legacy",
     "serve": "node dist/web-server.js",
-    "seed:tickets": "node dist/seed-tickets.js",
-    "start": "npm run build && npm run seed:tickets && npm run serve"
+    "seed:demo": "node dist/seed-demo-data.js",
+    "start": "npm run build && npm run seed:demo && npm run serve"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
 import { listTickets } from "./db/tickets.js";
+import { getLatestRunForTicket } from "./db/runs.js";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -22,7 +23,7 @@ export interface WebServerOptions {
 /**
  * Minimal API + static server for the new (post-reset) product design.
  * Deliberately separate from server.ts, which serves the prior attempt's
- * job/lane model — this one only knows about the tickets table so far.
+ * job/lane model — this one only knows about tickets and runs so far.
  */
 export function startWebServer(options: WebServerOptions): void {
   const { dbPath, port, webRoot } = options;
@@ -33,7 +34,11 @@ export function startWebServer(options: WebServerOptions): void {
     const path = url.split("?")[0] ?? "/";
 
     if (req.method === "GET" && path === "/api/tickets") {
-      const payload = JSON.stringify(listTickets(db));
+      const ticketsWithRuns = listTickets(db).map((ticket) => ({
+        ...ticket,
+        latestRun: getLatestRunForTicket(db, ticket.key),
+      }));
+      const payload = JSON.stringify(ticketsWithRuns);
       res.writeHead(200, {
         "content-type": "application/json; charset=utf-8",
         "content-length": Buffer.byteLength(payload),

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
 import { upsertTicket } from "./tickets.js";
-import { insertRun, updateRun, getRunById, listRunsForTicket } from "./runs.js";
+import { insertRun, updateRun, getRunById, listRunsForTicket, getLatestRunForTicket } from "./runs.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "runs-test-"));
@@ -90,11 +90,35 @@ function testListRunsForTicketReturnsAllAttemptsInOrder(): void {
   console.log("PASS: testListRunsForTicketReturnsAllAttemptsInOrder");
 }
 
+function testGetLatestRunForTicketReturnsMostRecentOrNull(): void {
+  const db = openTestDb();
+  assert.equal(getLatestRunForTicket(db, "PROJ-1"), null);
+
+  insertRun(db, {
+    ticketKey: "PROJ-1",
+    engine: "claude-code-headless",
+    outcome: "judging",
+    startedAt: "2026-08-01T00:00:00.000Z",
+  });
+  const second = insertRun(db, {
+    ticketKey: "PROJ-1",
+    engine: "claude-code-headless",
+    outcome: "implementing",
+    startedAt: "2026-08-02T00:00:00.000Z",
+  });
+
+  const latest = getLatestRunForTicket(db, "PROJ-1");
+  assert.ok(latest);
+  assert.equal(latest!.id, second.id);
+  console.log("PASS: testGetLatestRunForTicketReturnsMostRecentOrNull");
+}
+
 function main(): void {
   testInsertsAndReadsBackARun();
   testInsertRunFailsForUnknownTicket();
   testUpdateRunMergesFieldsWithoutClearingOthers();
   testListRunsForTicketReturnsAllAttemptsInOrder();
+  testGetLatestRunForTicketReturnsMostRecentOrNull();
 }
 
 main();

@@ -28,3 +28,9 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [ticket-list-view] | @potensio - Added dev-only seed script for sample tickets (src/seed-tickets.ts)
 - 2026-08-03: [ticket-list-view] | @potensio - Added the ticket list screen (web/src/components/TicketList.tsx) as the web app's entry point, styled per docs/design-system.html
 - 2026-08-03: [ticket-list-view] | @potensio - Renamed npm scripts so `npm start`/`npm run serve` run the new app; prior-attempt equivalents moved to `start:legacy`/`serve:legacy`
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - Added getLatestRunForTicket to src/db/runs.ts
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - Renamed seed script to seed-demo-data.ts and extended it to seed a spread of run states (backlog, two in-progress stages, two different blocked reasons, ready-for-review)
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - GET /api/tickets now embeds each ticket's latest run
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - Added the ticket-lifecycle kanban board (web/src/components/TicketBoard.tsx: Backlog/In progress/Blocked/Ready for review), distinct from the internal Judge/Implement/Verify/Open PR pipeline stage
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - Added the ticket detail slide-over (web/src/components/TicketDetail.tsx) showing the Judge->Implement->Verify->Open PR stepper and blocked/PR context
+- 2026-08-03: [ticket-board-and-readiness] | @potensio - Added List/Board toggle in web/src/Shell.tsx, now the app's entry point

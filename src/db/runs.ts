@@ -112,6 +112,13 @@ export function listRunsForTicket(db: Database.Database, ticketKey: string): Run
   return rows.map(mapRow);
 }
 
+export function getLatestRunForTicket(db: Database.Database, ticketKey: string): Run | null {
+  const row = db
+    .prepare("SELECT * FROM runs WHERE ticket_key = ? ORDER BY started_at DESC LIMIT 1")
+    .get(ticketKey) as RawRunRow | undefined;
+  return row ? mapRow(row) : null;
+}
+
 interface RawRunRow {
   id: string;
   ticket_key: string;
