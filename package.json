@@ -16,10 +16,11 @@
     "run:queue": "node dist/cli.js run",
     "dashboard": "node dist/cli.js dashboard",
     "doctor": "node dist/cli.js doctor",
-    "serve": "node dist/cli.js serve",
-    "start": "npm run build && npm run serve",
-    "serve:tickets": "node dist/web-server.js",
-    "seed:tickets": "node dist/seed-tickets.js"
+    "serve:legacy": "node dist/cli.js serve",
+    "start:legacy": "npm run build && npm run serve:legacy",
+    "serve": "node dist/web-server.js",
+    "seed:tickets": "node dist/seed-tickets.js",
+    "start": "npm run build && npm run seed:tickets && npm run serve"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

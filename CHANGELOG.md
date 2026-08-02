@@ -27,3 +27,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [ticket-list-view] | @potensio - Added minimal src/web-server.ts exposing GET /api/tickets from the real DB, separate from the prior attempt's src/server.ts
 - 2026-08-03: [ticket-list-view] | @potensio - Added dev-only seed script for sample tickets (src/seed-tickets.ts)
 - 2026-08-03: [ticket-list-view] | @potensio - Added the ticket list screen (web/src/components/TicketList.tsx) as the web app's entry point, styled per docs/design-system.html
+- 2026-08-03: [ticket-list-view] | @potensio - Renamed npm scripts so `npm start`/`npm run serve` run the new app; prior-attempt equivalents moved to `start:legacy`/`serve:legacy`
