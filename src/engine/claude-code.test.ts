@@ -47,9 +47,45 @@ async function testReportsTimeoutOutcome(): Promise<void> {
   console.log("PASS: testReportsTimeoutOutcome");
 }
 
+async function testReportsNonzeroExitOutcome(): Promise<void> {
+  const scratchDir = mkdtempSync(join(tmpdir(), "claude-code-invoker-test-"));
+  const fakeBinPath = join(scratchDir, "fake-claude-exit3.sh");
+  writeFileSync(fakeBinPath, `#!/bin/sh\nexit 3\n`);
+  chmodSync(fakeBinPath, 0o755);
+
+  const invoker = new ClaudeCodeInvoker({ bin: fakeBinPath });
+  const result = await invoker.run({
+    prompt: "do anything",
+    cwd: scratchDir,
+    timeoutMs: 5000,
+  });
+
+  assert.equal(result.outcome, "nonzero_exit");
+  assert.equal(result.exitCode, 3);
+  console.log("PASS: testReportsNonzeroExitOutcome");
+}
+
+async function testReportsProcessErrorOutcome(): Promise<void> {
+  const scratchDir = mkdtempSync(join(tmpdir(), "claude-code-invoker-test-"));
+  const missingBin = join(scratchDir, "does-not-exist");
+
+  const invoker = new ClaudeCodeInvoker({ bin: missingBin });
+  const result = await invoker.run({
+    prompt: "do anything",
+    cwd: scratchDir,
+    timeoutMs: 5000,
+  });
+
+  assert.equal(result.outcome, "process_error");
+  assert.equal(result.exitCode, null);
+  console.log("PASS: testReportsProcessErrorOutcome");
+}
+
 async function main(): Promise<void> {
   await testExtractsFinalTextFromResultLine();
   await testReportsTimeoutOutcome();
+  await testReportsNonzeroExitOutcome();
+  await testReportsProcessErrorOutcome();
 }
 
 void main();
