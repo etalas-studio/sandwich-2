@@ -22,6 +22,10 @@ The product's differentiator isn't "it writes code" — plenty of tools do that.
 
 ## The Core Loop
 
+### 0. First-run setup
+
+On first launch, the human points the instance at the one local project folder it will serve — a simple folder picker in the UI, nothing more elaborate (no repo browser, no multi-project chooser, consistent with single-tenant-per-instance). Selecting the folder kicks off the initial readiness scan (see below) automatically. The human reviews its output — the readiness map and agent-proposed blocklist — before any ticket can be judged or run against the codebase.
+
 ### 1. Upfront readiness scan (periodic, not per-ticket)
 
 A lightweight, mostly mechanical pass over the codebase, run once initially and refreshed periodically (not on every ticket — an on-demand or scheduled operation). It produces two things:
@@ -99,7 +103,7 @@ One SQLite file per instance. No external database service (ruled out Postgres/N
 
 Rejected a shared/hosted Postgres (e.g. one Neon database for all projects) explicitly because it reintroduces multi-tenancy at the data layer even if the orchestrator process is still one-per-project — contradicts single-tenant-per-instance, and undermines "handed over in full" (a project can't cleanly take sole ownership of data that's pooled with others). Embedded SQLite means zero setup step and the instance's data is genuinely self-contained.
 
-Config split: **static setup** (engine choice, VCS provider + credentials, repo path, blocklist) lives in a config file, human-edited. **Dynamically discovered credentials** (see Credentials, above) are stored in the SQLite database, provided through the UI — not hand-edited, since they accumulate over time as tickets surface new requirements.
+Config split: **static setup** (engine choice, VCS provider + credentials) lives in a config file, human-edited. **Repo path** is set once via the first-run UI folder picker (see Core Loop step 0), not hand-edited. **The blocklist** starts as agent-proposed (from the readiness scan) and is human-editable via UI. **Dynamically discovered credentials** (see Credentials, above) are stored in the SQLite database, provided through the UI — not hand-edited, since they accumulate over time as tickets surface new requirements.
 
 ### Agent execution: scoped shell access
 
@@ -165,4 +169,4 @@ The instance must run identically whether hosted locally or on a VPS — no assu
 - What the categorized "needs human" reasons aggregate into over time (a dashboard, a report) — the data model for capturing them is set (categorized, not free text), but the aggregation view itself isn't designed yet.
 - Which Pi SDK / Claude SDK specifics (auth, output format, tool-use capabilities) — research task at implementation time.
 - Exact GitHub/Bitbucket API scopes and auth mechanics for the VCS interface — research task at implementation time.
-- **Resolved:** the engine-invocation PoC ran (see Agent Engine section above and `poc/README.md`) — both headless and PTY invocation work reliably. Headless shipped as the default; PTY invocation as an explicit opt-in toggle is a separate, later implementation task (not yet built as of this writing — only the `EngineInvoker` interface and the headless `ClaudeCodeInvoker` exist so far).
+- **Resolved:** the engine-invocation PoC ran (see Agent Engine section above and `poc/README.md`) — both headless and PTY invocation work reliably. Headless shipped as the default (`docs/superpowers/plans/2026-08-02-engine-invocation-layer.md`); PTY invocation as an explicit opt-in toggle is also built now (`docs/superpowers/plans/2026-08-03-pty-engine-toggle.md`) — `ClaudeCodePtyInvoker` and the `createEngineInvoker` factory both exist, so callers pick a mode without depending on which concrete class backs it.

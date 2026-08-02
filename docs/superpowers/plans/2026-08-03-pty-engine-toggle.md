@@ -28,13 +28,13 @@
 - Consumes: nothing.
 - Produces: `node-pty` available as an import in `src/engine/` for Task 2.
 
-- [ ] **Step 1: Install `node-pty` in the project root**
+- [x] **Step 1: Install `node-pty` in the project root**
 
 ```bash
 npm install node-pty
 ```
 
-- [ ] **Step 2: Confirm it installed and typechecks are unaffected**
+- [x] **Step 2: Confirm it installed and typechecks are unaffected**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -42,7 +42,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: no errors (this step only adds a dependency, no code changes yet).
 
-- [ ] **Step 3: Confirm `package.json`/`package-lock.json` show exactly one new dependency**
+- [x] **Step 3: Confirm `package.json`/`package-lock.json` show exactly one new dependency**
 
 ```bash
 git diff package.json
@@ -50,7 +50,7 @@ git diff package.json
 
 Expected: one line added under `"dependencies"` (not `"devDependencies"` — `node-pty` is a runtime dependency, needed whenever the PTY mode actually runs, not just during development).
 
-- [ ] **Step 4: Confirm the installed native `spawn-helper` binary is actually executable**
+- [x] **Step 4: Confirm the installed native `spawn-helper` binary is actually executable**
 
 `node-pty` ships a prebuilt native helper binary that its own npm install does not reliably mark as executable on every machine — confirmed by direct testing during this plan's planning phase: a fresh `npm install node-pty` on this machine left `spawn-helper` as `-rw-r--r--` (not executable), which causes every single `pty.spawn(...)` call to fail immediately with `Error: posix_spawnp failed`, regardless of what binary you're trying to spawn. This is not a bug in this plan's code — it's an environment/packaging quirk worth checking for explicitly rather than debugging blind later.
 
@@ -77,7 +77,7 @@ term.onExit(() => process.exit(0));
 
 Expected output: `hello from node-pty` (possibly followed by a shell-prompt-related control sequence, harmless). If this still fails with `posix_spawnp failed` after the `chmod`, do not proceed to Task 2 — something else is wrong with the `node-pty` install on this machine and needs to be resolved first.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json package-lock.json
@@ -98,7 +98,7 @@ git commit -m "Add node-pty as a root dependency for the PTY engine invocation m
 
 The dialog-detection regex, the 20-second `/exit` timer, and the 90-second safety timeout below are carried over directly from `poc/claude-pty-poc.mjs`, which already proved them reliable (3/3 runs) against the real Claude Code CLI — this is not new, unvalidated logic.
 
-- [ ] **Step 1: Write the failing test — successful run extracts the answer**
+- [x] **Step 1: Write the failing test — successful run extracts the answer**
 
 ```typescript
 // src/engine/claude-code-pty.test.ts
@@ -157,7 +157,7 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails (the module doesn't exist yet)**
+- [x] **Step 2: Run it to confirm it fails (the module doesn't exist yet)**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -165,7 +165,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './claude-code-pty.js'`.
 
-- [ ] **Step 3: Write `src/engine/claude-code-pty.ts`**
+- [x] **Step 3: Write `src/engine/claude-code-pty.ts`**
 
 ```typescript
 import * as pty from "node-pty";
@@ -293,7 +293,7 @@ function extractFinalText(rawBuffer: string): string {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/claude-code-pty.test.js
@@ -306,7 +306,7 @@ PASS: testExtractsAnswerAndForcesCleanExit
 
 If the test hangs or times out, check the fake binary's shebang line permissions (`chmodSync(fakeBinPath, 0o755)`) and confirm `node-pty` installed correctly (Task 1).
 
-- [ ] **Step 5: Write a second test — timeout path**
+- [x] **Step 5: Write a second test — timeout path**
 
 Add this function to `src/engine/claude-code-pty.test.ts`, and call it from `main()`:
 
@@ -340,7 +340,7 @@ async function main(): Promise<void> {
 }
 ```
 
-- [ ] **Step 6: Run both tests to confirm they pass**
+- [x] **Step 6: Run both tests to confirm they pass**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/claude-code-pty.test.js
@@ -352,7 +352,7 @@ PASS: testExtractsAnswerAndForcesCleanExit
 PASS: testReportsTimeoutWhenExitNeverHappens
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/engine/claude-code-pty.ts src/engine/claude-code-pty.test.ts
@@ -371,7 +371,7 @@ git commit -m "Implement ClaudeCodePtyInvoker for interactive PTY-based invocati
 - Consumes: `ClaudeCodeInvoker` (from `src/engine/claude-code.ts`, already exists), `ClaudeCodePtyInvoker` (from Task 2), `EngineInvoker` (from `src/engine/types.ts`).
 - Produces: `createEngineInvoker(mode: EngineInvocationMode): EngineInvoker` — the single place any future caller (pipeline stages, not part of this plan) will go to get an invoker, without needing to know either concrete class exists.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // src/engine/create-invoker.test.ts
@@ -400,7 +400,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -408,7 +408,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './create-invoker.js'`.
 
-- [ ] **Step 3: Write `src/engine/create-invoker.ts`**
+- [x] **Step 3: Write `src/engine/create-invoker.ts`**
 
 ```typescript
 import { ClaudeCodeInvoker } from "./claude-code.js";
@@ -435,7 +435,7 @@ export function createEngineInvoker(mode: EngineInvocationMode): EngineInvoker {
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/create-invoker.test.js
@@ -447,7 +447,7 @@ PASS: testCreatesHeadlessInvokerByDefault
 PASS: testCreatesPtyInvokerWhenRequested
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/engine/create-invoker.ts src/engine/create-invoker.test.ts
@@ -465,7 +465,7 @@ git commit -m "Add createEngineInvoker factory to toggle between headless and PT
 - Consumes: `ClaudeCodePtyInvoker` from Task 2.
 - Produces: nothing consumed by later tasks — this is a one-time confirmation that the fake-binary tests in Task 2 reflect real behavior against the actual `claude` CLI, exactly as Task 4 did for the headless invoker in the prior plan.
 
-- [ ] **Step 1: Write `src/engine/manual-check-pty.ts`**
+- [x] **Step 1: Write `src/engine/manual-check-pty.ts`**
 
 ```typescript
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -506,7 +506,7 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it against the real CLI**
+- [x] **Step 2: Run it against the real CLI**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/manual-check-pty.js
@@ -516,7 +516,7 @@ Expected: `MANUAL CHECK PASSED`, and `finalText` should contain "mango" somewher
 
 If this fails, do not proceed — check whether the trust-dialog regex still matches the real CLI's current wording (Anthropic could have changed it since the original PoC), and check whether `finalText` contains the answer but buried in enough ANSI noise that the simple `toLowerCase().includes()` check needs a more tolerant match.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/engine/manual-check-pty.ts

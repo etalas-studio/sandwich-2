@@ -30,7 +30,7 @@
 
 This task is exploratory by nature — the steps below are the investigation script, not a TDD cycle, because there's no "expected behavior" to assert against yet; the whole point is finding out what the real behavior is.
 
-- [ ] **Step 1: Install `node-pty` in a scratch location, not the project**
+- [x] **Step 1: Install `node-pty` in a scratch location, not the project**
 
 ```bash
 mkdir -p poc
@@ -42,7 +42,7 @@ cd ..
 
 This keeps the PoC's dependency out of root `package.json` until Task 1 concludes the interactive mode is worth pursuing — if headless wins, `poc/` gets deleted wholesale and root `package.json` never sees `node-pty`.
 
-- [ ] **Step 2: Write the PoC script that spawns Claude Code in a real PTY**
+- [x] **Step 2: Write the PoC script that spawns Claude Code in a real PTY**
 
 ```javascript
 // poc/claude-pty-poc.mjs
@@ -106,7 +106,7 @@ setTimeout(() => {
 }, 60000);
 ```
 
-- [ ] **Step 3: Run the PoC and observe what actually happens**
+- [x] **Step 3: Run the PoC and observe what actually happens**
 
 ```bash
 node poc/claude-pty-poc.mjs
@@ -117,7 +117,7 @@ Watch the live output. Three things to specifically confirm, since these are the
 2. Does Claude Code eventually print its actual answer (should mention "hello from the PoC") into the PTY output, and can it be found in `buffer` by searching for text after the last dialog was dismissed?
 3. Does the process actually exit on its own once done (interactive Claude Code sessions do not normally exit automatically — check whether a `/exit` needs to be sent, or whether some other signal marks "the turn is complete" that a real invoker could detect programmatically without a human watching).
 
-- [ ] **Step 4: Run it two more times to check reliability, not just one lucky pass**
+- [x] **Step 4: Run it two more times to check reliability, not just one lucky pass**
 
 ```bash
 node poc/claude-pty-poc.mjs
@@ -126,7 +126,7 @@ node poc/claude-pty-poc.mjs
 
 Non-interactive automation needs to work close to 100% of the time, not "usually." If dialog timing varies between runs (e.g., the trust dialog takes longer to appear on one run and the hardcoded `500`ms delay before sending Enter fires too early), that is a real finding — write it down, it directly affects the decision.
 
-- [ ] **Step 5: Record the decision in `poc/README.md`**
+- [x] **Step 5: Record the decision in `poc/README.md`**
 
 Write down, in plain language, what was actually observed — not a hypothetical. Use this structure:
 
@@ -160,7 +160,7 @@ tradeoff already described in the design doc, but what THIS PoC actually
 showed>
 ```
 
-- [ ] **Step 6: Delete the scratch `node_modules` inside `poc/`, keep the script and the README**
+- [x] **Step 6: Delete the scratch `node_modules` inside `poc/`, keep the script and the README**
 
 ```bash
 rm -rf poc/node_modules poc/package-lock.json
@@ -168,7 +168,7 @@ rm -rf poc/node_modules poc/package-lock.json
 
 Keep `poc/claude-pty-poc.mjs` and `poc/README.md` committed — they're small, and they're the evidence backing whichever decision Task 2 acts on. If the decision is ever revisited later, this is the record of what was actually tried.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add poc/
@@ -192,7 +192,7 @@ EngineInvoker implementation."
 - Consumes: the decision recorded in `poc/README.md` from Task 1 (informs which concrete shape `run()`'s streaming callback needs — headless gives structured JSON lines, interactive gives raw terminal bytes — but the interface itself is written to be agnostic of that, so Task 3's implementation is free to adapt either raw form to it).
 - Produces: `EngineInvoker` interface, `EngineRunOptions`, `EngineRunResult`, `EngineOutcome` — all imported by Task 3 (the Claude Code implementation) and by every future plan that calls an engine (Judge/Implement/Verify stages, not part of this plan).
 
-- [ ] **Step 1: Write `src/engine/types.ts`**
+- [x] **Step 1: Write `src/engine/types.ts`**
 
 ```typescript
 /**
@@ -241,7 +241,7 @@ export interface EngineRunResult {
 }
 ```
 
-- [ ] **Step 2: Write `src/engine/types.test.ts` — a compile-time/shape check, not a behavior test**
+- [x] **Step 2: Write `src/engine/types.test.ts` — a compile-time/shape check, not a behavior test**
 
 Since this file only defines types and interfaces (no logic to unit-test yet), the test confirms the shapes are usable together, catching a class of mistake TDD would normally catch via a red test: a type that can't actually be constructed or satisfied as intended.
 
@@ -279,7 +279,7 @@ async function checkUsage(): Promise<void> {
 await checkUsage();
 ```
 
-- [ ] **Step 3: Confirm it typechecks and runs**
+- [x] **Step 3: Confirm it typechecks and runs**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/types.test.js
@@ -287,7 +287,7 @@ npx tsc -p tsconfig.json && node dist/engine/types.test.js
 
 Expected: no compile errors, and the output includes `PASS: checkUsage`. If there are compile errors, the interface shapes in `types.ts` don't actually fit together — fix `types.ts`, not the test.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/engine/types.ts src/engine/types.test.ts
@@ -309,7 +309,7 @@ git commit -m "Add EngineInvoker interface and result types"
 
 This task assumes Task 1's PoC selected **headless mode**. If Task 1 selected interactive mode instead, this task's steps change materially (PTY spawn instead of `child_process.spawn`, dialog handling instead of JSON-line parsing) — in that case, stop here and write a fresh Task 3 using the same TDD shape but PTY-based mechanics, following the pattern discovered in Task 1's PoC script.
 
-- [ ] **Step 1: Write `src/engine/proc.ts` — spawn with timeout, no shell, line-buffered stdout**
+- [x] **Step 1: Write `src/engine/proc.ts` — spawn with timeout, no shell, line-buffered stdout**
 
 ```typescript
 import { spawn } from "node:child_process";
@@ -382,7 +382,7 @@ export function runProcess(bin: string, args: string[], options: ProcOptions): P
 }
 ```
 
-- [ ] **Step 2: Write the failing test for `ClaudeCodeInvoker`, using a fake `bin` so the test doesn't actually call the real `claude` CLI**
+- [x] **Step 2: Write the failing test for `ClaudeCodeInvoker`, using a fake `bin` so the test doesn't actually call the real `claude` CLI**
 
 ```typescript
 // src/engine/claude-code.test.ts
@@ -442,7 +442,7 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 3: Run it to confirm it fails (the module doesn't exist yet)**
+- [x] **Step 3: Run it to confirm it fails (the module doesn't exist yet)**
 
 ```bash
 npx tsc -p tsconfig.json --noEmit
@@ -450,7 +450,7 @@ npx tsc -p tsconfig.json --noEmit
 
 Expected: FAIL — `Cannot find module './claude-code.js'`.
 
-- [ ] **Step 4: Write `src/engine/claude-code.ts`**
+- [x] **Step 4: Write `src/engine/claude-code.ts`**
 
 ```typescript
 import { runProcess } from "./proc.js";
@@ -563,7 +563,7 @@ function extractFinalText(transcript: string[]): string {
 }
 ```
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/claude-code.test.js
@@ -575,7 +575,7 @@ PASS: testExtractsFinalTextFromResultLine
 PASS: testReportsTimeoutOutcome
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/engine/proc.ts src/engine/claude-code.ts src/engine/claude-code.test.ts
@@ -593,7 +593,7 @@ git commit -m "Implement ClaudeCodeInvoker for headless claude -p mode"
 - Consumes: `ClaudeCodeInvoker` from Task 3.
 - Produces: nothing consumed by later tasks — this is a one-time confirmation that the fake-binary tests in Task 3 reflect real behavior, not just the test's own assumptions about what `claude -p` outputs.
 
-- [ ] **Step 1: Write `src/engine/manual-check.ts`**
+- [x] **Step 1: Write `src/engine/manual-check.ts`**
 
 ```typescript
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -635,7 +635,7 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it against the real CLI**
+- [x] **Step 2: Run it against the real CLI**
 
 ```bash
 npx tsc -p tsconfig.json && node dist/engine/manual-check.js
@@ -645,7 +645,7 @@ Expected: `MANUAL CHECK PASSED`, and `finalText` should contain "banana". This c
 
 If this fails, do not proceed — it means Task 3's implementation made an incorrect assumption about the real CLI's output format that the fake-binary test didn't catch. Fix `claude-code.ts` and re-run this check before moving on.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/engine/manual-check.ts
