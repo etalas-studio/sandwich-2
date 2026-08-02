@@ -23,3 +23,7 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [storage-sqlite] | @potensio - Added users repository module (src/db/users.ts)
 - 2026-08-03: [storage-sqlite] | @potensio - Added sessions repository module (src/db/sessions.ts)
 - 2026-08-03: [storage-sqlite] | @potensio - Added instance_settings repository module (src/db/settings.ts)
+- 2026-08-03: [ticket-list-view] | @potensio - Added Tailwind CSS as a real build dependency for web/ (web/tailwind.config.js, web/postcss.config.js, web/src/tailwind.css), replacing the design system doc's CDN-only setup
+- 2026-08-03: [ticket-list-view] | @potensio - Added minimal src/web-server.ts exposing GET /api/tickets from the real DB, separate from the prior attempt's src/server.ts
+- 2026-08-03: [ticket-list-view] | @potensio - Added dev-only seed script for sample tickets (src/seed-tickets.ts)
+- 2026-08-03: [ticket-list-view] | @potensio - Added the ticket list screen (web/src/components/TicketList.tsx) as the web app's entry point, styled per docs/design-system.html

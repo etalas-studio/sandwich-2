@@ -3,6 +3,7 @@ node_modules/
 dist/
 .work/
 runs/
+data/
 queue.json
 *.log
 .DS_Store

@@ -17,7 +17,9 @@
     "dashboard": "node dist/cli.js dashboard",
     "doctor": "node dist/cli.js doctor",
     "serve": "node dist/cli.js serve",
-    "start": "npm run build && npm run serve"
+    "start": "npm run build && npm run serve",
+    "serve:tickets": "node dist/web-server.js",
+    "seed:tickets": "node dist/seed-tickets.js"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
