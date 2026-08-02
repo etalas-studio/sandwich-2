@@ -137,7 +137,7 @@ async function testExtractsAnswerAndForcesCleanExit(): Promise<void> {
   const scratchDir = mkdtempSync(join(tmpdir(), "claude-pty-invoker-test-"));
   const fakeBinPath = writeFakeInteractiveBinary(scratchDir);
 
-  const invoker = new ClaudeCodePtyInvoker({ bin: fakeBinPath, exitAfterMs: 500, safetyTimeoutMs: 5000 });
+  const invoker = new ClaudeCodePtyInvoker({ bin: fakeBinPath, exitAfterMs: 500 });
   const result = await invoker.run({
     prompt: "what is the answer",
     cwd: scratchDir,
@@ -179,14 +179,12 @@ export interface ClaudeCodePtyInvokerOptions {
    * to force a clean session close. Interactive Claude Code sessions never
    * exit on their own — this is required, not optional. Defaults to 20000ms,
    * matching the value validated in the original PoC (poc/claude-pty-poc.mjs).
+   *
+   * This is PTY-specific behavior with no headless equivalent, so it stays a
+   * constructor option rather than part of EngineRunOptions — the shared
+   * interface only carries what every engine implementation needs.
    */
   exitAfterMs?: number;
-  /**
-   * Hard ceiling: if the process hasn't exited by this point (e.g. /exit
-   * didn't work), kill it and report a timeout. Defaults to 90000ms,
-   * matching the PoC's validated value.
-   */
-  safetyTimeoutMs?: number;
 }
 
 const TRUST_DIALOG_PATTERN = /Is.{0,80}this.{0,80}a.{0,80}project.{0,80}you.{0,80}trust\?/i;
@@ -202,16 +200,14 @@ const PERMISSION_DIALOG_PATTERN = /do.{0,20}you.{0,20}want.{0,20}to.{0,20}(proce
 export class ClaudeCodePtyInvoker implements EngineInvoker {
   private readonly bin: string;
   private readonly exitAfterMs: number;
-  private readonly safetyTimeoutMs: number;
 
   constructor(options: ClaudeCodePtyInvokerOptions = {}) {
     this.bin = options.bin ?? "claude";
     this.exitAfterMs = options.exitAfterMs ?? 20000;
-    this.safetyTimeoutMs = options.safetyTimeoutMs ?? 90000;
   }
 
   async run(options: EngineRunOptions): Promise<EngineRunResult> {
-    const { prompt, cwd, onOutputLine } = options;
+    const { prompt, cwd, timeoutMs, onOutputLine } = options;
     const startedAt = Date.now();
 
     return new Promise((resolve) => {
@@ -277,7 +273,7 @@ export class ClaudeCodePtyInvoker implements EngineInvoker {
           term.kill();
           finish("timeout", null);
         }
-      }, this.safetyTimeoutMs);
+      }, timeoutMs);
     });
   }
 }
@@ -323,11 +319,11 @@ async function testReportsTimeoutWhenExitNeverHappens(): Promise<void> {
   writeFileSync(fakeBinPath, "#!/bin/sh\nsleep 10\n");
   chmodSync(fakeBinPath, 0o755);
 
-  const invoker = new ClaudeCodePtyInvoker({ bin: fakeBinPath, exitAfterMs: 100, safetyTimeoutMs: 300 });
+  const invoker = new ClaudeCodePtyInvoker({ bin: fakeBinPath, exitAfterMs: 100 });
   const result = await invoker.run({
     prompt: "this will hang",
     cwd: scratchDir,
-    timeoutMs: 5000,
+    timeoutMs: 300,
   });
 
   assert.equal(result.outcome, "timeout");
