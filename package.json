@@ -15,7 +15,9 @@
     "selftest": "tsc -p tsconfig.json && node dist/selftest.js",
     "run:queue": "node dist/cli.js run",
     "dashboard": "node dist/cli.js dashboard",
-    "doctor": "node dist/cli.js doctor"
+    "doctor": "node dist/cli.js doctor",
+    "serve": "node dist/cli.js serve",
+    "start": "npm run build && npm run serve"
   },
   "devDependencies": {
     "@types/node": "^22.7.0",
