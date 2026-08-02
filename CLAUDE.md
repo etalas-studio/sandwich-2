@@ -23,6 +23,7 @@ The codebase in `src/` and `web/` from the prior attempt still exists and still 
 | `docs/roadmap.md` | Phase list at a glance — start here |
 | `docs/superpowers/specs/2026-08-02-phase-1-product-design.md` | Full Phase 1 design: problem, core loop, architecture decisions |
 | `docs/superpowers/plans/` | Implementation plans (task-by-task), once written |
+| `docs/design-system.html` | Visual design system — all UI components live here. Copy Tailwind classes directly. |
 | `CHANGELOG.md` | One entry per completed implementation task |
 
 ## Working Rules
