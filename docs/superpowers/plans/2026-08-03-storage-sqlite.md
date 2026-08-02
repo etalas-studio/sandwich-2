@@ -2120,7 +2120,7 @@ Edit `docs/superpowers/plans/2026-08-03-storage-sqlite.md`: change every `- [ ]`
 In `docs/roadmap.md`, change:
 
 ```
-- [x] Storage (embedded SQLite) — no plan yet
+- [ ] Storage (embedded SQLite) — no plan yet
 ```
 
 to:
