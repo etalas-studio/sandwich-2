@@ -1,142 +1,142 @@
-# CLAUDE.md — konteks proyek
+# CLAUDE.md — Project Context
 
-Baca ini dulu sebelum mengubah apa pun. Ditulis 31 Juli 2026.
+Read this first before changing anything. Written 31 July 2026.
 
 ---
 
-## Proyek ini apa
+## What This Project Is
 
-Orchestrator ("mandor") yang menjalankan coding agent per tiket Jira di git worktree terpisah, menegakkan guardrail, dan merekam tiap percobaan.
+An orchestrator that runs a coding agent per Jira ticket in a separate git worktree, enforces guardrails, and records every attempt.
 
-**Yang dibangun di sini bukan AI-nya.** AI-nya Claude Code, sudah terpasang. Yang dibangun adalah lapisan di sekelilingnya: intake tiket, pembatasan scope, gerbang keamanan, pengukuran, dan UI.
+**What's being built here isn't the AI.** The AI is Claude Code, already installed. What's being built is the layer around it: ticket intake, scope restriction, safety gates, measurement, and UI.
 
-Repo target ada di `../runchise` — monolit Rails milik klien. **Jangan pernah commit apa pun ke repo itu dari sini.**
+The target repo is at `../runchise` — a Rails monolith belonging to the client. **Never commit anything to that repo from here.**
 
-## Konteks engagement
+## Engagement Context
 
-- **Runchise** = klien. Produk software operasional restoran. Repo `RR` = backend Rails (Ruby 3.0.1, Rails 6.1) di Bitbucket. Orang: Daniel, Joshua, Paula.
-- **Etalas** = vendor (kita). Pandu, Dharma, Hanif.
-- Pilot 3 minggu, mulai 27 Juli 2026. Notes meeting ada di `docs/00-mulai-dari-sini.md`.
-- Model: langganan Claude (karena itu **harus** Claude Code — langganan tidak boleh dipakai lewat tool pihak ketiga). Amazon Bedkrock API key menyusul nanti.
+- **Runchise** = client. Restaurant operations software product. Repo `RR` = Rails backend (Ruby 3.0.1, Rails 6.1) on Bitbucket. People: Daniel, Joshua, Paula.
+- **Etalas** = vendor (us). Pandu, Dharma, Hanif.
+- 3-week pilot, started 27 July 2026. Meeting notes in `docs/00-mulai-dari-sini.md`.
+- Model: Claude subscription (that's why it **must** be Claude Code — subscription cannot be used via third-party tools). Amazon Bedrock API key to follow later.
 
-## Tesis pilot — jangan dibelokkan tanpa alasan kuat
+## Pilot Thesis — Don't Divert Without Strong Reason
 
-Tim Runchise **tidak lambat**: 277 tiket selesai dalam 90 hari (±21,5/minggu), median 6 hari, 10 kontributor. Yang mahal di codebase mereka adalah **memahami kode sebelum mengubah, dan memastikan benar setelah mengubah.**
+The Runchise team is **not slow**: 277 tickets completed in 90 days (~21.5/week), median 6 days, 10 contributors. What's expensive in their codebase is **understanding code before changing it, and ensuring correctness after changing it.**
 
-Maka penyempitannya ada di **verifikasi**, bukan produksi kode. Menambah output agent di sisi produksi hanya memperpanjang antrean di gerbang review.
+So the focus is on **verification**, not code production. Increasing agent output on the production side only extends the queue at the review gate.
 
-Karena itu urutannya: **agent menulis characterization test dulu, baru mengubah kode.** Coverage adalah alat tukar untuk menebus gerbang manusia. Penjelasan lengkap di `docs/02-desain-pipeline.md`.
+Hence the sequence: **agent writes characterization tests first, then changes code.** Coverage is the currency to buy passage through the human gate. Full explanation in `docs/02-desain-pipeline.md`.
 
-## Status sekarang
+## Current Status
 
-| Bagian | Status |
+| Component | Status |
 |---|---|
-| Orchestrator dua tahap (rencana → approve → implementasi) | jalan, typecheck bersih |
-| Guardrail + klasifikasi jalur | jalan, 38 selftest lolos |
-| Backend API + SSE | jalan, semua endpoint diuji manual |
-| UI 5 layar (React + Vite, `web/src/`) | jalan; diverifikasi manual di browser untuk 5 tab + detail run (status `error`); form review & tombol approve/reject belum diuji dengan data nyata — belum ada run yang sampai `awaiting_plan_approval` atau `ready_for_review` |
-| Pembukaan PR otomatis | **belum ada** — butuh kredensial Bitbucket |
-| Pencatatan biaya/token | **belum ada** — datanya ada di transcript, belum diringkas |
-| Intake Jira otomatis | **belum ada** — `queue.json` masih manual, dan itu disengaja untuk pilot |
-| Percobaan sungguhan end-to-end | **belum pernah** |
+| Two-stage orchestrator (plan → approve → implementation) | working, typecheck clean |
+| Guardrails + path classification | working, 38 selftests passing |
+| Backend API + SSE | working, all endpoints manually tested |
+| UI 5 views (React + Vite, `web/src/`) | working; manually verified in browser for 5 tabs + run detail (status `error`); review form & approve/reject buttons not yet tested with real data — no run has reached `awaiting_plan_approval` or `ready_for_review` |
+| Automatic PR opening | **not implemented** — needs Bitbucket credentials |
+| Cost/token tracking | **not implemented** — data exists in transcript, not yet summarized |
+| Automatic Jira intake | **not implemented** — `queue.json` is still manual, and that's intentional for pilot |
+| Real end-to-end attempt | **never done** |
 
-### Blocker nomor satu
+### Primary Blocker
 
-`RAILS_MASTER_KEY` belum ada dari Runchise. Tanpa itu rspec tidak bisa jalan, jadi tahap implementasi tidak bisa diselesaikan. Tahap rencana (`--plan-only`) **sudah bisa** dijalankan sekarang tanpa itu.
+`RAILS_MASTER_KEY` not yet received from Runchise. Without it, rspec cannot run, so the implementation phase cannot complete. The plan phase (`--plan-only`) **can** run now without it.
 
-Blocker lain yang belum terjawab sejak awal: **siapa reviewer di sisi Runchise dan berapa jam per minggu.** Itu plafon throughput sebenarnya.
+Another unresolved blocker since the beginning: **who is the reviewer on Runchise's side and how many hours per week.** That's the real throughput ceiling.
 
-## Keputusan yang jangan diubah tanpa berpikir
+## Decisions Not To Change Without Thought
 
-1. **Agent tidak pernah push ke `master`.** Selalu branch, selalu PR. Tanpa pengecualian selama pilot.
-2. **Jalur 1 (tanpa review sebelum merge) mati** di `config/pipeline.json`. Salah satu selftest sengaja memaksa ini tetap mati. Asimetrinya: auto-merge menghemat beberapa jam, satu bug lolos di domain GL bisa menutup pilot.
-3. **Gerbang ditentukan dari diff, bukan dari tiket.** Sebelum agent kerja kita hanya bisa menebak file apa yang tersentuh; setelah diff ada, kita tahu.
-4. **Rencana diperiksa terhadap daftar cegat sebelum satu baris kode disentuh.** Gerbang termurah di seluruh sistem.
-5. **Orchestrator (root) nol dependency runtime.** Hanya `typescript` dan `@types/node` sebagai devDependency di root `package.json` — ini yang menyentuh repo klien, jadi argumen "kami tidak memasang apa pun yang aneh di mesin kalian" tetap berlaku persis di situ. Frontend (`web/`) punya `package.json` sendiri dengan React + Vite dan build step (`npm run build` dari root memicu `vite build` di `web/`) — sengaja dipisah supaya siapa pun yang membaca root `package.json` tidak salah kira agent-runner butuh React. Kalau mau menambah dependency ke root, tetap pikir dua kali; `web/` boleh menambah dependency frontend selama alasannya jelas dan tetap di `web/package.json`, bukan root.
-6. **`proc.ts` tidak pernah memakai shell.** Teks tiket masuk sebagai argumen utuh, jadi isi deskripsi tiket tidak mungkin dieksekusi sebagai perintah.
-7. **Pekerjaan dijalankan serial, satu per satu.** Bukan karena worktree bentrok — itu sudah terpisah — tapi karena rspec berebut satu database test yang sama.
-8. **Server hanya mendengarkan di `127.0.0.1`.** UI ini bisa mengubah kode di repo klien.
-9. **`runs.jsonl` append-only.** Satu percobaan bisa punya beberapa baris; pembacaan mengambil baris terakhir per `ticket/runId`. Jangan diubah jadi rewrite-in-place.
+1. **Agent never pushes to `master`.** Always branch, always PR. No exceptions during pilot.
+2. **Path 1 (no review before merge) is disabled** in `config/pipeline.json`. One selftest intentionally forces this to remain disabled. The asymmetry: auto-merge saves a few hours, one bug slipping through in the GL domain could end the pilot.
+3. **Gates are determined from diff, not from ticket.** Before the agent works, we can only guess which files will be touched; once diff exists, we know.
+4. **Plan is checked against the blocklist before a single line of code is touched.** The cheapest gate in the entire system.
+5. **Orchestrator (root) has zero runtime dependencies.** Only `typescript` and `@types/node` as devDependency in root `package.json` — this is what touches the client repo, so the argument "we're not installing anything weird on your machines" holds precisely there. Frontend (`web/`) has its own `package.json` with React + Vite and a build step (`npm run build` from root triggers `vite build` in `web/`) — intentionally separated so anyone reading root `package.json` doesn't mistakenly think the agent-runner needs React. If adding dependencies to root, still think twice; `web/` may add frontend dependencies as long as the reason is clear and they stay in `web/package.json`, not root.
+6. **`proc.ts` never uses shell.** Ticket text comes in as a complete argument, so ticket description contents cannot be executed as commands.
+7. **Jobs run serially, one at a time.** Not because worktrees would conflict — they're separate — but because rspec competes for the same test database.
+8. **Server only listens on `127.0.0.1`.** This UI can modify code in the client repo.
+9. **`runs.jsonl` is append-only.** One attempt can have multiple lines; reading takes the last line per `ticket/runId`. Do not change to rewrite-in-place.
 
-## Aturan kerja
+## Working Rules
 
-- Setelah mengubah `config/pipeline.json`, **jalankan `npm run selftest`.** Guardrail yang salah adalah bug paling berbahaya di proyek ini, dan salahnya tidak berisik.
-- Setelah mengubah kode, `npm run build` sebelum menjalankan `dist/cli.js`.
-- `tsconfig.json` sengaja ketat (`noUncheckedIndexedAccess`, `strict`). Jangan dilonggarkan — setelan ini sudah menangkap bug nyata (label outcome yang kelupaan).
-- Jangan menambah test framework. `selftest.ts` cukup dan tanpa dependency.
-- Kalau menambah nilai `Outcome` baru, TypeScript akan memaksa melengkapi `OUTCOME_LABEL` di `dashboard.ts` dan sebaiknya juga di `OUTCOME` pada `web/index.html` (yang ini tidak dijaga compiler — mudah terlupa).
+- After changing `config/pipeline.json`, **run `npm run selftest`.** Incorrect guardrails are the most dangerous bug in this project, and they fail silently.
+- After changing code, run `npm run build` before running `dist/cli.js`.
+- `tsconfig.json` is intentionally strict (`noUncheckedIndexedAccess`, `strict`). Do not loosen it — this setting has caught real bugs (missing outcome label).
+- Do not add a test framework. `selftest.ts` is sufficient and has no dependencies.
+- If adding a new `Outcome` value, TypeScript will force completing `OUTCOME_LABEL` in `dashboard.ts` and should also be updated in `OUTCOME` in `web/index.html` (this one isn't compiler-enforced — easy to forget).
 
-## Perintah
+## Commands
 
 ```bash
 npm install && npm run build
-node dist/cli.js doctor      # periksa prasyarat, jalankan ini dulu
-npm run selftest             # 38 pemeriksaan guardrail
-node dist/cli.js serve       # UI di http://127.0.0.1:4319
-node dist/cli.js run --dry-run     # tanpa memanggil agent
-node dist/cli.js run --plan-only   # agent dipanggil, kode tidak disentuh
+node dist/cli.js doctor      # check prerequisites, run this first
+npm run selftest             # 38 guardrail checks
+node dist/cli.js serve       # UI at http://127.0.0.1:4319
+node dist/cli.js run --dry-run     # without invoking agent
+node dist/cli.js run --plan-only   # agent invoked, code untouched
 node dist/cli.js run --ticket RR-7338
 ```
 
-## Struktur
+## Structure
 
-| Lokasi | Isi |
+| Location | Contents |
 |---|---|
-| `src/orchestrator.ts` | Alur satu percobaan. **Baca ini dulu kalau mau paham sistemnya.** |
-| `src/guardrails.ts` | Daftar cegat, batas aman, klasifikasi jalur. Bagian paling kritis |
-| `src/prompts.ts` | Prompt tahap rencana & implementasi |
-| `src/server.ts`, `src/jobs.ts` | API, SSE, antrean serial |
-| `src/selftest.ts` | 38 pemeriksaan, tanpa dependency |
-| `config/pipeline.json` | Satu-satunya file yang perlu diedit rutin. 41 path daftar cegat |
-| `queue.json` | Antrean tiket, manual. Gitignored |
-| `web/` | Frontend React + TypeScript + Vite. `npm install` & `npm run build` terpisah dari root |
-| `runs/` | Rekaman percobaan. Gitignored |
-| `docs/` | Konteks analisis dan keputusan |
+| `src/orchestrator.ts` | Single attempt flow. **Read this first to understand the system.** |
+| `src/guardrails.ts` | Blocklist, safety bounds, path classification. Most critical part |
+| `src/prompts.ts` | Plan & implementation stage prompts |
+| `src/server.ts`, `src/jobs.ts` | API, SSE, serial queue |
+| `src/selftest.ts` | 38 checks, no dependencies |
+| `config/pipeline.json` | The only file that needs regular editing. 41 blocklist paths |
+| `queue.json` | Ticket queue, manual. Gitignored |
+| `web/` | Frontend React + TypeScript + Vite. Separate `npm install` & `npm run build` from root |
+| `runs/` | Attempt recordings. Gitignored |
+| `docs/` | Analysis context and decisions |
 
-## Dokumen
+## Documents
 
-Baca sesuai kebutuhan, jangan semua sekaligus:
+Read as needed, not all at once:
 
-| Dokumen | Kapan dibaca |
+| Document | When to Read |
 |---|---|
-| `docs/00-mulai-dari-sini.md` | Orientasi. Siapa siapa, angka asli Jira, dan koreksi framing awal |
-| `docs/01-audit-codebase.md` | Sebelum menyentuh apa pun soal repo klien. Struktur, coverage per domain, file berbahaya |
-| `docs/02-desain-pipeline.md` | Alasan di balik alur dan gerbangnya |
-| `docs/03-metrik-dan-baseline.md` | Definisi sukses, baseline nyata, kriteria berhenti |
-| `docs/04-primer-test-dan-runtime.md` | Cara baca test di repo Runchise, dan penjelasan characterization test |
-| `README.md` | Cara pakai, API, keterbatasan |
+| `docs/00-mulai-dari-sini.md` | Orientation. Who's who, real Jira numbers, and early framing corrections |
+| `docs/01-audit-codebase.md` | Before touching anything about the client repo. Structure, coverage per domain, dangerous files |
+| `docs/02-desain-pipeline.md` | Reasons behind the flow and gates |
+| `docs/03-metrik-dan-baseline.md` | Success definition, real baselines, stop criteria |
+| `docs/04-primer-test-dan-runtime.md` | How to read tests in Runchise repo, and characterization test explanation |
+| `README.md` | Usage, API, limitations |
 
-## Angka penting (jangan dikarang ulang)
+## Key Numbers (Don't Reconstruct)
 
-Dari Jira dan repo, ditarik 29–31 Juli 2026:
+From Jira and repo, pulled 29–31 July 2026:
 
-- 300 tiket To Do terbaru diskor: Tier A 18, B 64, C 126, D 92
-- Hanya **16 tiket** sekaligus agent-ready **dan** berumur <120 hari. Tiga di antaranya domain akuntansi → jalur cepat tinggal 13
-- Tiket yang dibuat 30 hari terakhir: **4%** agent-ready (1 dari 27). Tiket masuk dalam kondisi mentah
-- Throughput tim: 277 selesai / 90 hari. Dibuat: 324 / 90 hari
-- Median waktu tempuh 6 hari; p90 134 hari; rekor 670 hari
-- Metadata: 1 tiket punya label, **0** punya component, **0** punya priority selain Medium
-- Codebase: 4.446 file `.rb` di `app/`, 1.658 file spec. `app/domains/` = 72% kode, 83 domain
-- Domain `restaurant` = 1.156 file (seperempat seluruh kode) — terlalu luas untuk jadi batas scope
-- Rasio spec:kode — seluruh app 37%, accounting 30%, restaurant 26%, **report 3%**, **jurnal 3%**
-- 25 file di atas 800 baris; terbesar `app/models/concerns/product_logic.rb` (2.648 baris)
-- CI ada dan lengkap: `bitbucket-pipelines.yml` menjalankan rspec, rubocop, brakeman
+- 300 newest To Do tickets scored: Tier A 18, B 64, C 126, D 92
+- Only **16 tickets** are both agent-ready **and** <120 days old. Three are accounting domain → fast path remaining: 13
+- Tickets created in last 30 days: **4%** agent-ready (1 of 27). Tickets arrive in raw condition
+- Team throughput: 277 completed / 90 days. Created: 324 / 90 days
+- Median cycle time 6 days; p90 134 days; record 670 days
+- Metadata: 1 ticket has label, **0** have component, **0** have priority other than Medium
+- Codebase: 4,446 `.rb` files in `app/`, 1,658 spec files. `app/domains/` = 72% of code, 83 domains
+- Domain `restaurant` = 1,156 files (quarter of all code) — too broad to be a scope boundary
+- Spec:code ratio — entire app 37%, accounting 30%, restaurant 26%, **report 3%**, **jurnal 3%**
+- 25 files over 800 lines; largest is `app/models/concerns/product_logic.rb` (2,648 lines)
+- CI exists and is complete: `bitbucket-pipelines.yml` runs rspec, rubocop, brakeman
 
-## Koreksi dan jebakan yang sudah ketemu
+## Corrections and Traps Already Found
 
-Hal-hal yang sempat salah dan sudah diperbaiki. Ditulis di sini supaya tidak diulang.
+Things that went wrong and were fixed. Written here to avoid repeating.
 
-1. **Angka "report 3% tes" menyesatkan kalau dipakai mentah.** Job laporan tesnya ada, tapi duduk di `spec/domains/restaurant/jobs/report/`, bukan di folder `report`. Fungsi laporan lebih tertes daripada rasio folder itu menyarankan.
-2. **Jangan menilai kualitas tiket dari backlog To Do saja.** Itu tumpukan yang belum ada yang ambil — sampelnya bias ke kegagalan. Analisis awal terlalu keras karena kesalahan ini.
-3. **Daftar cegat isinya 41 path**, bukan 44. Pernah salah hitung.
-4. **Tiket bisa berisi kredensial plaintext.** RR-6966 memuat username dan password staging. Kalau tiket seperti itu masuk ke transcript agent, kredensialnya tersimpan permanen di `runs/`. Redact saat memasukkan ke `queue.json`, dan angkat ke Runchise.
-5. **Judul tiket bisa tidak nyambung dengan isinya.** RR-7035 judulnya soal "scheduled menu", langkah reproduksinya soal Bulk Action → Change Sell Price. Tahap rencana seharusnya mengembalikan `NEEDS_SPEC`, bukan menebak. Tiket ini sengaja ditinggal di `queue.json` sebagai uji coba.
-6. **Path relatif di config di-resolve dari root project** (direktori berisi `package.json`), bukan dari folder `config/`. Pernah salah dan membuat `../runchise` nyasar.
-7. **Endpoint `/api/` yang tidak dikenal harus menjawab JSON**, bukan jatuh ke fallback HTML — kalau tidak, salah ketik URL terlihat seperti berhasil.
+1. **"report 3% tests" number is misleading if used raw.** Report jobs have tests, but they sit in `spec/domains/restaurant/jobs/report/`, not in the `report` folder. Report functions are better tested than the folder ratio suggests.
+2. **Don't judge ticket quality from To Do backlog alone.** That's a pile nobody has picked up — the sample is biased toward failure. Initial analysis was too harsh because of this error.
+3. **Blocklist contains 41 paths**, not 44. Was miscounted once.
+4. **Tickets can contain plaintext credentials.** RR-6966 contained staging username and password. If such a ticket enters agent transcript, credentials are permanently stored in `runs/`. Redact when entering into `queue.json`, and escalate to Runchise.
+5. **Ticket title can mismatch its content.** RR-7035 title is about "scheduled menu", reproduction steps are about Bulk Action → Change Sell Price. Plan stage should return `NEEDS_SPEC`, not guess. This ticket is intentionally left in `queue.json` as a test case.
+6. **Relative paths in config are resolved from project root** (directory containing `package.json`), not from `config/` folder. Once wrong, made `../runchise` go astray.
+7. **Unrecognized `/api/` endpoints must return JSON**, not fall through to HTML fallback — otherwise a typo looks like success.
 
-## Yang paling gampang salah dikerjakan
+## What's Easiest to Get Wrong
 
-- **Melebarkan scope.** Area pilot sengaja dipilih yang paling mudah: lapisan export dan format output (fungsi murni, tidak menghitung uang, tesnya cepat). Hasil di sana **tidak bisa** ditarik lurus ke `accounting` atau ke domain `restaurant`. Katakan ini ke klien sebelum mereka menyimpulkannya sendiri.
-- **Mengisi tiga field review.** `humanEditedLines`, `reviewRounds`, `merged` hanya bisa diisi manusia. Tanpa itu autonomy rate — metrik utama pilot — selamanya kosong. Itu justifikasi utama UI-nya ada.
-- **Menulis banyak test yang lambat atau flaky.** Itu menyempitkan gerbang, bukan melebarkannya. Ukuran suksesnya bukan jumlah test, tapi test yang lolos konsisten dan cepat.
-- **Mengunci perilaku aneh jadi test.** Kalau agent menemukan perilaku ganjil yang bukan bagian tiket, itu naik ke manusia — jangan diabadikan jadi aturan resmi.
+- **Expanding scope.** Pilot area was intentionally chosen as easiest: export layer and output formats (pure functions, no money calculation, fast tests). Results there **cannot** be extrapolated to `accounting` or `restaurant` domains. Tell this to the client before they conclude it themselves.
+- **Filling three review fields.** `humanEditedLines`, `reviewRounds`, `merged` can only be filled by humans. Without them, autonomy rate — the pilot's main metric — is forever empty. That's the main justification for the UI existing.
+- **Writing many slow or flaky tests.** That narrows the gate, doesn't widen it. Success metric isn't test count, but tests that pass consistently and quickly.
+- **Locking odd behavior into tests.** If the agent discovers strange behavior not part of the ticket, escalate to human — don't codify it as official rules.
