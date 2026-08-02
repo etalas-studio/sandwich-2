@@ -1,12 +1,12 @@
-# Product Roadmap — Design
+# Product Roadmap
 
-Written 2 August 2026.
+Written 2 August 2026. Update this doc's "Current State" table and workstream statuses as work lands — this is meant to stay current, not be a one-time snapshot.
 
 ## Why this document exists
 
 The project paused mid-build to answer a question that had never been made explicit: **what is this, for whom, and in what order do we build it.** This document is the answer, written down so future implementation sessions (via `writing-plans`) have a fixed reference instead of re-litigating scope each time.
 
-This is a **roadmap**, not a spec for a single feature. It exists one level above the individual design docs in this folder — each workstream below gets its own brainstorm → spec → plan cycle when its turn comes, using this document only to know what's next and why.
+This is a **roadmap**, not a spec for a single feature. It exists one level above the individual design docs in `docs/superpowers/specs/` — each workstream below gets its own brainstorm → spec → plan cycle when its turn comes, using this document only to know what's next and why.
 
 ## Terminology
 

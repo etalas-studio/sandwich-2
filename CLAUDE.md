@@ -104,6 +104,7 @@ Read as needed, not all at once:
 | `docs/02-desain-pipeline.md` | Reasons behind the flow and gates |
 | `docs/03-metrik-dan-baseline.md` | Success definition, real baselines, stop criteria |
 | `docs/04-primer-test-dan-runtime.md` | How to read tests in Runchise repo, and characterization test explanation |
+| `docs/05-roadmap.md` | **Read this to know what we're building next and why.** Long-term product direction, workstreams, priority order |
 | `README.md` | Usage, API, limitations |
 
 ## Key Numbers (Don't Reconstruct)
