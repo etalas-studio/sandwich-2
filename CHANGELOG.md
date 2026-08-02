@@ -4,4 +4,7 @@ Append-only. One entry per completed implementation task (not per phase, not on 
 
 Format: `- YYYY-MM-DD: Task N — what it delivered`
 
-<!-- Phase 1 entries go below once docs/superpowers/plans/2026-08-02-phase-1-implementation.md exists and tasks start completing. -->
+- 2026-08-03: Task 1 — PoC comparing headless (`claude -p`) vs interactive PTY Claude Code invocation; selected headless (poc/README.md)
+- 2026-08-03: Task 2 — Defined the EngineInvoker interface and result types (src/engine/types.ts)
+- 2026-08-03: Task 3 — Implemented ClaudeCodeInvoker for headless claude -p invocation (src/engine/claude-code.ts, src/engine/proc.ts)
+- 2026-08-03: Task 4 — Verified ClaudeCodeInvoker end-to-end against the real Claude Code CLI (src/engine/manual-check.ts)
