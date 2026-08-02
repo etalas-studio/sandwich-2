@@ -144,7 +144,9 @@ No query builder or ORM (Kysely, Drizzle, Prisma) — raw SQL plus these hand-wr
 
 ## DB file location & config
 
-A new `dataDir` field on `Config` (`src/types.ts`/`src/config.ts` already treat `worktreeRoot` and `runsRoot` this way — deliberately separate from `repoPath`, the project folder being served). The SQLite file lives at `<dataDir>/db.sqlite`, never inside the target repo.
+`openDb(path: string)` takes the SQLite file path directly — it does not read any config itself. `src/types.ts`/`src/config.ts`'s existing `Config` interface belongs to the prior attempt's pipeline (RSpec/lane-rules-specific, validated against the real `config/pipeline.json` fixture `npm run selftest` uses) and is not touched by this piece, consistent with CLAUDE.md's "one candidate to learn from, not the foundation being extended." Deciding where the path comes from — a new config file/schema for the restarted architecture — is left to whichever future piece actually wires a CLI/UI together; that piece can reuse the same separate-from-`repoPath` pattern `worktreeRoot`/`runsRoot` already established, but that's its call to make, not this one's.
+
+The file still never lives inside the target repo — same reasoning as before, just decided by the caller rather than baked into this piece.
 
 Credentials (`credentials.value`) and password hashes (`users.password_hash`) are stored in plaintext/hashed-but-unencrypted-at-rest, matching the trust boundary the product spec already accepts for VCS credentials living in the hand-edited config file — file permissions on `dataDir` are the actual boundary here, not application-level encryption. Application-level encryption would need a master key stored somewhere else on the same machine, which doesn't raise the actual security bar for a single-tenant local/VPS instance — over-engineering for phase 1.
 
@@ -160,6 +162,7 @@ Same hand-rolled style already used for the engine tests (`src/engine/*.test.ts`
 
 ## Explicitly out of scope for this piece
 
+- Modifying `src/types.ts`/`src/config.ts`'s `Config` — that belongs to the prior attempt's pipeline, not the restarted architecture. Where the DB file path comes from in a real run is left to whichever future piece wires a CLI/UI together.
 - Wiring any of these tables into a CLI command, the web UI, or a pipeline stage — that's the job of Ticket intake, Pipeline shape, Visibility, and Auth respectively, none of which are planned yet.
 - The exact `outcome` enum values for `runs` beyond what's needed for the column to exist — finalized when the Pipeline shape piece is planned.
 - Any encryption-at-rest for credentials or password hashes beyond what's noted above.
