@@ -53,10 +53,48 @@ function testGetLatestReadinessScanReturnsMostRecentlyStarted(): void {
   console.log("PASS: testGetLatestReadinessScanReturnsMostRecentlyStarted");
 }
 
+function testCompleteReadinessScanThrowsForUnknownId(): void {
+  const db = openTestDb();
+
+  assert.throws(
+    () =>
+      completeReadinessScan(db, "does-not-exist", {
+        finishedAt: new Date().toISOString(),
+        techStack: "Node/TypeScript",
+        testCommand: "npm test",
+        areaSignals: null,
+        status: "completed",
+      }),
+    /No readiness scan found with id does-not-exist/,
+  );
+  console.log("PASS: testCompleteReadinessScanThrowsForUnknownId");
+}
+
+function testCompletingAFailedScanAllowsNullFields(): void {
+  const db = openTestDb();
+  const scan = startReadinessScan(db, new Date().toISOString());
+
+  const completed = completeReadinessScan(db, scan.id, {
+    finishedAt: new Date().toISOString(),
+    techStack: null,
+    testCommand: null,
+    areaSignals: null,
+    status: "failed",
+  });
+
+  assert.equal(completed.status, "failed");
+  assert.equal(completed.techStack, null);
+  assert.equal(completed.testCommand, null);
+  assert.equal(completed.areaSignals, null);
+  console.log("PASS: testCompletingAFailedScanAllowsNullFields");
+}
+
 function main(): void {
   testStartsAScanInRunningState();
   testCompletingAScanRoundTripsAreaSignals();
   testGetLatestReadinessScanReturnsMostRecentlyStarted();
+  testCompleteReadinessScanThrowsForUnknownId();
+  testCompletingAFailedScanAllowsNullFields();
 }
 
 main();

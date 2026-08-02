@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
@@ -52,10 +52,28 @@ function testInstanceSettingsSeeded(): void {
   console.log("PASS: testInstanceSettingsSeeded");
 }
 
+/**
+ * The database file itself is chmodSync'd to 0o600 (not subject to umask,
+ * unlike the mkdirSync `mode` option used for the parent directory), so
+ * that's what this test asserts on — the file permissions are the actual
+ * security boundary described in
+ * docs/superpowers/specs/2026-08-03-storage-sqlite-design.md.
+ */
+function testDatabaseFileHasRestrictivePermissions(): void {
+  const dir = mkdtempSync(join(tmpdir(), "storage-migrate-test-"));
+  const dbPath = join(dir, "db.sqlite");
+  openDb(dbPath);
+
+  const mode = statSync(dbPath).mode & 0o777;
+  assert.equal(mode, 0o600, `expected db file mode 0o600, got 0o${mode.toString(8)}`);
+  console.log("PASS: testDatabaseFileHasRestrictivePermissions");
+}
+
 function main(): void {
   testMigratesFreshDatabase();
   testMigratingTwiceIsANoOp();
   testInstanceSettingsSeeded();
+  testDatabaseFileHasRestrictivePermissions();
 }
 
 main();

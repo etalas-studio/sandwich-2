@@ -5,7 +5,7 @@
   "description": "Orchestrator untuk AI dev pipeline Runchise. Menjalankan coding agent per tiket di git worktree terpisah, menegakkan guardrail, dan merekam tiap percobaan.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "postinstall": "npm --prefix web install",

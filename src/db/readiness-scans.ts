@@ -36,9 +36,9 @@ export function startReadinessScan(db: Database.Database, startedAt: string): Re
 
 export interface CompleteReadinessScanInput {
   finishedAt: string;
-  techStack: string;
-  testCommand: string;
-  areaSignals: AreaSignal[];
+  techStack: string | null;
+  testCommand: string | null;
+  areaSignals: AreaSignal[] | null;
   status: "completed" | "failed";
 }
 
@@ -47,6 +47,10 @@ export function completeReadinessScan(
   id: string,
   input: CompleteReadinessScanInput,
 ): ReadinessScan {
+  if (!getReadinessScanById(db, id)) {
+    throw new Error(`No readiness scan found with id ${id}`);
+  }
+
   db.prepare(
     `UPDATE readiness_scans SET
        finished_at = @finishedAt,
@@ -60,7 +64,7 @@ export function completeReadinessScan(
     finishedAt: input.finishedAt,
     techStack: input.techStack,
     testCommand: input.testCommand,
-    areaSignals: JSON.stringify(input.areaSignals),
+    areaSignals: input.areaSignals ? JSON.stringify(input.areaSignals) : null,
     status: input.status,
   });
   return getReadinessScanById(db, id)!;

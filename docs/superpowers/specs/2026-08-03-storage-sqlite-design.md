@@ -152,7 +152,7 @@ Credentials (`credentials.value`) and password hashes (`users.password_hash`) ar
 
 ## Dependencies
 
-Add `better-sqlite3` as a runtime dependency (synchronous API — a natural fit given the product spec's sequential, one-attempt-at-a-time execution model; no need for async DB calls in a single-process, single-run-at-a-time system). Works on Node 20+, unlike `node:sqlite` (experimental/version-gated to Node 22.5+/24+, and this project's `engines` field currently allows Node 20).
+Add `better-sqlite3` as a runtime dependency (synchronous API — a natural fit given the product spec's sequential, one-attempt-at-a-time execution model; no need for async DB calls in a single-process, single-run-at-a-time system). `better-sqlite3@13.0.2`, the version actually installed, itself declares `"engines": {"node": ">=22"}` — this project's `engines` field has been updated to match (`>=22`), superseding the original assumption that it worked on Node 20+. That also means `node:sqlite` (version-gated to Node 22.5+/24+) is now a viable alternative worth reconsidering later, since this project's floor is Node 22 anyway — but `better-sqlite3` was already installed and working, so no need to swap now.
 
 Like `node-pty`, `better-sqlite3` ships a prebuilt native binary. `CLAUDE.md`'s existing working rule about `node-pty`'s `spawn-helper` executable bit after a fresh install is the precedent — this plan's first task should confirm `better-sqlite3` loads correctly right after install, and `CLAUDE.md` gets a matching note if any gotcha turns up.
 
