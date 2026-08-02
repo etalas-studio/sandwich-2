@@ -82,6 +82,15 @@ Decided in a follow-up architecture-focused session, after the product-behavior 
 
 Two supported engines from day one: **Pi SDK** (used for development) and **Claude SDK** (used in production). Switchable per-run, not fixed once at instance setup — the orchestrator defines a common engine interface, with each SDK as an implementation behind it. Research into each SDK's actual API/output format is an implementation-time task, not resolved here.
 
+**Open risk, needs a PoC before committing to an invocation mode.** Two ways to invoke Claude Code exist, with a real cost/reliability tradeoff between them, discovered while comparing against a third-party tool (Orca) that runs multiple coding-agent CLIs:
+
+- **Headless (`claude -p`, non-interactive)** — simpler to build: structured JSON output per line, no terminal emulation needed. This is what the prior build's `agent.ts` already used, and it's the natural default.
+- **Interactive (real PTY session)** — spawns Claude Code as if a human were sitting at a terminal, driving it via simulated keypresses (trust dialog, permission dialogs). Meaningfully more engineering work: needs a pseudo-terminal, ANSI/dialog-state handling, no clean structured output to parse.
+
+The reason this is worth resolving rather than defaulting to headless: Anthropic announced (14 May 2026) a split where headless/Agent-SDK usage on subscription plans would draw from a separate, smaller, non-rolling-over monthly credit once exhausted, billed at full API rates — while interactive terminal use stays on the normal subscription pool, unaffected, by definition. Anthropic **paused this split on its intended effective date** (15 June 2026) and hasn't said if/when it resumes — so headless works fine *today*, but carries a real, not-hypothetical, future cost risk that interactive sessions structurally don't have.
+
+**Before implementing either mode for real: a quick, throwaway PoC** — confirm a PTY-driven interactive Claude Code session can actually be scripted end-to-end (spawn, navigate trust/permission dialogs programmatically, detect completion, extract the result) reliably enough to be viable. If the PoC shows it's not practically controllable, headless is the fallback and the future billing risk is accepted knowingly rather than by default. This PoC happens before committing engine-layer code to one invocation mode — it is not something to build the real engine abstraction around speculatively.
+
 ### Storage: embedded SQLite
 
 One SQLite file per instance. No external database service (ruled out Postgres/Neon deliberately — see reasoning below) and no NoSQL (the data is inherently relational: tickets → runs → reviews, and the whole point of capturing categorized "needs-human" reasons is to later aggregate/query them, which relational storage does naturally and document stores make awkward).
@@ -154,3 +163,4 @@ The instance must run identically whether hosted locally or on a VPS — no assu
 - What the categorized "needs human" reasons aggregate into over time (a dashboard, a report) — the data model for capturing them is set (categorized, not free text), but the aggregation view itself isn't designed yet.
 - Which Pi SDK / Claude SDK specifics (auth, output format, tool-use capabilities) — research task at implementation time.
 - Exact GitHub/Bitbucket API scopes and auth mechanics for the VCS interface — research task at implementation time.
+- **Blocking for the engine layer specifically (see Agent Engine above): a quick PoC to confirm whether a PTY-driven interactive Claude Code session can be reliably scripted end-to-end.** This must be done and its result known before writing the real engine invocation code — it decides between headless (`claude -p`) and interactive (PTY) as the invocation mode, which is a real fork, not a detail to sort out while building.
