@@ -74,6 +74,69 @@ No upfront environment setup is required from the user. If the agent discovers m
 
 Phase 1 requires **real-time, read-only visibility** into the pipeline as a run progresses — not an editable or injectable pipeline yet, just clear observability of what stage a run is in and what's happening at each stage. This has an architectural consequence: the pipeline's stages must be explicit and clearly separated in the implementation (not buried inside one large prompt/function), so that a future phase can inject new methodology into specific stages without a rewrite. Phase 1 does not build that injection capability — only the visibility, and an architecture that doesn't foreclose it.
 
+## Architecture
+
+Decided in a follow-up architecture-focused session, after the product-behavior design above was settled. These are technical/implementation decisions, not product-behavior ones.
+
+### Agent engine: switchable, not fixed
+
+Two supported engines from day one: **Pi SDK** (used for development) and **Claude SDK** (used in production). Switchable per-run, not fixed once at instance setup — the orchestrator defines a common engine interface, with each SDK as an implementation behind it. Research into each SDK's actual API/output format is an implementation-time task, not resolved here.
+
+### Storage: embedded SQLite
+
+One SQLite file per instance. No external database service (ruled out Postgres/Neon deliberately — see reasoning below) and no NoSQL (the data is inherently relational: tickets → runs → reviews, and the whole point of capturing categorized "needs-human" reasons is to later aggregate/query them, which relational storage does naturally and document stores make awkward).
+
+Rejected a shared/hosted Postgres (e.g. one Neon database for all projects) explicitly because it reintroduces multi-tenancy at the data layer even if the orchestrator process is still one-per-project — contradicts single-tenant-per-instance, and undermines "handed over in full" (a project can't cleanly take sole ownership of data that's pooled with others). Embedded SQLite means zero setup step and the instance's data is genuinely self-contained.
+
+Config split: **static setup** (engine choice, VCS provider + credentials, repo path, blocklist) lives in a config file, human-edited. **Dynamically discovered credentials** (see Credentials, above) are stored in the SQLite database, provided through the UI — not hand-edited, since they accumulate over time as tickets surface new requirements.
+
+### Agent execution: scoped shell access
+
+The agent gets real shell access while working inside its git worktree (not a fixed allowlist of specific actions) — confined to that worktree's directory. Every command it runs is logged as part of the run's transcript (needed anyway for visibility). The blocklist (paths and prohibited actions, from the readiness scan) is the actual safety mechanism, not a restricted action-set — a fixed allowlist would be more provably safe but too brittle in practice, causing tickets to hit "needs human" for the wrong reason (an unanticipated command) rather than genuine risk. The worktree + PR-only ceiling + blocklist together are considered sufficient; shell access itself isn't treated as the primary risk surface.
+
+### Pipeline shape: fixed linear sequence
+
+Per ticket, in order:
+
+1. **Judge** — read ticket + relevant code, cross-reference readiness map/blocklist → outcome: agent-ready or needs-human
+2. **Implement** *(only if agent-ready)* — write code, using scoped shell access
+3. **Verify** *(only if agent-ready)* — run the test command, check exit code only (see Verify below)
+4. **Open PR** *(only if verify passed)* — push branch, open PR with structured summary
+
+No separate plan-approval stage between Judge and Implement — reaffirms the earlier product decision that a human checkpoint there would recreate the bottleneck the readiness judgment is meant to remove. Any internal "think before acting" the agent does is part of how Implement (or Judge) works internally, not a visible/separate pipeline stage.
+
+**Needs-human is a labeled outcome, not a 5th pipeline stage.** It attaches to whichever stage produced it (Judge deciding upfront, or Verify failing) with its category and reason shown there — avoids treating "stopped here" as visually different depending on which stage stopped it.
+
+The readiness scan is a separate, periodic, non-per-ticket process — not part of this per-ticket sequence — but gets the same live-visibility treatment (see Visibility).
+
+### Codebase understanding: no persistent index
+
+Only the readiness scan's coarse output (tech stack, test command, per-area coverage/churn signals, blocklist) is reused across tickets. Judge and Implement read the actual relevant code fresh, every time, per ticket — no caching or persistent code index. Reasoning: code changes constantly, so a cached deep understanding risks going stale and having the agent act on wrong information while writing code that ships; the cost of that is worse than the cost of re-reading. A real persistent code index (embeddings, dependency graphs) that stays correctly in sync is a hard, ongoing problem — its own feature, not a phase-1 aside.
+
+### Verify: exit-code only
+
+The test command's exit code (0 = pass, non-zero = fail) is the only signal used — no framework-specific output parsing (e.g. no RSpec/Jest-specific structured result parsing). This is universal across any test runner in any language, consistent with deferring test-runner abstraction until a second real project's different tooling is actually in front of us. Raw test output is still captured in the run's transcript for anyone who wants the detail; it's just not pre-parsed into structured pass/fail counts for phase 1.
+
+### VCS: GitHub and Bitbucket, both first-class
+
+Unlike test-runner/ticket-tracker abstractions (deferred until a second real project appears), VCS abstraction is built **now**, deliberately breaking the "don't abstract ahead of evidence" default — because two concrete, known providers already exist today (GitHub for development, Bitbucket for production), not a hypothetical future one. A common VCS-provider interface (create branch, push, open PR, set PR description) with two real implementations, chosen per instance via config. Both are equally first-class — neither is a dev-only shim.
+
+### Ticket intake: manual JSON queue file
+
+No ticket-tracker abstraction — there's no live tracker integration to abstract in phase 1. The queue file itself is generic (ticket key, summary, description, optional URL), not modeled on any specific tracker's export format. Exact schema to be finalized at implementation time.
+
+### Visibility: web UI + SSE
+
+Real-time web UI, using Server-Sent Events (one-directional server-to-browser push) — sufficient since the browser only needs to *receive* live updates, not send real-time data back. Same live-progress treatment applies to both per-ticket runs and the readiness scan.
+
+### Auth: custom, single account in phase 1
+
+Custom auth (username, email, password) — not an external OAuth provider — chosen deliberately despite the extra responsibility (password storage/hashing, sessions) it puts on this instance, to keep the instance genuinely self-contained/dependency-free, consistent with "handed over in full." **Phase 1 is single-account** (one fixed credential pair per instance — a lock on the door, not a user-management system). Multi-account support (several people, each with their own login, on the same instance) is explicitly deferred to phase 2.
+
+### Deployment: server-agnostic
+
+The instance must run identically whether hosted locally or on a VPS — no assumption baked in about where it's deployed. Bind address is configurable (localhost for pure local use; a real address for VPS use) — login is the actual security boundary now that it exists, not network binding. The instance speaks plain HTTP only; TLS/HTTPS is the deploying party's responsibility (e.g. a reverse proxy in front of it), not something built into the instance itself.
+
 ## Explicitly Deferred (not designed against yet)
 
 - Automatic ticket intake from a tracker (Jira/Linear/GitHub Issues) — phase 1 is manual queue only.
@@ -81,10 +144,13 @@ Phase 1 requires **real-time, read-only visibility** into the pipeline as a run 
 - Multi-project / multi-tenant serving from one instance.
 - Parallel ticket execution within one project.
 - Editable/injectable pipeline stages (methodology injection) — only the architectural separation of stages is required now, not the injection mechanism itself.
-- Version-control/PR-provider abstraction, test-runner abstraction, ticket-tracker abstraction — build concretely against whatever's needed for the first real project; abstract only once a second real project's different tooling makes the shape of the abstraction obvious.
+- Test-runner abstraction, ticket-tracker abstraction — build concretely against whatever's needed for the first real project; abstract only once a second real project's different tooling makes the shape of the abstraction obvious. (VCS abstraction is the one exception — built now, since two real providers already exist; see Architecture.)
+- Multi-account authentication / user management — phase 1 is single fixed credential pair; deferred to phase 2.
 
 ## Open Questions (not blocking phase 1, revisit later)
 
 - Exact format of the phase-1 queue file — to be defined at implementation time.
 - Whether/how the periodic readiness scan gets triggered (manual button vs. schedule vs. change-triggered) — not yet decided.
 - What the categorized "needs human" reasons aggregate into over time (a dashboard, a report) — the data model for capturing them is set (categorized, not free text), but the aggregation view itself isn't designed yet.
+- Which Pi SDK / Claude SDK specifics (auth, output format, tool-use capabilities) — research task at implementation time.
+- Exact GitHub/Bitbucket API scopes and auth mechanics for the VCS interface — research task at implementation time.
