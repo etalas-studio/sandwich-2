@@ -133,6 +133,8 @@ export interface ConfigResponse {
   laneRules: LaneRules;
   blocklist: BlocklistEntry[];
   engine: string;
+  repoPath: string;
+  baseBranch: string;
   lanes: LaneInfo[];
 }
 

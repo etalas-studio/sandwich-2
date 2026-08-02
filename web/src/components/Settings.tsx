@@ -19,6 +19,21 @@ export default function Settings() {
 
   return (
     <>
+      <div className="panel">
+        <h4>Target repo</h4>
+        <table>
+          <tbody>
+            <tr>
+              <td>Path</td>
+              <td className="key">{cfg.repoPath}</td>
+            </tr>
+            <tr>
+              <td>Branch</td>
+              <td className="key">{cfg.baseBranch}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div className="two">
         <div className="panel">
           <h4>Safety limits</h4>

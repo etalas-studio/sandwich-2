@@ -149,6 +149,8 @@ export function startServer(options: ServeOptions): void {
         laneRules: config.laneRules,
         blocklist: config.blocklist,
         engine: config.engine.name,
+        repoPath: config.repoPath,
+        baseBranch: config.baseBranch,
         lanes: [1, 2, 3].map((n) => ({ lane: n, label: laneLabel(n as 1 | 2 | 3) })),
       });
       return;
