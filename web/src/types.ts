@@ -138,6 +138,19 @@ export interface ConfigResponse {
   lanes: LaneInfo[];
 }
 
+export interface FileStat {
+  file: string;
+  added: number;
+  removed: number;
+}
+
+export interface FilesSummary {
+  filesChanged: number;
+  diffLines: number;
+  addedTestFiles: number;
+  stats: FileStat[];
+}
+
 export interface RunDetailResponse {
   record: RunRecord;
   plan: string | null;

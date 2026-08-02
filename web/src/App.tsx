@@ -1,7 +1,6 @@
-import { useState } from "react";
-import Board from "./components/Board";
+import { useEffect, useState } from "react";
 import Nav, { type TabId } from "./components/Nav";
-import Queue from "./components/Queue";
+import Queue, { activeJob } from "./components/Queue";
 import Review, { reviewItems } from "./components/Review";
 import MetricsView from "./components/Metrics";
 import RunDetail from "./components/RunDetail";
@@ -10,13 +9,25 @@ import { useAppState } from "./state";
 
 interface OpenRun {
   ticket: string;
-  runId: string;
+  runId: string | null;
 }
 
 export default function App() {
   const { state, error, reload } = useAppState();
-  const [tab, setTab] = useState<TabId>("board");
+  const [tab, setTab] = useState<TabId>("queue");
   const [openRun, setOpenRun] = useState<OpenRun | null>(null);
+
+  // Once the ticket being viewed gets a run (e.g. the plan stage that was
+  // "not started" finishes), follow it so the panel doesn't stay frozen
+  // showing "Start plan stage" for a run that already exists.
+  useEffect(() => {
+    if (!state || !openRun) return;
+    let latestRun: (typeof state.runs)[number] | undefined;
+    for (const r of state.runs) if (r.ticket === openRun.ticket) latestRun = r;
+    if (latestRun && latestRun.runId !== openRun.runId) {
+      setOpenRun({ ticket: openRun.ticket, runId: latestRun.runId });
+    }
+  }, [state, openRun]);
 
   if (error) {
     return (
@@ -47,26 +58,42 @@ export default function App() {
     setOpenRun(null);
   };
 
+  const handleOpenRun = (ticket: string, runId: string | null) => {
+    setOpenRun({ ticket, runId });
+  };
+
+  const handleCloseRun = () => {
+    setOpenRun(null);
+  };
+
   return (
-    <div className="wrap">
+    <div className={"wrap" + (openRun ? " sidebar-open" : "")}>
       <header>
         <span className="brand">Agent pipeline</span>
         <span className="repo">{repoLabel}</span>
         <Nav active={tab} onChange={goTab} reviewCount={reviewCount} />
       </header>
       <div id="main">
-        {openRun ? (
-          <RunDetail ticket={openRun.ticket} runId={openRun.runId} onBack={() => setOpenRun(null)} onChanged={reload} />
-        ) : (
-          <>
-            {tab === "board" && <Board state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
-            {tab === "queue" && <Queue state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} reload={reload} />}
-            {tab === "review" && <Review state={state} onOpenRun={(ticket, runId) => setOpenRun({ ticket, runId })} />}
-            {tab === "metrics" && <MetricsView metrics={state.metrics} />}
-            {tab === "settings" && <Settings />}
-          </>
-        )}
+        <>
+          {tab === "queue" && <Queue state={state} onOpenRun={handleOpenRun} reload={reload} openRun={openRun} />}
+          {tab === "review" && <Review state={state} onOpenRun={handleOpenRun} openRun={openRun} />}
+          {tab === "metrics" && <MetricsView metrics={state.metrics} />}
+          {tab === "settings" && <Settings />}
+        </>
       </div>
+      {openRun && (
+        <div className="sidebar-overlay" onClick={handleCloseRun} />
+      )}
+      {openRun && (
+        <RunDetail
+          ticketKey={openRun.ticket}
+          runId={openRun.runId}
+          ticket={state.tickets.find((t) => t.key === openRun.ticket)}
+          job={activeJob(state.jobs, openRun.ticket)}
+          onClose={handleCloseRun}
+          onChanged={reload}
+        />
+      )}
     </div>
   );
 }

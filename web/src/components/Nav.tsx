@@ -1,7 +1,6 @@
-export type TabId = "board" | "queue" | "review" | "metrics" | "settings";
+export type TabId = "queue" | "review" | "metrics" | "settings";
 
 const TABS: Array<[TabId, string]> = [
-  ["board", "Board"],
   ["queue", "Queue"],
   ["review", "Review"],
   ["metrics", "Metrics"],
