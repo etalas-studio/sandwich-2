@@ -273,18 +273,19 @@ async function checkUsage(): Promise<void> {
     onOutputLine: (line) => console.log(line),
   });
   if (result.outcome !== "ok") throw new Error("expected ok outcome in this fake");
+  console.log("PASS: checkUsage");
 }
 
-void checkUsage;
+await checkUsage();
 ```
 
-- [ ] **Step 3: Confirm it typechecks**
+- [ ] **Step 3: Confirm it typechecks and runs**
 
 ```bash
-npx tsc -p tsconfig.json --noEmit
+npx tsc -p tsconfig.json && node dist/engine/types.test.js
 ```
 
-Expected: no errors. If there are errors, the interface shapes in `types.ts` don't actually fit together — fix `types.ts`, not the test.
+Expected: no compile errors, and the output includes `PASS: checkUsage`. If there are compile errors, the interface shapes in `types.ts` don't actually fit together — fix `types.ts`, not the test.
 
 - [ ] **Step 4: Commit**
 
