@@ -4,9 +4,7 @@ Written 2 August 2026. This file was reset to zero on this date.
 
 ## Why This Is Nearly Empty
 
-The project paused to restart its product direction from first principles, rather than continuing to build on the architecture of a single prior attempt as if it were already the answer. The previous `CLAUDE.md` — including its architectural rules ("two-stage plan/approve/implement," "gates from diff," "blocklist-based guardrails," "serial job queue," etc.) — described one project's specific pilot, not necessarily decisions that hold for what comes next.
-
-That file is preserved at `docs/archive/CLAUDE-project1-pilot.md` **as information, not as constraint.** It may still be useful to read for context on how one system was built and what was learned running it — but nothing in it should be treated as already-decided. If this project reaches the same conclusions again, they need to be re-derived on their own merits, not inherited.
+The project paused to restart its product direction from first principles, rather than continuing to build on the architecture of a single prior attempt as if it were already the answer. The previous docs (`CLAUDE.md`, `docs/00`–`05`) described one project's specific pilot — its architecture ("two-stage plan/approve/implement," "gates from diff," "blocklist-based guardrails," "serial job queue," etc.), its numbers, and its context — treated as if these were already-settled product decisions. They were removed entirely (not just archived) so they can't passively leak into future context or nudge design decisions by proximity. A backup branch (`backup/pre-reset-2026-08-02`) holds them if that history is ever needed, but nothing in this working branch should be assumed to carry forward from it.
 
 ## What's Actually Settled Right Now
 
@@ -14,4 +12,4 @@ Very little. The codebase in `src/` and `web/` still exists and still runs (veri
 
 ## Next Step
 
-A product roadmap is being rebuilt from scratch — see whichever doc supersedes this note once that work starts. Until then, treat any existing code, config, or docs elsewhere in this repo as historical material to consult, not as settled direction.
+A product roadmap is being rebuilt from scratch — see whichever doc supersedes this note once that work starts. Until then, treat any existing code or config in this repo as historical material to consult, not as settled direction.
