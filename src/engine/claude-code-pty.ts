@@ -5,7 +5,7 @@ export interface ClaudeCodePtyInvokerOptions {
   /** Defaults to "claude" — overridable so tests can point at a fake binary. */
   bin?: string;
   /**
-   * How long to wait after the last observed output before sending "/exit"
+   * How long to wait after spawning the process before sending "/exit" — this is a single timer set once at spawn time, not a debounce that resets on new output.
    * to force a clean session close. Interactive Claude Code sessions never
    * exit on their own — this is required, not optional. Defaults to 20000ms,
    * matching the value validated in the original PoC (poc/claude-pty-poc.mjs).
@@ -75,6 +75,14 @@ export class ClaudeCodePtyInvoker implements EngineInvoker {
         });
       };
 
+      // NOTE: unlike the headless invoker (which parses genuine JSON lines),
+      // this pushes raw PTY data chunks to transcript/onOutputLine as-is —
+      // these can be partial lines, multiple merged lines, or split mid-ANSI-
+      // sequence. Nothing currently consumes onOutputLine/transcript from PTY
+      // mode, so this is an accepted, documented gap rather than a bug to fix
+      // now. If a future consumer needs real line granularity from PTY mode,
+      // buffer chunks and split on "\n" before calling onOutputLine, matching
+      // the headless invoker's actual guarantee.
       term.onData((chunk: string) => {
         rawBuffer += chunk;
         transcript.push(chunk);
