@@ -20,8 +20,8 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="ds-card-outer ds-shadow-elevated w-full max-w-md h-auto">
-          <div className="ds-card-inner p-6 h-auto">
+        <div className="ds-card-outer ds-shadow-elevated w-full max-w-md" style={{ height: 'auto' }}>
+          <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-normal tracking-tight text-white ds-text-shadow">
