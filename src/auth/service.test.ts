@@ -12,55 +12,96 @@ function openTestDb() {
   return openDb(join(dir, "db.sqlite"));
 }
 
-function testRegisterSucceedsOnce(): void {
+async function testRegisterSucceedsOnce(): Promise<void> {
   const db = openTestDb();
   assert.equal(setupRequired(db), true);
 
-  const result = register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+  const result = await register(db, {
+    username: "owner",
+    email: "owner@example.com",
+    password: "hunter22",
+  });
   assert.equal(result.user.username, "owner");
   assert.equal(setupRequired(db), false);
 
-  assert.throws(
-    () => register(db, { username: "someone-else", email: "other@example.com", password: "whatever1" }),
+  await assert.rejects(
+    register(db, { username: "someone-else", email: "other@example.com", password: "whatever1" }),
     (err: unknown) => err instanceof AuthError && err.status === 409,
   );
   console.log("PASS: testRegisterSucceedsOnce");
 }
 
-function testLoginSucceedsWithCorrectCredentials(): void {
+/**
+ * Regression guard for the coupling bug introduced by making hashPassword
+ * async: register() must hash BEFORE checking anyUserExists, so that the
+ * check and the insert stay in one synchronous, uninterruptible stretch.
+ * If an `await` sat between them, both of these concurrent calls would
+ * observe an empty users table and both would attempt to insert.
+ */
+async function testConcurrentRegistrationsCannotBothSucceed(): Promise<void> {
   const db = openTestDb();
-  register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
 
-  const result = login(db, { username: "owner", password: "hunter22" });
+  const results = await Promise.allSettled([
+    register(db, { username: "first", email: "first@example.com", password: "hunter22" }),
+    register(db, { username: "second", email: "second@example.com", password: "hunter22" }),
+  ]);
+
+  const fulfilled = results.filter((r) => r.status === "fulfilled");
+  const rejected = results.filter((r) => r.status === "rejected");
+  assert.equal(fulfilled.length, 1, "exactly one concurrent register() should succeed");
+  assert.equal(rejected.length, 1, "the loser should be rejected, not inserted");
+
+  const reason = (rejected[0] as PromiseRejectedResult).reason as unknown;
+  assert.ok(
+    reason instanceof AuthError && reason.status === 409,
+    "the losing registration should fail with a clean 409, not a raw DB constraint error",
+  );
+
+  const userCount = (
+    db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }
+  ).n;
+  assert.equal(userCount, 1, "only one account may ever exist");
+  console.log("PASS: testConcurrentRegistrationsCannotBothSucceed");
+}
+
+async function testLoginSucceedsWithCorrectCredentials(): Promise<void> {
+  const db = openTestDb();
+  await register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+
+  const result = await login(db, { username: "owner", password: "hunter22" });
   assert.equal(result.user.username, "owner");
   console.log("PASS: testLoginSucceedsWithCorrectCredentials");
 }
 
-function testLoginFailsWithWrongPassword(): void {
+async function testLoginFailsWithWrongPassword(): Promise<void> {
   const db = openTestDb();
-  register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+  await register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
 
-  assert.throws(
-    () => login(db, { username: "owner", password: "wrong" }),
+  await assert.rejects(
+    login(db, { username: "owner", password: "wrong" }),
     (err: unknown) => err instanceof AuthError && err.status === 401,
   );
   console.log("PASS: testLoginFailsWithWrongPassword");
 }
 
-function testLoginFailsWithUnknownUsername(): void {
+async function testLoginFailsWithUnknownUsername(): Promise<void> {
   const db = openTestDb();
-  register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+  await register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
 
-  assert.throws(
-    () => login(db, { username: "nobody", password: "whatever1" }),
+  await assert.rejects(
+    login(db, { username: "nobody", password: "whatever1" }),
     (err: unknown) => err instanceof AuthError && err.status === 401,
   );
   console.log("PASS: testLoginFailsWithUnknownUsername");
 }
 
-function testLogoutInvalidatesSession(): void {
+async function testLogoutInvalidatesSession(): Promise<void> {
   const db = openTestDb();
-  const { session } = register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+  const { session } = await register(db, {
+    username: "owner",
+    email: "owner@example.com",
+    password: "hunter22",
+  });
 
   assert.ok(validateSession(db, session.token) !== null);
   logout(db, session.token);
@@ -68,9 +109,9 @@ function testLogoutInvalidatesSession(): void {
   console.log("PASS: testLogoutInvalidatesSession");
 }
 
-function testExpiredSessionIsRejected(): void {
+async function testExpiredSessionIsRejected(): Promise<void> {
   const db = openTestDb();
-  register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
+  await register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
   const owner = getUserByUsername(db, "owner")!;
   const expired = createSession(db, owner.id, new Date(Date.now() - 1000).toISOString());
 
@@ -78,13 +119,14 @@ function testExpiredSessionIsRejected(): void {
   console.log("PASS: testExpiredSessionIsRejected");
 }
 
-function main(): void {
-  testRegisterSucceedsOnce();
-  testLoginSucceedsWithCorrectCredentials();
-  testLoginFailsWithWrongPassword();
-  testLoginFailsWithUnknownUsername();
-  testLogoutInvalidatesSession();
-  testExpiredSessionIsRejected();
+async function main(): Promise<void> {
+  await testRegisterSucceedsOnce();
+  await testConcurrentRegistrationsCannotBothSucceed();
+  await testLoginSucceedsWithCorrectCredentials();
+  await testLoginFailsWithWrongPassword();
+  await testLoginFailsWithUnknownUsername();
+  await testLogoutInvalidatesSession();
+  await testExpiredSessionIsRejected();
 }
 
-main();
+void main();
