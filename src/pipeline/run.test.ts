@@ -36,6 +36,7 @@ function makeConfig(repoPath: string): PipelineConfig {
     engineMode: "pty",
     implementTimeoutMs: 5000,
     verifyTimeoutMs: 5000,
+    scanTimeoutMs: 5000,
   };
 }
 

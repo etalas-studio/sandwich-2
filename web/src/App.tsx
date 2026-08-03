@@ -1,8 +1,25 @@
-import { useState } from 'react'
-import { useTickets, runTicket, stopTicket, duplicateTicket, deleteTicket, createTicket, computeStats } from './types'
+import { useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Toaster, toast } from 'sonner'
+import {
+  useTickets,
+  TICKETS_QUERY_KEY,
+  runTicket,
+  stopTicket,
+  duplicateTicket,
+  deleteTicket,
+  createTicket,
+  computeStats,
+  fetchProjectSettings,
+  useLatestReadinessScan,
+  READINESS_SCAN_QUERY_KEY,
+  triggerReadinessScan,
+  purgeDatabase,
+} from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
+import ReadinessCard from './components/ReadinessCard'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
@@ -27,15 +44,44 @@ interface AppProps {
 }
 
 export default function App({ username, onLogout }: AppProps) {
+  const queryClient = useQueryClient()
   const { tickets, error } = useTickets()
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [activeNav, setActiveNav] = useState<NavItem>('overview')
   const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
   const [stoppingKeys, setStoppingKeys] = useState<Set<string>>(new Set())
   const [runError, setRunError] = useState<string | null>(null)
+  const [repoPath, setRepoPath] = useState<string | null>(null)
+  const { scan, isLoading: scanLoading } = useLatestReadinessScan()
+  const notifiedFailedScanId = useRef<string | null>(null)
 
   const displayTickets = tickets ?? mockData.tickets
   const stats = computeStats(displayTickets)
+
+  useEffect(() => {
+    fetchProjectSettings()
+      .then((settings) => setRepoPath(settings.repoPath))
+      .catch(() => {
+        /* Overview just shows the "not configured" state if this fails. */
+      })
+  }, [])
+
+  useEffect(() => {
+    if (scan?.status === 'failed' && notifiedFailedScanId.current !== scan.id) {
+      notifiedFailedScanId.current = scan.id
+      toast.error('Readiness scan failed — try again.')
+    }
+  }, [scan])
+
+  const handleRunScan = () => {
+    triggerReadinessScan().then((result) => {
+      if (!result.ok) {
+        toast.error(`Could not start scan: ${result.message}`)
+        return
+      }
+      queryClient.invalidateQueries({ queryKey: READINESS_SCAN_QUERY_KEY })
+    })
+  }
 
   const handleOpenTicket = (ticket: Ticket) => {
     setSelectedTicket(ticket)
@@ -56,6 +102,7 @@ export default function App({ username, onLogout }: AppProps) {
     runTicket(key)
       .then((result) => {
         if (!result.ok) setRunError(`Could not start ${key}: ${result.message}`)
+        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
       })
       .finally(() => {
         setStartingKeys((prev) => {
@@ -72,6 +119,7 @@ export default function App({ username, onLogout }: AppProps) {
     stopTicket(key)
       .then((result) => {
         if (!result.ok) setRunError(`Could not stop ${key}: ${result.message}`)
+        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
       })
       .finally(() => {
         setStoppingKeys((prev) => {
@@ -86,6 +134,7 @@ export default function App({ username, onLogout }: AppProps) {
     setRunError(null)
     duplicateTicket(key).then((result) => {
       if (!result.ok) setRunError(`Could not duplicate ${key}: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
     })
   }
 
@@ -94,6 +143,18 @@ export default function App({ username, onLogout }: AppProps) {
     setRunError(null)
     deleteTicket(key).then((result) => {
       if (!result.ok) setRunError(`Could not delete ${key}: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
+    })
+  }
+
+  const handlePurge = () => {
+    if (!window.confirm('Delete EVERYTHING from the database (users, tickets, runs, settings, blocklist)? This cannot be undone.')) return
+    purgeDatabase().then((result) => {
+      if (!result.ok) {
+        setRunError(`Could not purge: ${result.message}`)
+        return
+      }
+      window.location.reload()
     })
   }
 
@@ -101,11 +162,13 @@ export default function App({ username, onLogout }: AppProps) {
     setRunError(null)
     createTicket(QUICK_ADD_TICKET).then((result) => {
       if (!result.ok) setRunError(`Could not add ticket: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
     })
   }
 
   return (
     <div className="ds-bg min-h-screen text-white antialiased">
+      <Toaster theme="dark" position="top-right" />
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div
           className="absolute -top-[30%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-white/5 blur-[100px]"
@@ -119,7 +182,13 @@ export default function App({ username, onLogout }: AppProps) {
 
       <div className="ds-card-outer min-h-screen">
         <div className="ds-card-inner flex min-h-screen">
-          <Sidebar active={activeNav} onNavigate={handleNavigate} username={username} onLogout={onLogout} />
+          <Sidebar
+            active={activeNav}
+            onNavigate={handleNavigate}
+            username={username}
+            onLogout={onLogout}
+            onPurge={handlePurge}
+          />
 
           <div className="ds-noise" />
 
@@ -178,6 +247,14 @@ export default function App({ username, onLogout }: AppProps) {
                     </span>
                   </button>
                 </div>
+
+                <ReadinessCard
+                  scan={scan}
+                  loading={scanLoading}
+                  repoConfigured={repoPath !== null}
+                  scanning={scan?.status === 'running'}
+                  onScan={handleRunScan}
+                />
 
                 <StatsCards stats={stats} />
 

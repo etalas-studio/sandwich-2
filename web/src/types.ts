@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 // Ticket status = which column the ticket is in
 export type TicketStatus = 'backlog' | 'in_progress' | 'blocked' | 'done'
@@ -171,45 +172,32 @@ function transformTicket(backend: BackendTicket): Ticket {
 // Polled rather than fetched once, so a ticket's status/stage visibly
 // advances while a run is in progress — a stand-in for the real-time SSE
 // push the Visibility piece will eventually add (see
-// docs/superpowers/specs/2026-08-03-pipeline-shape-design.md).
+// docs/superpowers/specs/2026-08-03-pipeline-shape-design.md). Mutations
+// (run/stop/duplicate/delete/create) invalidate this query key themselves
+// so the list refreshes immediately instead of waiting for the next tick.
 const POLL_INTERVAL_MS = 4000
 
+export const TICKETS_QUERY_KEY = ['tickets'] as const
+
+async function fetchTickets(): Promise<Ticket[]> {
+  const res = await fetch('/api/tickets')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = (await res.json()) as BackendTicket[]
+  return data.map(transformTicket)
+}
+
 export function useTickets() {
-  const [tickets, setTickets] = useState<Ticket[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const query = useQuery({
+    queryKey: TICKETS_QUERY_KEY,
+    queryFn: fetchTickets,
+    refetchInterval: POLL_INTERVAL_MS,
+  })
 
-  useEffect(() => {
-    let cancelled = false
-
-    const load = () => {
-      fetch('/api/tickets')
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return res.json() as Promise<BackendTicket[]>
-        })
-        .then(data => {
-          if (!cancelled) {
-            setTickets(data.map(transformTicket))
-            setError(null)
-          }
-        })
-        .catch(e => {
-          if (!cancelled) {
-            setError(e instanceof Error ? e.message : String(e))
-          }
-        })
-    }
-
-    load()
-    const interval = setInterval(load, POLL_INTERVAL_MS)
-
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-  }, [])
-
-  return { tickets, error }
+  return {
+    tickets: query.data ?? null,
+    error: query.error ? (query.error instanceof Error ? query.error.message : String(query.error)) : null,
+    isLoading: query.isLoading,
+  }
 }
 
 export interface RunTicketResult {
@@ -297,6 +285,59 @@ export async function fetchProjectSettings(): Promise<ProjectSettings> {
   const res = await fetch('/api/settings/project')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<ProjectSettings>
+}
+
+// One row from readiness_scans (src/db/readiness-scans.ts) — the coarse
+// readiness map produced by a manual scan (Overview's "First scan" button).
+export interface AreaSignal {
+  pathPrefix: string
+  testToCodeRatio: number
+  churnScore: number
+}
+
+export interface ReadinessScan {
+  id: string
+  startedAt: string
+  finishedAt: string | null
+  techStack: string | null
+  testCommand: string | null
+  areaSignals: AreaSignal[] | null
+  status: 'running' | 'completed' | 'failed'
+}
+
+// Polled while Overview is mounted, same stand-in-for-SSE reasoning as
+// useTickets above. triggerReadinessScan invalidates this query key on
+// success, so the card reflects "running" immediately instead of waiting
+// for the next poll tick.
+export const READINESS_SCAN_QUERY_KEY = ['readiness-scan', 'latest'] as const
+
+async function fetchLatestReadinessScan(): Promise<ReadinessScan | null> {
+  const res = await fetch('/api/readiness-scans/latest')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<ReadinessScan | null>
+}
+
+export function useLatestReadinessScan() {
+  const query = useQuery({
+    queryKey: READINESS_SCAN_QUERY_KEY,
+    queryFn: fetchLatestReadinessScan,
+    refetchInterval: POLL_INTERVAL_MS,
+  })
+
+  return {
+    scan: query.data ?? null,
+    error: query.error ? (query.error instanceof Error ? query.error.message : String(query.error)) : null,
+    isLoading: query.isLoading,
+  }
+}
+
+export async function triggerReadinessScan(): Promise<RunTicketResult> {
+  return postAction('/api/readiness-scans/run', 'Scan started')
+}
+
+// TEMPORARY dev-only helper — see src/db/purge.ts.
+export async function purgeDatabase(): Promise<RunTicketResult> {
+  return postAction('/api/dev/purge', 'Purged')
 }
 
 export async function saveProjectSettings(repoPath: string): Promise<SaveProjectResult> {

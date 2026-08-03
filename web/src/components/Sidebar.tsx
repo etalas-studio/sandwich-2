@@ -12,9 +12,10 @@ interface SidebarProps {
   onNavigate: (item: NavItem) => void
   username: string
   onLogout: () => void
+  onPurge: () => void
 }
 
-export default function Sidebar({ active, onNavigate, username, onLogout }: SidebarProps) {
+export default function Sidebar({ active, onNavigate, username, onLogout, onPurge }: SidebarProps) {
   const initials = username.slice(0, 2).toUpperCase() || '?'
 
   return (
@@ -65,6 +66,14 @@ export default function Sidebar({ active, onNavigate, username, onLogout }: Side
       </nav>
 
       <div className="mt-auto p-3 border-t border-white/[0.04]">
+        {/* TEMPORARY dev-only button — see src/db/purge.ts. */}
+        <button
+          onClick={onPurge}
+          className="w-full mb-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-light text-[#ff8a8a]/80 border border-[#ff8a8a]/20 hover:bg-[#ff8a8a]/10 hover:text-[#ff8a8a] transition-colors"
+        >
+          <iconify-icon icon="solar:trash-bin-2-linear" width="14" />
+          Purge DB (dev)
+        </button>
         <div className="flex items-center gap-3 px-2 py-1">
           <div
             className="w-7 h-7 rounded-full bg-gradient-to-b from-[#555] to-[#333] flex items-center justify-center text-xs text-white/90 border border-white/10"
