@@ -1,18 +1,20 @@
+import { Link, useLocation } from 'react-router-dom'
+
 type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
-const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }[] = [
-  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear' },
-  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear' },
-  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true },
-  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear' },
+const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean; to: string }[] = [
+  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
+  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
+  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
+  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
 ]
 
 interface SidebarProps {
   active: NavItem
-  onNavigate: (item: NavItem) => void
 }
 
-export default function Sidebar({ active, onNavigate }: SidebarProps) {
+export default function Sidebar({ active }: SidebarProps) {
+  const location = useLocation()
 
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
@@ -29,17 +31,16 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
       {/* Nav */}
       <nav className="flex flex-col gap-1 p-3">
         {navItems.map((item) => (
-          <button
+          <Link
             key={item.id}
+            to={item.to}
             onClick={() => {
               console.log('Click:', item.id, 'disabled:', item.disabled)
-              if (!item.disabled) onNavigate(item.id)
             }}
-            disabled={item.disabled}
             className={`
               relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-light transition-colors
-              ${item.disabled 
-                ? 'text-white/20 cursor-not-allowed' 
+              ${item.disabled
+                ? 'text-white/20 cursor-not-allowed pointer-events-none'
                 : active === item.id
                   ? 'text-white'
                   : 'text-white/50 hover:text-white hover:bg-white/[0.02] cursor-pointer'
@@ -49,13 +50,13 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
             {active === item.id && !item.disabled && (
               <div className="absolute inset-0 rounded-lg border border-white/[0.05] bg-white/[0.03]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }} />
             )}
-            <iconify-icon 
-              icon={item.icon} 
-              width="16" 
-              className={`relative z-10 ${item.disabled ? 'text-white/20' : active === item.id ? 'text-white/70' : ''}`} 
+            <iconify-icon
+              icon={item.icon}
+              width="16"
+              className={`relative z-10 ${item.disabled ? 'text-white/20' : active === item.id ? 'text-white/70' : ''}`}
             />
             <span className="relative z-10">{item.label}</span>
-          </button>
+          </Link>
         ))}
       </nav>
 
