@@ -34,9 +34,10 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         );
       }
 
-      console.log("[scan] Starting agent pass with model:", modelId);
+      console.log("[scan] Starting agent pass with model:", modelId, "cwd:", opts.cwd);
 
       const { session } = await createAgentSession({
+        cwd: opts.cwd,
         model: model as any,
         modelRuntime: modelRuntime as any,
         tools: ["read", "grep", "find", "ls"],

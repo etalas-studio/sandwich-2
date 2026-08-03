@@ -53,7 +53,9 @@ function buildScanPrompt(mech: MechanicalResult): string {
   return [
     "You are analyzing a codebase. Do two things:",
     "",
-    "1. Write a descriptive project overview (4-5 sentences) that explains what this project does, how it's structured, what problem it solves, and any notable architectural decisions visible in the code. Do NOT mention the tech stack — focus on purpose, architecture, and behavior. Base this on the actual source files, not just the README.",
+    "IMPORTANT: You are inside the target project's repository. Use the read, grep, find, and ls tools to explore the source files. The project you must describe is the one whose files you are reading right now — NOT the scanner/orchestrator that sent you this prompt.",
+    "",
+    "1. Write a descriptive project overview (4-5 sentences) that explains what THIS project (the one whose files you're reading) does, how it's structured, what problem it solves, and any notable architectural decisions. Do NOT mention the tech stack — focus on purpose, architecture, and behavior. Look at the actual source files, package.json scripts, directory layout, and configuration to understand the project.",
     "",
     "2. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
     "",
