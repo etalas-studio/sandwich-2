@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
-import { fetchIntegrations, connectIntegration, disconnectIntegration } from '../types'
-import type { IntegrationItem } from '../types'
+import { useState } from 'react'
+import { useIntegrations } from '../hooks/useIntegrations'
+import type { IntegrationItem } from '../api/integrations'
 import ConnectModal from './ConnectModal'
 
 type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -33,50 +33,20 @@ const PROVIDERS = [
 ] as const
 
 export default function Integrations() {
-  const [integrations, setIntegrations] = useState<IntegrationItem[]>([])
-  const [connectingId, setConnectingId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    integrations,
+    isLoading,
+    error,
+    connect,
+    disconnect,
+    connectingId,
+  } = useIntegrations()
+
   const [modalOpen, setModalOpen] = useState(false)
 
-  const loadStatus = useCallback(async () => {
-    try {
-      const data = await fetchIntegrations()
-      setIntegrations(data)
-      setError(null)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load integrations')
-    }
-  }, [])
-
-  useEffect(() => {
-    loadStatus()
-  }, [loadStatus])
-
   const handleConnect = async (providerId: string, key: string) => {
-    setConnectingId(providerId)
-    setError(null)
-
-    const result = await connectIntegration(providerId, key)
-
-    if (result.ok) {
-      setModalOpen(false)
-      await loadStatus()
-    } else {
-      setError(result.message)
-    }
-
-    setConnectingId(null)
-  }
-
-  const handleDisconnect = async (providerId: string) => {
-    setConnectingId(providerId)
-    setError(null)
-
-    const result = await disconnectIntegration(providerId)
-    await loadStatus()
-
-    if (!result.ok) setError(result.message)
-    setConnectingId(null)
+    await connect(providerId, key)
+    setModalOpen(false)
   }
 
   const getIntegration = (providerId: string): IntegrationItem | undefined =>
@@ -88,6 +58,10 @@ export default function Integrations() {
     if (!integration) return 'disconnected'
     if (integration.connected) return 'connected'
     return 'disconnected'
+  }
+
+  if (isLoading) {
+    return <div className="ds-bg min-h-screen" />
   }
 
   return (
@@ -223,7 +197,7 @@ export default function Integrations() {
                     <div className="pt-3 border-t border-white/[0.04]">
                       <button
                         type="button"
-                        onClick={() => handleDisconnect(provider.id)}
+                        onClick={() => disconnect(provider.id)}
                         disabled={connectingId === provider.id}
                         className="relative inline-flex group disabled:opacity-50"
                       >
