@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ScanResult } from "../api/scans";
 
 function relativeTime(iso: string): string {
@@ -14,6 +15,29 @@ function relativeTime(iso: string): string {
 
 interface Props {
   scan: ScanResult;
+}
+
+function RiskCell({ note }: { note: string }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!note) return <span className="text-white/30 text-xs">—</span>;
+
+  const long = note.length > 120;
+  return (
+    <div className="text-white/40 font-light text-xs leading-relaxed">
+      <span className={!expanded && long ? "line-clamp-2" : ""}>
+        {note}
+      </span>
+      {long && (
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-[10px] text-white/50 hover:text-white/80 transition-colors mt-0.5 block"
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function ReadinessCard({ scan }: Props) {
@@ -167,8 +191,8 @@ export default function ReadinessCard({ scan }: Props) {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-3.5 text-white/40 font-light text-xs max-w-48 leading-relaxed">
-                            {area.note || '—'}
+                          <td className="px-6 py-3.5">
+                            <RiskCell note={area.note} />
                           </td>
                         </tr>
                       );
