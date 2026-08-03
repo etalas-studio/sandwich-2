@@ -7,6 +7,7 @@ const TABLES = [
   "blocklist",
   "credentials",
   "sessions",
+  "tickets",
   "users",
   "instance_settings",
   "schema_migrations",
