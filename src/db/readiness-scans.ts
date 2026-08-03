@@ -76,6 +76,16 @@ export function abortReadinessScan(db: Database.Database, id: string): Readiness
   return mapRow(db, id)!;
 }
 
+export function failReadinessScan(db: Database.Database, id: string): ReadinessScan {
+  const now = new Date().toISOString();
+  db.prepare(
+    `UPDATE readiness_scans
+     SET status = 'failed', completed_at = ?
+     WHERE id = ?`,
+  ).run(now, id);
+  return mapRow(db, id)!;
+}
+
 export function getLatestReadinessScan(db: Database.Database): ReadinessScan | null {
   const row = db
     .prepare(

@@ -4,6 +4,7 @@ import type { Router } from "../router.js";
 import { getInstanceSettings } from "../db/settings.js";
 import {
   startReadinessScan,
+  failReadinessScan,
   getLatestReadinessScan,
 } from "../db/readiness-scans.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
@@ -47,8 +48,8 @@ export function registerScanRoutes(
 
     // Fire-and-forget the scan
     runScan(scanId, settings.repoPath, controller.signal, modelId)
-      .catch((err) => {
-        console.error("Scan failed:", err);
+      .catch((_err) => {
+        failReadinessScan(db, scanId);
       })
       .finally(() => {
         inFlight.delete(scanId);

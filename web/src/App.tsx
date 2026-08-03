@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
-import { Toaster } from 'sonner'
+import { useState } from 'react'
+import { Toaster, toast } from 'sonner'
 import { computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
@@ -10,6 +11,9 @@ import Settings from './components/Settings'
 import Integrations from './components/Integrations'
 import { Link } from 'react-router-dom'
 import ModelSelector from './components/ModelSelector'
+import CreateTicketModal from './components/CreateTicketModal'
+import type { CreateTicketData } from './components/CreateTicketModal'
+import { createTicket as apiCreateTicket } from './api/tickets'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
@@ -127,8 +131,27 @@ function OverviewPage() {
         </div>
       )}
 
+      {/* ── Scan failed ── */}
+      {latestScan && latestScan.status === 'failed' && !isRunning && (
+        <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+          <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10 text-center py-4">
+              <p className="text-sm text-[#ff8a8a] font-light mb-1">
+                Project scan failed.
+              </p>
+              <p className="text-xs text-white/40 font-light">
+                Check that a model is selected and the provider is connected in Settings → Integrations.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Scan results ── */}
-      {hasScan && !isRunning && !isTriggering && <ReadinessCard scan={latestScan!} />}
+      {hasScan && latestScan?.status === 'completed' && !isRunning && !isTriggering && (
+        <ReadinessCard scan={latestScan!} />
+      )}
 
       {/* ── Project not yet scanned ── */}
       {hasProject && !hasScan && !isRunning && !isTriggering && (
@@ -150,6 +173,9 @@ function OverviewPage() {
 
 function TicketsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const displayTickets = mockData.tickets
   const selectedKey = searchParams.get('selected')
@@ -183,6 +209,22 @@ function TicketsPage() {
               {displayTickets.length} tickets
             </p>
           </div>
+          <button
+            className="relative inline-flex group"
+            onClick={() => { setCreateError(null); setShowCreateModal(true) }}
+          >
+            <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+            <span
+              className="relative flex items-center gap-2 px-5 py-1.5 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+              style={{
+                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6), 0 4px 8px -2px rgba(0,0,0,0.6)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              <iconify-icon icon="solar:add-circle-linear" width="14" className="text-white/80" />
+              Add Ticket
+            </span>
+          </button>
         </div>
 
         <StatsCards stats={stats} />
@@ -196,6 +238,26 @@ function TicketsPage() {
       {selectedTicket && (
         <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
       )}
+
+      <CreateTicketModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={async (data: CreateTicketData) => {
+          setCreateError(null)
+          setIsCreating(true)
+          try {
+            await apiCreateTicket(data)
+            setShowCreateModal(false)
+            toast.success(`Ticket ${data.key} created`)
+          } catch (err) {
+            setCreateError(err instanceof Error ? err.message : 'Failed to create ticket')
+          } finally {
+            setIsCreating(false)
+          }
+        }}
+        error={createError}
+        isPending={isCreating}
+      />
     </>
   )
 }
