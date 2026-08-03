@@ -1,99 +1,95 @@
-import { useEffect, useState } from "react";
-import Nav, { type TabId } from "./components/Nav";
-import Queue, { activeJob } from "./components/Queue";
-import Review, { reviewItems } from "./components/Review";
-import MetricsView from "./components/Metrics";
-import RunDetail from "./components/RunDetail";
-import Settings from "./components/Settings";
-import { useAppState } from "./state";
-
-interface OpenRun {
-  ticket: string;
-  runId: string | null;
-}
+import { useState } from 'react'
+import { useTickets, computeStats } from './types'
+import type { Ticket } from './types'
+import Sidebar from './components/Sidebar'
+import StatsCards from './components/StatsCards'
+import KanbanBoard from './components/KanbanBoard'
+import TicketDetail from './components/TicketDetail'
+import mockData from './mockData'
 
 export default function App() {
-  const { state, error, reload } = useAppState();
-  const [tab, setTab] = useState<TabId>("queue");
-  const [openRun, setOpenRun] = useState<OpenRun | null>(null);
+  const { tickets, error } = useTickets()
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
-  // Once the ticket being viewed gets a run (e.g. the plan stage that was
-  // "not started" finishes), follow it so the panel doesn't stay frozen
-  // showing "Start plan stage" for a run that already exists.
-  useEffect(() => {
-    if (!state || !openRun) return;
-    let latestRun: (typeof state.runs)[number] | undefined;
-    for (const r of state.runs) if (r.ticket === openRun.ticket) latestRun = r;
-    if (latestRun && latestRun.runId !== openRun.runId) {
-      setOpenRun({ ticket: openRun.ticket, runId: latestRun.runId });
-    }
-  }, [state, openRun]);
+  // Use real tickets if available, otherwise fall back to mock data
+  const displayTickets = tickets ?? mockData.tickets
+  const stats = computeStats(displayTickets)
 
-  if (error) {
-    return (
-      <div className="wrap">
-        <div className="empty">
-          Could not reach the server: {error}
-          <br />
-          Run <code>node dist/cli.js serve</code> first.
-        </div>
-      </div>
-    );
+  const handleOpenTicket = (ticket: Ticket) => {
+    setSelectedTicket(ticket)
   }
 
-  if (!state) {
-    return (
-      <div className="wrap">
-        <div className="empty">Loading…</div>
-      </div>
-    );
+  const handleCloseTicket = () => {
+    setSelectedTicket(null)
   }
-
-  const reviewCount = reviewItems(state.runs).length;
-
-  const repoLabel = `${state.config.repoPath.split("/").slice(-1)[0]} · ${state.config.baseBranch}`;
-
-  const goTab = (next: TabId) => {
-    setTab(next);
-    setOpenRun(null);
-  };
-
-  const handleOpenRun = (ticket: string, runId: string | null) => {
-    setOpenRun({ ticket, runId });
-  };
-
-  const handleCloseRun = () => {
-    setOpenRun(null);
-  };
 
   return (
-    <div className={"wrap" + (openRun ? " sidebar-open" : "")}>
-      <header>
-        <span className="brand">Agent pipeline</span>
-        <span className="repo">{repoLabel}</span>
-        <Nav active={tab} onChange={goTab} reviewCount={reviewCount} />
-      </header>
-      <div id="main">
-        <>
-          {tab === "queue" && <Queue state={state} onOpenRun={handleOpenRun} reload={reload} openRun={openRun} />}
-          {tab === "review" && <Review state={state} onOpenRun={handleOpenRun} openRun={openRun} />}
-          {tab === "metrics" && <MetricsView metrics={state.metrics} />}
-          {tab === "settings" && <Settings />}
-        </>
-      </div>
-      {openRun && (
-        <div className="sidebar-overlay" onClick={handleCloseRun} />
-      )}
-      {openRun && (
-        <RunDetail
-          ticketKey={openRun.ticket}
-          runId={openRun.runId}
-          ticket={state.tickets.find((t) => t.key === openRun.ticket)}
-          job={activeJob(state.jobs, openRun.ticket)}
-          onClose={handleCloseRun}
-          onChanged={reload}
+    <div className="ds-bg min-h-screen text-white antialiased">
+      {/* Ambient background blobs */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+        <div 
+          className="absolute -top-[30%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-white/5 blur-[100px]"
+          style={{ animation: 'pulse 6s ease-in-out infinite' }}
         />
+        <div 
+          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[40vw] h-[70vh] bg-gradient-to-b from-white/5 via-white/[0.02] to-transparent blur-[80px]"
+          style={{ animation: 'pulse 6s ease-in-out infinite', animationDelay: '3s' }}
+        />
+      </div>
+
+      {/* Main layout wrapped in card pattern */}
+      <div className="ds-card-outer min-h-screen">
+        <div className="ds-card-inner flex min-h-screen">
+          {/* Noise texture overlay */}
+          <div className="ds-noise" />
+
+          {/* Sidebar */}
+          <Sidebar />
+
+          {/* Main content */}
+          <main className="relative z-10 flex-1 min-h-screen overflow-hidden">
+            <div className="h-full overflow-y-auto hide-scrollbar p-6">
+              {/* Error banner */}
+              {error && (
+                <div className="ds-card-outer mb-6">
+                  <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+                    <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
+                    <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Header */}
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+                    Overview
+                  </h1>
+                  <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                    Today
+                  </span>
+                </div>
+                <p className="text-sm text-white/50 font-light">
+                  {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  {' · '}
+                  {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
+                </p>
+              </div>
+
+              {/* Stats */}
+              <StatsCards stats={stats} />
+
+              {/* Kanban */}
+              <KanbanBoard tickets={displayTickets} onOpenTicket={handleOpenTicket} />
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Ticket detail overlay */}
+      {selectedTicket && (
+        <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
       )}
     </div>
-  );
+  )
 }

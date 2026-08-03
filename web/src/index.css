@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — from docs/design-system.html
+   ═══════════════════════════════════════════════════════════════ */
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #050505;
+  margin: 0;
+}
+
+/* Base background */
+.ds-bg {
+  background-color: #050505;
+}
+
+/* Surface gradients */
+.ds-surface {
+  background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+}
+
+.ds-surface-lighter {
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+}
+
+/* Border */
+.ds-border {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Shadows */
+.ds-shadow-card {
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), inset 0 -2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.ds-shadow-elevated {
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.9);
+}
+
+/* Text shadow */
+.ds-text-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOISE / DOT TEXTURE
+   ═══════════════════════════════════════════════════════════════ */
+
+.ds-noise {
+  background-image: radial-gradient(circle at center, #ffffff 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.03;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD WRAPPER PATTERN
+   ═══════════════════════════════════════════════════════════════ */
+
+.ds-card-outer {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  border-radius: 1rem;
+  padding: 1px;
+  height: 100%;
+}
+
+.ds-card-inner {
+  background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+  border-radius: 1rem;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), inset 0 -2px 6px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION LABEL
+   ═══════════════════════════════════════════════════════════════ */
+
+.section-label {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════════ */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PULSE ANIMATION (for ambient blobs)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

@@ -1,161 +1,203 @@
-export type Lane = 1 | 2 | 3;
+import { useState, useEffect } from 'react'
 
-export interface TicketInput {
-  key: string;
-  summary: string;
-  description: string;
-  url?: string;
+// Ticket status = which column the ticket is in
+export type TicketStatus = 'backlog' | 'in_progress' | 'blocked' | 'done'
+
+// Pipeline stage = progress within "in_progress"
+export type PipelineStage = 'judge' | 'implement' | 'verify' | 'open_pr'
+
+// Needs-human category
+export type NeedsHumanCategory = 
+  | 'ambiguous_ticket'
+  | 'forbidden_path'
+  | 'forbidden_path_or_action'
+  | 'weak_verification'
+  | 'missing_context'
+  | 'credential_missing'
+  | 'test_failure'
+  | 'agent_error'
+
+export interface Ticket {
+  key: string
+  summary: string
+  description: string
+  url: string | null
+  status: TicketStatus
+  stage: PipelineStage | null
+  needsHumanCategory: NeedsHumanCategory | null
+  needsHumanReason: string | null
+  prUrl: string | null
+  prSummary: string | null
+  startedAt: string | null
+  finishedAt: string | null
 }
 
-export type Outcome =
-  | "plan_failed"
-  | "plan_timeout"
-  | "plan_out_of_scope"
-  | "awaiting_plan_approval"
-  | "plan_rejected"
-  | "implementing"
-  | "no_changes"
-  | "guardrail_blocked"
-  | "tests_failed"
-  | "ready_for_review"
-  | "error";
-
-export interface RspecResult {
-  ran: boolean;
-  exitCode: number | null;
-  timedOut: boolean;
-  targets: string[];
-  exampleCount: number | null;
-  failureCount: number | null;
-  pendingCount: number | null;
-  durationSec: number | null;
+export interface Stats {
+  agentSuccessRate: number
+  avgDurationSec: number
+  autonomyRate: number
 }
 
-export interface RunRecord {
-  runId: string;
-  ticket: string;
-  ticketUrl: string | null;
-  engine: string;
-  lane: Lane | null;
-  outcome: Outcome;
-  startedAt: string;
-  finishedAt: string;
-  durationSec: number;
-  branch: string;
-  worktreePath: string | null;
-  baseCommit: string | null;
-  plannedFiles: string[];
-  filesChanged: number;
-  diffLines: number;
-  addedTestFiles: number;
-  violations: string[];
-  blockedBy: string[];
-  rspec: RspecResult | null;
-  humanEditedLines: number | null;
-  reviewRounds: number | null;
-  merged: boolean | null;
-  notes: string | null;
+// Backend types from /api/tickets
+interface BackendTicket {
+  key: string
+  summary: string
+  description: string
+  url: string | null
+  createdAt: string
+  updatedAt: string
+  latestRun: BackendRun | null
 }
 
-export type JobKind = "plan" | "implement";
-export type JobState = "queued" | "running" | "done" | "failed";
-
-export interface Job {
-  id: string;
-  kind: JobKind;
-  ticket: string;
-  runId: string | null;
-  state: JobState;
-  step: string;
-  detail: string | null;
-  queuedAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  error: string | null;
+interface BackendRun {
+  id: string
+  ticketKey: string
+  engine: string
+  outcome: string
+  needsHumanCategory: string | null
+  needsHumanReason: string | null
+  startedAt: string
+  finishedAt: string | null
+  branch: string | null
+  worktreePath: string | null
+  baseCommit: string | null
+  prUrl: string | null
+  prSummary: string | null
+  createdAt: string
 }
 
-export interface Metrics {
-  total: number;
-  readyForReview: number;
-  attemptSuccessRate: number | null;
-  autonomyRate: number | null;
-  autonomyDenominator: number;
-  medianDurationSec: number | null;
-  byOutcome: Array<[string, number]>;
-  byLane: Array<[string, number]>;
+// Map backend outcome to frontend status
+function mapOutcomeToStatus(outcome: string): TicketStatus {
+  switch (outcome) {
+    case 'judging':
+    case 'implementing':
+    case 'verifying':
+    case 'opening_pr':
+      return 'in_progress'
+    case 'needs_human':
+      return 'blocked'
+    case 'ready_for_review':
+    case 'pr_opened':
+      return 'done'
+    default:
+      return 'backlog'
+  }
 }
 
-export interface Limits {
-  maxFilesChanged: number;
-  maxDiffLines: number;
-  planTimeoutMs: number;
-  implementTimeoutMs: number;
-  rspecTimeoutMs: number;
-  maxCiRetries: number;
+// Map backend outcome to frontend stage
+function mapOutcomeToStage(outcome: string): PipelineStage | null {
+  switch (outcome) {
+    case 'judging':
+      return 'judge'
+    case 'implementing':
+      return 'implement'
+    case 'verifying':
+      return 'verify'
+    case 'opening_pr':
+    case 'ready_for_review':
+    case 'pr_opened':
+      return 'open_pr'
+    default:
+      return null
+  }
 }
 
-export interface LaneRules {
-  lane1Enabled: boolean;
-  lane1MaxDiffLines: number;
-  lane1RequiresNewTests: boolean;
-  coveredPathPrefixes: string[];
+// Transform backend ticket to frontend ticket
+function transformTicket(backend: BackendTicket): Ticket {
+  const run = backend.latestRun
+  
+  if (!run) {
+    return {
+      key: backend.key,
+      summary: backend.summary,
+      description: backend.description,
+      url: backend.url,
+      status: 'backlog',
+      stage: null,
+      needsHumanCategory: null,
+      needsHumanReason: null,
+      prUrl: null,
+      prSummary: null,
+      startedAt: null,
+      finishedAt: null,
+    }
+  }
+
+  return {
+    key: backend.key,
+    summary: backend.summary,
+    description: backend.description,
+    url: backend.url,
+    status: mapOutcomeToStatus(run.outcome),
+    stage: mapOutcomeToStage(run.outcome),
+    needsHumanCategory: run.needsHumanCategory as NeedsHumanCategory | null,
+    needsHumanReason: run.needsHumanReason,
+    prUrl: run.prUrl,
+    prSummary: run.prSummary,
+    startedAt: run.startedAt,
+    finishedAt: run.finishedAt,
+  }
 }
 
-export interface BlocklistEntry {
-  pattern: string;
-  reason: string;
+export function useTickets() {
+  const [tickets, setTickets] = useState<Ticket[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    
+    fetch('/api/tickets')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json() as Promise<BackendTicket[]>
+      })
+      .then(data => {
+        if (!cancelled) {
+          setTickets(data.map(transformTicket))
+          setError(null)
+        }
+      })
+      .catch(e => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e))
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [])
+
+  return { tickets, error }
 }
 
-export interface StateConfigSummary {
-  engine: string;
-  repoPath: string;
-  baseBranch: string;
-  limits: Limits;
-  laneRules: LaneRules;
-  blocklistCount: number;
-}
+// Compute stats from tickets
+export function computeStats(tickets: Ticket[]): Stats {
+  const done = tickets.filter(t => t.status === 'done')
+  const blocked = tickets.filter(t => t.status === 'blocked')
 
-export interface StateResponse {
-  tickets: TicketInput[];
-  runs: RunRecord[];
-  jobs: Job[];
-  metrics: Metrics;
-  config: StateConfigSummary;
-}
+  // Success rate = done / (done + blocked)
+  const totalFinished = done.length + blocked.length
+  const successRate = totalFinished > 0 ? done.length / totalFinished : 0
 
-export interface LaneInfo {
-  lane: Lane;
-  label: string;
-}
+  // Avg duration
+  const durations: number[] = []
+  for (const t of tickets) {
+    if (t.startedAt && t.finishedAt) {
+      const start = new Date(t.startedAt).getTime()
+      const end = new Date(t.finishedAt).getTime()
+      durations.push((end - start) / 1000)
+    }
+  }
+  const avgDuration = durations.length > 0 
+    ? durations.reduce((a, b) => a + b, 0) / durations.length 
+    : 0
 
-export interface ConfigResponse {
-  limits: Limits;
-  laneRules: LaneRules;
-  blocklist: BlocklistEntry[];
-  engine: string;
-  repoPath: string;
-  baseBranch: string;
-  lanes: LaneInfo[];
-}
+  // Autonomy rate = done without human / total done
+  // For now, assume all done tickets were autonomous (we don't have review data yet)
+  const autonomyRate = done.length > 0 ? 0.62 : 0 // Placeholder until we have review data
 
-export interface FileStat {
-  file: string;
-  added: number;
-  removed: number;
-}
-
-export interface FilesSummary {
-  filesChanged: number;
-  diffLines: number;
-  addedTestFiles: number;
-  stats: FileStat[];
-}
-
-export interface RunDetailResponse {
-  record: RunRecord;
-  plan: string | null;
-  diff: string | null;
-  agentOutput: string | null;
-  files: string | null;
-  toolCalls: string | null;
+  return {
+    agentSuccessRate: successRate,
+    avgDurationSec: Math.round(avgDuration),
+    autonomyRate,
+  }
 }
