@@ -113,6 +113,26 @@ async function testReachesVerifyFailedWhenTestsRed(): Promise<void> {
   console.log("PASS: testReachesVerifyFailedWhenTestsRed");
 }
 
+// Anything that throws *after* the runs row exists must be recorded on that
+// row as outcome "error" rather than escaping to the caller — a dirty repo
+// (assertCleanRepo) is the cheapest way to trigger that path for real.
+async function testRecordsErrorOutcomeWhenAStageThrows(): Promise<void> {
+  const db = openTestDb();
+  const repoPath = initTestRepo();
+  upsertTicket(db, { key: "PROJ-4", summary: "Add widget", description: "..." });
+  writeFileSync(join(repoPath, "uncommitted.txt"), "dirty\n");
+
+  const run = await runPipeline("PROJ-4", makeConfig(repoPath), db, engineDoesNothing);
+
+  assert.equal(run.outcome, "error");
+  assert.ok(
+    run.needsHumanReason && run.needsHumanReason.length > 0,
+    "expected a non-empty needsHumanReason explaining the failure",
+  );
+  assert.ok(run.finishedAt);
+  console.log("PASS: testRecordsErrorOutcomeWhenAStageThrows");
+}
+
 async function testThrowsForUnknownTicket(): Promise<void> {
   const db = openTestDb();
   const repoPath = initTestRepo();
@@ -125,6 +145,7 @@ async function main(): Promise<void> {
   await testFullRunReachesReadyForPr();
   await testStopsAtNoChangesWithoutRunningVerify();
   await testReachesVerifyFailedWhenTestsRed();
+  await testRecordsErrorOutcomeWhenAStageThrows();
   await testThrowsForUnknownTicket();
 }
 

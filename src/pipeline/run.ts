@@ -94,7 +94,7 @@ export async function runPipeline(
   } catch (err) {
     return updateRun(db, run.id, {
       outcome: "error",
-      needsHumanReason: (err as Error).message,
+      needsHumanReason: err instanceof Error ? err.message : String(err),
       finishedAt: new Date().toISOString(),
     });
   }
