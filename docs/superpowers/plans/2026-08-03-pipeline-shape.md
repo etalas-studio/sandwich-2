@@ -1355,7 +1355,7 @@ git commit -m "Add Verify stage"
 - Consumes: `judge` (Task 4), `implement` (Task 5), `verify` (Task 6), `PipelineConfig`/`loadPipelineConfig` (Task 3), `PipelineContext` (Task 1); `getTicketByKey` (`src/db/tickets.ts`), `insertRun`/`updateRun`/`Run` (`src/db/runs.ts`), `assertCleanRepo`/`createWorktree` (`src/git.ts`), `createEngineInvoker` (`src/engine/create-invoker.ts`)
 - Produces: `runPipeline(ticketKey, config, db, engineOverride?): Promise<Run>` — the deliverable of this plan; nothing later in this plan consumes it, but it's what a future ticket-intake/CLI/UI piece will call
 
-- [ ] **Step 1: Write the failing test — `src/pipeline/run.test.ts`**
+- [x] **Step 1: Write the failing test — `src/pipeline/run.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1491,12 +1491,12 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './run.js'`
 
-- [ ] **Step 3: Write `src/pipeline/run.ts`**
+- [x] **Step 3: Write `src/pipeline/run.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -1602,17 +1602,17 @@ export async function runPipeline(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/pipeline/run.test.js`
 Expected: all four `PASS:` lines print.
 
-- [ ] **Step 5: Full build + selftest**
+- [x] **Step 5: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 6: Update CHANGELOG and commit**
+- [x] **Step 6: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```

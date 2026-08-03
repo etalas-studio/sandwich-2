@@ -42,3 +42,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Judge stage, stubbed to always return agent-ready until the readiness-scan piece exists (src/pipeline/judge.ts)
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Implement stage: real agent invocation, diff-time blocklist enforcement, and branch commit (src/pipeline/implement.ts)
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Verify stage: readiness-scan test command lookup and exit-code-only verification (src/pipeline/verify.ts)
+- 2026-08-03: [pipeline-shape] | @potensio - Added the Pipeline shape orchestrator wiring Judge -> Implement -> Verify against a real ticket and worktree (src/pipeline/run.ts)
