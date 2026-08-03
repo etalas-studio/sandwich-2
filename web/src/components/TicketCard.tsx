@@ -73,9 +73,14 @@ export default function TicketCard({ ticket, onClick, onRun, isStarting }: Ticke
               {STAGE_LABELS[ticket.stage]}
             </span>
           )}
-          {isBlocked && ticket.needsHumanCategory && (
+          {/* Most blocked outcomes (verify_failed, implement_timeout, ...)
+              have no needs-human category — only a free-text reason — so the
+              badge falls back to a generic label rather than disappearing. */}
+          {isBlocked && (ticket.needsHumanCategory || ticket.needsHumanReason) && (
             <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a1d1d] to-[#241010] text-[#ff8a8a] text-[10px] font-normal tracking-wide border border-[#522525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              {NEEDS_HUMAN_LABELS[ticket.needsHumanCategory] || ticket.needsHumanCategory}
+              {ticket.needsHumanCategory
+                ? NEEDS_HUMAN_LABELS[ticket.needsHumanCategory] || ticket.needsHumanCategory
+                : 'Needs human'}
             </span>
           )}
           {isDone && ticket.prUrl && (

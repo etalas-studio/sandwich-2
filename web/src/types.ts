@@ -97,7 +97,13 @@ function mapOutcomeToStatus(outcome: string): TicketStatus {
 }
 
 // Map backend outcome to frontend stage — mirrors the same mid-pipeline
-// reasoning as mapOutcomeToStatus above.
+// reasoning as mapOutcomeToStatus above. Failure outcomes map to the stage
+// they actually failed in, so the detail panel's stepper can show "stopped
+// here" on the right row instead of rendering all-pending. Two outcomes stay
+// null because the outcome string genuinely doesn't say where they happened:
+// `needs_human` (Implement's blocklist hit and Verify's missing-test-command
+// check both produce it) and `error` (the orchestrator's catch-all, which
+// can fire anywhere in the run).
 function mapOutcomeToStage(outcome: string): PipelineStage | null {
   switch (outcome) {
     case 'running':
@@ -108,6 +114,14 @@ function mapOutcomeToStage(outcome: string): PipelineStage | null {
       return 'verify'
     case 'ready_for_pr':
       return 'open_pr'
+    case 'no_changes':
+    case 'implement_timeout':
+    case 'implement_error':
+    case 'implement_nonzero_exit':
+      return 'implement'
+    case 'verify_failed':
+    case 'verify_timeout':
+      return 'verify'
     default:
       return null
   }
