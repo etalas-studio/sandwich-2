@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTickets, computeStats } from './types'
+import { useTickets, runTicket, computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
@@ -14,6 +14,8 @@ export default function App() {
   const { tickets, error } = useTickets()
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [activeNav, setActiveNav] = useState<NavItem>('overview')
+  const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
+  const [runError, setRunError] = useState<string | null>(null)
 
   // Use real tickets if available, otherwise fall back to mock data
   const displayTickets = tickets ?? mockData.tickets
@@ -32,15 +34,31 @@ export default function App() {
     setSelectedTicket(null)
   }
 
+  const handleRunTicket = (key: string) => {
+    setStartingKeys((prev) => new Set(prev).add(key))
+    setRunError(null)
+    runTicket(key)
+      .then((result) => {
+        if (!result.ok) setRunError(`Could not start ${key}: ${result.message}`)
+      })
+      .finally(() => {
+        setStartingKeys((prev) => {
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+      })
+  }
+
   return (
     <div className="ds-bg min-h-screen text-white antialiased">
       {/* Ambient background blobs */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
-        <div 
+        <div
           className="absolute -top-[30%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-white/5 blur-[100px]"
           style={{ animation: 'pulse 6s ease-in-out infinite' }}
         />
-        <div 
+        <div
           className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[40vw] h-[70vh] bg-gradient-to-b from-white/5 via-white/[0.02] to-transparent blur-[80px]"
           style={{ animation: 'pulse 6s ease-in-out infinite', animationDelay: '3s' }}
         />
@@ -70,6 +88,13 @@ export default function App() {
                     </div>
                   </div>
                 )}
+                {runError && (
+                  <div className="ds-card-outer mb-6">
+                    <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+                      <p className="text-sm text-[#ff8a8a]">{runError}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Header */}
                 <div className="mb-8">
@@ -92,7 +117,12 @@ export default function App() {
                 <StatsCards stats={stats} />
 
                 {/* Kanban */}
-                <KanbanBoard tickets={displayTickets} onOpenTicket={handleOpenTicket} />
+                <KanbanBoard
+                  tickets={displayTickets}
+                  onOpenTicket={handleOpenTicket}
+                  onRunTicket={handleRunTicket}
+                  startingKeys={startingKeys}
+                />
               </div>
             )}
           </main>

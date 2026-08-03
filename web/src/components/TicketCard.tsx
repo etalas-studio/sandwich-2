@@ -3,6 +3,8 @@ import type { Ticket, PipelineStage } from '../types'
 interface TicketCardProps {
   ticket: Ticket
   onClick: () => void
+  onRun: (key: string) => void
+  isStarting: boolean
 }
 
 const STAGE_LABELS: Record<PipelineStage, string> = {
@@ -37,10 +39,11 @@ function formatRelativeTime(iso: string | null): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function TicketCard({ ticket, onClick }: TicketCardProps) {
+export default function TicketCard({ ticket, onClick, onRun, isStarting }: TicketCardProps) {
   const isInProgress = ticket.status === 'in_progress'
   const isBlocked = ticket.status === 'blocked'
   const isDone = ticket.status === 'done'
+  const isBacklog = ticket.status === 'backlog'
 
   return (
     <div
@@ -70,9 +73,14 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
               {STAGE_LABELS[ticket.stage]}
             </span>
           )}
-          {isBlocked && ticket.needsHumanCategory && (
+          {/* Most blocked outcomes (verify_failed, implement_timeout, ...)
+              have no needs-human category — only a free-text reason — so the
+              badge falls back to a generic label rather than disappearing. */}
+          {isBlocked && (ticket.needsHumanCategory || ticket.needsHumanReason) && (
             <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a1d1d] to-[#241010] text-[#ff8a8a] text-[10px] font-normal tracking-wide border border-[#522525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              {NEEDS_HUMAN_LABELS[ticket.needsHumanCategory] || ticket.needsHumanCategory}
+              {ticket.needsHumanCategory
+                ? NEEDS_HUMAN_LABELS[ticket.needsHumanCategory] || ticket.needsHumanCategory
+                : 'Needs human'}
             </span>
           )}
           {isDone && ticket.prUrl && (
@@ -101,15 +109,29 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
             </div>
           )}
           {isDone && ticket.prUrl && (
-            <a 
-              href={ticket.prUrl} 
-              target="_blank" 
+            <a
+              href={ticket.prUrl}
+              target="_blank"
               rel="noreferrer"
               className="text-[10px] text-[#8affb1] hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
               View →
             </a>
+          )}
+          {isBacklog && (
+            <button
+              type="button"
+              disabled={isStarting}
+              onClick={(e) => {
+                e.stopPropagation()
+                onRun(ticket.key)
+              }}
+              className="px-2 py-0.5 rounded bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-white/70 text-[10px] font-normal tracking-wide border border-white/[0.08] hover:text-white hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}
+            >
+              {isStarting ? 'Starting…' : 'Run'}
+            </button>
           )}
         </div>
       </div>

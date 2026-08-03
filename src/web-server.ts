@@ -3,8 +3,11 @@ import type { ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
-import { listTickets } from "./db/tickets.js";
+import { getTicketByKey, listTickets } from "./db/tickets.js";
 import { getLatestRunForTicket } from "./db/runs.js";
+import { listArtifactsForRun } from "./db/run-artifacts.js";
+import { loadPipelineConfig } from "./pipeline/config.js";
+import { runPipeline } from "./pipeline/run.js";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -18,6 +21,52 @@ export interface WebServerOptions {
   dbPath: string;
   port: number;
   webRoot: string;
+  /**
+   * Path to the Pipeline shape instance config (src/pipeline/config.ts).
+   * If it doesn't exist, the server still starts — POST .../run just
+   * responds 503 until a real config/instance.json is created (copy
+   * config/instance.example.json and point repoPath at a real project).
+   */
+  pipelineConfigPath: string;
+}
+
+function sendJson(res: ServerResponse, status: number, body: unknown): void {
+  const payload = JSON.stringify(body);
+  res.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": Buffer.byteLength(payload),
+    "cache-control": "no-store",
+  });
+  res.end(payload);
+}
+
+/**
+ * `decodeURIComponent` throws `URIError` on malformed percent-encoding
+ * (e.g. `/api/tickets/%E0%A4%A/artifacts`). Inside the request listener an
+ * uncaught throw kills the whole process — including any in-flight
+ * runPipeline call, orphaning a real agent subprocess — so every call site
+ * goes through this and answers 400 instead.
+ */
+function decodePathSegment(segment: string): string | null {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Browser-CSRF defense for the state-changing run trigger: there's no auth
+ * on this instance yet (Auth is its own unplanned roadmap piece), so the
+ * least we can do is refuse cross-origin browser requests. An absent
+ * `Origin` header is allowed — same-origin navigations and non-browser
+ * clients (curl, the test suite) typically don't send one, and this is not
+ * a substitute for real authentication.
+ */
+function isCrossOriginRequest(origin: string | undefined, host: string | undefined): boolean {
+  if (origin === undefined || origin === "") return false;
+  if (host === undefined || host === "") return true;
+  return origin !== `http://${host}` && origin !== `https://${host}`;
 }
 
 /**
@@ -26,32 +75,109 @@ export interface WebServerOptions {
  * job/lane model — this one only knows about tickets and runs so far.
  */
 export function startWebServer(options: WebServerOptions): void {
-  const { dbPath, port, webRoot } = options;
+  const { dbPath, port, webRoot, pipelineConfigPath } = options;
   const db = openDb(dbPath);
 
+  const pipelineConfig = existsSync(pipelineConfigPath)
+    ? loadPipelineConfig(pipelineConfigPath)
+    : null;
+  if (!pipelineConfig) {
+    console.log(
+      `Pipeline: no config at ${pipelineConfigPath} — POST /api/tickets/:key/run will return 503 until one exists (copy config/instance.example.json).`,
+    );
+  }
+
+  // Global (process-wide) single-run guard: every run costs real money and
+  // spawns a real coding agent, so at most one runPipeline call is ever in
+  // flight, whichever ticket it's for. Not a real queue — sequential
+  // execution across a backlog is still an unbuilt piece; this just refuses
+  // the second trigger instead of racing it.
+  let runningTicketKey: string | null = null;
+
   const server = createServer((req, res) => {
-    const url = req.url ?? "/";
-    const path = url.split("?")[0] ?? "/";
+    try {
+      const url = req.url ?? "/";
+      const path = url.split("?")[0] ?? "/";
 
-    if (req.method === "GET" && path === "/api/tickets") {
-      const ticketsWithRuns = listTickets(db).map((ticket) => ({
-        ...ticket,
-        latestRun: getLatestRunForTicket(db, ticket.key),
-      }));
-      const payload = JSON.stringify(ticketsWithRuns);
-      res.writeHead(200, {
-        "content-type": "application/json; charset=utf-8",
-        "content-length": Buffer.byteLength(payload),
-        "cache-control": "no-store",
-      });
-      res.end(payload);
-      return;
+      if (req.method === "GET" && path === "/api/tickets") {
+        const ticketsWithRuns = listTickets(db).map((ticket) => ({
+          ...ticket,
+          latestRun: getLatestRunForTicket(db, ticket.key),
+        }));
+        sendJson(res, 200, ticketsWithRuns);
+        return;
+      }
+
+      const artifactsMatch =
+        req.method === "GET" ? /^\/api\/tickets\/([^/]+)\/artifacts$/.exec(path) : null;
+      if (artifactsMatch) {
+        const ticketKey = decodePathSegment(artifactsMatch[1] as string);
+        if (ticketKey === null) {
+          sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
+          return;
+        }
+        const run = getLatestRunForTicket(db, ticketKey);
+        sendJson(res, 200, run ? listArtifactsForRun(db, run.id) : []);
+        return;
+      }
+
+      const runMatch = req.method === "POST" ? /^\/api\/tickets\/([^/]+)\/run$/.exec(path) : null;
+      if (runMatch) {
+        const ticketKey = decodePathSegment(runMatch[1] as string);
+        if (ticketKey === null) {
+          sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
+          return;
+        }
+
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin run requests are refused" });
+          return;
+        }
+        if (!pipelineConfig) {
+          sendJson(res, 503, { error: "no pipeline config — see server startup log" });
+          return;
+        }
+        if (!getTicketByKey(db, ticketKey)) {
+          sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
+          return;
+        }
+        if (runningTicketKey !== null) {
+          sendJson(res, 409, {
+            error:
+              runningTicketKey === ticketKey
+                ? `${ticketKey} is already running`
+                : `another run (${runningTicketKey}) is already in flight — only one runs at a time`,
+          });
+          return;
+        }
+
+        runningTicketKey = ticketKey;
+        runPipeline(ticketKey, pipelineConfig, db)
+          .catch((err: unknown) => {
+            console.error(`Pipeline run for ${ticketKey} failed:`, err);
+          })
+          .finally(() => {
+            runningTicketKey = null;
+          });
+
+        sendJson(res, 202, { status: "started", ticketKey });
+        return;
+      }
+
+      if (req.method === "GET" && serveStatic(path, webRoot, res)) return;
+
+      res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "not found" }));
+    } catch (err) {
+      // Backstop so one bad request can never take the process down with an
+      // in-flight pipeline run attached to it.
+      console.error(`Unhandled error serving ${req.method ?? "?"} ${req.url ?? "?"}:`, err);
+      if (!res.headersSent) {
+        sendJson(res, 500, { error: "internal server error" });
+      } else {
+        res.end();
+      }
     }
-
-    if (req.method === "GET" && serveStatic(path, webRoot, res)) return;
-
-    res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({ error: "not found" }));
   });
 
   server.listen(port, "127.0.0.1", () => {
@@ -90,5 +216,6 @@ if (isMain) {
     dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,
     webRoot: process.env.WEB_ROOT ?? "web/dist",
+    pipelineConfigPath: process.env.PIPELINE_CONFIG_PATH ?? "config/instance.json",
   });
 }

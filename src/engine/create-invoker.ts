@@ -3,9 +3,12 @@ import { ClaudeCodePtyInvoker } from "./claude-code-pty.js";
 import type { EngineInvoker } from "./types.js";
 
 /**
- * "headless" (claude -p) is the default across this project — see the
- * Phase 1 design doc's "Agent engine" section. "pty" is an explicit opt-in
- * for cost-durability reasons; nothing selects it automatically.
+ * "headless" (claude -p) was the Phase 1 design doc's initially recommended
+ * default — see its "Agent engine" section. This instance's actual config
+ * (src/pipeline/config.ts) defaults to "pty" instead; see
+ * docs/superpowers/specs/2026-08-03-pipeline-shape-design.md. Either way,
+ * this factory never auto-selects — the caller always passes an explicit
+ * mode.
  */
 export type EngineInvocationMode = "headless" | "pty";
 

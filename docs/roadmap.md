@@ -12,13 +12,13 @@ Architecture pieces (mirrors the spec's Architecture section):
 
 - [x] Agent engine (switchable Pi SDK / Claude SDK, headless + PTY toggle) — `docs/superpowers/plans/2026-08-02-engine-invocation-layer.md`, `docs/superpowers/plans/2026-08-03-pty-engine-toggle.md` (both done)
 - [x] Storage (embedded SQLite) — `docs/superpowers/plans/2026-08-03-storage-sqlite.md` (done)
-- [ ] Agent execution (scoped shell access, one worktree per attempt) — no plan yet
-- [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — no plan yet
+- [ ] Agent execution (scoped shell access, one worktree per attempt) — partially done: one worktree per attempt and cwd-confined shell access for the Implement stage are built by the pipeline orchestrator (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — sandboxing beyond cwd confinement remains unplanned
+- [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — partially done: Implement and Verify are built for real, Judge is stubbed to always agent-ready, and Open PR is out of scope (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — real Judge logic and Open PR remain unplanned
 - [ ] Codebase understanding (no persistent index, fresh read per ticket) — no plan yet
-- [ ] Verify (exit-code only) — no plan yet
+- [ ] Verify (exit-code only) — mostly done: the exit-code-only Verify stage is built and wired into the pipeline (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`), but it reads its test command from the readiness scan, whose scan process doesn't exist yet — without one, Verify stops at needs-human/weak-verification
 - [ ] VCS abstraction (GitHub and Bitbucket, both first-class) — no plan yet
 - [ ] Ticket intake (manual JSON queue file) — no plan yet
-- [ ] Visibility (web UI + SSE, incl. first-run project-folder setup + readiness overview) — partially done: static ticket list/board/detail UI is built (`docs/superpowers/plans/2026-08-03-visibility-ui-foundation.md`), but SSE live updates, first-run folder setup, and the readiness overview are still unplanned
+- [ ] Visibility (web UI + SSE, incl. first-run project-folder setup + readiness overview) — partially done: static ticket list/board/detail UI is built (`docs/superpowers/plans/2026-08-03-visibility-ui-foundation.md`), plus a per-ticket run trigger, 4-second polling so a run's status visibly advances, and a run transcript view (no design doc for that work — see CHANGELOG's `[pipeline-run-trigger]` entries); SSE live updates, first-run folder setup, and the readiness overview are still unplanned
 - [ ] Auth (custom, single account) — no plan yet
 - [ ] Deployment (server-agnostic) — no plan yet
 
