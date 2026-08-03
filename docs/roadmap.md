@@ -10,7 +10,7 @@ Spec: `docs/superpowers/specs/2026-08-02-phase-1-product-design.md`
 
 Architecture pieces (mirrors the spec's Architecture section):
 
-- [x] Agent engine (switchable Pi SDK / Claude SDK, headless + PTY toggle) — `docs/superpowers/plans/2026-08-02-engine-invocation-layer.md`, `docs/superpowers/plans/2026-08-03-pty-engine-toggle.md` (both done)
+- [ ] Agent engine (Pi SDK) — the Claude Code CLI approach (headless `claude -p` + PTY toggle, `docs/superpowers/plans/2026-08-02-engine-invocation-layer.md`, `docs/superpowers/plans/2026-08-03-pty-engine-toggle.md`) is dropped; moving to a Pi-SDK-backed `EngineInvoker` (`ModelRuntime`/`AgentSession`, same credential store as `/integrations` — see `src/pipeline/db-credential-store.ts`) so scan/implement/verify use the connected provider instead of shelling out to a separate `claude` CLI auth. Not yet built.
 - [x] Storage (embedded SQLite) — `docs/superpowers/plans/2026-08-03-storage-sqlite.md` (done)
 - [ ] Agent execution (scoped shell access, one worktree per attempt) — partially done: one worktree per attempt and cwd-confined shell access for the Implement stage are built by the pipeline orchestrator (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — sandboxing beyond cwd confinement remains unplanned
 - [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — partially done: Implement and Verify are built for real, Judge is stubbed to always agent-ready, and Open PR is out of scope (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — real Judge logic and Open PR remain unplanned
