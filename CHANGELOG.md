@@ -38,3 +38,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [visibility-ui-foundation] | @potensio - Added retroactive spec and plan docs reconciling the ticket-list-view/ticket-board-and-readiness/design-system-rebuild work against docs/roadmap.md's Visibility checkbox (docs/superpowers/specs/2026-08-03-visibility-ui-foundation-design.md, docs/superpowers/plans/2026-08-03-visibility-ui-foundation.md)
 - 2026-08-03: [auth] | @potensio - Added scrypt-based password hashing for the Auth piece (src/auth/password.ts, src/auth/password.test.ts)
 - 2026-08-03: [auth] | @potensio - Session cookie parse/build helpers (src/auth/cookie.ts, src/auth/cookie.test.ts)
+- 2026-08-03: [auth] | @potensio - Added register/login/logout/validateSession auth service (src/auth/service.ts, src/auth/service.test.ts)
