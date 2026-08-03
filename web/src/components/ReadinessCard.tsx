@@ -116,82 +116,57 @@ export default function ReadinessCard({ scan }: Props) {
                 <table className="w-full text-sm text-left">
                   <thead>
                     <tr className="border-b border-white/[0.04] bg-[#0a0a0a]/50">
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Area</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Files</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test-to-Code Ratio</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase w-[35%]">Area</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test-to-Code</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Churn</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Risk</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase w-[30%]">Risk</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {scan.areaSignals.map((area) => {
+                      const coveragePct = Math.round(area.testToCodeRatio * 100);
                       const coverageColor =
                         area.testToCodeRatio >= 0.7
                           ? "text-[#8affb1]"
                           : area.testToCodeRatio >= 0.4
                             ? "text-[#f59e0b]"
                             : "text-[#ff8a8a]";
-                      const coverageBg =
-                        area.testToCodeRatio >= 0.7
-                          ? "bg-[#8affb1]"
-                          : area.testToCodeRatio >= 0.4
-                            ? "bg-[#f59e0b]"
-                            : "bg-[#ff8a8a]";
-                      const coveragePct = Math.round(area.testToCodeRatio * 100);
+
+                      const churn = area.churnScore;
+                      const churnLabel = churn >= 0.7 ? "High" : churn >= 0.3 ? "Medium" : churn > 0 ? "Low" : "None";
+                      const churnColor =
+                        churn >= 0.7
+                          ? "text-[#ff8a8a]"
+                          : churn >= 0.3
+                            ? "text-[#f59e0b]"
+                            : churn > 0
+                              ? "text-white/50"
+                              : "text-white/25";
 
                       return (
                         <tr key={area.area} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-3.5 text-white/80 font-mono text-xs">{area.area}</td>
-                          <td className="px-6 py-3.5 text-white/40 font-light text-xs">{area.files}</td>
-                          <td className="px-6 py-3.5">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="flex-1 max-w-20 h-1 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]"
-                                style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }}
-                              >
-                                <div
-                                  className={`h-full rounded-full ${coverageBg}`}
-                                  style={{
-                                    width: `${coveragePct}%`,
-                                    boxShadow:
-                                      area.testToCodeRatio >= 0.7
-                                        ? "0 0 6px rgba(138,255,177,0.3)"
-                                        : area.testToCodeRatio >= 0.4
-                                          ? "0 0 6px rgba(245,158,11,0.3)"
-                                          : "0 0 6px rgba(255,138,138,0.3)",
-                                  }}
-                                />
-                              </div>
-                              <span className={`text-xs font-mono font-light ${coverageColor}`}>
-                                {coveragePct}%
-                              </span>
-                              {area.testFileCount > 0 && (
-                                <span className="text-[10px] text-white/30 font-light">
-                                  ({area.testFileCount} test{area.testFileCount !== 1 ? 's' : ''})
-                                </span>
-                              )}
+                          <td className="px-6 py-3">
+                            <div className="text-white/80 font-mono text-xs">{area.area}</div>
+                            <div className="text-[10px] text-white/30 font-light mt-0.5">
+                              {area.files} file{area.files !== 1 ? 's' : ''}
                             </div>
                           </td>
                           <td className="px-6 py-3.5">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="flex-1 max-w-20 h-1 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]"
-                                style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }}
-                              >
-                                <div
-                                  className="h-full rounded-full bg-white/60"
-                                  style={{
-                                    width: `${Math.round(area.churnScore * 100)}%`,
-                                    boxShadow: "0 0 6px rgba(255,255,255,0.2)",
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs text-white/40 font-mono font-light">
-                                {Math.round(area.churnScore * 100)}
+                            <span className={`text-xs font-mono font-light ${coverageColor}`}>
+                              {coveragePct}%
+                            </span>
+                            {area.testFileCount > 0 && (
+                              <span className="text-[10px] text-white/30 font-light ml-1">
+                                ({area.testFileCount} test{area.testFileCount !== 1 ? 's' : ''})
                               </span>
-                            </div>
+                            )}
                           </td>
                           <td className="px-6 py-3.5">
+                            <span className={`text-xs font-light ${churnColor}`}>
+                              {churnLabel}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3">
                             <RiskCell note={area.note} />
                           </td>
                         </tr>
