@@ -63,3 +63,15 @@ export async function deleteTicket(key: string): Promise<void> {
     throw new Error(body?.error ?? `HTTP ${res.status}`)
   }
 }
+
+export async function runTicket(key: string, modelId?: string): Promise<void> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}/run`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(modelId ? { modelId } : {}),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `HTTP ${res.status}`)
+  }
+}

@@ -13,12 +13,13 @@ export interface Ticket {
   prSummary: string | null;
   startedAt: string | null;
   finishedAt: string | null;
+  worktreePath: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateTicketInput {
-  id: string;        // optional — auto-generated if empty
+  id: string;
   description: string;
   url: string | null;
 }
@@ -27,7 +28,6 @@ function validate(input: CreateTicketInput): void {
   if (!input.description.trim()) throw new Error("description must not be empty");
 }
 
-/** Normalise better-sqlite3 NULL → null (the driver can return undefined). */
 function normaliseTicket(row: Record<string, unknown>): Ticket {
   const nullish = (v: unknown) => (v === undefined || v === null ? null : String(v));
   return {
@@ -42,6 +42,7 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     prSummary: nullish(row.pr_summary),
     startedAt: nullish(row.started_at),
     finishedAt: nullish(row.finished_at),
+    worktreePath: nullish(row.worktree_path),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -64,10 +65,24 @@ export function listTickets(db: Database.Database): Ticket[] {
   return rows.map(normaliseTicket);
 }
 
+export function getTicket(db: Database.Database, key: string): Ticket | null {
+  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown> | undefined;
+  if (!row) return null;
+  return normaliseTicket(row);
+}
+
 export interface UpdateTicketInput {
   description?: string;
   url?: string | null;
   status?: string;
+  stage?: string | null;
+  worktreePath?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  prUrl?: string | null;
+  prSummary?: string | null;
+  needsHumanCategory?: string | null;
+  needsHumanReason?: string | null;
 }
 
 export function updateTicket(db: Database.Database, key: string, input: UpdateTicketInput): Ticket | null {
@@ -83,6 +98,30 @@ export function updateTicket(db: Database.Database, key: string, input: UpdateTi
   }
   if (input.status !== undefined) {
     db.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE key = ?").run(input.status, now, key);
+  }
+  if (input.stage !== undefined) {
+    db.prepare("UPDATE tickets SET stage = ?, updated_at = ? WHERE key = ?").run(input.stage, now, key);
+  }
+  if (input.worktreePath !== undefined) {
+    db.prepare("UPDATE tickets SET worktree_path = ?, updated_at = ? WHERE key = ?").run(input.worktreePath, now, key);
+  }
+  if (input.startedAt !== undefined) {
+    db.prepare("UPDATE tickets SET started_at = ?, updated_at = ? WHERE key = ?").run(input.startedAt, now, key);
+  }
+  if (input.finishedAt !== undefined) {
+    db.prepare("UPDATE tickets SET finished_at = ?, updated_at = ? WHERE key = ?").run(input.finishedAt, now, key);
+  }
+  if (input.prUrl !== undefined) {
+    db.prepare("UPDATE tickets SET pr_url = ?, updated_at = ? WHERE key = ?").run(input.prUrl, now, key);
+  }
+  if (input.prSummary !== undefined) {
+    db.prepare("UPDATE tickets SET pr_summary = ?, updated_at = ? WHERE key = ?").run(input.prSummary, now, key);
+  }
+  if (input.needsHumanCategory !== undefined) {
+    db.prepare("UPDATE tickets SET needs_human_category = ?, updated_at = ? WHERE key = ?").run(input.needsHumanCategory, now, key);
+  }
+  if (input.needsHumanReason !== undefined) {
+    db.prepare("UPDATE tickets SET needs_human_reason = ?, updated_at = ? WHERE key = ?").run(input.needsHumanReason, now, key);
   }
 
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;

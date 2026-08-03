@@ -27,6 +27,7 @@ interface TicketDetailProps {
   onClose: () => void
   onEdit?: () => void
   onDelete?: () => void
+  onRun?: (ticket: Ticket) => void
 }
 
 const STAGE_ORDER: PipelineStage[] = ['judge', 'implement', 'verify', 'open_pr']
@@ -76,7 +77,7 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
   pending: { border: 'border-white/[0.08]', bg: 'bg-transparent', text: 'text-white/30', dot: 'bg-white/30' },
 }
 
-export default function TicketDetail({ ticket, onClose, onEdit, onDelete }: TicketDetailProps) {
+export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun }: TicketDetailProps) {
   return (
     <>
       {/* Backdrop */}
@@ -226,7 +227,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete }: Tick
           <div className="sticky bottom-0 pt-4 pb-2 -mx-6 px-6 border-t border-white/[0.05] bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/90 to-transparent">
             <button
               className="relative inline-flex group w-full"
-              onClick={() => {}}
+              onClick={() => onRun?.(ticket)}
             >
               <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
               <span

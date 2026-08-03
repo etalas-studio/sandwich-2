@@ -13,6 +13,7 @@ import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerScanRoutes } from "./routes/scans.js";
 import { registerPurgeRoute } from "./routes/purge.js";
 import { registerTicketRoutes } from "./routes/tickets.js";
+import { registerTicketRunRoutes } from "./routes/ticket-run.js";
 import { createScanRunner } from "./scanner/run-scan.js";
 import { createPiInvokerFactory } from "./scanner/pi-invoker.js";
 
@@ -63,8 +64,10 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerPurgeRoute(router, db);
 
   // Scan runner: uses Pi SDK createAgentSession when a model is selected
-  const scanRunner = createScanRunner(db, createPiInvokerFactory(getModelRuntime()));
+  const piInvokerFactory = createPiInvokerFactory(getModelRuntime());
+  const scanRunner = createScanRunner(db, piInvokerFactory);
   registerScanRoutes(router, db, scanRunner);
+  registerTicketRunRoutes(router, db, piInvokerFactory);
 
   const server = createServer((req, res) => {
     void (async () => {

@@ -11,6 +11,7 @@ interface TicketCardProps {
   ticket: Ticket
   onClick: () => void
   onDelete?: (ticket: Ticket) => void
+  onRun?: (ticket: Ticket) => void
 }
 
 const STAGE_LABELS: Record<PipelineStage, string> = {
@@ -49,6 +50,7 @@ export default function TicketCard({
   ticket,
   onClick,
   onDelete,
+  onRun,
 }: TicketCardProps) {
   const isInProgress = ticket.status === 'in_progress'
   const isBlocked = ticket.status === 'blocked'
@@ -148,7 +150,10 @@ export default function TicketCard({
             {ticket.status === 'backlog' && (
               <button
                 className="relative inline-flex group"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRun?.(ticket)
+                }}
               >
                 <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                 <span

@@ -2,9 +2,11 @@ import type { Migration } from "./types.js";
 import { migration0001Init } from "./0001_init.js";
 import { migration0002Readiness } from "./0002_readiness.js";
 import { migration0003Tickets } from "./0003_tickets.js";
+import { migration0004TicketWorktree } from "./0004_ticket_worktree.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
   migration0002Readiness,
   migration0003Tickets,
+  migration0004TicketWorktree,
 ];

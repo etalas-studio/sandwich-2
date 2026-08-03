@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Toaster, toast } from 'sonner'
 import type { Ticket } from './api/tickets'
 import Sidebar from './components/Sidebar'
@@ -15,12 +15,13 @@ import type { CreateTicketData } from './components/CreateTicketModal'
 import EditTicketModal from './components/EditTicketModal'
 import ConfirmDeleteModal from './components/ConfirmDeleteModal'
 import type { UpdateTicketData } from './api/tickets'
-import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket } from './api/tickets'
+import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket } from './api/tickets'
 import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
 import { useScan } from './hooks/useScan'
+import { useTicketRun } from './hooks/useTicketRun'
 
 function OverviewPage() {
   const { repoPath } = useProjectSettings()
@@ -182,6 +183,7 @@ function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const { selectedModelId } = useModelContext()
 
   // Create state
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -214,6 +216,18 @@ function TicketsPage() {
   const selectedTicket = selectedKey
     ? tickets.find(t => t.key === selectedKey) ?? null
     : null
+
+  const { ticket: liveTicket, isRunning } = useTicketRun(selectedTicket)
+  const displayTicket = liveTicket ?? selectedTicket
+  const wasRunning = useRef(isRunning)
+
+  // Reload tickets list when a run finishes
+  useEffect(() => {
+    if (wasRunning.current && !isRunning) {
+      void loadTickets()
+    }
+    wasRunning.current = isRunning
+  }, [isRunning])
 
   const handleOpenTicket = (ticket: Ticket) => {
     setSearchParams({ selected: ticket.key })
@@ -314,17 +328,27 @@ function TicketsPage() {
               tickets={tickets}
               onOpenTicket={handleOpenTicket}
               onDeleteTicket={(ticket) => setDeletingKey(ticket.key)}
+              onRunTicket={(ticket) => {
+                runTicket(ticket.key, selectedModelId ?? undefined)
+                  .then(() => loadTickets())
+                  .catch((err) => toast.error(err.message))
+              }}
             />
           </>
         )}
       </div>
 
-      {selectedTicket && (
+      {displayTicket && (
         <TicketDetail
-          ticket={selectedTicket}
+          ticket={displayTicket}
           onClose={handleCloseTicket}
-          onEdit={() => { setEditError(null); setEditingTicket(selectedTicket) }}
-          onDelete={() => setDeletingKey(selectedTicket.key)}
+          onEdit={() => { setEditError(null); setEditingTicket(displayTicket) }}
+          onDelete={() => setDeletingKey(displayTicket.key)}
+          onRun={(ticket) => {
+            runTicket(ticket.key, selectedModelId ?? undefined)
+              .then(() => loadTickets())
+              .catch((err) => toast.error(err.message))
+          }}
         />
       )}
 

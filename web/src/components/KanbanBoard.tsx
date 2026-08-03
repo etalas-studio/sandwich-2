@@ -6,6 +6,7 @@ interface KanbanBoardProps {
   tickets: Ticket[]
   onOpenTicket: (ticket: Ticket) => void
   onDeleteTicket?: (ticket: Ticket) => void
+  onRunTicket?: (ticket: Ticket) => void
 }
 
 const COLUMNS: { status: TicketStatus; label: string; dotColor: string; glowColor: string }[] = [
@@ -19,6 +20,7 @@ export default function KanbanBoard({
   tickets,
   onOpenTicket,
   onDeleteTicket,
+  onRunTicket,
 }: KanbanBoardProps) {
   const ticketsByStatus = new Map<TicketStatus, Ticket[]>(
     COLUMNS.map((col) => [col.status, []])
@@ -63,6 +65,7 @@ export default function KanbanBoard({
                         ticket={ticket}
                         onClick={() => onOpenTicket(ticket)}
                         onDelete={onDeleteTicket}
+                        onRun={onRunTicket}
                       />
                     ))
                   )}
