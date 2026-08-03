@@ -12,12 +12,7 @@
     "build": "tsc -p tsconfig.json && npm --prefix web run build",
     "dev:web": "npm --prefix web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "selftest": "tsc -p tsconfig.json && node dist/selftest.js",
-    "run:queue": "node dist/cli.js run",
-    "dashboard": "node dist/cli.js dashboard",
-    "doctor": "node dist/cli.js doctor",
-    "serve:legacy": "node dist/cli.js serve",
-    "start:legacy": "npm run build && npm run serve:legacy",
+    "test": "tsc -p tsconfig.json && node --test dist/**/*.test.js",
     "serve": "node dist/web-server.js",
     "seed:demo": "node dist/seed-demo-data.js",
     "start": "npm run build && npm run seed:demo && npm run serve"
