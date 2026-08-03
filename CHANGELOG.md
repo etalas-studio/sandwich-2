@@ -11,6 +11,7 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-04: [url-based-navigation] | @potensio - Added URL-based routing with react-router-dom, replacing state-based navigation
 - 2026-08-04: [settings-screen] | @potensio - Updated Sidebar and App.tsx to support navigation between Overview and Settings
 - 2026-08-04: [http-routing-layer] | @riaenriala - added internal Router class for node:http route dispatch (method+path registration with :param segments, Host/Origin guards, middleware, dispatch)
+- 2026-08-04: [http-routing-layer] | @riaenriala - extracted auth routes (me, register, login, logout) into src/routes/auth.ts route module
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Pipeline shape instance config loader, defaulting engine mode to PTY (src/pipeline/config.ts, config/instance.example.json)
 - 2026-08-03: [pipeline-shape] | @potensio - Added shared pipeline stage types (PipelineContext, Judge/Implement/Verify result types) for the new Judge -> Implement -> Verify sequence (src/pipeline/types.ts)
 - 2026-08-03: [engine-invocation-layer] | @potensio - PoC comparing headless (`claude -p`) vs interactive PTY Claude Code invocation; selected headless (poc/README.md)
