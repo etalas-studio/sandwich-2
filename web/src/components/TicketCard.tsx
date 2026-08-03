@@ -3,12 +3,6 @@ import type { Ticket, PipelineStage } from '../types'
 interface TicketCardProps {
   ticket: Ticket
   onClick: () => void
-  onRun: (key: string) => void
-  onStop: (key: string) => void
-  onDuplicate: (key: string) => void
-  onDelete: (key: string) => void
-  isStarting: boolean
-  isStopping: boolean
 }
 
 const STAGE_LABELS: Record<PipelineStage, string> = {
@@ -46,17 +40,10 @@ function formatRelativeTime(iso: string | null): string {
 export default function TicketCard({
   ticket,
   onClick,
-  onRun,
-  onStop,
-  onDuplicate,
-  onDelete,
-  isStarting,
-  isStopping,
 }: TicketCardProps) {
   const isInProgress = ticket.status === 'in_progress'
   const isBlocked = ticket.status === 'blocked'
   const isDone = ticket.status === 'done'
-  const isBacklog = ticket.status === 'backlog'
 
   return (
     <div
@@ -101,31 +88,6 @@ export default function TicketCard({
               PR
             </span>
           )}
-          <div className="flex items-center gap-1 ml-1">
-            <button
-              type="button"
-              title="Duplicate"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDuplicate(ticket.key)
-              }}
-              className="text-white/25 hover:text-white/60 transition-colors"
-            >
-              <iconify-icon icon="solar:copy-linear" width="13" />
-            </button>
-            <button
-              type="button"
-              title="Delete"
-              disabled={isInProgress}
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(ticket.key)
-              }}
-              className="text-white/25 hover:text-[#ff8a8a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <iconify-icon icon="solar:trash-bin-minimalistic-linear" width="13" />
-            </button>
-          </div>
         </div>
 
         {/* Summary */}
@@ -140,28 +102,6 @@ export default function TicketCard({
              isDone ? `Finished ${formatRelativeTime(ticket.finishedAt)}` :
              ticket.startedAt ? `Ran ${formatRelativeTime(ticket.startedAt)}` : ''}
           </span>
-          {isInProgress && (
-            <button
-              type="button"
-              disabled={isStopping}
-              onClick={(e) => {
-                e.stopPropagation()
-                onStop(ticket.key)
-              }}
-              className="flex items-center gap-1 group disabled:opacity-40 disabled:cursor-not-allowed"
-              title="Stop"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse group-hover:hidden" />
-              <iconify-icon
-                icon="solar:stop-circle-linear"
-                width="11"
-                className="hidden group-hover:inline text-[#ff8a8a]"
-              />
-              <span className="text-[10px] text-[#f59e0b] font-light group-hover:text-[#ff8a8a]">
-                {isStopping ? 'Stopping…' : 'Running'}
-              </span>
-            </button>
-          )}
           {isDone && ticket.prUrl && (
             <a
               href={ticket.prUrl}
@@ -172,20 +112,6 @@ export default function TicketCard({
             >
               View →
             </a>
-          )}
-          {isBacklog && (
-            <button
-              type="button"
-              disabled={isStarting}
-              onClick={(e) => {
-                e.stopPropagation()
-                onRun(ticket.key)
-              }}
-              className="px-2 py-0.5 rounded bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-white/70 text-[10px] font-normal tracking-wide border border-white/[0.08] hover:text-white hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}
-            >
-              {isStarting ? 'Starting…' : 'Run'}
-            </button>
           )}
         </div>
       </div>

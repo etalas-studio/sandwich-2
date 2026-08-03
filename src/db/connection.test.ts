@@ -16,16 +16,10 @@ function testMigratesFreshDatabase(): void {
   ).map((row) => row.name);
 
   for (const expected of [
-    "tickets",
-    "runs",
-    "reviews",
-    "readiness_scans",
-    "blocklist_entries",
     "credentials",
     "users",
     "sessions",
     "instance_settings",
-    "run_artifacts",
     "schema_migrations",
   ]) {
     assert.ok(tables.includes(expected), `expected table ${expected} to exist`);

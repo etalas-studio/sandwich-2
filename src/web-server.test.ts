@@ -50,19 +50,11 @@ function tempWebRoot(): string {
   return mkdtempSync(join(tmpdir(), "web-server-webroot-"));
 }
 
-function tempPipelineConfigPath(): string {
-  // Deliberately nonexistent — these tests never exercise the run-trigger
-  // route's actual pipeline execution, and startWebServer already handles a
-  // missing config gracefully (503 on POST .../run).
-  return join(mkdtempSync(join(tmpdir(), "web-server-test-pipeline-")), "instance.json");
-}
-
 async function startTestServer() {
   const server = startWebServer({
     dbPath: tempDbPath(),
     port: 0,
     webRoot: tempWebRoot(),
-    pipelineConfigPath: tempPipelineConfigPath(),
   });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const { port } = server.address() as AddressInfo;

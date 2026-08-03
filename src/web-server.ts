@@ -1,15 +1,9 @@
 import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { execSync } from "node:child_process";
 import { extname, isAbsolute, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
-import { getTicketByKey, listTickets, deleteTicket, upsertTicket } from "./db/tickets.js";
-import { getLatestRunForTicket } from "./db/runs.js";
-import { listArtifactsForRun } from "./db/run-artifacts.js";
 import { getInstanceSettings, completeFirstRun } from "./db/settings.js";
-import { getLatestReadinessScan } from "./db/readiness-scans.js";
-import { purgeAllData } from "./db/purge.js";
 import { getUserById } from "./db/users.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import {
@@ -26,18 +20,6 @@ import {
   buildSessionCookie,
   parseCookies,
 } from "./auth/cookie.js";
-import {
-  loadPipelineConfig,
-  DEFAULT_ENGINE_MODE,
-  DEFAULT_IMPLEMENT_TIMEOUT_MS,
-  DEFAULT_VERIFY_TIMEOUT_MS,
-  DEFAULT_SCAN_TIMEOUT_MS,
-  DEFAULT_WORKTREE_ROOT,
-  DEFAULT_BRANCH_PREFIX,
-} from "./pipeline/config.js";
-import type { PipelineConfig } from "./pipeline/config.js";
-import { runPipeline } from "./pipeline/run.js";
-import { runReadinessScan } from "./pipeline/readiness-scan.js";
 import {
   initIntegrations,
   getIntegrationStatus,
@@ -140,13 +122,6 @@ export interface WebServerOptions {
   dbPath: string;
   port: number;
   webRoot: string;
-  /**
-   * Path to the Pipeline shape instance config (src/pipeline/config.ts).
-   * If it doesn't exist, the server still starts — POST .../run just
-   * responds 503 until a real config/instance.json is created (copy
-   * config/instance.example.json and point repoPath at a real project).
-   */
-  pipelineConfigPath: string;
 }
 
 function sendJson(
@@ -278,109 +253,22 @@ function validateRepoPath(candidate: unknown): { ok: true; repoPath: string } | 
   return { ok: true, repoPath };
 }
 
-/** First available key of the form "<base>", "<base>-copy", "<base>-copy-2", ... */
-function uniqueTicketKey(db: import("better-sqlite3").Database, base: string): string {
-  if (!getTicketByKey(db, base)) return base;
-  let suffix = 2;
-  let candidate = `${base}-copy`;
-  while (getTicketByKey(db, candidate)) {
-    candidate = `${base}-copy-${String(suffix)}`;
-    suffix += 1;
-  }
-  return candidate;
-}
-
-/** The repo's currently checked-out branch — used as a baseBranch fallback
- * when there's no static config file to say otherwise, since a hardcoded
- * "main"/"master" guess would be wrong for plenty of real repos. */
-function detectCurrentBranch(repoPath: string): string | null {
-  try {
-    return execSync("git rev-parse --abbrev-ref HEAD", { cwd: repoPath, encoding: "utf8" }).trim();
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Builds the config runPipeline actually runs with for one request. The
- * DB-stored repoPath (first-run setup, see instance_settings) always wins
- * over the static config file's repoPath — the file's repoPath is only a
- * dev-time fallback. The other fields (worktreeRoot, branchPrefix,
- * engineMode, timeouts) come from the static file when one exists; when it
- * doesn't, this instance still runs on sensible defaults rather than
- * refusing outright, since repoPath (set via Settings > Project) is the one
- * piece of setup this product actually asks a human to do up front.
- */
-function resolveEffectiveConfig(
-  fileConfig: PipelineConfig | null,
-  dbRepoPath: string | null,
-): PipelineConfig | null {
-  const repoPath = dbRepoPath ?? fileConfig?.repoPath ?? null;
-  if (!repoPath) return null;
-
-  if (fileConfig) {
-    return { ...fileConfig, repoPath };
-  }
-
-  return {
-    repoPath,
-    // Must be absolute: git resolves createWorktree's relative path against
-    // repoPath (its own cwd for the `git worktree add` call), while the
-    // engine invoker's cwd option resolves relative to *this server
-    // process's* cwd — those two disagree on a bare relative string, so the
-    // worktree git actually creates and the directory the agent tries to
-    // start in silently diverge, and the agent exits instantly with no
-    // output. Joining against repoPath up front removes the ambiguity.
-    worktreeRoot: join(repoPath, DEFAULT_WORKTREE_ROOT),
-    branchPrefix: DEFAULT_BRANCH_PREFIX,
-    baseBranch: detectCurrentBranch(repoPath) ?? "main",
-    engineMode: DEFAULT_ENGINE_MODE,
-    implementTimeoutMs: DEFAULT_IMPLEMENT_TIMEOUT_MS,
-    verifyTimeoutMs: DEFAULT_VERIFY_TIMEOUT_MS,
-    scanTimeoutMs: DEFAULT_SCAN_TIMEOUT_MS,
-  };
-}
-
-/**
- * Minimal API + static server for the new (post-reset) product design.
- * Deliberately separate from server.ts, which serves the prior attempt's
- * job/lane model — this one knows about tickets, runs, auth, and the
- * pipeline trigger.
+ * Minimal API + static server. Serves auth, settings, integrations, and
+ * the SPA — the ticket pipeline has been removed (UI is static mock data).
  */
 export function startWebServer(options: WebServerOptions): Server {
-  const { dbPath, port, webRoot, pipelineConfigPath } = options;
+  const { dbPath, port, webRoot } = options;
   const db = openDb(dbPath);
 
   const trustedHosts = parseTrustedHosts();
   // Set once the server is listening; `port` may be 0 ("pick a free port").
   let boundPort = port;
 
-  const pipelineConfig = existsSync(pipelineConfigPath)
-    ? loadPipelineConfig(pipelineConfigPath)
-    : null;
-  if (!pipelineConfig) {
-    console.log(
-      `Pipeline: no config at ${pipelineConfigPath} — POST /api/tickets/:key/run will return 503 until one exists (copy config/instance.example.json).`,
-    );
-  }
-
   // Pi SDK integration layer — loads custom providers from config/models.json.
   initIntegrations(db).catch((err) => {
     console.error("Integrations init failed:", err);
   });
-
-  // Global (process-wide) single-run guard: every run costs real money and
-  // spawns a real coding agent, so at most one runPipeline call is ever in
-  // flight, whichever ticket it's for. Not a real queue — sequential
-  // execution across a backlog is still an unbuilt piece; this just refuses
-  // the second trigger instead of racing it. The controller lets a human
-  // stop that one in-flight run early from the UI.
-  let runningTicketKey: string | null = null;
-  let runningController: AbortController | null = null;
-  // A readiness scan needs the same real shell access to the repo (via a
-  // worktree) that a ticket run does, so it shares the same "only one thing
-  // running at a time" rule rather than getting its own independent guard.
-  let scanRunning = false;
 
   const server = createServer((req, res) => {
     // One wrapper around the entire handler body. Any unexpected throw from
@@ -478,62 +366,6 @@ export function startWebServer(options: WebServerOptions): Server {
           return;
         }
 
-        if (method === "GET" && path === "/api/tickets") {
-          // Auth already enforced by the default-deny guard above.
-          const ticketsWithRuns = listTickets(db).map((ticket) => ({
-            ...ticket,
-            latestRun: getLatestRunForTicket(db, ticket.key),
-          }));
-          sendJson(res, 200, ticketsWithRuns);
-          return;
-        }
-
-        if (path === "/api/tickets" && method === "POST") {
-          let body: unknown;
-          try {
-            body = await readJsonBody(req);
-          } catch (err) {
-            sendCaughtError(res, err, "ticket create");
-            return;
-          }
-          const input = body as Partial<{
-            key: string;
-            summary: string;
-            description: string;
-            url: string | null;
-          }> | null;
-          if (
-            typeof input?.key !== "string" ||
-            input.key.trim().length === 0 ||
-            typeof input.summary !== "string" ||
-            typeof input.description !== "string"
-          ) {
-            sendJson(res, 400, { error: "key, summary, and description are required strings" });
-            return;
-          }
-          const ticket = upsertTicket(db, {
-            key: uniqueTicketKey(db, input.key.trim()),
-            summary: input.summary,
-            description: input.description,
-            url: input.url ?? null,
-          });
-          sendJson(res, 201, ticket);
-          return;
-        }
-
-        const artifactsMatch =
-          method === "GET" ? /^\/api\/tickets\/([^/]+)\/artifacts$/.exec(path) : null;
-        if (artifactsMatch) {
-          const ticketKey = decodePathSegment(artifactsMatch[1] as string);
-          if (ticketKey === null) {
-            sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
-            return;
-          }
-          const run = getLatestRunForTicket(db, ticketKey);
-          sendJson(res, 200, run ? listArtifactsForRun(db, run.id) : []);
-          return;
-        }
-
         if (path === "/api/settings/project" && method === "GET") {
           sendJson(res, 200, getInstanceSettings(db));
           return;
@@ -555,163 +387,6 @@ export function startWebServer(options: WebServerOptions): Server {
           }
           const settings = completeFirstRun(db, validated.repoPath, new Date().toISOString());
           sendJson(res, 200, settings);
-          return;
-        }
-
-        // TEMPORARY dev-only route — see src/db/purge.ts.
-        if (method === "POST" && path === "/api/dev/purge") {
-          if (runningTicketKey !== null || scanRunning) {
-            sendJson(res, 409, { error: "a run or scan is in flight — stop it before purging" });
-            return;
-          }
-          purgeAllData(db);
-          sendJson(res, 200, { status: "purged" });
-          return;
-        }
-
-        if (method === "GET" && path === "/api/readiness-scans/latest") {
-          sendJson(res, 200, getLatestReadinessScan(db));
-          return;
-        }
-
-        if (method === "POST" && path === "/api/readiness-scans/run") {
-          const effectiveConfig = resolveEffectiveConfig(pipelineConfig, getInstanceSettings(db).repoPath);
-          if (!effectiveConfig) {
-            sendJson(res, 503, {
-              error: "no project folder configured yet — set one in Settings",
-            });
-            return;
-          }
-          if (runningTicketKey !== null || scanRunning) {
-            sendJson(res, 409, {
-              error:
-                runningTicketKey !== null
-                  ? `a ticket run (${runningTicketKey}) is already in flight — only one runs at a time`
-                  : "a readiness scan is already running",
-            });
-            return;
-          }
-
-          scanRunning = true;
-          runReadinessScan(effectiveConfig, db)
-            .catch((err: unknown) => {
-              console.error("Readiness scan failed:", err);
-            })
-            .finally(() => {
-              scanRunning = false;
-            });
-
-          sendJson(res, 202, { status: "started" });
-          return;
-        }
-
-        const runMatch = method === "POST" ? /^\/api\/tickets\/([^/]+)\/run$/.exec(path) : null;
-        if (runMatch) {
-          const ticketKey = decodePathSegment(runMatch[1] as string);
-          if (ticketKey === null) {
-            sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
-            return;
-          }
-
-          // Cross-origin/DNS-rebinding already refused above, and this route
-          // now also requires a valid session via the default-deny guard —
-          // the ad-hoc Origin-only check this route used before Auth existed
-          // is superseded rather than duplicated here.
-          const effectiveConfig = resolveEffectiveConfig(pipelineConfig, getInstanceSettings(db).repoPath);
-          if (!effectiveConfig) {
-            sendJson(res, 503, {
-              error: "no project folder configured yet — set one in Settings",
-            });
-            return;
-          }
-          if (!getTicketByKey(db, ticketKey)) {
-            sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
-            return;
-          }
-          if (runningTicketKey !== null || scanRunning) {
-            sendJson(res, 409, {
-              error:
-                runningTicketKey === ticketKey
-                  ? `${ticketKey} is already running`
-                  : scanRunning
-                    ? "a readiness scan is already in flight — only one runs at a time"
-                    : `another run (${runningTicketKey}) is already in flight — only one runs at a time`,
-            });
-            return;
-          }
-
-          const controller = new AbortController();
-          runningTicketKey = ticketKey;
-          runningController = controller;
-          runPipeline(ticketKey, effectiveConfig, db, undefined, controller.signal)
-            .catch((err: unknown) => {
-              console.error(`Pipeline run for ${ticketKey} failed:`, err);
-            })
-            .finally(() => {
-              runningTicketKey = null;
-              runningController = null;
-            });
-
-          sendJson(res, 202, { status: "started", ticketKey });
-          return;
-        }
-
-        const stopMatch = method === "POST" ? /^\/api\/tickets\/([^/]+)\/stop$/.exec(path) : null;
-        if (stopMatch) {
-          const ticketKey = decodePathSegment(stopMatch[1] as string);
-          if (ticketKey === null) {
-            sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
-            return;
-          }
-          if (runningTicketKey !== ticketKey || !runningController) {
-            sendJson(res, 409, { error: `${ticketKey} is not currently running` });
-            return;
-          }
-          runningController.abort();
-          sendJson(res, 200, { status: "stopping", ticketKey });
-          return;
-        }
-
-        const duplicateMatch =
-          method === "POST" ? /^\/api\/tickets\/([^/]+)\/duplicate$/.exec(path) : null;
-        if (duplicateMatch) {
-          const ticketKey = decodePathSegment(duplicateMatch[1] as string);
-          if (ticketKey === null) {
-            sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
-            return;
-          }
-          const original = getTicketByKey(db, ticketKey);
-          if (!original) {
-            sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
-            return;
-          }
-          const duplicate = upsertTicket(db, {
-            key: uniqueTicketKey(db, original.key),
-            summary: original.summary,
-            description: original.description,
-            url: original.url,
-          });
-          sendJson(res, 201, duplicate);
-          return;
-        }
-
-        const ticketMatch = /^\/api\/tickets\/([^/]+)$/.exec(path);
-        if (ticketMatch && method === "DELETE") {
-          const ticketKey = decodePathSegment(ticketMatch[1] as string);
-          if (ticketKey === null) {
-            sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
-            return;
-          }
-          if (!getTicketByKey(db, ticketKey)) {
-            sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
-            return;
-          }
-          if (runningTicketKey === ticketKey) {
-            sendJson(res, 409, { error: `${ticketKey} is currently running — stop it first` });
-            return;
-          }
-          deleteTicket(db, ticketKey);
-          sendJson(res, 200, { status: "deleted", ticketKey });
           return;
         }
 
@@ -785,11 +460,6 @@ export function startWebServer(options: WebServerOptions): Server {
     boundPort = typeof address === "object" && address ? address.port : port;
     console.log(`Server : http://127.0.0.1:${String(boundPort)}`);
     console.log(`DB     : ${dbPath}`);
-    console.log(
-      existsSync(join(webRoot, "index.html"))
-        ? `Web    : ${webRoot}/index.html`
-        : `Web    : not found at ${webRoot} — API only.`,
-    );
   });
 
   return server;
@@ -820,6 +490,5 @@ if (isMain) {
     dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,
     webRoot: process.env.WEB_ROOT ?? "web/dist",
-    pipelineConfigPath: process.env.PIPELINE_CONFIG_PATH ?? "config/instance.json",
   });
 }

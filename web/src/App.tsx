@@ -1,77 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
-import { Toaster, toast } from 'sonner'
-import {
-  useTickets,
-  TICKETS_QUERY_KEY,
-  runTicket,
-  stopTicket,
-  duplicateTicket,
-  deleteTicket,
-  createTicket,
-  computeStats,
-  fetchProjectSettings,
-  useLatestReadinessScan,
-  READINESS_SCAN_QUERY_KEY,
-  triggerReadinessScan,
-  purgeDatabase,
-} from './types'
+import { Toaster } from 'sonner'
+import { computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
-import ReadinessCard from './components/ReadinessCard'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
 import Integrations from './components/Integrations'
 import mockData from './mockData'
 
-// Quick Add: a one-click seed of a known real ticket for demoing/testing,
-// rather than a full ticket-creation form. createTicket auto-suffixes the
-// key if RR-7338 is already taken, so clicking repeatedly just adds more.
-const QUICK_ADD_TICKET = {
-  key: 'RR-7338',
-  url: 'https://runchise.atlassian.net/browse/RR-7338',
-  summary: 'Bug: Exported File Name Replaces Mandarin Characters with Underscores (_)',
-  description:
-    '### Issue\n\nWhen exporting or downloading files, any Mandarin characters included in the file name are replaced with underscores (`_`) instead of being preserved.\n\nThis issue occurs regardless of the system language (Bahasa Indonesia, English, or Mandarin).\n\n**Example**\n\n* **Brand Name:** `Onboard Fajar 库存变动`\n* **Expected File Name:** `Onboard_Fajar_库存变动.xlsx`\n* **Actual File Name:** `Onboard_Fajar_____.xlsx` (Mandarin characters replaced with `_`)\n\n### Expected Behavior\n\n* Preserve all supported Unicode characters (including Mandarin) in exported file names.\n* File names should display correctly across all supported languages without replacing non-Latin characters with underscores.\n* The exported file name should match the original brand name (except for invalid filesystem characters that must still be sanitized).\n\n### Acceptance Criteria\n\n1. Exported file names preserve Mandarin characters.\n2. Exported file names preserve Unicode characters for all supported languages.\n3. Only invalid filename characters (e.g. `\\ / : * ? " < > |`) are sanitized or replaced.\n4. Export works correctly for all export types (e.g. Onboarding, Stock Product, and other exported reports/files).\n5. The issue is resolved regardless of the selected system language (English, Bahasa Indonesia, or Mandarin).',
-}
-
 function OverviewPage() {
-  const queryClient = useQueryClient()
-  const [repoPath, setRepoPath] = useState<string | null>(null)
-  const { scan, isLoading: scanLoading } = useLatestReadinessScan()
-  const notifiedFailedScanId = useRef<string | null>(null)
-
-  useEffect(() => {
-    fetchProjectSettings()
-      .then((settings) => setRepoPath(settings.repoPath))
-      .catch(() => {
-        /* Overview just shows the "not configured" state if this fails. */
-      })
-  }, [])
-
-  useEffect(() => {
-    if (scan?.status === 'failed' && notifiedFailedScanId.current !== scan.id) {
-      notifiedFailedScanId.current = scan.id
-      toast.error('Readiness scan failed — try again.')
-    }
-  }, [scan])
-
-  const handleRunScan = () => {
-    triggerReadinessScan().then((result) => {
-      if (!result.ok) {
-        toast.error(`Could not start scan: ${result.message}`)
-        return
-      }
-      queryClient.invalidateQueries({ queryKey: READINESS_SCAN_QUERY_KEY })
-    })
-  }
-
   return (
     <div className="h-full overflow-y-auto hide-scrollbar p-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
           <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
@@ -83,28 +25,272 @@ function OverviewPage() {
         </p>
       </div>
 
-      <ReadinessCard
-        scan={scan}
-        loading={scanLoading}
-        repoConfigured={repoPath !== null}
-        scanning={scan?.status === 'running'}
-        onScan={handleRunScan}
-      />
+      {/* ── Project Description ── */}
+      <div className="section-label">Project</div>
+      <div className="ds-card-outer ds-shadow-elevated mb-8">
+        <div className="ds-card-inner p-6">
+          <div className="absolute inset-0 ds-noise pointer-events-none" />
+          <div className="relative z-10">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333] ds-shadow-card shrink-0 mt-0.5">
+                <iconify-icon icon="solar:widget-5-linear" width="20" className="text-white/80" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-normal tracking-tight text-white ds-text-shadow mb-2">
+                  Runchise Agent Pipeline
+                </h2>
+                <p className="text-sm text-white/60 font-light leading-relaxed">
+                  An orchestrator that runs AI coding agents per ticket in isolated git worktrees.
+                  Each attempt goes through a{' '}
+                  <span className="italic font-light text-white/80" style={{ fontFamily: "'Playfair Display', serif" }}>Judge → Implement → Verify</span>
+                  {' '}pipeline with guardrails that block risky changes before a single line of code is touched.
+                  Built to produce evidence — not impressions — for the Runchise pilot.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Agentic Readiness ── */}
+      <div className="section-label">Agentic Readiness</div>
+      <div className="ds-card-outer ds-shadow-elevated mb-8">
+        <div className="ds-card-inner p-6">
+          <div className="absolute inset-0 ds-noise pointer-events-none" />
+          <div className="relative z-10">
+            {/* Readiness summary bar */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-2.5">
+                <span className="px-2.5 py-1 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                  Good
+                </span>
+                <span className="text-xs text-white/40 font-light">6 of 10 signals present</span>
+              </div>
+              <div className="flex-1 h-1.5 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }}>
+                <div className="h-full bg-gradient-to-r from-[#f59e0b]/60 to-[#f59e0b] rounded-full w-[60%]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.3)' }} />
+              </div>
+            </div>
+
+            {/* Context files grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <ReadinessItem
+                icon="solar:document-text-linear"
+                label="CLAUDE.md"
+                status="present"
+                detail="English, good project orientation"
+              />
+              <ReadinessItem
+                icon="solar:document-text-linear"
+                label="README.md"
+                status="partial"
+                detail="Indonesian — AI models work better with English"
+              />
+              <ReadinessItem
+                icon="solar:map-point-linear"
+                label="Roadmap"
+                status="present"
+                detail="Clear phase tracking with checkboxes"
+              />
+              <ReadinessItem
+                icon="solar:documents-linear"
+                label="Spec docs"
+                status="present"
+                detail="6 specs in docs/superpowers/specs/"
+              />
+              <ReadinessItem
+                icon="solar:checklist-linear"
+                label="Implementation plans"
+                status="present"
+                detail="5 plans in docs/superpowers/plans/"
+              />
+              <ReadinessItem
+                icon="solar:code-linear"
+                label="package.json scripts"
+                status="present"
+                detail="build, test, serve, typecheck defined"
+              />
+              <ReadinessItem
+                icon="solar:history-linear"
+                label="CHANGELOG.md"
+                status="present"
+                detail="One entry per completed task"
+              />
+              <ReadinessItem
+                icon="solar:document-text-linear"
+                label="AGENTS.md"
+                status="missing"
+                detail="No agent-specific instructions file"
+              />
+              <ReadinessItem
+                icon="solar:structure-linear"
+                label="architecture.md"
+                status="missing"
+                detail="No dedicated architecture document"
+              />
+              <ReadinessItem
+                icon="solar:users-group-rounded-linear"
+                label="CONTRIBUTING.md"
+                status="missing"
+                detail="No contributor guide"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Recommendations ── */}
+      <div className="section-label">Recommendations</div>
+      <div className="ds-card-outer ds-shadow-elevated mb-8">
+        <div className="ds-card-inner p-6">
+          <div className="absolute inset-0 ds-noise pointer-events-none" />
+          <div className="relative z-10 flex flex-col gap-1">
+            <RecommendationItem
+              icon="solar:translation-linear"
+              title="Translate README.md to English"
+              description="AI coding agents parse English project context more reliably. An English README alongside the existing Indonesian one (or replacing it) would improve first-read comprehension for any agent entering this codebase."
+            />
+            <RecommendationItem
+              icon="solar:structure-linear"
+              title="Add an architecture.md"
+              description="Document the pipeline stages, data flow between orchestrator and worktrees, and how guardrails, credential storage, and the web server fit together. This gives agents a structural map before they start reading source files."
+            />
+            <RecommendationItem
+              icon="solar:mention-circle-linear"
+              title="Add AGENTS.md with project-specific rules"
+              description="An AGENTS.md (or .cursorrules) file tells AI agents about conventions unique to this project: no shell in proc.ts, append-only run records, the credential store pattern, and the working rules from CLAUDE.md that agents should follow."
+            />
+            <RecommendationItem
+              icon="solar:users-group-rounded-linear"
+              title="Add CONTRIBUTING.md"
+              description="Helps both human contributors and AI agents understand the contribution workflow: branch naming, commit conventions, how to run tests, and what the review process expects."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Technical Information ── */}
+      <div className="section-label">Technical Information</div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Stack */}
+        <div className="ds-card-outer ds-shadow-elevated">
+          <div className="ds-card-inner p-6">
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10">
+              <h3 className="text-sm font-normal tracking-tight text-white ds-text-shadow mb-4 flex items-center gap-2">
+                <iconify-icon icon="solar:layers-linear" width="16" className="text-white/50" />
+                Stack
+              </h3>
+              <div className="space-y-3">
+                <TechRow label="Runtime" value="Node.js 22+" />
+                <TechRow label="Language" value="TypeScript 5.6" />
+                <TechRow label="Frontend" value="React 18 + Vite + Tailwind CSS" />
+                <TechRow label="Storage" value="better-sqlite3 (embedded)" />
+                <TechRow label="Agent Engine" value="Pi SDK (@earendil-works/pi-coding-agent)" />
+                <TechRow label="Terminal" value="node-pty (PTY-mode invocation)" />
+                <TechRow label="Testing" value="Node.js native test runner" />
+                <TechRow label="Package manager" value="npm" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Architecture */}
+        <div className="ds-card-outer ds-shadow-elevated">
+          <div className="ds-card-inner p-6">
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10">
+              <h3 className="text-sm font-normal tracking-tight text-white ds-text-shadow mb-4 flex items-center gap-2">
+                <iconify-icon icon="solar:graph-new-linear" width="16" className="text-white/50" />
+                Architecture
+              </h3>
+              <div className="space-y-3">
+                <TechRow label="Pipeline" value="Judge → Implement → Verify → Open PR (phase-gated)" />
+                <TechRow label="Isolation" value="One git worktree per ticket attempt" />
+                <TechRow label="Guardrails" value="File/bound allowlists, diff limits, domain blocklists enforced by orchestrator" />
+                <TechRow label="Records" value="Append-only JSONL + per-run folders (plan, diff, transcript, test results)" />
+                <TechRow label="Auth" value="Custom single-account session auth with CSRF protection" />
+                <TechRow label="Server" value="node:http (zero runtime deps beyond sqlite3 and pi SDK)" />
+                <TechRow label="Deployment" value="Server-agnostic — runs anywhere Node runs" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Readiness checklist item ── */
+
+function ReadinessItem({
+  icon,
+  label,
+  status,
+  detail,
+}: {
+  icon: string
+  label: string
+  status: 'present' | 'partial' | 'missing'
+  detail: string
+}) {
+  const colors = {
+    present: { bg: 'bg-[#1d3a24]', border: 'border-[#2b5936]', text: 'text-[#8affb1]', dot: 'bg-[#8affb1]' },
+    partial: { bg: 'bg-[#3a2e1d]', border: 'border-[#5a4525]', text: 'text-[#f59e0b]', dot: 'bg-[#f59e0b]' },
+    missing: { bg: 'bg-white/[0.03]', border: 'border-white/[0.05]', text: 'text-white/30', dot: 'bg-white/20' },
+  }[status]
+
+  return (
+    <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg ${colors.bg} border ${colors.border} transition-colors`} style={{ boxShadow: status !== 'missing' ? 'inset 0 1px 1px rgba(255,255,255,0.05)' : undefined }}>
+      <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} shrink-0 mt-1.5`} style={status === 'present' ? { boxShadow: '0 0 6px rgba(138,255,177,0.4)' } : status === 'partial' ? { boxShadow: '0 0 6px rgba(245,158,11,0.4)' } : undefined} />
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <iconify-icon icon={icon} width="13" className={colors.text} />
+          <span className={`text-xs font-normal tracking-wide ${colors.text}`}>{label}</span>
+        </div>
+        <p className="text-[10px] text-white/30 font-light mt-0.5 leading-relaxed">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Recommendation list item ── */
+
+function RecommendationItem({
+  icon,
+  title,
+  description,
+}: {
+  icon: string
+  title: string
+  description: string
+}) {
+  return (
+    <div className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
+      <iconify-icon icon={icon} width="16" className="text-white/40 shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <span className="text-sm text-white/80 font-light">{title}</span>
+        <p className="text-xs text-white/40 font-light mt-0.5 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Tech info key-value row ── */
+
+function TechRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <span className="text-xs text-white/35 font-light shrink-0 w-28">{label}</span>
+      <span className="text-xs text-white/70 font-light">{value}</span>
     </div>
   )
 }
 
 function TicketsPage() {
-  const queryClient = useQueryClient()
-  const { tickets, error } = useTickets()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
-  const [stoppingKeys, setStoppingKeys] = useState<Set<string>>(new Set())
-  const [runError, setRunError] = useState<string | null>(null)
 
-  // Derive selected ticket from URL query param
+  const displayTickets = mockData.tickets
   const selectedKey = searchParams.get('selected')
-  const displayTickets = tickets ?? mockData.tickets
   const selectedTicket = selectedKey
     ? displayTickets.find(t => t.key === selectedKey) ?? null
     : null
@@ -118,85 +304,9 @@ function TicketsPage() {
     setSearchParams({})
   }
 
-  const handleRunTicket = (key: string) => {
-    setStartingKeys((prev) => new Set(prev).add(key))
-    setRunError(null)
-    runTicket(key)
-      .then((result) => {
-        if (!result.ok) setRunError(`Could not start ${key}: ${result.message}`)
-        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
-      })
-      .finally(() => {
-        setStartingKeys((prev) => {
-          const next = new Set(prev)
-          next.delete(key)
-          return next
-        })
-      })
-  }
-
-  const handleStopTicket = (key: string) => {
-    setStoppingKeys((prev) => new Set(prev).add(key))
-    setRunError(null)
-    stopTicket(key)
-      .then((result) => {
-        if (!result.ok) setRunError(`Could not stop ${key}: ${result.message}`)
-        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
-      })
-      .finally(() => {
-        setStoppingKeys((prev) => {
-          const next = new Set(prev)
-          next.delete(key)
-          return next
-        })
-      })
-  }
-
-  const handleDuplicateTicket = (key: string) => {
-    setRunError(null)
-    duplicateTicket(key).then((result) => {
-      if (!result.ok) setRunError(`Could not duplicate ${key}: ${result.message}`)
-      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
-    })
-  }
-
-  const handleDeleteTicket = (key: string) => {
-    if (!window.confirm(`Delete ${key}? This also removes its run history.`)) return
-    setRunError(null)
-    deleteTicket(key).then((result) => {
-      if (!result.ok) setRunError(`Could not delete ${key}: ${result.message}`)
-      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
-    })
-  }
-
-  const handleQuickAdd = () => {
-    setRunError(null)
-    createTicket(QUICK_ADD_TICKET).then((result) => {
-      if (!result.ok) setRunError(`Could not add ticket: ${result.message}`)
-      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
-    })
-  }
-
   return (
     <>
       <div className="h-full overflow-y-auto hide-scrollbar p-6">
-        {/* Error banner */}
-        {error && (
-          <div className="ds-card-outer mb-6">
-            <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-              <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
-              <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
-            </div>
-          </div>
-        )}
-        {runError && (
-          <div className="ds-card-outer mb-6">
-            <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-              <p className="text-sm text-[#ff8a8a]">{runError}</p>
-            </div>
-          </div>
-        )}
-
         {/* Header */}
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
@@ -204,52 +314,23 @@ function TicketsPage() {
               <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
                 Tickets
               </h1>
-              <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-                Today
-              </span>
             </div>
             <p className="text-sm text-white/50 font-light">
               {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               {' · '}
-              {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
+              {displayTickets.length} tickets
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleQuickAdd}
-            className="relative inline-flex group shrink-0"
-          >
-            <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-            <span
-              className="relative px-4 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
-              style={{
-                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-              }}
-            >
-              <iconify-icon icon="solar:add-circle-linear" width="14" />
-              Quick Add
-            </span>
-          </button>
         </div>
 
-        {/* Stats */}
         <StatsCards stats={stats} />
 
-        {/* Kanban */}
         <KanbanBoard
           tickets={displayTickets}
           onOpenTicket={handleOpenTicket}
-          onRunTicket={handleRunTicket}
-          onStopTicket={handleStopTicket}
-          onDuplicateTicket={handleDuplicateTicket}
-          onDeleteTicket={handleDeleteTicket}
-          startingKeys={startingKeys}
-          stoppingKeys={stoppingKeys}
         />
       </div>
 
-      {/* Ticket detail overlay */}
       {selectedTicket && (
         <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
       )}
@@ -263,17 +344,6 @@ interface AppProps {
 }
 
 function AppLayout({ username, onLogout }: AppProps) {
-  const handlePurge = () => {
-    if (!window.confirm('Delete EVERYTHING from the database (users, tickets, runs, settings, blocklist)? This cannot be undone.')) return
-    purgeDatabase().then((result) => {
-      if (!result.ok) {
-        toast.error(`Could not purge: ${result.message}`)
-        return
-      }
-      window.location.reload()
-    })
-  }
-
   return (
     <div className="ds-bg min-h-screen text-white antialiased">
       <Toaster theme="dark" position="top-right" />
@@ -290,7 +360,7 @@ function AppLayout({ username, onLogout }: AppProps) {
 
       <div className="ds-card-outer min-h-screen">
         <div className="ds-card-inner flex min-h-screen">
-          <Sidebar username={username} onLogout={onLogout} onPurge={handlePurge} />
+          <Sidebar username={username} onLogout={onLogout} />
 
           <div className="ds-noise" />
 
@@ -300,7 +370,7 @@ function AppLayout({ username, onLogout }: AppProps) {
               <Route path="/tickets" element={<TicketsPage />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/integrations" element={<Integrations />} />
-              <Route path="/" element={<Navigate to="/overview" replace />} />
+              <Route path="/" element={<Navigate to="/tickets" replace />} />
             </Routes>
           </main>
         </div>
