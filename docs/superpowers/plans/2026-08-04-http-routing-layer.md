@@ -110,7 +110,7 @@ git commit -m "refactor: extract shared HTTP utilities to http-utils.ts"
   }
   ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/router.test.ts`:
 
@@ -246,12 +246,12 @@ describe("Router", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests, verify they fail**
+- [x] **Step 2: Run tests, verify they fail**
 
 Run: `npx tsc -p tsconfig.json && node --test dist/router.test.js`
 Expected: Module not found.
 
-- [ ] **Step 3: Implement `src/router.ts`**
+- [x] **Step 3: Implement `src/router.ts`**
 
 ```ts
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -429,12 +429,12 @@ export class Router {
 }
 ```
 
-- [ ] **Step 4: Run tests, verify they pass**
+- [x] **Step 4: Run tests, verify they pass**
 
 Run: `npm run build && node --test dist/router.test.js`
 Expected: All 10 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/router.ts src/router.test.ts
