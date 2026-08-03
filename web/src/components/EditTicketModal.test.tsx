@@ -6,6 +6,7 @@ import type { Ticket } from '../api/tickets'
 
 const ticket: Ticket = {
   key: 'RR-1234',
+  summary: 'Test ticket',
   description: 'Original description.',
   url: 'https://example.com',
   status: 'backlog',

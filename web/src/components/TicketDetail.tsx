@@ -105,7 +105,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
                   )
                 })()}
               </div>
-              <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.description}</h2>
+              <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.summary || ticket.description}</h2>
             </div>
             <button 
               className="text-white/40 hover:text-white text-sm transition-colors"
@@ -171,10 +171,10 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
                     className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-light transition-colors ${styles.border} ${styles.bg} ${styles.text}`}
                     style={{ boxShadow: status !== 'pending' ? 'inset 0 1px 1px rgba(255,255,255,0.05)' : undefined }}
                   >
-                    <div className={`w-1.5 h-1.5 rounded-full ${styles.dot}`} />
+                    <div className={`w-1.5 h-1.5 rounded-full ${styles.dot} ${status === 'active' ? 'animate-pulse' : ''}`} style={status === 'active' ? { boxShadow: '0 0 8px rgba(245,158,11,0.6)' } : undefined} />
                     <span>{STAGE_LABELS[stage]}</span>
-                    {status === 'done' && (
-                      <span className="ml-auto text-xs opacity-70">✓</span>
+                    {status === 'active' && (
+                      <span className="ml-auto text-xs opacity-70 animate-pulse">running</span>
                     )}
                   </div>
                 )

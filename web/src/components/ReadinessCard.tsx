@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ScanResult } from "../api/scans";
+import type { ScanResult, Recommendation } from "../api/scans";
 
 function relativeTime(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -15,6 +15,7 @@ function relativeTime(iso: string): string {
 
 interface Props {
   scan: ScanResult;
+  onFix?: (rec: Recommendation) => void;
 }
 
 function RiskCell({ note }: { note: string }) {
@@ -40,7 +41,7 @@ function RiskCell({ note }: { note: string }) {
   );
 }
 
-export default function ReadinessCard({ scan }: Props) {
+export default function ReadinessCard({ scan, onFix }: Props) {
   return (
     <>
       {/* Tech stack + test command */}
@@ -206,6 +207,7 @@ export default function ReadinessCard({ scan }: Props) {
                     <button
                       type="button"
                       className="shrink-0 px-3 py-1 text-[10px] text-white/60 bg-white/[0.04] hover:bg-white/[0.08] rounded-md border border-white/[0.06] transition-colors font-light mt-0.5"
+                      onClick={() => onFix?.(rec)}
                     >
                       Fix
                     </button>

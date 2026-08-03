@@ -20,6 +20,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ]
 
 export default function EditTicketModal({ open, ticket, onClose, onSubmit, error, isPending }: EditTicketModalProps) {
+  const [summary, setSummary] = useState(ticket.summary ?? '')
   const [description, setDescription] = useState(ticket.description)
   const [url, setUrl] = useState(ticket.url ?? '')
   const [status, setStatus] = useState(ticket.status)
@@ -28,6 +29,7 @@ export default function EditTicketModal({ open, ticket, onClose, onSubmit, error
     e.preventDefault()
     if (isPending) return
     void onSubmit(ticket.key, {
+      summary: summary.trim() || null,
       description: description.trim() || undefined,
       url: url.trim() || null,
       status,
@@ -49,6 +51,17 @@ export default function EditTicketModal({ open, ticket, onClose, onSubmit, error
             {ticket.key}
           </div>
         </div>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm text-white/70">Summary</span>
+          <input
+            type="text"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            placeholder="Brief title"
+            className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/20"
+          />
+        </label>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-sm text-white/70">Description</span>

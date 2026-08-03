@@ -153,7 +153,15 @@ function OverviewPage() {
 
       {/* ── Scan results ── */}
       {hasScan && latestScan?.status === 'completed' && !isRunning && !isTriggering && (
-        <ReadinessCard scan={latestScan!} />
+        <ReadinessCard
+          scan={latestScan!}
+          onFix={(rec) => {
+            apiCreateTicket({ id: '', summary: rec.title, description: rec.description, url: '' }).then((ticket) => {
+              toast.success(`Ticket ${ticket.key} created`)
+              return runTicket(ticket.key, selectedModelId ?? undefined)
+            }).then(() => toast.success('Pipeline started')).catch((err) => toast.error(err.message))
+          }}
+        />
       )}
 
       {/* ── Project not yet scanned ── */}

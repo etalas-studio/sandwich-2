@@ -5,6 +5,7 @@ import Modal from './Modal'
 
 export const ticketFormSchema = z.object({
   id: z.string().trim().optional().default(''),
+  summary: z.string().trim().optional().default(''),
   description: z.string().trim().min(1, 'Description is required'),
   url: z.string().trim().optional().default(''),
 })
@@ -23,6 +24,7 @@ type FieldErrors = Partial<Record<keyof CreateTicketData, string>>
 
 export default function CreateTicketModal({ open, onClose, onSubmit, error, isPending }: CreateTicketModalProps) {
   const [id, setId] = useState('')
+  const [summary, setSummary] = useState('')
   const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -31,7 +33,7 @@ export default function CreateTicketModal({ open, onClose, onSubmit, error, isPe
     e.preventDefault()
     if (isPending) return
 
-    const result = ticketFormSchema.safeParse({ id, description, url })
+    const result = ticketFormSchema.safeParse({ id, summary, description, url })
     if (!result.success) {
       const errors: FieldErrors = {}
       for (const issue of result.error.issues) {
@@ -49,6 +51,7 @@ export default function CreateTicketModal({ open, onClose, onSubmit, error, isPe
   const handleClose = () => {
     if (isPending) return
     setId('')
+    setSummary('')
     setDescription('')
     setUrl('')
     setFieldErrors({})
@@ -80,6 +83,19 @@ export default function CreateTicketModal({ open, onClose, onSubmit, error, isPe
             className={inputClass('id')}
           />
           {fieldErrors.id && <p className="text-xs text-[#ff8a8a]">{fieldErrors.id}</p>}
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          {labelText('Summary', false)}
+          <input
+            type="text"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            autoFocus
+            placeholder="Brief title for this ticket"
+            className={inputClass('summary')}
+          />
+          {fieldErrors.summary && <p className="text-xs text-[#ff8a8a]">{fieldErrors.summary}</p>}
         </label>
 
         <label className="flex flex-col gap-1.5">

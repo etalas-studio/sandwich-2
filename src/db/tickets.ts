@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 
 export interface Ticket {
   key: string;
+  summary: string | null;
   description: string;
   url: string | null;
   status: string;
@@ -20,6 +21,7 @@ export interface Ticket {
 
 export interface CreateTicketInput {
   id: string;
+  summary?: string;
   description: string;
   url: string | null;
 }
@@ -32,6 +34,7 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
   const nullish = (v: unknown) => (v === undefined || v === null ? null : String(v));
   return {
     key: String(row.key),
+    summary: nullish(row.summary),
     description: String(row.description),
     url: nullish(row.url),
     status: String(row.status),
@@ -53,9 +56,9 @@ export function createTicket(db: Database.Database, input: CreateTicketInput): T
   const key = input.id.trim() || `T-${randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
   db.prepare(
-    `INSERT INTO tickets (key, description, url, status, created_at, updated_at)
-     VALUES (?, ?, ?, 'backlog', ?, ?)`,
-  ).run(key, input.description, input.url, now, now);
+    `INSERT INTO tickets (key, summary, description, url, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'backlog', ?, ?)`,
+  ).run(key, input.summary ?? null, input.description, input.url, now, now);
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
   return normaliseTicket(row);
 }
@@ -73,6 +76,7 @@ export function getTicket(db: Database.Database, key: string): Ticket | null {
 
 export interface UpdateTicketInput {
   description?: string;
+  summary?: string | null;
   url?: string | null;
   status?: string;
   stage?: string | null;
@@ -92,6 +96,9 @@ export function updateTicket(db: Database.Database, key: string, input: UpdateTi
   const now = new Date().toISOString();
   if (input.description !== undefined) {
     db.prepare("UPDATE tickets SET description = ?, updated_at = ? WHERE key = ?").run(input.description, now, key);
+  }
+  if (input.summary !== undefined) {
+    db.prepare("UPDATE tickets SET summary = ?, updated_at = ? WHERE key = ?").run(input.summary, now, key);
   }
   if (input.url !== undefined) {
     db.prepare("UPDATE tickets SET url = ?, updated_at = ? WHERE key = ?").run(input.url, now, key);

@@ -21,6 +21,7 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     }
 
     const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+    const summary = typeof candidate.summary === "string" && candidate.summary.trim() !== "" ? candidate.summary.trim() : undefined;
     const description = typeof candidate.description === "string" ? candidate.description.trim() : "";
     const url = typeof candidate.url === "string" && candidate.url.trim() !== "" ? candidate.url.trim() : null;
 
@@ -29,7 +30,7 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
       return;
     }
 
-    const input: CreateTicketInput = { id, description, url };
+    const input: CreateTicketInput = { id, summary, description, url };
 
     try {
       const ticket = createTicket(db, input);
@@ -59,6 +60,7 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     }
 
     const input: UpdateTicketInput = {};
+    if (typeof candidate.summary === "string") input.summary = candidate.summary.trim() || null;
     if (typeof candidate.description === "string") input.description = candidate.description.trim();
     if (typeof candidate.url === "string") input.url = candidate.url.trim() || null;
     if (typeof candidate.status === "string") input.status = candidate.status;

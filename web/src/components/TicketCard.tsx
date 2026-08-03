@@ -78,7 +78,12 @@ export default function TicketCard({
       <div className="p-3 bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-lg">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] text-white/30 font-mono">{ticket.key}</span>
+          <div className="flex items-center gap-1.5">
+            {isInProgress && (
+              <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.6)' }} />
+            )}
+            <span className="text-[10px] text-white/30 font-mono">{ticket.key}</span>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger
               className="flex items-center justify-center w-5 h-5 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
@@ -125,7 +130,7 @@ export default function TicketCard({
 
         {/* Summary */}
         <h4 className="text-sm text-white font-light mb-2 tracking-tight ds-text-shadow line-clamp-2">
-          {ticket.description}
+          {ticket.summary || ticket.description}
         </h4>
 
         {/* Footer */}
