@@ -5,6 +5,7 @@ import { getInstanceSettings } from "../db/settings.js";
 import {
   startReadinessScan,
   failReadinessScan,
+  abortReadinessScan,
   getLatestReadinessScan,
 } from "../db/readiness-scans.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
@@ -78,12 +79,21 @@ export function registerScanRoutes(
     }
 
     const controller = inFlight.get(scanId);
-    if (!controller) {
-      sendJson(res, 404, { error: "No in-flight scan with that ID" });
+    if (controller) {
+      controller.abort();
+      sendJson(res, 200, { aborted: true });
       return;
     }
 
-    controller.abort();
-    sendJson(res, 200, { aborted: true });
+    // Fallback: in-flight map lost track (e.g. server restart).
+    // If the DB still shows "running", mark it aborted.
+    const scan = getLatestReadinessScan(db);
+    if (scan && scan.id === scanId && scan.status === "running") {
+      abortReadinessScan(db, scanId);
+      sendJson(res, 200, { aborted: true });
+      return;
+    }
+
+    sendJson(res, 404, { error: "No in-flight scan with that ID" });
   });
 }
