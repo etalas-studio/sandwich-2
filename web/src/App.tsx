@@ -27,13 +27,13 @@ function OverviewPage() {
 
       {/* ── Project Description ── */}
       <div className="section-label">Project</div>
-      <div className="ds-card-outer ds-shadow-elevated mb-8">
-        <div className="ds-card-inner p-6">
+      <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+        <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
           <div className="absolute inset-0 ds-noise pointer-events-none" />
           <div className="relative z-10">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333] ds-shadow-card shrink-0 mt-0.5">
-                <iconify-icon icon="solar:widget-5-linear" width="20" className="text-white/80" />
+                <iconify-icon icon="solar:code-linear" width="20" className="text-white/80" />
               </div>
               <div className="min-w-0">
                 <h2 className="text-lg font-normal tracking-tight text-white ds-text-shadow mb-2">
@@ -46,173 +46,206 @@ function OverviewPage() {
                   {' '}pipeline with guardrails that block risky changes before a single line of code is touched.
                   Built to produce evidence — not impressions — for the Runchise pilot.
                 </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>TypeScript</span>
+                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>Node.js 22+</span>
+                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>React + Vite</span>
+                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>SQLite</span>
+                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>Pi SDK</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Agentic Readiness ── */}
-      <div className="section-label">Agentic Readiness</div>
-      <div className="ds-card-outer ds-shadow-elevated mb-8">
-        <div className="ds-card-inner p-6">
-          <div className="absolute inset-0 ds-noise pointer-events-none" />
-          <div className="relative z-10">
-            {/* Readiness summary bar */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-1 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-                  Good
-                </span>
-                <span className="text-xs text-white/40 font-light">6 of 10 signals present</span>
-              </div>
-              <div className="flex-1 h-1.5 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }}>
-                <div className="h-full bg-gradient-to-r from-[#f59e0b]/60 to-[#f59e0b] rounded-full w-[60%]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.3)' }} />
-              </div>
-            </div>
-
-            {/* Context files grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              <ReadinessItem
-                icon="solar:document-text-linear"
-                label="CLAUDE.md"
-                status="present"
-                detail="English, good project orientation"
-              />
-              <ReadinessItem
-                icon="solar:document-text-linear"
-                label="README.md"
-                status="partial"
-                detail="Indonesian — AI models work better with English"
-              />
-              <ReadinessItem
-                icon="solar:map-point-linear"
-                label="Roadmap"
-                status="present"
-                detail="Clear phase tracking with checkboxes"
-              />
-              <ReadinessItem
-                icon="solar:documents-linear"
-                label="Spec docs"
-                status="present"
-                detail="6 specs in docs/superpowers/specs/"
-              />
-              <ReadinessItem
-                icon="solar:checklist-linear"
-                label="Implementation plans"
-                status="present"
-                detail="5 plans in docs/superpowers/plans/"
-              />
-              <ReadinessItem
-                icon="solar:code-linear"
-                label="package.json scripts"
-                status="present"
-                detail="build, test, serve, typecheck defined"
-              />
-              <ReadinessItem
-                icon="solar:history-linear"
-                label="CHANGELOG.md"
-                status="present"
-                detail="One entry per completed task"
-              />
-              <ReadinessItem
-                icon="solar:document-text-linear"
-                label="AGENTS.md"
-                status="missing"
-                detail="No agent-specific instructions file"
-              />
-              <ReadinessItem
-                icon="solar:structure-linear"
-                label="architecture.md"
-                status="missing"
-                detail="No dedicated architecture document"
-              />
-              <ReadinessItem
-                icon="solar:users-group-rounded-linear"
-                label="CONTRIBUTING.md"
-                status="missing"
-                detail="No contributor guide"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Recommendations ── */}
-      <div className="section-label">Recommendations</div>
-      <div className="ds-card-outer ds-shadow-elevated mb-8">
-        <div className="ds-card-inner p-6">
-          <div className="absolute inset-0 ds-noise pointer-events-none" />
-          <div className="relative z-10 flex flex-col gap-1">
-            <RecommendationItem
-              icon="solar:translation-linear"
-              title="Translate README.md to English"
-              description="AI coding agents parse English project context more reliably. An English README alongside the existing Indonesian one (or replacing it) would improve first-read comprehension for any agent entering this codebase."
-            />
-            <RecommendationItem
-              icon="solar:structure-linear"
-              title="Add an architecture.md"
-              description="Document the pipeline stages, data flow between orchestrator and worktrees, and how guardrails, credential storage, and the web server fit together. This gives agents a structural map before they start reading source files."
-            />
-            <RecommendationItem
-              icon="solar:mention-circle-linear"
-              title="Add AGENTS.md with project-specific rules"
-              description="An AGENTS.md (or .cursorrules) file tells AI agents about conventions unique to this project: no shell in proc.ts, append-only run records, the credential store pattern, and the working rules from CLAUDE.md that agents should follow."
-            />
-            <RecommendationItem
-              icon="solar:users-group-rounded-linear"
-              title="Add CONTRIBUTING.md"
-              description="Helps both human contributors and AI agents understand the contribution workflow: branch naming, commit conventions, how to run tests, and what the review process expects."
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Technical Information ── */}
-      <div className="section-label">Technical Information</div>
+      {/* ── Agentic Readiness + Recommendations ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Stack */}
-        <div className="ds-card-outer ds-shadow-elevated">
-          <div className="ds-card-inner p-6">
-            <div className="absolute inset-0 ds-noise pointer-events-none" />
-            <div className="relative z-10">
-              <h3 className="text-sm font-normal tracking-tight text-white ds-text-shadow mb-4 flex items-center gap-2">
-                <iconify-icon icon="solar:layers-linear" width="16" className="text-white/50" />
-                Stack
-              </h3>
-              <div className="space-y-3">
-                <TechRow label="Runtime" value="Node.js 22+" />
-                <TechRow label="Language" value="TypeScript 5.6" />
-                <TechRow label="Frontend" value="React 18 + Vite + Tailwind CSS" />
-                <TechRow label="Storage" value="better-sqlite3 (embedded)" />
-                <TechRow label="Agent Engine" value="Pi SDK (@earendil-works/pi-coding-agent)" />
-                <TechRow label="Terminal" value="node-pty (PTY-mode invocation)" />
-                <TechRow label="Testing" value="Node.js native test runner" />
-                <TechRow label="Package manager" value="npm" />
+        {/* Agentic Readiness */}
+        <div>
+          <div className="section-label">Agentic Readiness</div>
+          <div className="ds-card-outer ds-shadow-elevated" style={{ height: 'auto' }}>
+            <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+              <div className="absolute inset-0 ds-noise pointer-events-none" />
+              <div className="relative z-10">
+                {/* Readiness summary bar */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2.5">
+                    <span className="px-2.5 py-1 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                      Good
+                    </span>
+                    <span className="text-xs text-white/40 font-light">6 of 10 signals present</span>
+                  </div>
+                  <div className="flex-1 h-1.5 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }}>
+                    <div className="h-full bg-gradient-to-r from-[#f59e0b]/60 to-[#f59e0b] rounded-full w-[60%]" style={{ boxShadow: '0 0 8px rgba(245,158,11,0.3)' }} />
+                  </div>
+                </div>
+
+                <p className="text-sm text-white/50 font-light leading-relaxed mb-5">
+                  This project gives AI agents a solid starting point — project context, a phased roadmap,
+                  and detailed specs. But there are gaps that would force an agent to guess at architecture
+                  and conventions on first encounter.
+                </p>
+
+                {/* What's strong */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#8affb1]" style={{ boxShadow: '0 0 6px rgba(138,255,177,0.4)' }} />
+                    <span className="text-xs font-normal tracking-wide text-[#8affb1] uppercase">What's strong</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    <FindingItem
+                      icon="solar:document-text-linear"
+                      title="CLAUDE.md"
+                      detail="Well-structured English project context with working rules, file map, and decision rationale. The single most valuable file for an AI entering this codebase."
+                    />
+                    <FindingItem
+                      icon="solar:map-point-linear"
+                      title="Roadmap & specs"
+                      detail="docs/roadmap.md tracks every phase with checkboxes; 6 design specs and 5 implementation plans give agents detailed guidance for any task."
+                    />
+                    <FindingItem
+                      icon="solar:code-linear"
+                      title="Well-defined tooling"
+                      detail="package.json has clear build, test, typecheck, and serve scripts. An agent can verify its work without guessing the right commands."
+                    />
+                    <FindingItem
+                      icon="solar:history-linear"
+                      title="CHANGELOG.md"
+                      detail="Task-level change log lets an agent understand what was recently built and why — useful context before touching adjacent code."
+                    />
+                  </div>
+                </div>
+
+                {/* Needs attention */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#f59e0b]" style={{ boxShadow: '0 0 6px rgba(245,158,11,0.4)' }} />
+                    <span className="text-xs font-normal tracking-wide text-[#f59e0b] uppercase">Needs attention</span>
+                  </div>
+                  <FindingItem
+                    icon="solar:translation-linear"
+                    title="README.md is in Indonesian"
+                    detail="Most AI coding models perform best with English project context. The README is thorough but an English version (or a short English summary at the top) would significantly improve first-read comprehension for English-language agents."
+                  />
+                </div>
+
+                {/* Missing */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#ff8a8a]" style={{ boxShadow: '0 0 6px rgba(255,138,138,0.4)' }} />
+                    <span className="text-xs font-normal tracking-wide text-[#ff8a8a] uppercase">Missing</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                    <FindingItem
+                      icon="solar:structure-linear"
+                      title="architecture.md"
+                      detail="No document describing pipeline stages, data flow, or how subsystems connect. Agents must infer structure from source."
+                    />
+                    <FindingItem
+                      icon="solar:mention-circle-linear"
+                      title="AGENTS.md"
+                      detail="No project-specific AI instructions. Conventions like no-shell-in-proc.ts and append-only records are only in CLAUDE.md's working rules."
+                    />
+                    <FindingItem
+                      icon="solar:users-group-rounded-linear"
+                      title="CONTRIBUTING.md"
+                      detail="No contributor guide. Agents and humans alike have no documented workflow for branching, commits, or review expectations."
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Architecture */}
-        <div className="ds-card-outer ds-shadow-elevated">
-          <div className="ds-card-inner p-6">
-            <div className="absolute inset-0 ds-noise pointer-events-none" />
-            <div className="relative z-10">
-              <h3 className="text-sm font-normal tracking-tight text-white ds-text-shadow mb-4 flex items-center gap-2">
-                <iconify-icon icon="solar:graph-new-linear" width="16" className="text-white/50" />
-                Architecture
-              </h3>
-              <div className="space-y-3">
-                <TechRow label="Pipeline" value="Judge → Implement → Verify → Open PR (phase-gated)" />
-                <TechRow label="Isolation" value="One git worktree per ticket attempt" />
-                <TechRow label="Guardrails" value="File/bound allowlists, diff limits, domain blocklists enforced by orchestrator" />
-                <TechRow label="Records" value="Append-only JSONL + per-run folders (plan, diff, transcript, test results)" />
-                <TechRow label="Auth" value="Custom single-account session auth with CSRF protection" />
-                <TechRow label="Server" value="node:http (zero runtime deps beyond sqlite3 and pi SDK)" />
-                <TechRow label="Deployment" value="Server-agnostic — runs anywhere Node runs" />
+        {/* Recommendations */}
+        <div>
+          <div className="section-label">Recommendations</div>
+          <div className="ds-card-outer ds-shadow-elevated" style={{ height: 'auto' }}>
+            <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+              <div className="absolute inset-0 ds-noise pointer-events-none" />
+              <div className="relative z-10 flex flex-col gap-1">
+                <RecommendationItem
+                  icon="solar:translation-linear"
+                  title="Translate README.md to English"
+                  description="AI coding agents parse English project context more reliably. An English README alongside the existing Indonesian one (or replacing it) would improve first-read comprehension for any agent entering this codebase."
+                />
+                <RecommendationItem
+                  icon="solar:structure-linear"
+                  title="Add an architecture.md"
+                  description="Document the pipeline stages, data flow between orchestrator and worktrees, and how guardrails, credential storage, and the web server fit together. This gives agents a structural map before they start reading source files."
+                />
+                <RecommendationItem
+                  icon="solar:mention-circle-linear"
+                  title="Add AGENTS.md with project-specific rules"
+                  description="An AGENTS.md (or .cursorrules) file tells AI agents about conventions unique to this project: no shell in proc.ts, append-only run records, the credential store pattern, and the working rules from CLAUDE.md that agents should follow."
+                />
+                <RecommendationItem
+                  icon="solar:users-group-rounded-linear"
+                  title="Add CONTRIBUTING.md"
+                  description="Helps both human contributors and AI agents understand the contribution workflow: branch naming, commit conventions, how to run tests, and what the review process expects."
+                />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Area Signals ── */}
+      <div className="section-label">Area Signals</div>
+      <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+        <div className="ds-card-inner overflow-hidden" style={{ height: 'auto' }}>
+          <div className="absolute inset-0 ds-noise pointer-events-none" />
+          <div className="relative z-10 overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead>
+                <tr className="border-b border-white/[0.04] bg-[#0a0a0a]/50">
+                  <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Area</th>
+                  <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Files</th>
+                  <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test Coverage</th>
+                  <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Churn</th>
+                  <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                <AreaRow
+                  area="src/pipeline"
+                  files={2}
+                  coverage={50}
+                  churn={66}
+                  note="Core orchestration. Light on tests relative to churn — actively being built."
+                />
+                <AreaRow
+                  area="src/db"
+                  files={9}
+                  coverage={56}
+                  churn={63}
+                  note="Storage layer. Migrations and migrate.ts untested; repos are well-covered."
+                />
+                <AreaRow
+                  area="src/engine"
+                  files={7}
+                  coverage={57}
+                  churn={20}
+                  note="Agent invocation. Manual-check files and proc.ts lack direct tests."
+                />
+                <AreaRow
+                  area="src/auth"
+                  files={4}
+                  coverage={75}
+                  churn={15}
+                  note="Session auth with CSRF. Only middleware.ts lacks a direct test."
+                />
+                <AreaRow
+                  area="src/web-server.ts"
+                  files={1}
+                  coverage={100}
+                  churn={3}
+                  note="HTTP server entry point. Single file, fully tested."
+                />
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -220,34 +253,23 @@ function OverviewPage() {
   )
 }
 
-/* ── Readiness checklist item ── */
+/* ── Finding item (used in Agentic Readiness) ── */
 
-function ReadinessItem({
+function FindingItem({
   icon,
-  label,
-  status,
+  title,
   detail,
 }: {
   icon: string
-  label: string
-  status: 'present' | 'partial' | 'missing'
+  title: string
   detail: string
 }) {
-  const colors = {
-    present: { bg: 'bg-[#1d3a24]', border: 'border-[#2b5936]', text: 'text-[#8affb1]', dot: 'bg-[#8affb1]' },
-    partial: { bg: 'bg-[#3a2e1d]', border: 'border-[#5a4525]', text: 'text-[#f59e0b]', dot: 'bg-[#f59e0b]' },
-    missing: { bg: 'bg-white/[0.03]', border: 'border-white/[0.05]', text: 'text-white/30', dot: 'bg-white/20' },
-  }[status]
-
   return (
-    <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg ${colors.bg} border ${colors.border} transition-colors`} style={{ boxShadow: status !== 'missing' ? 'inset 0 1px 1px rgba(255,255,255,0.05)' : undefined }}>
-      <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} shrink-0 mt-1.5`} style={status === 'present' ? { boxShadow: '0 0 6px rgba(138,255,177,0.4)' } : status === 'partial' ? { boxShadow: '0 0 6px rgba(245,158,11,0.4)' } : undefined} />
+    <div className="flex items-start gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.02] transition-colors">
+      <iconify-icon icon={icon} width="14" className="text-white/40 shrink-0 mt-0.5" />
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5">
-          <iconify-icon icon={icon} width="13" className={colors.text} />
-          <span className={`text-xs font-normal tracking-wide ${colors.text}`}>{label}</span>
-        </div>
-        <p className="text-[10px] text-white/30 font-light mt-0.5 leading-relaxed">{detail}</p>
+        <span className="text-xs text-white/70 font-normal">{title}</span>
+        <p className="text-[11px] text-white/35 font-light mt-0.5 leading-relaxed">{detail}</p>
       </div>
     </div>
   )
@@ -275,14 +297,39 @@ function RecommendationItem({
   )
 }
 
-/* ── Tech info key-value row ── */
+/* ── Area signal table row ── */
 
-function TechRow({ label, value }: { label: string; value: string }) {
+function AreaRow({
+  area,
+  files,
+  coverage,
+  churn,
+  note,
+}: {
+  area: string
+  files: number
+  coverage: number
+  churn: number
+  note: string
+}) {
+  const coverageColor = coverage >= 70 ? 'text-[#8affb1]' : coverage >= 40 ? 'text-[#f59e0b]' : 'text-[#ff8a8a]'
+  const coverageBg = coverage >= 70 ? 'bg-[#8affb1]' : coverage >= 40 ? 'bg-[#f59e0b]' : 'bg-[#ff8a8a]'
+
   return (
-    <div className="flex items-baseline gap-2">
-      <span className="text-xs text-white/35 font-light shrink-0 w-28">{label}</span>
-      <span className="text-xs text-white/70 font-light">{value}</span>
-    </div>
+    <tr className="hover:bg-white/[0.02] transition-colors">
+      <td className="px-6 py-3.5 text-white/80 font-mono text-xs">{area}</td>
+      <td className="px-6 py-3.5 text-white/40 font-light text-xs">{files}</td>
+      <td className="px-6 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 max-w-20 h-1 bg-[#0a0a0a] rounded-full overflow-hidden border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }}>
+            <div className={`h-full rounded-full ${coverageBg}`} style={{ width: `${coverage}%`, boxShadow: coverage >= 70 ? '0 0 6px rgba(138,255,177,0.3)' : coverage >= 40 ? '0 0 6px rgba(245,158,11,0.3)' : '0 0 6px rgba(255,138,138,0.3)' }} />
+          </div>
+          <span className={`text-xs font-mono font-light ${coverageColor}`}>{coverage}%</span>
+        </div>
+      </td>
+      <td className="px-6 py-3.5 text-white/40 font-light text-xs font-mono">{churn}</td>
+      <td className="px-6 py-3.5 text-white/40 font-light text-xs max-w-64 leading-relaxed">{note}</td>
+    </tr>
   )
 }
 

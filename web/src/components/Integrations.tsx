@@ -117,7 +117,7 @@ export default function Integrations() {
       )}
 
       {/* Provider cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {PROVIDERS.map((provider) => {
           const state = getState(provider.id)
           const integration = getIntegration(provider.id)
@@ -153,7 +153,7 @@ export default function Integrations() {
                       </div>
                     </div>
 
-                    {/* Status badge */}
+                    {/* Status dot */}
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isOAuth && (
                         <span className="px-1.5 py-0.5 rounded-full text-[8px] font-normal border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">
@@ -161,20 +161,14 @@ export default function Integrations() {
                         </span>
                       )}
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[9px] font-normal border ${
+                        className={`w-2 h-2 rounded-full ${
                           state === 'connected'
-                            ? 'border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400'
+                            ? 'bg-emerald-400 animate-pulse'
                             : state === 'connecting'
-                              ? 'border-amber-500/20 bg-amber-500/[0.06] text-amber-400'
-                              : 'border-white/[0.06] bg-white/[0.03] text-white/40'
+                              ? 'bg-amber-400 animate-pulse'
+                              : 'bg-white/20'
                         }`}
-                      >
-                        {state === 'connected'
-                          ? 'Connected'
-                          : state === 'connecting'
-                            ? '…'
-                            : 'Off'}
-                      </span>
+                      />
                     </div>
                   </div>
 
@@ -225,18 +219,8 @@ export default function Integrations() {
                   )}
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
-                    <a
-                      href={provider.docsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-white/40 hover:text-white/60 transition-colors flex items-center gap-1"
-                    >
-                      <iconify-icon icon="solar:link-circle-linear" width="12" />
-                      Docs
-                    </a>
-
-                    {state === 'connected' && !isOAuth && (
+                  {state === 'connected' && !isOAuth && (
+                    <div className="pt-3 border-t border-white/[0.04]">
                       <button
                         type="button"
                         onClick={() => handleDisconnect(provider.id)}
@@ -254,29 +238,28 @@ export default function Integrations() {
                           Disconnect
                         </span>
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Connected details */}
                   {state === 'connected' && (
                     <div className="mt-3 pt-3 border-t border-white/[0.04]">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] text-white/40 font-light">Status</span>
-                        <span className="text-[10px] text-emerald-400 font-light flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          Active
-                        </span>
-                      </div>
+
                       {models.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {models.map((m) => (
+                        <div className="flex items-center gap-1 overflow-hidden">
+                          {models.slice(0, 3).map((m) => (
                             <span
                               key={m.id}
-                              className="px-1.5 py-0.5 rounded-md text-[9px] font-light text-white/60 bg-white/[0.04] border border-white/[0.06]"
+                              className="px-1.5 py-0.5 rounded-md text-[9px] font-light text-white/60 bg-white/[0.04] border border-white/[0.06] shrink-0"
                             >
                               {m.id}
                             </span>
                           ))}
+                          {models.length > 3 && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-light text-white/40 bg-white/[0.04] border border-white/[0.06] shrink-0">
+                              +{models.length - 3}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
