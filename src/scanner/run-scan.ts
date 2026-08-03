@@ -57,8 +57,12 @@ export function createScanRunner(
       });
     }
 
-    // Complete the scan with mechanical results
+    // Agent description takes priority; fall back to mechanical (README/package.json)
+    const description = agentResult.description ?? mechanical.description;
+
     completeReadinessScan(db, scanId, {
+      projectName: mechanical.projectName,
+      description,
       techStack: mechanical.techStack,
       testCommand: mechanical.testCommand,
       areaSignals: mechanical.areaSignals,

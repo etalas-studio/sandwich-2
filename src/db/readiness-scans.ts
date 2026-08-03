@@ -3,6 +3,8 @@ import type Database from "better-sqlite3";
 export interface ReadinessScan {
   id: string;
   status: "running" | "completed" | "failed" | "aborted";
+  projectName: string | null;
+  description: string | null;
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;
@@ -19,6 +21,8 @@ export interface AreaSignal {
 }
 
 export interface ScanResults {
+  projectName: string | null;
+  description: string | null;
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[];
@@ -42,12 +46,16 @@ export function completeReadinessScan(
   db.prepare(
     `UPDATE readiness_scans
      SET status = 'completed',
+         project_name = ?,
+         project_description = ?,
          tech_stack = ?,
          test_command = ?,
          area_signals = ?,
          completed_at = ?
      WHERE id = ?`,
   ).run(
+    results.projectName,
+    results.description,
     results.techStack,
     results.testCommand,
     JSON.stringify(results.areaSignals),
@@ -84,6 +92,8 @@ export function getLatestReadinessScan(db: Database.Database): ReadinessScan | n
 interface RawRow {
   id: string;
   status: string;
+  project_name: string | null;
+  project_description: string | null;
   tech_stack: string | null;
   test_command: string | null;
   area_signals: string | null;
@@ -110,6 +120,8 @@ function toScan(row: RawRow): ReadinessScan {
   return {
     id: row.id,
     status: row.status as ReadinessScan["status"],
+    projectName: row.project_name,
+    description: row.project_description,
     techStack: row.tech_stack,
     testCommand: row.test_command,
     areaSignals,

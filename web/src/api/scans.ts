@@ -1,6 +1,8 @@
 export interface ScanResult {
   id: string;
   status: "running" | "completed" | "failed" | "aborted";
+  projectName: string | null;
+  description: string | null;
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;

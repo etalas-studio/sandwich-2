@@ -7,6 +7,8 @@ export const migration0002Readiness: Migration = {
 CREATE TABLE readiness_scans (
   id TEXT PRIMARY KEY,
   status TEXT NOT NULL DEFAULT 'running',
+  project_name TEXT,
+  project_description TEXT,
   tech_stack TEXT,
   test_command TEXT,
   area_signals TEXT,

@@ -63,9 +63,14 @@ export function startWebServer(options: WebServerOptions): Server {
   const scanRunner = createScanRunner(db, {
     async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
       // TODO: replace with Pi SDK ModelRuntime when ModelContext is wired
-      // For now, the mechanical scan runs without an agent pass
       console.log("Agent pass not yet wired (prompt:", opts.prompt.slice(0, 80) + "...)");
-      return { outcome: "ok" as const, finalText: "[]" };
+      return {
+        outcome: "ok" as const,
+        finalText: JSON.stringify({
+          description: null,
+          blocklist: [],
+        }),
+      };
     },
   });
   registerScanRoutes(router, db, scanRunner);

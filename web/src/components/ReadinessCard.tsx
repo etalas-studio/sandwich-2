@@ -38,6 +38,16 @@ export default function ReadinessCard({ scan }: Props) {
               </span>
             </div>
 
+            {scan.projectName && (
+              <h2 className="text-lg font-normal tracking-tight text-white ds-text-shadow mb-2">
+                {scan.projectName}
+              </h2>
+            )}
+            {scan.description && (
+              <p className="text-sm text-white/60 font-light leading-relaxed mb-4">
+                {scan.description}
+              </p>
+            )}
             {scan.techStack && (
               <div className="mb-4">
                 <div className="text-[10px] text-white/30 uppercase tracking-wider mb-2">

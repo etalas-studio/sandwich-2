@@ -5,6 +5,7 @@ import type { AreaSignal } from "../db/readiness-scans.js";
 
 export interface MechanicalResult {
   projectName: string;
+  description: string | null;
   techStack: string;
   testCommand: string | null;
   areaSignals: AreaSignal[];
@@ -26,14 +27,16 @@ const TEST_FILE_PATTERNS = [/\.test\./, /\.spec\./, /^__tests__$/];
 export function scanMechanical(repoPath: string): MechanicalResult {
   const pkgJson = readPkgJson(repoPath);
   const projectName = pkgJson?.name ?? "unknown";
+  const description = pkgJson?.description ?? readReadmePreview(repoPath);
   const techStack = detectTechStack(repoPath, pkgJson);
   const testCommand = pkgJson?.scripts?.["test"] ?? null;
   const areaSignals = computeAreaSignals(repoPath);
-  return { projectName, techStack, testCommand, areaSignals };
+  return { projectName, description, techStack, testCommand, areaSignals };
 }
 
 interface PkgJson {
   name?: string;
+  description?: string;
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -185,6 +188,38 @@ function isCodeFile(name: string): boolean {
   if (name.endsWith(".d.ts") || name.endsWith(".d.mts") || name.endsWith(".d.cts"))
     return false;
   return codeExts.some((ext) => name.endsWith(ext));
+}
+
+function readReadmePreview(repoPath: string): string | null {
+  const candidates = ["README.md", "readme.md", "README", "readme"];
+  for (const name of candidates) {
+    const p = join(repoPath, name);
+    if (!existsSync(p)) continue;
+    try {
+      const text = readFileSync(p, "utf-8");
+      // Extract first non-empty, non-heading paragraph
+      const lines = text.split("\n");
+      let paragraph = "";
+      let inParagraph = false;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // Skip headings, badges, empty lines before content starts
+        if (!inParagraph) {
+          if (trimmed.startsWith("#") || trimmed.startsWith("[") || trimmed.startsWith("<")) continue;
+          if (trimmed.length === 0) continue;
+          inParagraph = true;
+        }
+        if (inParagraph && trimmed.length === 0) break;
+        if (inParagraph) {
+          paragraph += (paragraph ? " " : "") + trimmed;
+        }
+      }
+      if (paragraph.length > 0) return paragraph.slice(0, 500); // max 500 chars
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 function computeChurn(

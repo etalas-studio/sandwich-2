@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { fetchLatestScan, triggerScan, abortScan } from "../api/scans";
 import type { ScanResult } from "../api/scans";
@@ -7,6 +7,7 @@ import type { ScanResult } from "../api/scans";
 export function useScan() {
   const queryClient = useQueryClient();
   const [inFlightId, setInFlightId] = useState<string | null>(null);
+  const prevStatusRef = useRef<string | undefined>(undefined);
 
   const {
     data: latestScan,
@@ -16,9 +17,9 @@ export function useScan() {
     queryKey: ["scan-latest"],
     queryFn: fetchLatestScan,
     // Poll every 4s while a scan is running
-    refetchInterval: () => {
-      const scan = queryClient.getQueryData<ScanResult | null>(["scan-latest"]);
-      return scan?.status === "running" ? 4000 : false;
+    refetchInterval: (query) => {
+      const data = query.state.data as ScanResult | null | undefined;
+      return data?.status === "running" ? 4000 : false;
     },
   });
 
@@ -30,12 +31,18 @@ export function useScan() {
       queryClient.setQueryData(["scan-latest"], {
         id: result.scanId,
         status: "running" as const,
+        projectName: null,
+        description: null,
         techStack: null,
         testCommand: null,
         areaSignals: null,
         startedAt: new Date().toISOString(),
         completedAt: null,
       });
+      // Refetch after mechanical scan completes (it takes ~1-2s)
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["scan-latest"] });
+      }, 3000);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to start scan");
@@ -55,6 +62,19 @@ export function useScan() {
 
   // Detect scan completion or failure from polled data
   const isRunning = latestScan?.status === "running";
+
+  // Show toast when scan finishes with non-completed status
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = latestScan?.status;
+    if (prev === "running" && latestScan && latestScan.status !== "running") {
+      if (latestScan.status === "failed") {
+        toast.error("Project scan failed. Check server logs for details.");
+      } else if (latestScan.status === "aborted") {
+        toast.info("Project scan was aborted.");
+      }
+    }
+  }, [latestScan?.status]);
 
   const trigger = useCallback(() => {
     triggerMutation.mutate();

@@ -14,6 +14,7 @@ export interface AgentPassInput {
 }
 
 export interface AgentPassResult {
+  description: string | null;
   blocklistProposals: Array<{ pattern: string; reason: string }>;
   outcome: "ok" | "timeout" | "process_error" | "nonzero_exit" | "aborted";
 }
@@ -22,65 +23,98 @@ const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResult> {
   if (input.signal.aborted) {
-    return { blocklistProposals: [], outcome: "aborted" };
+    return { description: null, blocklistProposals: [], outcome: "aborted" };
   }
 
-  const prompt = buildBlocklistPrompt(input.mechanicalResult);
+  const prompt = buildScanPrompt(input.mechanicalResult);
   const engineResult = await input.invoker.run({
     prompt,
     cwd: input.repoPath,
     timeoutMs: SCAN_TIMEOUT_MS,
   });
 
-  const proposals = parseBlocklistJson(engineResult.finalText);
+  const parsed = parseAgentResponse(engineResult.finalText);
 
   return {
-    blocklistProposals: proposals,
+    description: parsed.description,
+    blocklistProposals: parsed.blocklist,
     outcome: engineResult.outcome as AgentPassResult["outcome"],
   };
 }
 
-function buildBlocklistPrompt(mech: MechanicalResult): string {
+function buildScanPrompt(mech: MechanicalResult): string {
   const areaLines = mech.areaSignals
-    .map((a) => `  ${a.area}: ${a.files} files, test/code ratio ${a.testToCodeRatio.toFixed(1)}, churn ${a.churnScore.toFixed(1)}`)
+    .map(
+      (a) =>
+        `  ${a.area}: ${a.files} files, test/code ratio ${a.testToCodeRatio.toFixed(1)}, churn ${a.churnScore.toFixed(1)}`,
+    )
     .join("\n");
 
   return [
-    "You are analyzing a codebase to identify paths and actions that are too risky for autonomous AI agents.",
+    "You are analyzing a codebase. Do two things:",
     "",
-    `Project: ${mech.projectName}`,
-    `Tech stack: ${mech.techStack}`,
+    "1. Write a concise project description (2-4 sentences) that explains what this project does, its architecture, and key characteristics. Base this on the codebase structure, not just the README.",
+    "",
+    "2. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
+    "",
+    `Project name: ${mech.projectName}`,
+    `Detected tech stack: ${mech.techStack}`,
     `Test command: ${mech.testCommand ?? "none"}`,
     "",
     "Area signals:",
     areaLines,
     "",
-    "Identify files, directories, or operations that an AI agent should NEVER touch without human review.",
-    "Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
-    "",
-    "Answer ONLY with a JSON array. Each entry must have `pattern` (glob or path pattern) and `reason` (short explanation).",
-    'Example: [{"pattern":"src/secrets/**","reason":"Contains API keys and tokens"}]',
-    "If nothing is risky, respond with an empty array: []",
+    "Answer ONLY with a JSON object with two fields: `description` (string) and `blocklist` (array of {pattern, reason}).",
+    'Example: {"description":"A pipeline orchestrator that...","blocklist":[{"pattern":"src/secrets/**","reason":"Contains API keys"}]}',
+    "If nothing is risky, use an empty blocklist array.",
   ].join("\n");
 }
 
-function parseBlocklistJson(text: string): Array<{ pattern: string; reason: string }> {
-  // Find the first JSON array in the text
-  const match = text.match(/\[[\s\S]*?\]/);
-  if (!match) return [];
+interface ParsedResponse {
+  description: string | null;
+  blocklist: Array<{ pattern: string; reason: string }>;
+}
 
-  try {
-    const parsed = JSON.parse(match[0]) as unknown;
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.filter(
-      (entry): entry is { pattern: string; reason: string } =>
-        typeof entry === "object" &&
-        entry !== null &&
-        typeof (entry as Record<string, unknown>).pattern === "string" &&
-        typeof (entry as Record<string, unknown>).reason === "string",
-    );
-  } catch {
-    return [];
+function parseAgentResponse(text: string): ParsedResponse {
+  // Try to find a JSON object with description + blocklist
+  const objMatch = text.match(/\{[\s\S]*"description"[\s\S]*"blocklist"[\s\S]*\}/);
+  if (objMatch) {
+    try {
+      const parsed = JSON.parse(objMatch[0]) as Record<string, unknown>;
+      const desc = typeof parsed.description === "string" ? parsed.description : null;
+      const list = Array.isArray(parsed.blocklist) ? parsed.blocklist : [];
+      const blocklist = list.filter(
+        (entry): entry is { pattern: string; reason: string } =>
+          typeof entry === "object" &&
+          entry !== null &&
+          typeof (entry as Record<string, unknown>).pattern === "string" &&
+          typeof (entry as Record<string, unknown>).reason === "string",
+      );
+      return { description: desc, blocklist };
+    } catch {
+      // fall through to old format
+    }
   }
+
+  // Fallback: old format — just a blocklist array, no description
+  const arrMatch = text.match(/\[[\s\S]*?\]/);
+  if (arrMatch) {
+    try {
+      const parsed = JSON.parse(arrMatch[0]) as unknown;
+      if (Array.isArray(parsed)) {
+        const blocklist = parsed.filter(
+          (entry): entry is { pattern: string; reason: string } =>
+            typeof entry === "object" &&
+            entry !== null &&
+            typeof (entry as Record<string, unknown>).pattern === "string" &&
+            typeof (entry as Record<string, unknown>).reason === "string",
+        );
+        return { description: null, blocklist };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return { description: null, blocklist: [] };
 }

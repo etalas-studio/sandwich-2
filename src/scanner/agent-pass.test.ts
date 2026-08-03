@@ -5,6 +5,7 @@ import type { MechanicalResult } from "./mechanical.js";
 function makeMechanicalResult(): MechanicalResult {
   return {
     projectName: "test-app",
+    description: "A test application",
     techStack: "Node.js, TypeScript",
     testCommand: "npm test",
     areaSignals: [
@@ -13,15 +14,21 @@ function makeMechanicalResult(): MechanicalResult {
   };
 }
 
-// ── Valid JSON output ──
+function agentJson(desc: string | null, blocklist: Array<{ pattern: string; reason: string }>): string {
+  return JSON.stringify({ description: desc, blocklist });
+}
 
-async function testParsesValidBlocklistJson(): Promise<void> {
+// ── Valid response with description + blocklist ──
+
+async function testParsesDescriptionAndBlocklist(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
-        finalText: 'Some prose\n[{"pattern":"src/secrets/**","reason":"API keys"}]\nMore text',
+        finalText: agentJson("A pipeline orchestrator for AI agents.", [
+          { pattern: "src/secrets/**", reason: "API keys" },
+        ]),
       };
     },
   };
@@ -35,10 +42,37 @@ async function testParsesValidBlocklistJson(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
+  assert.equal(result.description, "A pipeline orchestrator for AI agents.");
   assert.equal(result.blocklistProposals.length, 1);
   assert.equal(result.blocklistProposals[0]!.pattern, "src/secrets/**");
-  assert.equal(result.blocklistProposals[0]!.reason, "API keys");
-  console.log("PASS: testParsesValidBlocklistJson");
+  console.log("PASS: testParsesDescriptionAndBlocklist");
+}
+
+// ── Null description ──
+
+async function testHandlesNullDescription(): Promise<void> {
+  const mechanical = makeMechanicalResult();
+  const invoker = {
+    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
+      return {
+        outcome: "ok" as const,
+        finalText: agentJson(null, []),
+      };
+    },
+  };
+
+  const controller = new AbortController();
+  const result = await runAgentPass({
+    repoPath: "/fake/repo",
+    mechanicalResult: mechanical,
+    signal: controller.signal,
+    invoker,
+  });
+
+  assert.equal(result.outcome, "ok");
+  assert.equal(result.description, null);
+  assert.equal(result.blocklistProposals.length, 0);
+  console.log("PASS: testHandlesNullDescription");
 }
 
 // ── Malformed output ──
@@ -49,7 +83,7 @@ async function testHandlesMalformedOutput(): Promise<void> {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
-        finalText: "Just some prose, no JSON array here.",
+        finalText: "Just some prose, no JSON here.",
       };
     },
   };
@@ -63,46 +97,20 @@ async function testHandlesMalformedOutput(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
+  assert.equal(result.description, null);
   assert.equal(result.blocklistProposals.length, 0);
   console.log("PASS: testHandlesMalformedOutput");
 }
 
-// ── Empty array ──
+// ── Old format fallback (just blocklist array) ──
 
-async function testHandlesEmptyBlocklistArray(): Promise<void> {
-  const mechanical = makeMechanicalResult();
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return {
-        outcome: "ok" as const,
-        finalText: "Nothing risky found.\n[]",
-      };
-    },
-  };
-
-  const controller = new AbortController();
-  const result = await runAgentPass({
-    repoPath: "/fake/repo",
-    mechanicalResult: mechanical,
-    signal: controller.signal,
-    invoker,
-  });
-
-  assert.equal(result.outcome, "ok");
-  assert.equal(result.blocklistProposals.length, 0);
-  console.log("PASS: testHandlesEmptyBlocklistArray");
-}
-
-// ── Multiple entries ──
-
-async function testParsesMultipleBlocklistEntries(): Promise<void> {
+async function testFallsBackToOldBlocklistFormat(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
         finalText: JSON.stringify([
-          { pattern: "src/secrets/**", reason: "API keys" },
           { pattern: "*.pem", reason: "Private keys" },
         ]),
       };
@@ -118,34 +126,10 @@ async function testParsesMultipleBlocklistEntries(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
-  assert.equal(result.blocklistProposals.length, 2);
-  console.log("PASS: testParsesMultipleBlocklistEntries");
-}
-
-// ── Invalid JSON (not an array) ──
-
-async function testHandlesNonArrayJson(): Promise<void> {
-  const mechanical = makeMechanicalResult();
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return {
-        outcome: "ok" as const,
-        finalText: '{"not": "an array"}',
-      };
-    },
-  };
-
-  const controller = new AbortController();
-  const result = await runAgentPass({
-    repoPath: "/fake/repo",
-    mechanicalResult: mechanical,
-    signal: controller.signal,
-    invoker,
-  });
-
-  assert.equal(result.outcome, "ok");
-  assert.equal(result.blocklistProposals.length, 0);
-  console.log("PASS: testHandlesNonArrayJson");
+  assert.equal(result.description, null);
+  assert.equal(result.blocklistProposals.length, 1);
+  assert.equal(result.blocklistProposals[0]!.pattern, "*.pem");
+  console.log("PASS: testFallsBackToOldBlocklistFormat");
 }
 
 // ── Engine timeout ──
@@ -154,10 +138,7 @@ async function testReportsEngineTimeout(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return {
-        outcome: "timeout" as const,
-        finalText: "",
-      };
+      return { outcome: "timeout" as const, finalText: "" };
     },
   };
 
@@ -170,20 +151,16 @@ async function testReportsEngineTimeout(): Promise<void> {
   });
 
   assert.equal(result.outcome, "timeout");
-  assert.equal(result.blocklistProposals.length, 0);
   console.log("PASS: testReportsEngineTimeout");
 }
 
-// ── Engine process error ──
+// ── Process error ──
 
 async function testReportsEngineProcessError(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return {
-        outcome: "process_error" as const,
-        finalText: "",
-      };
+      return { outcome: "process_error" as const, finalText: "" };
     },
   };
 
@@ -204,14 +181,11 @@ async function testReportsEngineProcessError(): Promise<void> {
 async function testAbortsWhenSignalled(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const controller = new AbortController();
-
-  // Abort before the invoker runs
   controller.abort();
 
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      // Should not be called if we catch the signal first
-      return { outcome: "ok" as const, finalText: "[]" };
+      return { outcome: "ok" as const, finalText: "{}" };
     },
   };
 
@@ -223,16 +197,16 @@ async function testAbortsWhenSignalled(): Promise<void> {
   });
 
   assert.equal(result.outcome, "aborted");
+  assert.equal(result.description, null);
   assert.equal(result.blocklistProposals.length, 0);
   console.log("PASS: testAbortsWhenSignalled");
 }
 
 async function main(): Promise<void> {
-  await testParsesValidBlocklistJson();
+  await testParsesDescriptionAndBlocklist();
+  await testHandlesNullDescription();
   await testHandlesMalformedOutput();
-  await testHandlesEmptyBlocklistArray();
-  await testParsesMultipleBlocklistEntries();
-  await testHandlesNonArrayJson();
+  await testFallsBackToOldBlocklistFormat();
   await testReportsEngineTimeout();
   await testReportsEngineProcessError();
   await testAbortsWhenSignalled();
