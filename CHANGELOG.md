@@ -13,6 +13,7 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-04: [http-routing-layer] | @riaenriala - added internal Router class for node:http route dispatch (method+path registration with :param segments, Host/Origin guards, middleware, dispatch)
 - 2026-08-04: [http-routing-layer] | @riaenriala - extracted auth routes (me, register, login, logout) into src/routes/auth.ts route module
 - 2026-08-04: [http-routing-layer] | @riaenriala - wired web-server through Router + route modules, removing ~200 lines of monolithic handler
+- 2026-08-04: [http-routing-layer] | @riaenriala - extracted monolith web-server into Router class + per-domain route modules (auth, settings, integrations)
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Pipeline shape instance config loader, defaulting engine mode to PTY (src/pipeline/config.ts, config/instance.example.json)
 - 2026-08-03: [pipeline-shape] | @potensio - Added shared pipeline stage types (PipelineContext, Judge/Implement/Verify result types) for the new Judge -> Implement -> Verify sequence (src/pipeline/types.ts)
 - 2026-08-03: [engine-invocation-layer] | @potensio - PoC comparing headless (`claude -p`) vs interactive PTY Claude Code invocation; selected headless (poc/README.md)

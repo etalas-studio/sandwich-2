@@ -19,19 +19,11 @@ export interface WebServerOptions {
 
 function parseTrustedHosts(): Set<string> {
   return new Set(
-    (process.env.TRUSTED_HOSTS ?? "")
-      .split(",")
-      .map((h) => h.trim().toLowerCase())
-      .filter((h) => h.length > 0),
+    (process.env.TRUSTED_HOSTS ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean),
   );
 }
 
-const PUBLIC_API_PATHS = new Set([
-  "/api/auth/me",
-  "/api/auth/register",
-  "/api/auth/login",
-  "/api/auth/logout",
-]);
+const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout"]);
 
 export function startWebServer(options: WebServerOptions): Server {
   const { dbPath, port, webRoot } = options;
@@ -70,26 +62,12 @@ export function startWebServer(options: WebServerOptions): Server {
       try {
         const url = req.url ?? "/";
         const path = url.split("?")[0] ?? "/";
-        const method = req.method ?? "GET";
-
-        // API paths go through the router
-        const isApiPath = path === "/api" || path.startsWith("/api/");
-        if (isApiPath) {
-          await router.dispatch(req, res);
-          return;
-        }
-
-        // Non-API: serve static SPA
-        if (method === "GET" && serveStatic(path, webRoot, res)) return;
-
+        if (path === "/api" || path.startsWith("/api/")) { await router.dispatch(req, res); return; }
+        if ((req.method ?? "GET") === "GET" && serveStatic(path, webRoot, res)) return;
         sendJson(res, 404, { error: "not found" });
       } catch (err) {
         console.error("unhandled request error:", err);
-        if (res.headersSent) {
-          res.destroy();
-        } else {
-          sendJson(res, 500, { error: "internal error" });
-        }
+        res.headersSent ? res.destroy() : sendJson(res, 500, { error: "internal error" });
       }
     })();
   });
@@ -120,8 +98,7 @@ function serveStatic(urlPath: string, webRoot: string, res: ServerResponse): boo
   return true;
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
-if (isMain) {
+if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   startWebServer({
     dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,

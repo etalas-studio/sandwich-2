@@ -1113,7 +1113,7 @@ git commit -m "refactor: wire web-server through Router + route modules"
 
 **Files:** None new — verify everything passes.
 
-- [ ] **Step 1: Full build and test**
+- [x] **Step 1: Full build and test**
 
 ```bash
 npm run build
@@ -1122,11 +1122,11 @@ npm run test
 
 Expected: Zero failures across all test files (`router.test.js`, `routes/auth.test.js`, `routes/settings.test.js`, `web-server.test.js`, and all pre-existing tests in `db/`, `auth/`, `engine/`, `pipeline/`).
 
-- [ ] **Step 2: Inspect `web-server.ts` line count**
+- [x] **Step 2: Inspect `web-server.ts` line count**
 
 The file should be significantly shorter than the current ~330 lines. Target: under 120 lines (wiring + static serving).
 
-- [ ] **Step 3: Verify no behavioral regressions manually**
+- [x] **Step 3: Verify no behavioral regressions manually**
 
 ```bash
 npm run build && npm start
@@ -1144,11 +1144,11 @@ curl -s http://127.0.0.1:4319/api/settings/project | jq
 curl -s http://127.0.0.1:4319/ | head -5
 ```
 
-- [ ] **Step 4: Update CHANGELOG.md**
+- [x] **Step 4: Update CHANGELOG.md**
 
 Append: `- 2026-08-04: [http-routing-layer] | @riaenriala - extracted monolith web-server into Router class + per-domain route modules (auth, settings, integrations)`
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```bash
 git add CHANGELOG.md
