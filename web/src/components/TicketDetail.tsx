@@ -1,5 +1,5 @@
 import { marked } from 'marked'
-import type { Ticket } from '../api/tickets'
+import type { Ticket, QuickWinChoice } from '../api/tickets'
 import type { PipelineStage, NeedsHumanCategory } from '../types'
 
 type TicketSource = 'jira' | 'linear' | 'github' | 'internal'
@@ -28,6 +28,7 @@ interface TicketDetailProps {
   onEdit?: () => void
   onDelete?: () => void
   onRun?: (ticket: Ticket) => void
+  onResolve?: (ticketKey: string, choiceIndex: number) => void
 }
 
 const STAGE_ORDER: PipelineStage[] = ['judge', 'implement', 'verify', 'open_pr']
@@ -41,6 +42,7 @@ const STAGE_LABELS: Record<PipelineStage, string> = {
 
 const NEEDS_HUMAN_LABELS: Record<NeedsHumanCategory, string> = {
   ambiguous_ticket: 'Ambiguous Ticket',
+  quick_win: 'Quick Win',
   forbidden_path: 'Forbidden Path',
   forbidden_path_or_action: 'Forbidden Path/Action',
   weak_verification: 'Weak Verification',
@@ -61,7 +63,6 @@ function getStageStatus(ticket: Ticket, stage: PipelineStage): 'done' | 'active'
     if (stageIndex === currentIndex) return 'blocked'
     return 'pending'
   }
-  // In progress
   if (!ticket.stage) return 'pending'
   const currentIndex = STAGE_ORDER.indexOf(ticket.stage as PipelineStage)
   const stageIndex = STAGE_ORDER.indexOf(stage)
@@ -77,7 +78,7 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
   pending: { border: 'border-white/[0.08]', bg: 'bg-transparent', text: 'text-white/30', dot: 'bg-white/30' },
 }
 
-export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun }: TicketDetailProps) {
+export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun, onResolve }: TicketDetailProps) {
   return (
     <>
       {/* Backdrop */}
@@ -87,8 +88,9 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
       />
 
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md ds-bg border-l border-white/[0.05] z-50 overflow-y-auto hide-scrollbar">
-        <div className="relative z-10 p-6">
+      <div className="fixed top-0 right-0 h-full w-full max-w-md ds-bg border-l border-white/[0.05] z-50 flex flex-col">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto hide-scrollbar p-6 pb-0">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -127,28 +129,6 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
             </a>
           )}
 
-          {/* Actions */}
-          {(onEdit || onDelete) && (
-            <div className="flex gap-2 mb-6">
-              {onEdit && (
-                <button
-                  onClick={onEdit}
-                  className="px-3 py-1.5 rounded text-xs font-normal text-white/60 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-white/20 transition-colors"
-                >
-                  Edit
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={onDelete}
-                  className="px-3 py-1.5 rounded text-xs font-normal text-[#ff8a8a]/60 bg-[#ff8a8a]/[0.04] border border-[#ff8a8a]/[0.10] hover:text-[#ff8a8a] hover:border-[#ff8a8a]/30 transition-colors"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Description */}
           <div className="mb-8">
             <div className="section-label">Description</div>
@@ -159,22 +139,25 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
           </div>
 
           {/* Pipeline progress */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="section-label">Pipeline Progress</div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {STAGE_ORDER.map((stage) => {
                 const status = getStageStatus(ticket, stage)
                 const styles = STAGE_STYLES[status]
                 return (
                   <div
                     key={stage}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-light transition-colors ${styles.border} ${styles.bg} ${styles.text}`}
+                    className={`relative flex items-center gap-3 px-3 py-2 rounded-lg border text-sm font-light transition-colors ${styles.border} ${styles.bg} ${styles.text}`}
                     style={{ boxShadow: status !== 'pending' ? 'inset 0 1px 1px rgba(255,255,255,0.05)' : undefined }}
                   >
                     <div className={`w-1.5 h-1.5 rounded-full ${styles.dot} ${status === 'active' ? 'animate-pulse' : ''}`} style={status === 'active' ? { boxShadow: '0 0 8px rgba(245,158,11,0.6)' } : undefined} />
                     <span>{STAGE_LABELS[stage]}</span>
                     {status === 'active' && (
                       <span className="ml-auto text-xs opacity-70 animate-pulse">running</span>
+                    )}
+                    {status === 'done' && (
+                      <span className="ml-auto text-xs opacity-70">✓</span>
                     )}
                   </div>
                 )
@@ -184,24 +167,50 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
 
           {/* Blocked reason */}
           {ticket.status === 'blocked' && (ticket.needsHumanReason || ticket.needsHumanCategory) && (
-            <div className="ds-card-outer mb-6">
-              <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+            <div className="ds-card-outer mb-6" style={{ height: 'auto' }}>
+              <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]" style={{ height: 'auto' }}>
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">
                   {ticket.needsHumanCategory
-                    ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory as NeedsHumanCategory]}`
+                    ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory as NeedsHumanCategory] || ticket.needsHumanCategory}`
                     : 'Needs Human'}
                 </h4>
                 {ticket.needsHumanReason && (
                   <p className="text-xs text-white/50 font-light">{ticket.needsHumanReason}</p>
                 )}
+
+                {/* Quick-win choices */}
+                {ticket.quickWinChoices && (() => {
+                  let choices: QuickWinChoice[] = [];
+                  try { choices = JSON.parse(ticket.quickWinChoices); } catch { /* invalid JSON */ }
+                  if (choices.length === 0) return null;
+                  return (
+                    <div className="mt-3 flex flex-col gap-1.5">
+                      {choices.map((choice, i) => (
+                        <button
+                          key={i}
+                          onClick={() => onResolve?.(ticket.key, i)}
+                          className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-colors text-left group"
+                        >
+                          <span className="w-5 h-5 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
+                            <span className="text-[10px] text-white/50 font-mono group-hover:text-white/80 transition-colors">{i + 1}</span>
+                          </span>
+                          <div className="min-w-0">
+                            <span className="text-xs text-white/70 font-normal group-hover:text-white transition-colors">{choice.label}</span>
+                            <p className="text-[11px] text-white/40 font-light mt-0.5 leading-relaxed">{choice.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
 
           {/* Done state */}
           {ticket.status === 'done' && ticket.prUrl && (
-            <div className="ds-card-outer mb-6">
-              <div className="ds-card-inner p-4 border-l-2 border-l-[#8affb1]">
+            <div className="ds-card-outer mb-6" style={{ height: 'auto' }}>
+              <div className="ds-card-inner p-4 border-l-2 border-l-[#8affb1]" style={{ height: 'auto' }}>
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">PR Opened</h4>
                 {ticket.prSummary && (
                   <p className="text-xs text-white/50 font-light mb-2">{ticket.prSummary}</p>
@@ -222,11 +231,21 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
           {ticket.status === 'backlog' && (
             <div className="text-xs text-white/40 mb-6">Not yet started.</div>
           )}
+        </div>
 
-          {/* Run button */}
-          <div className="sticky bottom-0 pt-4 pb-2 -mx-6 px-6 border-t border-white/[0.05] bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/90 to-transparent">
+        {/* Bottom bar — Run + Delete */}
+        <div className="shrink-0 p-4 pt-3 pb-5 border-t border-white/[0.05] bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f] to-[#0a0a0a]">
+          <div className="flex gap-2">
+            {ticket.status === 'blocked' && onEdit && (
+              <button
+                onClick={onEdit}
+                className="flex items-center justify-center w-[38px] h-[38px] rounded-lg text-white/50 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-white/20 transition-colors shrink-0"
+              >
+                <iconify-icon icon="solar:pen-linear" width="16" />
+              </button>
+            )}
             <button
-              className="relative inline-flex group w-full"
+              className="relative inline-flex group flex-1"
               onClick={() => onRun?.(ticket)}
             >
               <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
@@ -241,6 +260,14 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun 
                 Run
               </span>
             </button>
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="flex items-center justify-center w-[38px] h-[38px] rounded-lg text-white/50 bg-white/[0.04] border border-white/[0.08] hover:text-[#ff8a8a] hover:border-[#ff8a8a]/30 transition-colors shrink-0"
+              >
+                <iconify-icon icon="solar:trash-bin-trash-linear" width="16" />
+              </button>
+            )}
           </div>
         </div>
       </div>

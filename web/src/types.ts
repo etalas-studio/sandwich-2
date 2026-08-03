@@ -7,6 +7,7 @@ export type PipelineStage = 'judge' | 'implement' | 'verify' | 'open_pr'
 // Needs-human category
 export type NeedsHumanCategory = 
   | 'ambiguous_ticket'
+  | 'quick_win'
   | 'forbidden_path'
   | 'forbidden_path_or_action'
   | 'weak_verification'

@@ -15,7 +15,7 @@ import type { CreateTicketData } from './components/CreateTicketModal'
 import EditTicketModal from './components/EditTicketModal'
 import ConfirmDeleteModal from './components/ConfirmDeleteModal'
 import type { UpdateTicketData } from './api/tickets'
-import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket } from './api/tickets'
+import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket } from './api/tickets'
 import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
@@ -350,8 +350,13 @@ function TicketsPage() {
         <TicketDetail
           ticket={displayTicket}
           onClose={handleCloseTicket}
-          onEdit={() => { setEditError(null); setEditingTicket(displayTicket) }}
+          onEdit={displayTicket.status === 'blocked' ? () => { setEditError(null); setEditingTicket(displayTicket) } : undefined}
           onDelete={() => setDeletingKey(displayTicket.key)}
+          onResolve={(ticketKey, choiceIndex) => {
+            resolveTicket(ticketKey, choiceIndex, selectedModelId ?? undefined)
+              .then(() => loadTickets())
+              .catch((err) => toast.error(err.message))
+          }}
           onRun={(ticket) => {
             runTicket(ticket.key, selectedModelId ?? undefined)
               .then(() => loadTickets())

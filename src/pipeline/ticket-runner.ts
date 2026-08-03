@@ -95,12 +95,17 @@ export async function runTicketPipeline(
 
     if (!result.ok) {
       // Stage failed — block the ticket
-      updateTicket(db, ticketKey, {
+      const updateInput: Record<string, unknown> = {
         status: "blocked",
         needsHumanReason: result.reason ?? "stage failed",
         needsHumanCategory: result.category ?? "agent_error",
         finishedAt: new Date().toISOString(),
-      });
+      };
+      if (result.choices && result.choices.length > 0) {
+        updateInput.quickWinChoices = JSON.stringify(result.choices);
+        updateInput.needsHumanCategory = "quick_win";
+      }
+      updateTicket(db, ticketKey, updateInput);
       emit({ type: "stage_end", stage, ticket: getTicket(db, ticketKey)! });
       emit({ type: "done", ticket: getTicket(db, ticketKey)! });
       return;
@@ -117,6 +122,7 @@ interface StageResult {
   ok: boolean;
   reason?: string;
   category?: string;
+  choices?: Array<{ label: string; description: string; inject: string }>;
 }
 
 // ── Stage: Judge ──
@@ -148,9 +154,12 @@ async function runJudge(
 
   // 2. AI relevance check
   if (!modelId) {
-    // No model selected — pass through (backlog already allows human review)
     return { ok: true };
   }
+
+  // Cap quick-win rounds at 1
+  const attempts = ticket.quickWinAttempts ?? 0;
+  const allowChoices = attempts < 1;
 
   const invoker = createInvoker(modelId);
   const prompt = [
@@ -158,11 +167,16 @@ async function runJudge(
     "",
     "Rules:",
     "- Small, clear changes (typo fixes, simple refactors, config changes) should pass.",
-    "- Ambiguous, underspecified, or poorly scoped tickets should NOT pass.",
-    '- A ticket is underspecified if it requires guessing at requirements, APIs, or behavior.',
+    "- Before flagging as ambiguous, check the codebase for existing conventions that answer the question (.prettierrc, .eslintrc, tsconfig.json, package.json scripts, etc.).",
+    "- If the project already has config files or code patterns that make the answer obvious, use those as defaults and pass the ticket.",
+    "- If there IS a small missing decision (e.g. 'which formatter' when Prettier is already configured) and the answer comes down to 2-3 clear options informed by the codebase, return choices. This is a 'quick win'.",
+    "- Only block as truly ambiguous if the gap would fundamentally change the implementation approach or the codebase provides no hints.",
     "",
     "Answer ONLY with a JSON object:",
     '{"agentReady": true/false, "reason": "one short sentence explaining why"}',
+    "",
+    `For quick wins (small missing decision with clear options), add a "choices" array: ${allowChoices ? '{"agentReady": false, "reason": "...", "choices": [{"label": "Use Prettier", "description": "Project already has .prettierrc", "inject": "Format code with Prettier (npx prettier --write)"}]}' : 'choices are NOT allowed on this ticket — just use ambiguous_ticket'}`,
+    "Each choice needs: label (short), description (why this option), inject (the text to add to the ticket description when chosen). Max 3 choices.",
     "",
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
@@ -186,8 +200,24 @@ async function runJudge(
 
     const jsonMatch = result.finalText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]) as { agentReady?: boolean; reason?: string };
+      const parsed = JSON.parse(jsonMatch[0]) as {
+        agentReady?: boolean;
+        reason?: string;
+        choices?: Array<{ label: string; description: string; inject: string }>;
+      };
       if (parsed.agentReady === false) {
+        const choices = parsed.choices?.slice(0, 3).filter(
+          (c): c is { label: string; description: string; inject: string } =>
+            typeof c.label === "string" && typeof c.inject === "string",
+        );
+        if (choices && choices.length > 0 && allowChoices) {
+          return {
+            ok: false,
+            reason: parsed.reason ?? "Quick decision needed",
+            category: "quick_win",
+            choices,
+          };
+        }
         return {
           ok: false,
           reason: parsed.reason ?? "Not agent-ready",
@@ -297,7 +327,9 @@ async function runVerify(
   emit: (event: TicketRunEvent) => void,
   signal: AbortSignal,
 ): Promise<StageResult> {
-  if (!modelId || !ticket.worktreePath) {
+  // Refetch — worktreePath was set during implement stage
+  const fresh = getTicket(db, ticket.key);
+  if (!modelId || !fresh?.worktreePath) {
     return { ok: false, reason: "No model or worktree", category: "agent_error" };
   }
 
@@ -319,7 +351,7 @@ async function runVerify(
   try {
     const result = await invoker.run({
       prompt,
-      cwd: ticket.worktreePath,
+      cwd: fresh.worktreePath,
       timeoutMs: 120_000,
     });
 
@@ -363,16 +395,18 @@ async function runOpenPr(
 ): Promise<StageResult> {
   const fakePrUrl = `https://github.com/etalas/runchise/pull/fake-${randomUUID().slice(0, 8)}`;
 
+  // Refetch — worktreePath was set during implement stage
+  const fresh = getTicket(db, ticket.key);
+  const worktreePath = fresh?.worktreePath;
+
   // Cleanup worktree
-  if (ticket.worktreePath && existsSync(ticket.worktreePath)) {
+  if (worktreePath && existsSync(worktreePath)) {
     try {
-      // Remove worktree from git, then delete directory
-      execSync(`git -C "${ticket.worktreePath}" worktree remove --force "${ticket.worktreePath}" 2>/dev/null || rm -rf "${ticket.worktreePath}"`, {
+      execSync(`git -C "${worktreePath}" worktree remove --force "${worktreePath}" 2>/dev/null || rm -rf "${worktreePath}"`, {
         timeout: 10_000,
       });
     } catch {
-      // Best effort cleanup
-      try { rmSync(ticket.worktreePath, { recursive: true, force: true }); } catch { /* ignore */ }
+      try { rmSync(worktreePath, { recursive: true, force: true }); } catch { /* ignore */ }
     }
   }
 

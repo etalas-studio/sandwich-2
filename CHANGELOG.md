@@ -3,6 +3,7 @@
 - 2026-08-04: restore UI cards | @potensio - restored agentic readiness, recommendations, and area signals cards on overview page; restored stats cards (agent success rate, avg duration, autonomy rate) on tickets page wired to live ticket data; added fix button to scan-driven recommendations
 - 2026-08-04: ticket pipeline | @potensio - 4-stage ticket pipeline (judge → implement → verify → open_pr) with Pi SDK engine, isolated git worktrees, blocklist check, SSE real-time progress, resume support, Run button on ticket cards and detail panel
 - 2026-08-04: summary field + fix button + pulse | @potensio - added summary field to tickets (already existed in schema, now surfaced in UI); Fix button on recommendations creates ticket with proper summary/description and auto-runs; pulsing dot animation on active pipeline stages in card and detail panel
+- 2026-08-04: quick win | @potensio - judge returns structured choices for small missing decisions (e.g. formatter choice); blocked card shows clickable pills; resolve endpoint injects answer into description and auto-reruns; capped at 1 quick-win round per ticket; edit button restored on blocked tickets; ticket detail layout fixed with sticky bottom bar
 
 Append-only. One entry per completed implementation task (not per phase, not on a fixed schedule) — logged as part of that task's own completion commit, so this never goes stale relative to what's actually been built.
 

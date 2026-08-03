@@ -15,6 +15,8 @@ export interface Ticket {
   startedAt: string | null;
   finishedAt: string | null;
   worktreePath: string | null;
+  quickWinChoices: string | null;
+  quickWinAttempts: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +48,8 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     startedAt: nullish(row.started_at),
     finishedAt: nullish(row.finished_at),
     worktreePath: nullish(row.worktree_path),
+    quickWinChoices: nullish(row.quick_win_choices),
+    quickWinAttempts: typeof row.quick_win_attempts === "number" ? row.quick_win_attempts : 0,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -87,6 +91,8 @@ export interface UpdateTicketInput {
   prSummary?: string | null;
   needsHumanCategory?: string | null;
   needsHumanReason?: string | null;
+  quickWinChoices?: string | null;
+  quickWinAttempts?: number;
 }
 
 export function updateTicket(db: Database.Database, key: string, input: UpdateTicketInput): Ticket | null {
@@ -129,6 +135,12 @@ export function updateTicket(db: Database.Database, key: string, input: UpdateTi
   }
   if (input.needsHumanReason !== undefined) {
     db.prepare("UPDATE tickets SET needs_human_reason = ?, updated_at = ? WHERE key = ?").run(input.needsHumanReason, now, key);
+  }
+  if (input.quickWinChoices !== undefined) {
+    db.prepare("UPDATE tickets SET quick_win_choices = ?, updated_at = ? WHERE key = ?").run(input.quickWinChoices, now, key);
+  }
+  if (input.quickWinAttempts !== undefined) {
+    db.prepare("UPDATE tickets SET quick_win_attempts = ?, updated_at = ? WHERE key = ?").run(input.quickWinAttempts, now, key);
   }
 
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;

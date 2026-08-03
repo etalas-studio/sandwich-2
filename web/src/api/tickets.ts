@@ -13,6 +13,8 @@ export interface Ticket {
   prSummary: string | null
   startedAt: string | null
   finishedAt: string | null
+  quickWinChoices: string | null
+  quickWinAttempts: number
   createdAt: string
   updatedAt: string
 }
@@ -59,6 +61,24 @@ export async function updateTicket(key: string, data: UpdateTicketData): Promise
 export async function deleteTicket(key: string): Promise<void> {
   const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, {
     method: 'DELETE',
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `HTTP ${res.status}`)
+  }
+}
+
+export interface QuickWinChoice {
+  label: string
+  description: string
+  inject: string
+}
+
+export async function resolveTicket(key: string, choiceIndex: number, modelId?: string): Promise<void> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}/resolve`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ choiceIndex, ...(modelId ? { modelId } : {}) }),
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { error?: string } | null
