@@ -99,11 +99,37 @@ function OverviewPage() {
         </div>
       )}
 
+      {/* ── Scan running ── */}
+      {(isRunning || isTriggering) && (
+        <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+          <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10 flex items-center gap-4">
+              <iconify-icon
+                icon="solar:refresh-linear"
+                width="20"
+                className="text-white/60 animate-spin shrink-0"
+              />
+              <div>
+                <p className="text-sm text-white font-light">
+                  {isTriggering ? 'Starting project scan…' : 'Project scan in progress…'}
+                </p>
+                <p className="text-xs text-white/40 font-light mt-1">
+                  {isTriggering
+                    ? 'Initializing…'
+                    : 'Analyzing codebase structure, tech stack, test coverage, and churn. This may take a minute.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Scan results ── */}
-      {hasScan && <ReadinessCard scan={latestScan!} />}
+      {hasScan && !isRunning && !isTriggering && <ReadinessCard scan={latestScan!} />}
 
       {/* ── Project not yet scanned ── */}
-      {hasProject && !hasScan && !isRunning && (
+      {hasProject && !hasScan && !isRunning && !isTriggering && (
         <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
           <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
             <div className="absolute inset-0 ds-noise pointer-events-none" />

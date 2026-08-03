@@ -34,6 +34,8 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         );
       }
 
+      console.log("[scan] Starting agent pass with model:", modelId);
+
       const { session } = await createAgentSession({
         model: model as any,
         modelRuntime: modelRuntime as any,
@@ -45,6 +47,7 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
       });
 
       let responseText = "";
+      let toolCount = 0;
 
       session.subscribe((event: any) => {
         if (
@@ -52,16 +55,28 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
           event.assistantMessageEvent?.type === "text_delta"
         ) {
           responseText += event.assistantMessageEvent.delta;
+          // Log first chunk to confirm the agent is working
+          if (responseText.length < 200 && event.assistantMessageEvent.delta.length > 0) {
+            process.stdout.write(".");
+          }
+        }
+        if (event.type === "tool_execution_start") {
+          toolCount++;
+          console.log(`[scan] Agent running tool: ${event.toolName}`);
         }
       });
 
       try {
+        console.log("[scan] Sending prompt to agent...");
         await session.prompt(opts.prompt);
+        console.log(""); // newline after dots
+        console.log(`[scan] Agent finished. Used ${toolCount} tool calls, response ${responseText.length} chars.`);
         session.dispose();
         return { outcome: "ok" as const, finalText: responseText };
       } catch (err) {
         session.dispose();
         const message = err instanceof Error ? err.message : String(err);
+        console.error("[scan] Agent pass failed:", message);
         if (
           message.includes("timeout") ||
           message.includes("aborted") ||
@@ -69,7 +84,6 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         ) {
           return { outcome: "timeout" as const, finalText: "" };
         }
-        console.error("Agent pass engine error:", message);
         return { outcome: "process_error" as const, finalText: "" };
       }
     },
