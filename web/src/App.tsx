@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import { useTickets, runTicket, stopTicket, duplicateTicket, deleteTicket, createTicket, computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
@@ -7,8 +8,6 @@ import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
 import mockData from './mockData'
-
-type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
 // Quick Add: a one-click seed of a known real ticket for demoing/testing,
 // rather than a full ticket-creation form. createTicket auto-suffixes the
@@ -21,29 +20,52 @@ const QUICK_ADD_TICKET = {
     '### Issue\n\nWhen exporting or downloading files, any Mandarin characters included in the file name are replaced with underscores (`_`) instead of being preserved.\n\nThis issue occurs regardless of the system language (Bahasa Indonesia, English, or Mandarin).\n\n**Example**\n\n* **Brand Name:** `Onboard Fajar 库存变动`\n* **Expected File Name:** `Onboard_Fajar_库存变动.xlsx`\n* **Actual File Name:** `Onboard_Fajar_____.xlsx` (Mandarin characters replaced with `_`)\n\n### Expected Behavior\n\n* Preserve all supported Unicode characters (including Mandarin) in exported file names.\n* File names should display correctly across all supported languages without replacing non-Latin characters with underscores.\n* The exported file name should match the original brand name (except for invalid filesystem characters that must still be sanitized).\n\n### Acceptance Criteria\n\n1. Exported file names preserve Mandarin characters.\n2. Exported file names preserve Unicode characters for all supported languages.\n3. Only invalid filename characters (e.g. `\\ / : * ? " < > |`) are sanitized or replaced.\n4. Export works correctly for all export types (e.g. Onboarding, Stock Product, and other exported reports/files).\n5. The issue is resolved regardless of the selected system language (English, Bahasa Indonesia, or Mandarin).',
 }
 
-export default function App() {
+function OverviewPage() {
+  return (
+    <div className="h-full overflow-y-auto hide-scrollbar p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+            Overview
+          </h1>
+        </div>
+        <p className="text-sm text-white/50 font-light">
+          High-level dashboard coming soon.
+        </p>
+      </div>
+
+      {/* Placeholder */}
+      <div className="ds-card-outer">
+        <div className="ds-card-inner p-8 text-center">
+          <p className="text-white/50 font-light">Coming soon</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TicketsPage() {
   const { tickets, error } = useTickets()
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
-  const [activeNav, setActiveNav] = useState<NavItem>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
   const [stoppingKeys, setStoppingKeys] = useState<Set<string>>(new Set())
   const [runError, setRunError] = useState<string | null>(null)
 
-  // Use real tickets if available, otherwise fall back to mock data
+  // Derive selected ticket from URL query param
+  const selectedKey = searchParams.get('selected')
   const displayTickets = tickets ?? mockData.tickets
+  const selectedTicket = selectedKey 
+    ? displayTickets.find(t => t.key === selectedKey) ?? null 
+    : null
   const stats = computeStats(displayTickets)
 
   const handleOpenTicket = (ticket: Ticket) => {
-    setSelectedTicket(ticket)
+    setSearchParams({ selected: ticket.key })
   }
 
   const handleCloseTicket = () => {
-    setSelectedTicket(null)
-  }
-
-  const handleNavigate = (item: NavItem) => {
-    setActiveNav(item)
-    setSelectedTicket(null)
+    setSearchParams({})
   }
 
   const handleRunTicket = (key: string) => {
@@ -101,6 +123,87 @@ export default function App() {
   }
 
   return (
+    <>
+      <div className="h-full overflow-y-auto hide-scrollbar p-6">
+        {/* Error banner */}
+        {error && (
+          <div className="ds-card-outer mb-6">
+            <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+              <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
+              <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
+            </div>
+          </div>
+        )}
+        {runError && (
+          <div className="ds-card-outer mb-6">
+            <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+              <p className="text-sm text-[#ff8a8a]">{runError}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+                Tickets
+              </h1>
+              <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                Today
+              </span>
+            </div>
+            <p className="text-sm text-white/50 font-light">
+              {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              {' · '}
+              {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            className="relative inline-flex group shrink-0"
+          >
+            <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+            <span
+              className="relative px-4 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
+              style={{
+                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              <iconify-icon icon="solar:add-circle-linear" width="14" />
+              Quick Add
+            </span>
+          </button>
+        </div>
+
+        {/* Stats */}
+        <StatsCards stats={stats} />
+
+        {/* Kanban */}
+        <KanbanBoard
+          tickets={displayTickets}
+          onOpenTicket={handleOpenTicket}
+          onRunTicket={handleRunTicket}
+          onStopTicket={handleStopTicket}
+          onDuplicateTicket={handleDuplicateTicket}
+          onDeleteTicket={handleDeleteTicket}
+          startingKeys={startingKeys}
+          stoppingKeys={stoppingKeys}
+        />
+      </div>
+
+      {/* Ticket detail overlay */}
+      {selectedTicket && (
+        <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
+      )}
+    </>
+  )
+}
+
+function AppLayout() {
+  return (
     <div className="ds-bg min-h-screen text-white antialiased">
       {/* Ambient background blobs */}
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
@@ -118,94 +221,26 @@ export default function App() {
       <div className="ds-card-outer min-h-screen">
         <div className="ds-card-inner flex min-h-screen">
           {/* Sidebar */}
-          <Sidebar active={activeNav} onNavigate={handleNavigate} />
+          <Sidebar />
 
           {/* Noise texture overlay */}
           <div className="ds-noise" />
 
           {/* Main content */}
           <main className="relative z-10 flex-1 min-h-screen overflow-hidden">
-            {activeNav === 'settings' ? (
-              <Settings onBack={() => setActiveNav('overview')} />
-            ) : (
-              <div className="h-full overflow-y-auto hide-scrollbar p-6">
-                {/* Error banner */}
-                {error && (
-                  <div className="ds-card-outer mb-6">
-                    <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-                      <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
-                      <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
-                    </div>
-                  </div>
-                )}
-                {runError && (
-                  <div className="ds-card-outer mb-6">
-                    <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-                      <p className="text-sm text-[#ff8a8a]">{runError}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Header */}
-                <div className="mb-8 flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
-                        Overview
-                      </h1>
-                      <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-                        Today
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/50 font-light">
-                      {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      {' · '}
-                      {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleQuickAdd}
-                    className="relative inline-flex group shrink-0"
-                  >
-                    <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                    <span
-                      className="relative px-4 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
-                      style={{
-                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                      }}
-                    >
-                      <iconify-icon icon="solar:add-circle-linear" width="14" />
-                      Quick Add
-                    </span>
-                  </button>
-                </div>
-
-                {/* Stats */}
-                <StatsCards stats={stats} />
-
-                {/* Kanban */}
-                <KanbanBoard
-                  tickets={displayTickets}
-                  onOpenTicket={handleOpenTicket}
-                  onRunTicket={handleRunTicket}
-                  onStopTicket={handleStopTicket}
-                  onDuplicateTicket={handleDuplicateTicket}
-                  onDeleteTicket={handleDeleteTicket}
-                  startingKeys={startingKeys}
-                  stoppingKeys={stoppingKeys}
-                />
-              </div>
-            )}
+            <Routes>
+              <Route path="/overview" element={<OverviewPage />} />
+              <Route path="/tickets" element={<TicketsPage />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/" element={<Navigate to="/overview" replace />} />
+            </Routes>
           </main>
         </div>
       </div>
-
-      {/* Ticket detail overlay */}
-      {selectedTicket && (
-        <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
-      )}
     </div>
   )
+}
+
+export default function App() {
+  return <AppLayout />
 }
