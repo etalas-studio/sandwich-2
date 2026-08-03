@@ -1,34 +1,17 @@
-import { useEffect, useState } from 'react'
-import { fetchProjectSettings, saveProjectSettings } from '../types'
+import { useState, useEffect, useRef } from 'react'
+import { useProjectSettings } from '../hooks/useProjectSettings'
 
 export default function ProjectSection() {
-  const [repoPath, setRepoPath] = useState<string | null>(null)
+  const { repoPath, isSaving, save } = useProjectSettings()
   const [input, setInput] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const seeded = useRef(false)
 
   useEffect(() => {
-    fetchProjectSettings()
-      .then((settings) => {
-        setRepoPath(settings.repoPath)
-        setInput(settings.repoPath ?? '')
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
-  }, [])
-
-  const handleSave = () => {
-    setSaving(true)
-    setError(null)
-    saveProjectSettings(input)
-      .then((result) => {
-        if (result.ok) {
-          setRepoPath(result.settings?.repoPath ?? input)
-        } else {
-          setError(result.message)
-        }
-      })
-      .finally(() => setSaving(false))
-  }
+    if (repoPath && !seeded.current) {
+      setInput(repoPath)
+      seeded.current = true
+    }
+  }, [repoPath])
 
   return (
     <div className="ds-card-outer ds-shadow-elevated">
@@ -66,17 +49,11 @@ export default function ProjectSection() {
               />
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-[#3a1d1d] border border-[#522525]">
-                <span className="text-xs text-[#ff8a8a] font-light">{error}</span>
-              </div>
-            )}
-
             <div className="flex items-center justify-end pt-2">
               <button
                 className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={saving || input.trim().length === 0}
-                onClick={handleSave}
+                disabled={isSaving || input.trim().length === 0}
+                onClick={() => save(input.trim())}
               >
                 <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                 <span
@@ -86,7 +63,7 @@ export default function ProjectSection() {
                     textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                   }}
                 >
-                  {saving ? 'Saving…' : 'Save'}
+                  {isSaving ? 'Saving…' : 'Save'}
                 </span>
               </button>
             </div>
