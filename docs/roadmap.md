@@ -18,7 +18,7 @@ Architecture pieces (mirrors the spec's Architecture section):
 - [ ] Verify (exit-code only) — no plan yet
 - [ ] VCS abstraction (GitHub and Bitbucket, both first-class) — no plan yet
 - [ ] Ticket intake (manual JSON queue file) — no plan yet
-- [ ] Visibility (web UI + SSE, incl. first-run project-folder setup + readiness overview) — no plan yet
+- [ ] Visibility (web UI + SSE, incl. first-run project-folder setup + readiness overview) — partially done: static ticket list/board/detail UI is built (`docs/superpowers/plans/2026-08-03-visibility-ui-foundation.md`), but SSE live updates, first-run folder setup, and the readiness overview are still unplanned
 - [ ] Auth (custom, single account) — no plan yet
 - [ ] Deployment (server-agnostic) — no plan yet
 
