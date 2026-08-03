@@ -43,3 +43,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [auth] | @potensio - Added useAuth hook for frontend auth state management (web/src/useAuth.ts)
 - 2026-08-03: [auth] | @potensio - Added first-run account setup screen component (web/src/components/SetupForm.tsx)
 - 2026-08-03: [auth] | @potensio - Added login screen component (web/src/components/LoginForm.tsx)
+- 2026-08-03: [auth] | @potensio - Wired AuthGate (web/src/components/AuthGate.tsx) to gate the app on setup/login/authenticated state, rendered from main.tsx in place of App; App and Sidebar now take real username/onLogout props, replacing the hardcoded "Jane Doe" placeholder
