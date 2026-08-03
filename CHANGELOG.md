@@ -4,6 +4,7 @@ Append-only. One entry per completed implementation task (not per phase, not on 
 
 Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 
+- 2026-08-03: [pipeline-shape] | @potensio - Added the Pipeline shape instance config loader, defaulting engine mode to PTY (src/pipeline/config.ts, config/instance.example.json)
 - 2026-08-03: [pipeline-shape] | @potensio - Added shared pipeline stage types (PipelineContext, Judge/Implement/Verify result types) for the new Judge -> Implement -> Verify sequence (src/pipeline/types.ts)
 - 2026-08-03: [engine-invocation-layer] | @potensio - PoC comparing headless (`claude -p`) vs interactive PTY Claude Code invocation; selected headless (poc/README.md)
 - 2026-08-03: [engine-invocation-layer] | @potensio - Defined the EngineInvoker interface and result types (src/engine/types.ts)
