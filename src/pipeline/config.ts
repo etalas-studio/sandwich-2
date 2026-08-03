@@ -13,9 +13,11 @@ export interface PipelineConfig {
 
 const REQUIRED_STRING_FIELDS = ["repoPath", "worktreeRoot", "branchPrefix", "baseBranch"] as const;
 
-const DEFAULT_ENGINE_MODE = "pty";
-const DEFAULT_IMPLEMENT_TIMEOUT_MS = 20 * 60 * 1000;
-const DEFAULT_VERIFY_TIMEOUT_MS = 30 * 60 * 1000;
+export const DEFAULT_ENGINE_MODE = "pty";
+export const DEFAULT_IMPLEMENT_TIMEOUT_MS = 20 * 60 * 1000;
+export const DEFAULT_VERIFY_TIMEOUT_MS = 30 * 60 * 1000;
+export const DEFAULT_WORKTREE_ROOT = ".work/worktrees";
+export const DEFAULT_BRANCH_PREFIX = "agent/";
 
 /**
  * Nearest ancestor directory containing a package.json, used as the base

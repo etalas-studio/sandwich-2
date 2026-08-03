@@ -1,13 +1,22 @@
 import { createServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { extname, isAbsolute, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
 import { getTicketByKey, listTickets } from "./db/tickets.js";
 import { getLatestRunForTicket } from "./db/runs.js";
 import { listArtifactsForRun } from "./db/run-artifacts.js";
 import { getInstanceSettings, completeFirstRun } from "./db/settings.js";
-import { loadPipelineConfig } from "./pipeline/config.js";
+import {
+  loadPipelineConfig,
+  DEFAULT_ENGINE_MODE,
+  DEFAULT_IMPLEMENT_TIMEOUT_MS,
+  DEFAULT_VERIFY_TIMEOUT_MS,
+  DEFAULT_WORKTREE_ROOT,
+  DEFAULT_BRANCH_PREFIX,
+} from "./pipeline/config.js";
+import type { PipelineConfig } from "./pipeline/config.js";
 import { runPipeline } from "./pipeline/run.js";
 
 const MIME: Record<string, string> = {
@@ -124,6 +133,49 @@ function validateRepoPath(candidate: unknown): { ok: true; repoPath: string } | 
   return { ok: true, repoPath };
 }
 
+/** The repo's currently checked-out branch — used as a baseBranch fallback
+ * when there's no static config file to say otherwise, since a hardcoded
+ * "main"/"master" guess would be wrong for plenty of real repos. */
+function detectCurrentBranch(repoPath: string): string | null {
+  try {
+    return execSync("git rev-parse --abbrev-ref HEAD", { cwd: repoPath, encoding: "utf8" }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Builds the config runPipeline actually runs with for one request. The
+ * DB-stored repoPath (first-run setup, see instance_settings) always wins
+ * over the static config file's repoPath — the file's repoPath is only a
+ * dev-time fallback. The other fields (worktreeRoot, branchPrefix,
+ * engineMode, timeouts) come from the static file when one exists; when it
+ * doesn't, this instance still runs on sensible defaults rather than
+ * refusing outright, since repoPath (set via Settings > Project) is the one
+ * piece of setup this product actually asks a human to do up front.
+ */
+function resolveEffectiveConfig(
+  fileConfig: PipelineConfig | null,
+  dbRepoPath: string | null,
+): PipelineConfig | null {
+  const repoPath = dbRepoPath ?? fileConfig?.repoPath ?? null;
+  if (!repoPath) return null;
+
+  if (fileConfig) {
+    return { ...fileConfig, repoPath };
+  }
+
+  return {
+    repoPath,
+    worktreeRoot: DEFAULT_WORKTREE_ROOT,
+    branchPrefix: DEFAULT_BRANCH_PREFIX,
+    baseBranch: detectCurrentBranch(repoPath) ?? "main",
+    engineMode: DEFAULT_ENGINE_MODE,
+    implementTimeoutMs: DEFAULT_IMPLEMENT_TIMEOUT_MS,
+    verifyTimeoutMs: DEFAULT_VERIFY_TIMEOUT_MS,
+  };
+}
+
 /**
  * Minimal API + static server for the new (post-reset) product design.
  * Deliberately separate from server.ts, which serves the prior attempt's
@@ -213,12 +265,8 @@ export function startWebServer(options: WebServerOptions): void {
           sendJson(res, 403, { error: "cross-origin run requests are refused" });
           return;
         }
-        // The chosen-via-UI project folder (first-run setup) always wins
-        // over the static config file's repoPath — the file's value is only
-        // a dev-time fallback for instances that haven't done first-run
-        // setup yet.
-        const repoPath = getInstanceSettings(db).repoPath ?? pipelineConfig?.repoPath ?? null;
-        if (!pipelineConfig || !repoPath) {
+        const effectiveConfig = resolveEffectiveConfig(pipelineConfig, getInstanceSettings(db).repoPath);
+        if (!effectiveConfig) {
           sendJson(res, 503, {
             error: "no project folder configured yet — set one in Settings",
           });
@@ -239,7 +287,7 @@ export function startWebServer(options: WebServerOptions): void {
         }
 
         runningTicketKey = ticketKey;
-        runPipeline(ticketKey, { ...pipelineConfig, repoPath }, db)
+        runPipeline(ticketKey, effectiveConfig, db)
           .catch((err: unknown) => {
             console.error(`Pipeline run for ${ticketKey} failed:`, err);
           })
