@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
 
+// User data only — schema_migrations is infrastructure, not reset on purge.
 const TABLES = [
   "readiness_scans",
   "blocklist",
@@ -10,7 +11,6 @@ const TABLES = [
   "tickets",
   "users",
   "instance_settings",
-  "schema_migrations",
 ];
 
 export function registerPurgeRoute(router: Router, db: Database.Database): void {
