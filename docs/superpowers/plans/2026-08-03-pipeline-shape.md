@@ -30,7 +30,7 @@
 - Consumes: `EngineInvoker` (`src/engine/types.ts`), `Ticket` (`src/db/tickets.ts`), `Database.Database` (`better-sqlite3`)
 - Produces: `PipelineContext`, `NeedsHumanCategory`, `JudgeResult`, `ImplementOutcome`, `ImplementResult`, `VerifyOutcome`, `VerifyResult` — used by every later task in this plan
 
-- [ ] **Step 1: Write `src/pipeline/types.ts`**
+- [x] **Step 1: Write `src/pipeline/types.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -99,7 +99,7 @@ export interface VerifyResult {
 }
 ```
 
-- [ ] **Step 2: Write `src/pipeline/types.test.ts`**
+- [x] **Step 2: Write `src/pipeline/types.test.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -191,22 +191,22 @@ console.log(
 );
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: no errors. (This is a shape-check file, not a runtime test — compiling cleanly is the only pass condition.)
 
-- [ ] **Step 4: Run it**
+- [x] **Step 4: Run it**
 
 Run: `node dist/pipeline/types.test.js`
 Expected: prints `PASS: pipeline types are constructible ...`
 
-- [ ] **Step 5: Full build + selftest**
+- [x] **Step 5: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed (`selftest` still ends with `38 lolos, 0 gagal.` — untouched by this task).
 
-- [ ] **Step 6: Update CHANGELOG and commit**
+- [x] **Step 6: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -232,7 +232,7 @@ git commit -m "Add shared pipeline stage types"
 - Consumes: `Migration` (`src/db/migrations/types.ts`), `openDb` (`src/db/connection.ts`), `upsertTicket`/`insertRun` (existing, for test fixtures)
 - Produces: `RunArtifactKind`, `RunArtifact`, `NewRunArtifact`, `insertRunArtifact(db, input): RunArtifact`, `listArtifactsForRun(db, runId): RunArtifact[]` — used by Implement (Task 5) and Verify (Task 6)
 
-- [ ] **Step 1: Write the failing test — `src/db/run-artifacts.test.ts`**
+- [x] **Step 1: Write the failing test — `src/db/run-artifacts.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -302,12 +302,12 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './run-artifacts.js'` (neither the migration nor the repository module exist yet)
 
-- [ ] **Step 3: Write the migration — `src/db/migrations/0002_run_artifacts.ts`**
+- [x] **Step 3: Write the migration — `src/db/migrations/0002_run_artifacts.ts`**
 
 ```typescript
 import type { Migration } from "./types.js";
@@ -328,7 +328,7 @@ CREATE INDEX idx_run_artifacts_run_id ON run_artifacts(run_id);
 };
 ```
 
-- [ ] **Step 4: Register the migration — modify `src/db/migrations/index.ts`**
+- [x] **Step 4: Register the migration — modify `src/db/migrations/index.ts`**
 
 ```typescript
 import type { Migration } from "./types.js";
@@ -338,7 +338,7 @@ import { migration0002RunArtifacts } from "./0002_run_artifacts.js";
 export const MIGRATIONS: Migration[] = [migration0001Init, migration0002RunArtifacts];
 ```
 
-- [ ] **Step 5: Write the repository module — `src/db/run-artifacts.ts`**
+- [x] **Step 5: Write the repository module — `src/db/run-artifacts.ts`**
 
 ```typescript
 import type Database from "better-sqlite3";
@@ -407,17 +407,17 @@ function mapRow(row: RawRow): RunArtifact {
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/db/run-artifacts.test.js`
 Expected: `PASS: testInsertsAndListsArtifactsForARun`, `PASS: testListReturnsEmptyForRunWithNoArtifacts`, `PASS: testInsertFailsForUnknownRun`
 
-- [ ] **Step 7: Full build + selftest**
+- [x] **Step 7: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 8: Update CHANGELOG and commit**
+- [x] **Step 8: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -442,7 +442,7 @@ git commit -m "Add run_artifacts storage"
 - Consumes: nothing new (plain `node:fs`/`node:path`)
 - Produces: `PipelineConfig`, `loadPipelineConfig(configPath): PipelineConfig` — used by the orchestrator (Task 7)
 
-- [ ] **Step 1: Write the failing test — `src/pipeline/config.test.ts`**
+- [x] **Step 1: Write the failing test — `src/pipeline/config.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -549,12 +549,12 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './config.js'`
 
-- [ ] **Step 3: Write `src/pipeline/config.ts`**
+- [x] **Step 3: Write `src/pipeline/config.ts`**
 
 ```typescript
 import { existsSync, readFileSync } from "node:fs";
@@ -660,7 +660,7 @@ export function loadPipelineConfig(configPath: string): PipelineConfig {
 }
 ```
 
-- [ ] **Step 4: Write `config/instance.example.json`**
+- [x] **Step 4: Write `config/instance.example.json`**
 
 ```json
 {
@@ -674,17 +674,17 @@ export function loadPipelineConfig(configPath: string): PipelineConfig {
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/pipeline/config.test.js`
 Expected: all four `PASS:` lines print.
 
-- [ ] **Step 6: Full build + selftest**
+- [x] **Step 6: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 7: Update CHANGELOG and commit**
+- [x] **Step 7: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -708,7 +708,7 @@ git commit -m "Add pipeline instance config loader"
 - Consumes: `PipelineContext`, `JudgeResult` (Task 1)
 - Produces: `judge(ctx: PipelineContext): Promise<JudgeResult>` — used by the orchestrator (Task 7)
 
-- [ ] **Step 1: Write the failing test — `src/pipeline/judge.test.ts`**
+- [x] **Step 1: Write the failing test — `src/pipeline/judge.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -768,12 +768,12 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './judge.js'`
 
-- [ ] **Step 3: Write `src/pipeline/judge.ts`**
+- [x] **Step 3: Write `src/pipeline/judge.ts`**
 
 ```typescript
 import type { PipelineContext, JudgeResult } from "./types.js";
@@ -792,17 +792,17 @@ export async function judge(_ctx: PipelineContext): Promise<JudgeResult> {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/pipeline/judge.test.js`
 Expected: `PASS: testAlwaysReturnsAgentReady`
 
-- [ ] **Step 5: Full build + selftest**
+- [x] **Step 5: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 6: Update CHANGELOG and commit**
+- [x] **Step 6: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -826,7 +826,7 @@ git commit -m "Add stubbed Judge stage"
 - Consumes: `PipelineContext`, `ImplementResult` (Task 1); `insertRunArtifact` (Task 2); `summarizeDiff`/`commitAll` (`src/git.ts`, unmodified); `listBlocklistEntries` (`src/db/blocklist.ts`)
 - Produces: `implement(ctx: PipelineContext): Promise<ImplementResult>` — used by the orchestrator (Task 7)
 
-- [ ] **Step 1: Write the failing test — `src/pipeline/implement.test.ts`**
+- [x] **Step 1: Write the failing test — `src/pipeline/implement.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -971,12 +971,12 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './implement.js'`
 
-- [ ] **Step 3: Write `src/pipeline/implement.ts`**
+- [x] **Step 3: Write `src/pipeline/implement.ts`**
 
 ```typescript
 import { summarizeDiff, commitAll } from "../git.js";
@@ -1103,17 +1103,17 @@ export async function implement(ctx: PipelineContext): Promise<ImplementResult> 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/pipeline/implement.test.js`
 Expected: all four `PASS:` lines print.
 
-- [ ] **Step 5: Full build + selftest**
+- [x] **Step 5: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 6: Update CHANGELOG and commit**
+- [x] **Step 6: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -1137,7 +1137,7 @@ git commit -m "Add Implement stage"
 - Consumes: `PipelineContext`, `VerifyResult` (Task 1); `insertRunArtifact` (Task 2); `exec` (`src/proc.ts`, unmodified); `getLatestReadinessScan` (`src/db/readiness-scans.ts`)
 - Produces: `verify(ctx: PipelineContext): Promise<VerifyResult>` — used by the orchestrator (Task 7)
 
-- [ ] **Step 1: Write the failing test — `src/pipeline/verify.test.ts`**
+- [x] **Step 1: Write the failing test — `src/pipeline/verify.test.ts`**
 
 ```typescript
 import { strict as assert } from "node:assert";
@@ -1246,12 +1246,12 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx tsc -p tsconfig.json`
 Expected: FAIL — `Cannot find module './verify.js'`
 
-- [ ] **Step 3: Write `src/pipeline/verify.ts`**
+- [x] **Step 3: Write `src/pipeline/verify.ts`**
 
 ```typescript
 import { exec } from "../proc.js";
@@ -1321,17 +1321,17 @@ export async function verify(ctx: PipelineContext): Promise<VerifyResult> {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx tsc -p tsconfig.json && node dist/pipeline/verify.test.js`
 Expected: all four `PASS:` lines print.
 
-- [ ] **Step 5: Full build + selftest**
+- [x] **Step 5: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed.
 
-- [ ] **Step 6: Update CHANGELOG and commit**
+- [x] **Step 6: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
@@ -1637,7 +1637,7 @@ git commit -m "Add pipeline orchestrator"
 - Consumes: nothing (docs/comments only)
 - Produces: nothing consumed by other tasks — this is the plan's closing bookkeeping step
 
-- [ ] **Step 1: Update the stale "headless is the default" wording in the Phase 1 spec**
+- [x] **Step 1: Update the stale "headless is the default" wording in the Phase 1 spec**
 
 In `docs/superpowers/specs/2026-08-02-phase-1-product-design.md`, find this line in the "Agent engine: switchable, not fixed" section:
 
@@ -1663,7 +1663,7 @@ Replace with:
 Headless was faster (10–16s vs 18–20s) and produces clean output with no ANSI-stripping needed, so it shipped first as the initially recommended default, and does not require the PTY complexity to be built before anything can run. (This instance's actual config now defaults to PTY instead — see `docs/superpowers/specs/2026-08-03-pipeline-shape-design.md`.)
 ```
 
-- [ ] **Step 2: Update the comment in `src/engine/create-invoker.ts`**
+- [x] **Step 2: Update the comment in `src/engine/create-invoker.ts`**
 
 Find:
 
@@ -1688,7 +1688,7 @@ Replace with:
  */
 ```
 
-- [ ] **Step 3: Update `docs/roadmap.md`'s Pipeline shape line**
+- [x] **Step 3: Update `docs/roadmap.md`'s Pipeline shape line**
 
 Find:
 
@@ -1702,12 +1702,12 @@ Replace with:
 - [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — partially done: Implement and Verify are built for real, Judge is stubbed to always agent-ready, and Open PR is out of scope (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — real Judge logic and Open PR remain unplanned
 ```
 
-- [ ] **Step 4: Full build + selftest**
+- [x] **Step 4: Full build + selftest**
 
 Run: `npm run build && npm run selftest`
 Expected: both succeed (this task changes no runtime logic, only comments/docs, so this is purely a regression check).
 
-- [ ] **Step 5: Update CHANGELOG and commit**
+- [x] **Step 5: Update CHANGELOG and commit**
 
 Add to `CHANGELOG.md`:
 ```
