@@ -7,6 +7,7 @@ import { openDb } from "../db/connection.js";
 import { getLatestReadinessScan, startReadinessScan } from "../db/readiness-scans.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
 import { createScanRunner } from "./run-scan.js";
+import type { InvokerFactory } from "./run-scan.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "run-scan-test-"));
@@ -22,6 +23,7 @@ function makeRepo(): string {
     join(dir, "package.json"),
     JSON.stringify({
       name: "scanned-app",
+      description: "A scanned test app",
       dependencies: { express: "^4" },
       devDependencies: { typescript: "^5" },
       scripts: { test: "vitest" },
@@ -35,17 +37,27 @@ function makeRepo(): string {
   return dir;
 }
 
+function makeInvokerFactory(responseJson: string): InvokerFactory {
+  return (_modelId) => ({
+    async run(_opts) {
+      return { outcome: "ok" as const, finalText: responseJson };
+    },
+  });
+}
+
 async function testRunScanCompletesWithMechanicalResults(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  // null modelRuntime = stub invoker (no agent pass)
-  const runScan = createScanRunner(db, null);
+  const runScan = createScanRunner(
+    db,
+    makeInvokerFactory(JSON.stringify({ description: null, blocklist: [] })),
+  );
   const scanId = "test-scan-1";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
 
-  await runScan(scanId, repo, controller.signal, null);
+  await runScan(scanId, repo, controller.signal, "test/fake");
 
   const scan = getLatestReadinessScan(db);
   assert.ok(scan);
@@ -55,6 +67,8 @@ async function testRunScanCompletesWithMechanicalResults(): Promise<void> {
   assert.ok(scan!.techStack!.includes("Express"));
   assert.equal(scan!.testCommand, "vitest");
   assert.ok(scan!.areaSignals && scan!.areaSignals.length > 0);
+  // Description is null when agent returns null (no fallback to mechanical)
+  assert.equal(scan!.description, null);
   console.log("PASS: testRunScanCompletesWithMechanicalResults");
 }
 
@@ -62,30 +76,15 @@ async function testRunScanInsertsAgentBlocklistEntries(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  // Inject a fake modelRuntime that returns a description and blocklist
-  const fakeRuntime = {
-    getModel(_provider: string, _modelId: string) {
-      return { provider: "test", id: "fake", name: "fake" };
-    },
-    async completeSimple(
-      _model: unknown,
-      _context: { messages: Array<{ role: string; content: string }> },
-      _options?: Record<string, unknown>,
-    ) {
-      return {
-        text: [
-          {
-            text: JSON.stringify({
-              description: "A test pipeline orchestrator.",
-              blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
-            }),
-          },
-        ],
-      };
-    },
-  };
-
-  const runScan = createScanRunner(db, fakeRuntime as any);
+  const runScan = createScanRunner(
+    db,
+    makeInvokerFactory(
+      JSON.stringify({
+        description: "A test pipeline orchestrator.",
+        blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
+      }),
+    ),
+  );
   const scanId = "test-scan-2";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
@@ -106,13 +105,13 @@ async function testRunScanAbortsWhenSignalled(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  const runScan = createScanRunner(db, null);
+  const runScan = createScanRunner(db, makeInvokerFactory("[]"));
   const scanId = "test-scan-3";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
   controller.abort();
 
-  await runScan(scanId, repo, controller.signal, null);
+  await runScan(scanId, repo, controller.signal, "test/fake");
 
   const scan = getLatestReadinessScan(db);
   assert.ok(scan);

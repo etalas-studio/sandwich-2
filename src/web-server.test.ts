@@ -51,7 +51,7 @@ function tempWebRoot(): string {
 }
 
 async function startTestServer() {
-  const server = startWebServer({
+  const server = await startWebServer({
     dbPath: tempDbPath(),
     port: 0,
     webRoot: tempWebRoot(),

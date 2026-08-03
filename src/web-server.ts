@@ -12,6 +12,7 @@ import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerScanRoutes } from "./routes/scans.js";
 import { createScanRunner } from "./scanner/run-scan.js";
+import { createPiInvokerFactory } from "./scanner/pi-invoker.js";
 
 export interface WebServerOptions {
   dbPath: string;
@@ -27,16 +28,14 @@ function parseTrustedHosts(): Set<string> {
 
 const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout"]);
 
-export function startWebServer(options: WebServerOptions): Server {
+export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { dbPath, port, webRoot } = options;
   const db = openDb(dbPath);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 
   // Pi SDK integrations
-  initIntegrations(db).catch((err) => {
-    console.error("Integrations init failed:", err);
-  });
+  await initIntegrations(db);
 
   // Build router
   const router = new Router(trustedHosts, boundPort);
@@ -59,8 +58,8 @@ export function startWebServer(options: WebServerOptions): Server {
   registerSettingsRoutes(router, db);
   registerIntegrationRoutes(router);
 
-  // Scan runner: uses Pi SDK ModelRuntime when a model is selected, else stub
-  const scanRunner = createScanRunner(db, getModelRuntime());
+  // Scan runner: uses Pi SDK createAgentSession when a model is selected
+  const scanRunner = createScanRunner(db, createPiInvokerFactory(getModelRuntime()));
   registerScanRoutes(router, db, scanRunner);
 
   const server = createServer((req, res) => {
@@ -109,5 +108,8 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,
     webRoot: process.env.WEB_ROOT ?? "web/dist",
+  }).catch((err) => {
+    console.error("Failed to start:", err);
+    process.exit(1);
   });
 }
