@@ -49,6 +49,17 @@ Parsing: extract the first JSON array substring from `finalText` and parse it. E
 - `POST /api/readiness-scans/run` — 503 if no `repoPath` configured (same check `POST /api/tickets/:key/run` already does via `resolveEffectiveConfig`); 409 if a scan or a ticket run is already in flight (reuses the existing single in-flight guard — a scan and a ticket run both need real shell access to the same repo via a worktree, so they share the same "only one thing running at a time" rule already enforced for ticket runs). Fire-and-forget, same pattern as the run route.
 - `GET /api/readiness-scans/latest` — wraps `getLatestReadinessScan`. Returns `null` if none has ever run (distinct from a completed scan with empty signals).
 
+### Implement prompt gets scan context
+
+`src/pipeline/implement.ts`'s `buildImplementPrompt` currently carries no repo context at all — just the ticket key, summary, and description. Once a scan exists, it gains a short, fixed block prepended to the existing prompt:
+
+```
+Project: <techStack, or "unknown tech stack" if none recorded>
+Test command: <testCommand, or "none recorded">
+```
+
+Sourced from `getLatestReadinessScan(db)`. This deliberately stays a flat, always-two-line block rather than a growing structured framework — the legacy `src/prompts.ts` (deleted in the prior cleanup) was the cautionary example of where that goes: a full Verdict/characterization-test-first methodology hardcoded to one specific repo, in Bahasa Indonesia. If no scan has ever run, the block is omitted entirely and the prompt reads exactly as it does today. No changes to Judge (still stubbed) or Verify (already scan-aware) are needed for this — it's additive to Implement only.
+
 ## Frontend
 
 ### Overview page (`web/src/App.tsx`)
@@ -93,6 +104,7 @@ Adds `sonner` as a new frontend dependency. A single `<Toaster />` mounted once 
 - Mechanical analyzer: unit tests against fixture directory trees (fake `package.json`, fake nested dirs with test/non-test files, fake git history) — deterministic, no engine involved.
 - Agent pass: unit tests using the existing fake `claude` binary, covering (a) valid JSON array → entries inserted with correct `proposedByScanId`, (b) prose/malformed output → scan still `completed`, zero entries, (c) each non-`ok` engine outcome → scan `failed`.
 - Route tests: 503 when unconfigured, 409 when a ticket run or another scan is already in flight, 200 + `null` from `GET .../latest` before any scan has run.
+- `buildImplementPrompt`: unit tests for both states — no scan yet (prompt unchanged from today) and a completed scan present (prompt includes the two-line project-context block with the scan's actual values).
 - Manually clicking "First scan" in the running app is a real Claude Code invocation, same as clicking "Run" on a ticket already is today — not gated by `ALLOW_LIVE_CLAUDE_CHECK` (that guard is specific to `manual-check.ts`/`manual-check-pty.ts`, not the production pipeline path this reuses). Flagging per `CLAUDE.md`, not asking for a separate go-ahead beyond this plan's approval.
 
 ## Out of scope (explicitly deferred)
