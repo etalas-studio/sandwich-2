@@ -1,4 +1,25 @@
+import { marked } from 'marked'
 import type { Ticket, PipelineStage, NeedsHumanCategory } from '../types'
+
+type TicketSource = 'jira' | 'linear' | 'github' | 'internal'
+
+const SOURCE_CONFIG: Record<TicketSource, { icon: string; label: string; color: string }> = {
+  jira:    { icon: 'simple-icons:jira',    label: 'Jira',    color: 'text-[#2684FF]' },
+  linear:  { icon: 'simple-icons:linear',  label: 'Linear',  color: 'text-[#5E6AD2]' },
+  github:  { icon: 'simple-icons:github',  label: 'GitHub',  color: 'text-white/70' },
+  internal:{ icon: 'solar:document-linear',label: 'Internal',color: 'text-white/40' },
+}
+
+function getTicketSource(url: string | null): TicketSource {
+  if (!url) return 'internal'
+  try {
+    const host = new URL(url).host
+    if (host.includes('atlassian.net')) return 'jira'
+    if (host.includes('linear.app')) return 'linear'
+    if (host.includes('github.com')) return 'github'
+  } catch { /* fall through */ }
+  return 'internal'
+}
 
 interface TicketDetailProps {
   ticket: Ticket
@@ -67,7 +88,19 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <div className="text-xs text-white/40 font-mono mb-1">{ticket.key}</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-white/40 font-mono">{ticket.key}</span>
+                {(() => {
+                  const src = getTicketSource(ticket.url)
+                  const cfg = SOURCE_CONFIG[src]
+                  return (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06]">
+                      <iconify-icon icon={cfg.icon} width="10" className={cfg.color} />
+                      <span className="text-[10px] text-white/30 font-normal">{cfg.label}</span>
+                    </span>
+                  )
+                })()}
+              </div>
               <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.summary}</h2>
             </div>
             <button 
@@ -93,7 +126,10 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
           {/* Description */}
           <div className="mb-8">
             <div className="section-label">Description</div>
-            <p className="text-sm text-white/60 font-light leading-relaxed">{ticket.description}</p>
+            <div
+              className="text-sm text-white/60 font-light leading-relaxed ticket-description"
+              dangerouslySetInnerHTML={{ __html: marked.parse(ticket.description, { async: false }) as string }}
+            />
           </div>
 
           {/* Pipeline progress */}

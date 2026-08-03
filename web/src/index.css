@@ -228,6 +228,96 @@ body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TICKET DESCRIPTION (rendered markdown)
+   ═══════════════════════════════════════════════════════════════ */
+
+.ticket-description p {
+  margin-bottom: 0.75rem;
+}
+.ticket-description p:last-child {
+  margin-bottom: 0;
+}
+.ticket-description strong {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+.ticket-description em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+}
+.ticket-description ul,
+.ticket-description ol {
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.ticket-description li {
+  margin-bottom: 0.25rem;
+}
+.ticket-description ul li {
+  list-style-type: disc;
+}
+.ticket-description ol li {
+  list-style-type: decimal;
+}
+.ticket-description code {
+  font-family: 'Geist Variable', monospace;
+  font-size: 0.8em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ticket-description pre {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+}
+.ticket-description pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ticket-description a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ticket-description a:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+.ticket-description h1,
+.ticket-description h2,
+.ticket-description h3,
+.ticket-description h4,
+.ticket-description h5,
+.ticket-description h6 {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.ticket-description h1 { font-size: 1.1em; }
+.ticket-description h2 { font-size: 1.05em; }
+.ticket-description h3 { font-size: 1em; }
+.ticket-description hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 1rem 0;
+}
+.ticket-description blockquote {
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  padding-left: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
