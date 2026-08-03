@@ -94,11 +94,28 @@ async function testReturnsVerifyTimeoutWhenCommandHangs(): Promise<void> {
   console.log("PASS: testReturnsVerifyTimeoutWhenCommandHangs");
 }
 
+async function testTokenizesQuotedSegmentAsOneArgument(): Promise<void> {
+  const db = openTestDb();
+  // Under the old naive `split(/\s+/)`, this would tokenize into
+  // ["sh", "-c", "\"exit", "0\""] — four args instead of three, and `sh -c`
+  // would receive the literal string `"exit` as its script, which is not
+  // valid shell and exits nonzero. A quote-aware tokenizer must instead
+  // produce ["sh", "-c", "exit 0"] so the quoted phrase survives as one
+  // argument and the script actually runs `exit 0`, exiting zero.
+  seedTestCommand(db, 'sh -c "exit 0"');
+  const ctx = makeContext(db);
+
+  const result = await verify(ctx);
+  assert.equal(result.outcome, "ready_for_pr");
+  console.log("PASS: testTokenizesQuotedSegmentAsOneArgument");
+}
+
 async function main(): Promise<void> {
   await testReturnsNeedsHumanWhenNoReadinessScan();
   await testReturnsReadyForPrWhenTestCommandExitsZero();
   await testReturnsVerifyFailedWhenTestCommandExitsNonzero();
   await testReturnsVerifyTimeoutWhenCommandHangs();
+  await testTokenizesQuotedSegmentAsOneArgument();
 }
 
 void main();
