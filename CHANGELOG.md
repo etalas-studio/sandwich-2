@@ -39,3 +39,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [auth] | @potensio - Added scrypt-based password hashing for the Auth piece (src/auth/password.ts, src/auth/password.test.ts)
 - 2026-08-03: [auth] | @potensio - Session cookie parse/build helpers (src/auth/cookie.ts, src/auth/cookie.test.ts)
 - 2026-08-03: [auth] | @potensio - Added register/login/logout/validateSession auth service (src/auth/service.ts, src/auth/service.test.ts)
+- 2026-08-03: [auth] | @potensio - Wired auth middleware and /api/auth/* routes into web-server.ts, gating /api/tickets behind a valid session (src/auth/middleware.ts, src/web-server.ts, src/web-server.test.ts)
