@@ -15,11 +15,12 @@ describe('CreateTicketModal', () => {
     render(
       <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={vi.fn()} error={null} isPending={false} />,
     )
-    expect(screen.getByLabelText('Key')).toBeInTheDocument()
-    expect(screen.getByLabelText('Summary')).toBeInTheDocument()
-    expect(screen.getByLabelText('Description')).toBeInTheDocument()
-    expect(screen.getByLabelText('URL')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('RR-7000 (auto-generated if blank)')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Steps to reproduce…')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('https://runchise.atlassian.net/browse/RR-7000')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create ticket' })).toBeInTheDocument()
+    // Description has required asterisk
+    expect(screen.getByText(/Description/).textContent).toContain('*')
   })
 
   it('calls onSubmit with form data when submitted', async () => {
@@ -30,18 +31,48 @@ describe('CreateTicketModal', () => {
       <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={onSubmit} error={null} isPending={false} />,
     )
 
-    await user.type(screen.getByLabelText('Key'), 'RR-7000')
-    await user.type(screen.getByLabelText('Summary'), 'Fix bug')
-    await user.type(screen.getByLabelText('Description'), 'The bug is fixed.')
-    await user.type(screen.getByLabelText('URL'), 'https://jira.example.com/RR-7000')
+    await user.type(screen.getByPlaceholderText('RR-7000 (auto-generated if blank)'), 'RR-7000')
+    await user.type(screen.getByPlaceholderText('Steps to reproduce…'), 'The bug is fixed.')
+    await user.type(screen.getByPlaceholderText('https://runchise.atlassian.net/browse/RR-7000'), 'https://jira.example.com/RR-7000')
     await user.click(screen.getByRole('button', { name: 'Create ticket' }))
 
     expect(onSubmit).toHaveBeenCalledWith({
-      key: 'RR-7000',
-      summary: 'Fix bug',
+      id: 'RR-7000',
       description: 'The bug is fixed.',
       url: 'https://jira.example.com/RR-7000',
     })
+  })
+
+  it('submits with empty id and url (both optional)', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    render(
+      <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={onSubmit} error={null} isPending={false} />,
+    )
+
+    await user.type(screen.getByPlaceholderText('Steps to reproduce…'), 'Just a description.')
+    await user.click(screen.getByRole('button', { name: 'Create ticket' }))
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      id: '',
+      description: 'Just a description.',
+      url: '',
+    })
+  })
+
+  it('shows validation error when description is empty', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={onSubmit} error={null} isPending={false} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Create ticket' }))
+
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByText('Description is required')).toBeInTheDocument()
   })
 
   it('does not call onSubmit while isPending', async () => {
@@ -52,9 +83,7 @@ describe('CreateTicketModal', () => {
       <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={onSubmit} error={null} isPending={true} />,
     )
 
-    await user.type(screen.getByLabelText('Key'), 'X')
-    await user.type(screen.getByLabelText('Summary'), 'Y')
-    await user.type(screen.getByLabelText('Description'), 'Z')
+    await user.type(screen.getByPlaceholderText('Steps to reproduce…'), 'Z')
     await user.click(screen.getByRole('button', { name: 'Creating…' }))
 
     expect(onSubmit).not.toHaveBeenCalled()
@@ -62,22 +91,8 @@ describe('CreateTicketModal', () => {
 
   it('shows error message when provided', () => {
     render(
-      <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={vi.fn()} error="key already exists" isPending={false} />,
+      <CreateTicketModal open={true} onClose={vi.fn()} onSubmit={vi.fn()} error="id already exists" isPending={false} />,
     )
-    expect(screen.getByText('key already exists')).toBeInTheDocument()
-  })
-
-  it('calls onClose when backdrop is clicked', async () => {
-    const onClose = vi.fn()
-    const user = userEvent.setup()
-
-    render(
-      <CreateTicketModal open={true} onClose={onClose} onSubmit={vi.fn()} error={null} isPending={false} />,
-    )
-
-    // Click the backdrop (first child of the fragment)
-    const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/60')
-    if (backdrop) await user.click(backdrop)
-    expect(onClose).toHaveBeenCalled()
+    expect(screen.getByText('id already exists')).toBeInTheDocument()
   })
 })

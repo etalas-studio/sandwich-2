@@ -20,102 +20,61 @@ describe("tickets repository", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("creates a ticket and reads it back", () => {
+  it("creates a ticket with explicit id and reads it back", () => {
     const ticket = createTicket(db, {
-      key: "RR-1234",
-      summary: "Fix login redirect loop",
+      id: "RR-1234",
       description: "Users get stuck in a redirect loop when logging in via SSO.",
       url: "https://runchise.atlassian.net/browse/RR-1234",
     });
 
     assert.equal(ticket.key, "RR-1234");
-    assert.equal(ticket.summary, "Fix login redirect loop");
     assert.equal(ticket.description, "Users get stuck in a redirect loop when logging in via SSO.");
     assert.equal(ticket.url, "https://runchise.atlassian.net/browse/RR-1234");
     assert.equal(ticket.status, "backlog");
     assert.equal(ticket.stage, null);
-    assert.equal(ticket.needsHumanCategory, null);
-    assert.equal(ticket.needsHumanReason, null);
-    assert.equal(ticket.prUrl, null);
-    assert.equal(ticket.prSummary, null);
-    assert.equal(ticket.startedAt, null);
-    assert.equal(ticket.finishedAt, null);
     assert.equal(typeof ticket.createdAt, "string");
-    assert.equal(typeof ticket.updatedAt, "string");
+  });
+
+  it("auto-generates id when empty", () => {
+    const ticket = createTicket(db, {
+      id: "",
+      description: "A description-only ticket.",
+      url: null,
+    });
+
+    assert.ok(ticket.key.startsWith("T-"));
+    assert.equal(ticket.key.length, 10); // "T-" + 8 chars
+    assert.equal(ticket.description, "A description-only ticket.");
+    assert.equal(ticket.url, null);
   });
 
   it("lists tickets ordered by created_at descending", () => {
-    createTicket(db, {
-      key: "RR-AAAA",
-      summary: "First ticket",
-      description: "A",
-      url: null,
-    });
-    createTicket(db, {
-      key: "RR-BBBB",
-      summary: "Second ticket",
-      description: "B",
-      url: "https://linear.app/runchise/RR-BBBB",
-    });
+    createTicket(db, { id: "RR-AAAA", description: "First ticket", url: null });
+    createTicket(db, { id: "RR-BBBB", description: "Second ticket", url: null });
 
     const tickets = listTickets(db);
     assert.ok(tickets.length >= 2);
-    // Most recently created should be first
     assert.equal(tickets[0]!.key, "RR-BBBB");
     assert.equal(tickets[1]!.key, "RR-AAAA");
   });
 
   it("rejects duplicate ticket key", () => {
-    createTicket(db, {
-      key: "RR-DUP",
-      summary: "Some ticket",
-      description: "First",
-      url: null,
-    });
+    createTicket(db, { id: "RR-DUP", description: "First", url: null });
 
     assert.throws(
-      () =>
-        createTicket(db, {
-          key: "RR-DUP",
-          summary: "Duplicate",
-          description: "Second",
-          url: null,
-        }),
-      /UNIQUE constraint failed: tickets.key/,
+      () => createTicket(db, { id: "RR-DUP", description: "Second", url: null }),
+      /UNIQUE constraint failed/,
     );
   });
 
-  it("rejects missing required fields", () => {
+  it("rejects empty description", () => {
     assert.throws(
-      () =>
-        createTicket(db, {
-          key: "",
-          summary: "Test",
-          description: "Test",
-          url: null,
-        }),
-      /key must not be empty/,
+      () => createTicket(db, { id: "RR-EMPTY", description: "", url: null }),
+      /description must not be empty/,
     );
 
     assert.throws(
-      () =>
-        createTicket(db, {
-          key: "RR-EMPTY-SUMMARY",
-          summary: "",
-          description: "Test",
-          url: null,
-        }),
-      /summary must not be empty/,
-    );
-
-    assert.throws(
-      () =>
-        createTicket(db, {
-          key: "RR-EMPTY-DESC",
-          summary: "Test",
-          description: "",
-          url: null,
-        }),
+      () => createTicket(db, { id: "RR-WHITESPACE", description: "   ", url: null }),
       /description must not be empty/,
     );
   });

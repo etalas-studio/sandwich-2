@@ -2,7 +2,6 @@ import type { CreateTicketData } from '../components/CreateTicketModal'
 
 export interface Ticket {
   key: string
-  summary: string
   description: string
   url: string | null
   status: string
@@ -21,7 +20,7 @@ export async function createTicket(data: CreateTicketData): Promise<Ticket> {
   const res = await fetch('/api/tickets', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ id: data.id, description: data.description, url: data.url || null }),
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { error?: string } | null

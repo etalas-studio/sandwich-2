@@ -6,7 +6,7 @@ export const migration0003Tickets: Migration = {
   sql: `
 CREATE TABLE tickets (
   key TEXT PRIMARY KEY,
-  summary TEXT NOT NULL,
+  summary TEXT,
   description TEXT NOT NULL,
   url TEXT,
   status TEXT NOT NULL DEFAULT 'backlog',

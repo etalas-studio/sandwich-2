@@ -45,14 +45,13 @@ describe("ticket routes", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("POST /api/tickets creates a ticket", async () => {
+  it("POST /api/tickets creates a ticket with id", async () => {
     const router = new Router(new Set(), 0);
     registerTicketRoutes(router, db);
     const res = mockRes();
     await router.dispatch(
       mockJsonReq("POST", "/api/tickets", {
-        key: "RR-7000",
-        summary: "Test ticket",
+        id: "RR-7000",
         description: "A test description.",
         url: "https://runchise.atlassian.net/browse/RR-7000",
       }),
@@ -61,23 +60,37 @@ describe("ticket routes", () => {
     assert.equal(res.statusCode, 201);
     const body = JSON.parse(res.body);
     assert.equal(body.key, "RR-7000");
-    assert.equal(body.summary, "Test ticket");
+    assert.equal(body.description, "A test description.");
     assert.equal(body.status, "backlog");
   });
 
-  it("POST /api/tickets rejects missing key", async () => {
+  it("POST /api/tickets auto-generates id when omitted", async () => {
     const router = new Router(new Set(), 0);
     registerTicketRoutes(router, db);
     const res = mockRes();
     await router.dispatch(
       mockJsonReq("POST", "/api/tickets", {
-        summary: "No key",
-        description: "Missing the key field.",
+        description: "No id provided.",
+      }),
+      res,
+    );
+    assert.equal(res.statusCode, 201);
+    const body = JSON.parse(res.body);
+    assert.ok(body.key.startsWith("T-"));
+  });
+
+  it("POST /api/tickets rejects missing description", async () => {
+    const router = new Router(new Set(), 0);
+    registerTicketRoutes(router, db);
+    const res = mockRes();
+    await router.dispatch(
+      mockJsonReq("POST", "/api/tickets", {
+        id: "RR-EMPTY",
       }),
       res,
     );
     assert.equal(res.statusCode, 400);
-    assert.ok(JSON.parse(res.body).error.includes("key"));
+    assert.ok(JSON.parse(res.body).error.includes("description"));
   });
 
   it("POST /api/tickets rejects empty body", async () => {

@@ -248,7 +248,7 @@ function TicketsPage() {
           try {
             await apiCreateTicket(data)
             setShowCreateModal(false)
-            toast.success(`Ticket ${data.key} created`)
+            toast.success(`Ticket ${data.id || '(auto-generated)'} created`)
           } catch (err) {
             setCreateError(err instanceof Error ? err.message : 'Failed to create ticket')
           } finally {

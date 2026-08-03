@@ -20,25 +20,16 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
       return;
     }
 
-    const key = typeof candidate.key === "string" ? candidate.key.trim() : "";
-    const summary = typeof candidate.summary === "string" ? candidate.summary.trim() : "";
+    const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
     const description = typeof candidate.description === "string" ? candidate.description.trim() : "";
     const url = typeof candidate.url === "string" && candidate.url.trim() !== "" ? candidate.url.trim() : null;
 
-    if (!key) {
-      sendJson(res, 400, { error: "key is required" });
-      return;
-    }
-    if (!summary) {
-      sendJson(res, 400, { error: "summary is required" });
-      return;
-    }
     if (!description) {
       sendJson(res, 400, { error: "description is required" });
       return;
     }
 
-    const input: CreateTicketInput = { key, summary, description, url };
+    const input: CreateTicketInput = { id, description, url };
 
     try {
       const ticket = createTicket(db, input);

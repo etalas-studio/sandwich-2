@@ -1,8 +1,8 @@
 import type Database from "better-sqlite3";
+import { randomUUID } from "node:crypto";
 
 export interface Ticket {
   key: string;
-  summary: string;
   description: string;
   url: string | null;
   status: string;
@@ -18,15 +18,12 @@ export interface Ticket {
 }
 
 export interface CreateTicketInput {
-  key: string;
-  summary: string;
+  id: string;        // optional — auto-generated if empty
   description: string;
   url: string | null;
 }
 
 function validate(input: CreateTicketInput): void {
-  if (!input.key.trim()) throw new Error("key must not be empty");
-  if (!input.summary.trim()) throw new Error("summary must not be empty");
   if (!input.description.trim()) throw new Error("description must not be empty");
 }
 
@@ -35,7 +32,6 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
   const nullish = (v: unknown) => (v === undefined || v === null ? null : String(v));
   return {
     key: String(row.key),
-    summary: String(row.summary),
     description: String(row.description),
     url: nullish(row.url),
     status: String(row.status),
@@ -53,12 +49,13 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
 
 export function createTicket(db: Database.Database, input: CreateTicketInput): Ticket {
   validate(input);
+  const key = input.id.trim() || `T-${randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
   db.prepare(
-    `INSERT INTO tickets (key, summary, description, url, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'backlog', ?, ?)`,
-  ).run(input.key, input.summary, input.description, input.url, now, now);
-  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(input.key) as Record<string, unknown>;
+    `INSERT INTO tickets (key, description, url, status, created_at, updated_at)
+     VALUES (?, ?, ?, 'backlog', ?, ?)`,
+  ).run(key, input.description, input.url, now, now);
+  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
   return normaliseTicket(row);
 }
 
