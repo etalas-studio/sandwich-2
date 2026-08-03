@@ -4,6 +4,12 @@ import TicketCard from './TicketCard'
 interface KanbanBoardProps {
   tickets: Ticket[]
   onOpenTicket: (ticket: Ticket) => void
+  onRunTicket: (key: string) => void
+  onStopTicket: (key: string) => void
+  onDuplicateTicket: (key: string) => void
+  onDeleteTicket: (key: string) => void
+  startingKeys: Set<string>
+  stoppingKeys: Set<string>
 }
 
 const COLUMNS: { status: TicketStatus; label: string; dotColor: string; glowColor: string }[] = [
@@ -13,7 +19,16 @@ const COLUMNS: { status: TicketStatus; label: string; dotColor: string; glowColo
   { status: 'done', label: 'Done', dotColor: 'bg-[#8affb1]', glowColor: 'rgba(138,255,177,0.5)' },
 ]
 
-export default function KanbanBoard({ tickets, onOpenTicket }: KanbanBoardProps) {
+export default function KanbanBoard({
+  tickets,
+  onOpenTicket,
+  onRunTicket,
+  onStopTicket,
+  onDuplicateTicket,
+  onDeleteTicket,
+  startingKeys,
+  stoppingKeys,
+}: KanbanBoardProps) {
   const ticketsByStatus = new Map<TicketStatus, Ticket[]>(
     COLUMNS.map((col) => [col.status, []])
   )
@@ -56,6 +71,12 @@ export default function KanbanBoard({ tickets, onOpenTicket }: KanbanBoardProps)
                         key={ticket.key}
                         ticket={ticket}
                         onClick={() => onOpenTicket(ticket)}
+                        onRun={onRunTicket}
+                        onStop={onStopTicket}
+                        onDuplicate={onDuplicateTicket}
+                        onDelete={onDeleteTicket}
+                        isStarting={startingKeys.has(ticket.key)}
+                        isStopping={stoppingKeys.has(ticket.key)}
                       />
                     ))
                   )}

@@ -28,9 +28,16 @@ export interface EngineRunOptions {
    * for a PTY-based engine it's one line of decoded terminal text.
    */
   onOutputLine?: (line: string) => void;
+  /**
+   * When aborted, the invoker kills the underlying process and resolves
+   * with outcome "aborted" instead of throwing — same never-throws contract
+   * as every other engine-level outcome. Lets a human stop an in-flight run
+   * from the UI without waiting out its timeout.
+   */
+  signal?: AbortSignal;
 }
 
-export type EngineOutcome = "ok" | "timeout" | "process_error" | "nonzero_exit";
+export type EngineOutcome = "ok" | "timeout" | "process_error" | "nonzero_exit" | "aborted";
 
 export interface EngineRunResult {
   outcome: EngineOutcome;

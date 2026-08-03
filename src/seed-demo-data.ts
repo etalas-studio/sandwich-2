@@ -4,13 +4,17 @@ import { insertRun, updateRun } from "./db/runs.js";
 
 /**
  * Dev-only helper to populate tickets + a spread of run states, since
- * formal ticket intake and the real Judge/Implement/Verify/Open PR
- * pipeline don't exist yet. Not wired into any runtime path — run
- * manually with `node dist/seed-demo-data.js` while iterating on
- * ticket-facing UI. The outcome strings used here ("judging",
- * "implementing", "verifying", "needs_human", "ready_for_review") are
- * provisional placeholders, not a finalized vocabulary — the Pipeline
- * shape piece owns that decision.
+ * formal ticket intake doesn't exist yet. Not wired into any runtime
+ * path — run manually with `node dist/seed-demo-data.js` while iterating
+ * on ticket-facing UI. The outcome strings used here ("running",
+ * "agent_ready", "changes_committed", "needs_human", "ready_for_pr") are
+ * the real, finalized vocabulary the pipeline actually produces (see
+ * src/pipeline/types.ts and src/pipeline/run.ts) — not placeholders — so
+ * seeded rows render exactly like real runs do in the web UI.
+ *
+ * `prUrl`/`prSummary` on the ready_for_pr row are valid `Run` fields the
+ * current pipeline never sets (Open PR is out of scope for now); they're
+ * seeded purely so the "PR opened" UI has something to show.
  */
 const dbPath = process.env.DB_PATH ?? "data/instance.sqlite";
 const db = openDb(dbPath);
@@ -41,10 +45,10 @@ seedTicket({
   const run = insertRun(db, {
     ticketKey: "PROJ-102",
     engine: "claude-code-headless",
-    outcome: "judging",
+    outcome: "running",
     startedAt: "2026-08-03T09:00:00.000Z",
   });
-  updateRun(db, run.id, { outcome: "implementing", branch: "agent/proj-102" });
+  updateRun(db, run.id, { outcome: "agent_ready", branch: "agent/proj-102" });
 }
 
 seedTicket({
@@ -57,11 +61,11 @@ seedTicket({
   const run = insertRun(db, {
     ticketKey: "PROJ-106",
     engine: "claude-code-headless",
-    outcome: "judging",
+    outcome: "running",
     startedAt: "2026-08-03T08:00:00.000Z",
   });
   updateRun(db, run.id, {
-    outcome: "verifying",
+    outcome: "changes_committed",
     branch: "agent/proj-106",
   });
 }
@@ -76,7 +80,7 @@ seedTicket({
   const run = insertRun(db, {
     ticketKey: "PROJ-103",
     engine: "claude-code-headless",
-    outcome: "judging",
+    outcome: "running",
     startedAt: "2026-08-02T14:00:00.000Z",
   });
   updateRun(db, run.id, {
@@ -97,7 +101,7 @@ seedTicket({
   const run = insertRun(db, {
     ticketKey: "PROJ-104",
     engine: "claude-code-headless",
-    outcome: "judging",
+    outcome: "running",
     startedAt: "2026-08-02T11:00:00.000Z",
   });
   updateRun(db, run.id, {
@@ -118,11 +122,11 @@ seedTicket({
   const run = insertRun(db, {
     ticketKey: "PROJ-105",
     engine: "claude-code-headless",
-    outcome: "judging",
+    outcome: "running",
     startedAt: "2026-08-01T10:00:00.000Z",
   });
   updateRun(db, run.id, {
-    outcome: "ready_for_review",
+    outcome: "ready_for_pr",
     branch: "agent/proj-105",
     prUrl: "https://github.com/example/runchise/pull/42",
     prSummary: "Updated the two CI badge URLs in README.md to point at the renamed repo.",

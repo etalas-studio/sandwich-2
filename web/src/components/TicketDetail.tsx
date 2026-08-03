@@ -1,4 +1,6 @@
+import { useRunArtifacts } from '../types'
 import type { Ticket, PipelineStage, NeedsHumanCategory } from '../types'
+import TranscriptView from './TranscriptView'
 
 interface TicketDetailProps {
   ticket: Ticket
@@ -53,6 +55,9 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
 }
 
 export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
+  const hasRun = ticket.status !== 'backlog'
+  const { artifacts } = useRunArtifacts(ticket.key, hasRun)
+
   return (
     <>
       {/* Backdrop */}
@@ -129,14 +134,30 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
             </div>
           </div>
 
-          {/* Blocked reason */}
-          {ticket.status === 'blocked' && ticket.needsHumanCategory && ticket.needsHumanReason && (
+          {/* Transcript */}
+          {hasRun && (
+            <div className="mb-8">
+              <div className="section-label">Transcript</div>
+              <TranscriptView artifacts={artifacts} />
+            </div>
+          )}
+
+          {/* Blocked reason. Keyed off the reason rather than the category:
+              most failure outcomes (verify_failed, implement_timeout, ...)
+              carry no needs-human category at all — only a free-text reason
+              — so requiring a category hid the explanation for exactly the
+              cases a human most needs it. */}
+          {ticket.status === 'blocked' && (ticket.needsHumanReason || ticket.needsHumanCategory) && (
             <div className="ds-card-outer mb-6">
               <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">
-                  Needs Human — {NEEDS_HUMAN_LABELS[ticket.needsHumanCategory]}
+                  {ticket.needsHumanCategory
+                    ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory]}`
+                    : 'Needs Human'}
                 </h4>
-                <p className="text-xs text-white/50 font-light">{ticket.needsHumanReason}</p>
+                {ticket.needsHumanReason && (
+                  <p className="text-xs text-white/50 font-light">{ticket.needsHumanReason}</p>
+                )}
               </div>
             </div>
           )}

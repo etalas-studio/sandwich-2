@@ -50,8 +50,20 @@ function tempWebRoot(): string {
   return mkdtempSync(join(tmpdir(), "web-server-webroot-"));
 }
 
+function tempPipelineConfigPath(): string {
+  // Deliberately nonexistent — these tests never exercise the run-trigger
+  // route's actual pipeline execution, and startWebServer already handles a
+  // missing config gracefully (503 on POST .../run).
+  return join(mkdtempSync(join(tmpdir(), "web-server-test-pipeline-")), "instance.json");
+}
+
 async function startTestServer() {
-  const server = startWebServer({ dbPath: tempDbPath(), port: 0, webRoot: tempWebRoot() });
+  const server = startWebServer({
+    dbPath: tempDbPath(),
+    port: 0,
+    webRoot: tempWebRoot(),
+    pipelineConfigPath: tempPipelineConfigPath(),
+  });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const { port } = server.address() as AddressInfo;
   return { server, port, baseUrl: `http://127.0.0.1:${port}` };
@@ -329,6 +341,74 @@ async function testOversizedBodyIsRejected(): Promise<void> {
   console.log("PASS: testOversizedBodyIsRejected");
 }
 
+// --- Merge with the pipeline/settings work: those routes had no auth at
+// all before this branch merged (they were built before Auth existed) —
+// the default-deny guard must cover them too, not just /api/tickets. ---
+
+async function testSettingsProjectRequiresSession(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    const getRes = await fetch(`${baseUrl}/api/settings/project`);
+    assert.equal(getRes.status, 401);
+
+    const postRes = await fetch(`${baseUrl}/api/settings/project`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repoPath: "/tmp/whatever" }),
+    });
+    assert.equal(postRes.status, 401);
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testSettingsProjectRequiresSession");
+}
+
+async function testArtifactsRequiresSession(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    const res = await fetch(`${baseUrl}/api/tickets/some-key/artifacts`);
+    assert.equal(res.status, 401);
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testArtifactsRequiresSession");
+}
+
+async function testRunTriggerRequiresSession(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    const res = await fetch(`${baseUrl}/api/tickets/some-key/run`, { method: "POST" });
+    assert.equal(res.status, 401);
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testRunTriggerRequiresSession");
+}
+
+async function testTicketCreateStopDuplicateDeleteRequireSession(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    const createRes = await fetch(`${baseUrl}/api/tickets`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ key: "T-1", summary: "s", description: "d" }),
+    });
+    assert.equal(createRes.status, 401);
+
+    const stopRes = await fetch(`${baseUrl}/api/tickets/some-key/stop`, { method: "POST" });
+    assert.equal(stopRes.status, 401);
+
+    const duplicateRes = await fetch(`${baseUrl}/api/tickets/some-key/duplicate`, { method: "POST" });
+    assert.equal(duplicateRes.status, 401);
+
+    const deleteRes = await fetch(`${baseUrl}/api/tickets/some-key`, { method: "DELETE" });
+    assert.equal(deleteRes.status, 401);
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testTicketCreateStopDuplicateDeleteRequireSession");
+}
+
 async function main(): Promise<void> {
   await testTicketsRequiresSession();
   await testRegisterLoginLogoutFlow();
@@ -342,6 +422,10 @@ async function main(): Promise<void> {
   await testLocalhostHostIsAllowed();
   await testUnknownApiPathIsNotServedBySpa();
   await testOversizedBodyIsRejected();
+  await testSettingsProjectRequiresSession();
+  await testArtifactsRequiresSession();
+  await testRunTriggerRequiresSession();
+  await testTicketCreateStopDuplicateDeleteRequireSession();
 }
 
 void main();

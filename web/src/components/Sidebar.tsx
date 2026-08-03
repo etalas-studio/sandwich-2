@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
 const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }[] = [
@@ -10,16 +8,17 @@ const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }
 ]
 
 interface SidebarProps {
+  active: NavItem
+  onNavigate: (item: NavItem) => void
   username: string
   onLogout: () => void
 }
 
-export default function Sidebar({ username, onLogout }: SidebarProps) {
-  const [active, setActive] = useState<NavItem>('overview')
+export default function Sidebar({ active, onNavigate, username, onLogout }: SidebarProps) {
   const initials = username.slice(0, 2).toUpperCase() || '?'
 
   return (
-    <aside className="relative z-10 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
+    <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
       <div className="flex items-center gap-3 p-4 border-b border-white/[0.04]">
         <div
           className="w-8 h-8 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333]"
@@ -36,7 +35,7 @@ export default function Sidebar({ username, onLogout }: SidebarProps) {
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => !item.disabled && setActive(item.id)}
+            onClick={() => !item.disabled && onNavigate(item.id)}
             disabled={item.disabled}
             className={`
               relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-light transition-colors

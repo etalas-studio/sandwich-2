@@ -3,6 +3,7 @@ import { mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
+import { MIGRATIONS } from "./migrations/index.js";
 
 function testMigratesFreshDatabase(): void {
   const dir = mkdtempSync(join(tmpdir(), "storage-migrate-test-"));
@@ -24,6 +25,7 @@ function testMigratesFreshDatabase(): void {
     "users",
     "sessions",
     "instance_settings",
+    "run_artifacts",
     "schema_migrations",
   ]) {
     assert.ok(tables.includes(expected), `expected table ${expected} to exist`);
@@ -40,7 +42,10 @@ function testMigratingTwiceIsANoOp(): void {
   const count = (
     db2.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as { c: number }
   ).c;
-  assert.equal(count, 1);
+  // Compared against MIGRATIONS.length rather than a hardcoded count: the
+  // point of this test is "reopening doesn't re-apply anything", which must
+  // stay true as migrations are added (it broke when 0002 landed).
+  assert.equal(count, MIGRATIONS.length);
   console.log("PASS: testMigratingTwiceIsANoOp");
 }
 
