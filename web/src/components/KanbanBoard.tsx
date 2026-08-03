@@ -1,4 +1,5 @@
-import type { Ticket, TicketStatus } from '../types'
+import type { Ticket } from '../api/tickets'
+import type { TicketStatus } from '../types'
 import TicketCard from './TicketCard'
 
 interface KanbanBoardProps {
@@ -21,7 +22,7 @@ export default function KanbanBoard({
     COLUMNS.map((col) => [col.status, []])
   )
   for (const ticket of tickets) {
-    ticketsByStatus.get(ticket.status)!.push(ticket)
+    ticketsByStatus.get(ticket.status as TicketStatus)!.push(ticket)
   }
 
   return (

@@ -1,5 +1,6 @@
 import { marked } from 'marked'
-import type { Ticket, PipelineStage, NeedsHumanCategory } from '../types'
+import type { Ticket } from '../api/tickets'
+import type { PipelineStage, NeedsHumanCategory } from '../types'
 
 type TicketSource = 'jira' | 'linear' | 'github' | 'internal'
 
@@ -24,6 +25,8 @@ function getTicketSource(url: string | null): TicketSource {
 interface TicketDetailProps {
   ticket: Ticket
   onClose: () => void
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 const STAGE_ORDER: PipelineStage[] = ['judge', 'implement', 'verify', 'open_pr']
@@ -51,7 +54,7 @@ function getStageStatus(ticket: Ticket, stage: PipelineStage): 'done' | 'active'
   if (ticket.status === 'done') return 'done'
   if (ticket.status === 'blocked') {
     if (!ticket.stage) return 'pending'
-    const currentIndex = STAGE_ORDER.indexOf(ticket.stage)
+    const currentIndex = STAGE_ORDER.indexOf(ticket.stage as PipelineStage)
     const stageIndex = STAGE_ORDER.indexOf(stage)
     if (stageIndex < currentIndex) return 'done'
     if (stageIndex === currentIndex) return 'blocked'
@@ -59,7 +62,7 @@ function getStageStatus(ticket: Ticket, stage: PipelineStage): 'done' | 'active'
   }
   // In progress
   if (!ticket.stage) return 'pending'
-  const currentIndex = STAGE_ORDER.indexOf(ticket.stage)
+  const currentIndex = STAGE_ORDER.indexOf(ticket.stage as PipelineStage)
   const stageIndex = STAGE_ORDER.indexOf(stage)
   if (stageIndex < currentIndex) return 'done'
   if (stageIndex === currentIndex) return 'active'
@@ -73,7 +76,7 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
   pending: { border: 'border-white/[0.08]', bg: 'bg-transparent', text: 'text-white/30', dot: 'bg-white/30' },
 }
 
-export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
+export default function TicketDetail({ ticket, onClose, onEdit, onDelete }: TicketDetailProps) {
   return (
     <>
       {/* Backdrop */}
@@ -101,7 +104,7 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
                   )
                 })()}
               </div>
-              <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.summary}</h2>
+              <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.description}</h2>
             </div>
             <button 
               className="text-white/40 hover:text-white text-sm transition-colors"
@@ -117,10 +120,32 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
               href={ticket.url}
               target="_blank"
               rel="noreferrer"
-              className="text-xs text-white/40 hover:text-white/70 hover:underline block mb-6"
+              className="text-xs text-white/40 hover:text-white/70 hover:underline block mb-4"
             >
               {ticket.url}
             </a>
+          )}
+
+          {/* Actions */}
+          {(onEdit || onDelete) && (
+            <div className="flex gap-2 mb-6">
+              {onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="px-3 py-1.5 rounded text-xs font-normal text-white/60 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-white/20 transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="px-3 py-1.5 rounded text-xs font-normal text-[#ff8a8a]/60 bg-[#ff8a8a]/[0.04] border border-[#ff8a8a]/[0.10] hover:text-[#ff8a8a] hover:border-[#ff8a8a]/30 transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           )}
 
           {/* Description */}
@@ -162,7 +187,7 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
               <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">
                   {ticket.needsHumanCategory
-                    ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory]}`
+                    ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory as NeedsHumanCategory]}`
                     : 'Needs Human'}
                 </h4>
                 {ticket.needsHumanReason && (

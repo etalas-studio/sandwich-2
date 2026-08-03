@@ -1,4 +1,5 @@
-import type { Ticket, PipelineStage } from '../types'
+import type { Ticket } from '../api/tickets'
+import type { PipelineStage } from '../types'
 
 interface TicketCardProps {
   ticket: Ticket
@@ -70,7 +71,7 @@ export default function TicketCard({
           <span className="text-[10px] text-white/30 font-mono">{ticket.key}</span>
           {isInProgress && ticket.stage && (
             <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              {STAGE_LABELS[ticket.stage]}
+              {STAGE_LABELS[ticket.stage as PipelineStage]}
             </span>
           )}
           {/* Most blocked outcomes (verify_failed, implement_timeout, ...)
@@ -92,7 +93,7 @@ export default function TicketCard({
 
         {/* Summary */}
         <h4 className="text-sm text-white font-light mb-2 tracking-tight ds-text-shadow line-clamp-2">
-          {ticket.summary}
+          {ticket.description}
         </h4>
 
         {/* Footer */}

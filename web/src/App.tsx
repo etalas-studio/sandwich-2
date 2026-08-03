@@ -1,10 +1,8 @@
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Toaster, toast } from 'sonner'
-import { computeStats } from './types'
-import type { Ticket } from './types'
+import type { Ticket } from './api/tickets'
 import Sidebar from './components/Sidebar'
-import StatsCards from './components/StatsCards'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
@@ -13,12 +11,13 @@ import { Link } from 'react-router-dom'
 import ModelSelector from './components/ModelSelector'
 import CreateTicketModal from './components/CreateTicketModal'
 import type { CreateTicketData } from './components/CreateTicketModal'
-import { createTicket as apiCreateTicket } from './api/tickets'
+import EditTicketModal from './components/EditTicketModal'
+import type { UpdateTicketData } from './api/tickets'
+import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket } from './api/tickets'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
 import { useScan } from './hooks/useScan'
-import mockData from './mockData'
 
 function OverviewPage() {
   const { repoPath } = useProjectSettings()
@@ -173,16 +172,41 @@ function OverviewPage() {
 
 function TicketsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  // Create state
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
 
-  const displayTickets = mockData.tickets
+  // Edit state
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  // Delete state
+  const [deletingKey, setDeletingKey] = useState<string | null>(null)
+
+  const loadTickets = useCallback(async () => {
+    try {
+      setLoadError(null)
+      const data = await fetchTickets()
+      setTickets(data)
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load tickets')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void loadTickets() }, [loadTickets])
+
   const selectedKey = searchParams.get('selected')
   const selectedTicket = selectedKey
-    ? displayTickets.find(t => t.key === selectedKey) ?? null
+    ? tickets.find(t => t.key === selectedKey) ?? null
     : null
-  const stats = computeStats(displayTickets)
 
   const handleOpenTicket = (ticket: Ticket) => {
     setSearchParams({ selected: ticket.key })
@@ -190,6 +214,50 @@ function TicketsPage() {
 
   const handleCloseTicket = () => {
     setSearchParams({})
+  }
+
+  const handleCreate = async (data: CreateTicketData) => {
+    setCreateError(null)
+    setIsCreating(true)
+    try {
+      await apiCreateTicket(data)
+      setShowCreateModal(false)
+      toast.success(`Ticket ${data.id || '(auto-generated)'} created`)
+      await loadTickets()
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to create ticket')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleUpdate = async (key: string, data: UpdateTicketData) => {
+    setEditError(null)
+    setIsUpdating(true)
+    try {
+      await apiUpdateTicket(key, data)
+      setEditingTicket(null)
+      toast.success(`Ticket ${key} updated`)
+      await loadTickets()
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Failed to update ticket')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingKey) return
+    try {
+      await apiDeleteTicket(deletingKey)
+      toast.success(`Ticket ${deletingKey} deleted`)
+      setDeletingKey(null)
+      if (selectedKey === deletingKey) setSearchParams({})
+      await loadTickets()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete ticket')
+      setDeletingKey(null)
+    }
   }
 
   return (
@@ -206,7 +274,7 @@ function TicketsPage() {
             <p className="text-sm text-white/50 font-light">
               {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               {' · '}
-              {displayTickets.length} tickets
+              {tickets.length} tickets
             </p>
           </div>
           <button
@@ -227,37 +295,77 @@ function TicketsPage() {
           </button>
         </div>
 
-        <StatsCards stats={stats} />
-
-        <KanbanBoard
-          tickets={displayTickets}
-          onOpenTicket={handleOpenTicket}
-        />
+        {loading ? (
+          <p className="text-sm text-white/40">Loading tickets…</p>
+        ) : loadError ? (
+          <p className="text-sm text-[#ff8a8a]">{loadError}</p>
+        ) : (
+          <>
+            <KanbanBoard
+              tickets={tickets}
+              onOpenTicket={handleOpenTicket}
+            />
+          </>
+        )}
       </div>
 
       {selectedTicket && (
-        <TicketDetail ticket={selectedTicket} onClose={handleCloseTicket} />
+        <TicketDetail
+          ticket={selectedTicket}
+          onClose={handleCloseTicket}
+          onEdit={() => { setEditError(null); setEditingTicket(selectedTicket) }}
+          onDelete={() => setDeletingKey(selectedTicket.key)}
+        />
       )}
 
       <CreateTicketModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={async (data: CreateTicketData) => {
-          setCreateError(null)
-          setIsCreating(true)
-          try {
-            await apiCreateTicket(data)
-            setShowCreateModal(false)
-            toast.success(`Ticket ${data.id || '(auto-generated)'} created`)
-          } catch (err) {
-            setCreateError(err instanceof Error ? err.message : 'Failed to create ticket')
-          } finally {
-            setIsCreating(false)
-          }
-        }}
+        onSubmit={handleCreate}
         error={createError}
         isPending={isCreating}
       />
+
+      {editingTicket && (
+        <EditTicketModal
+          open={true}
+          ticket={editingTicket}
+          onClose={() => setEditingTicket(null)}
+          onSubmit={handleUpdate}
+          error={editError}
+          isPending={isUpdating}
+        />
+      )}
+
+      {deletingKey && (
+        <>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setDeletingKey(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="ds-card-outer ds-shadow-elevated w-full max-w-sm" style={{ height: 'auto' }}>
+              <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+                <h3 className="text-base font-normal tracking-tight text-white ds-text-shadow mb-2">Delete Ticket</h3>
+                <p className="text-sm text-white/50 font-light mb-6">
+                  Are you sure you want to delete <span className="text-white/70 font-mono">{deletingKey}</span>? This cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeletingKey(null)}
+                    className="flex-1 px-4 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-white/60 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => void handleDelete()}
+                    className="flex-1 px-4 py-2 rounded-lg bg-[#ff8a8a]/20 border border-[#ff8a8a]/30 text-[#ff8a8a] text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }
