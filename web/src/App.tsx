@@ -24,7 +24,7 @@ import ReadinessCard from './components/ReadinessCard'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
-import PiPoc from './components/PiPoc'
+import Integrations from './components/Integrations'
 import mockData from './mockData'
 
 // Quick Add: a one-click seed of a known real ticket for demoing/testing,
@@ -299,7 +299,7 @@ function AppLayout({ username, onLogout }: AppProps) {
               <Route path="/overview" element={<OverviewPage />} />
               <Route path="/tickets" element={<TicketsPage />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/pi-poc" element={<PiPoc />} />
+              <Route path="/integrations" element={<Integrations />} />
               <Route path="/" element={<Navigate to="/overview" replace />} />
             </Routes>
           </main>

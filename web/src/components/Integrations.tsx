@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchIntegrations, connectIntegration, disconnectIntegration } from '../types'
 import type { IntegrationItem } from '../types'
+import ConnectModal from './ConnectModal'
 
 type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error'
 
@@ -21,13 +22,21 @@ const PROVIDERS = [
       'Requires ChatGPT Plus or Pro subscription. Login via Pi CLI to connect your Codex subscription for GPT-5.5.',
     docsUrl: 'https://github.com/openai/codex',
   },
+  {
+    id: '9router',
+    name: '9Router',
+    logo: 'solar:globus-linear',
+    description:
+      'Intelligent AI request router — automatically selects the best model across providers based on cost, latency, and capability.',
+    docsUrl: 'https://9router.com',
+  },
 ] as const
 
-export default function PiPoc() {
+export default function Integrations() {
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([])
   const [connectingId, setConnectingId] = useState<string | null>(null)
-  const [apiKeys, setApiKeys] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const loadStatus = useCallback(async () => {
     try {
@@ -43,17 +52,14 @@ export default function PiPoc() {
     loadStatus()
   }, [loadStatus])
 
-  const handleConnect = async (providerId: string) => {
-    const key = (apiKeys[providerId] ?? '').trim()
-    if (!key) return
-
+  const handleConnect = async (providerId: string, key: string) => {
     setConnectingId(providerId)
     setError(null)
 
     const result = await connectIntegration(providerId, key)
 
     if (result.ok) {
-      setApiKeys((prev) => ({ ...prev, [providerId]: '' }))
+      setModalOpen(false)
       await loadStatus()
     } else {
       setError(result.message)
@@ -90,7 +96,7 @@ export default function PiPoc() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
           <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
-            Pi POC
+            Integrations
           </h1>
           <span className="px-2 py-0.5 rounded-full border border-white/[0.06] bg-white/[0.03] text-[10px] text-white/50">
             integrations
@@ -177,47 +183,34 @@ export default function PiPoc() {
                     {provider.description}
                   </p>
 
-                  {/* API key input (OpenCode Go) */}
+                  {/* Connect button (OpenCode Go — disconnected) */}
                   {!isOAuth && state !== 'connected' && (
                     <div className="mb-3">
-                      <label className="text-[9px] text-white/40 font-normal uppercase tracking-wide mb-1 block">
-                        API Key
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          placeholder="oc-..."
-                          value={apiKeys[provider.id] ?? ''}
-                          onChange={(e) => setApiKeys((prev) => ({ ...prev, [provider.id]: e.target.value }))}
-                          disabled={state === 'connecting'}
-                          className="flex-1 px-2.5 py-1 rounded-md bg-[#0a0a0a] border border-white/[0.08] text-[10px] text-white/80 placeholder:text-white/20 font-mono outline-none focus:border-white/20 disabled:opacity-40"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleConnect(provider.id)}
-                          disabled={state === 'connecting' || !(apiKeys[provider.id] ?? '').trim()}
-                          className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                      <button
+                        type="button"
+                        onClick={() => setModalOpen(true)}
+                        disabled={state === 'connecting'}
+                        className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                        <span
+                          className="relative px-3 py-1 rounded-md text-[11px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
+                          style={{
+                            boxShadow:
+                              'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                          }}
                         >
-                          <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                          <span
-                            className="relative px-2.5 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
-                            style={{
-                              boxShadow:
-                                'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
-                              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                            }}
-                          >
-                            {state === 'connecting' ? (
-                              <>
-                                <iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />
-                                …
-                              </>
-                            ) : (
-                              'Connect'
-                            )}
-                          </span>
-                        </button>
-                      </div>
+                          {state === 'connecting' ? (
+                            <>
+                              <iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />
+                              Connecting…
+                            </>
+                          ) : (
+                            'Connect'
+                          )}
+                        </span>
+                      </button>
                     </div>
                   )}
 
@@ -294,6 +287,16 @@ export default function PiPoc() {
           )
         })}
       </div>
+
+      {/* Connect modal */}
+      <ConnectModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        provider={PROVIDERS[0]}
+        connecting={connectingId === PROVIDERS[0].id}
+        error={error}
+        onConnect={(key) => handleConnect(PROVIDERS[0].id, key)}
+      />
     </div>
   )
 }
