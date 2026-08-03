@@ -167,7 +167,14 @@ function resolveEffectiveConfig(
 
   return {
     repoPath,
-    worktreeRoot: DEFAULT_WORKTREE_ROOT,
+    // Must be absolute: git resolves createWorktree's relative path against
+    // repoPath (its own cwd for the `git worktree add` call), while the
+    // engine invoker's cwd option resolves relative to *this server
+    // process's* cwd — those two disagree on a bare relative string, so the
+    // worktree git actually creates and the directory the agent tries to
+    // start in silently diverge, and the agent exits instantly with no
+    // output. Joining against repoPath up front removes the ambiguity.
+    worktreeRoot: join(repoPath, DEFAULT_WORKTREE_ROOT),
     branchPrefix: DEFAULT_BRANCH_PREFIX,
     baseBranch: detectCurrentBranch(repoPath) ?? "main",
     engineMode: DEFAULT_ENGINE_MODE,
