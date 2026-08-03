@@ -3,25 +3,18 @@ import type { FormEvent } from 'react'
 
 interface LoginFormProps {
   onSubmit: (username: string, password: string) => Promise<void>
+  error: string | null
+  isPending: boolean
 }
 
-export default function LoginForm({ onSubmit }: LoginFormProps) {
+export default function LoginForm({ onSubmit, error, isPending }: LoginFormProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = async (e: FormEvent) => {
-    if (submitting) return
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    try {
-      await onSubmit(username, password)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-      setSubmitting(false)
-    }
+    if (isPending) return
+    void onSubmit(username, password)
   }
 
   return (
@@ -57,10 +50,10 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={isPending}
               className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-b from-[#333] to-[#111] border border-white/10 text-white text-sm disabled:opacity-50"
             >
-              {submitting ? 'Logging in…' : 'Log in'}
+              {isPending ? 'Logging in…' : 'Log in'}
             </button>
           </form>
         </div>

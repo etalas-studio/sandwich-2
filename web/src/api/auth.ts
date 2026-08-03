@@ -1,5 +1,3 @@
-import { useCallback, useEffect, useState } from 'react'
-
 export type AuthState =
   | { status: 'loading' }
   | { status: 'setup_required' }
@@ -11,7 +9,7 @@ interface MeResponse {
   user?: { username: string }
 }
 
-async function fetchMe(): Promise<AuthState> {
+export async function fetchMe(): Promise<AuthState> {
   const res = await fetch('/api/auth/me')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = (await res.json()) as MeResponse
@@ -38,41 +36,18 @@ async function postJson(url: string, body: unknown): Promise<void> {
   }
 }
 
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({ status: 'loading' })
+export async function postLogin(username: string, password: string): Promise<void> {
+  await postJson('/api/auth/login', { username, password })
+}
 
-  const refresh = useCallback(async () => {
-    try {
-      setState(await fetchMe())
-    } catch {
-      setState({ status: 'unauthenticated' })
-    }
-  }, [])
+export async function postRegister(
+  username: string,
+  email: string,
+  password: string,
+): Promise<void> {
+  await postJson('/api/auth/register', { username, email, password })
+}
 
-  useEffect(() => {
-    void refresh()
-  }, [refresh])
-
-  const register = useCallback(
-    async (username: string, email: string, password: string) => {
-      await postJson('/api/auth/register', { username, email, password })
-      await refresh()
-    },
-    [refresh],
-  )
-
-  const login = useCallback(
-    async (username: string, password: string) => {
-      await postJson('/api/auth/login', { username, password })
-      await refresh()
-    },
-    [refresh],
-  )
-
-  const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    await refresh()
-  }, [refresh])
-
-  return { state, register, login, logout }
+export async function postLogout(): Promise<void> {
+  await fetch('/api/auth/logout', { method: 'POST' })
 }

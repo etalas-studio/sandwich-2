@@ -3,25 +3,19 @@ import type { FormEvent } from 'react'
 
 interface SetupFormProps {
   onSubmit: (username: string, email: string, password: string) => Promise<void>
+  error: string | null
+  isPending: boolean
 }
 
-export default function SetupForm({ onSubmit }: SetupFormProps) {
+export default function SetupForm({ onSubmit, error, isPending }: SetupFormProps) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    try {
-      await onSubmit(username, email, password)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-      setSubmitting(false)
-    }
+    if (isPending) return
+    void onSubmit(username, email, password)
   }
 
   return (
@@ -69,10 +63,10 @@ export default function SetupForm({ onSubmit }: SetupFormProps) {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={isPending}
               className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-b from-[#333] to-[#111] border border-white/10 text-white text-sm disabled:opacity-50"
             >
-              {submitting ? 'Creating account…' : 'Create account'}
+              {isPending ? 'Creating account…' : 'Create account'}
             </button>
           </form>
         </div>
