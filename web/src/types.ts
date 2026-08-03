@@ -88,6 +88,25 @@ export async function fetchProjectSettings(): Promise<ProjectSettings> {
   return res.json() as Promise<ProjectSettings>
 }
 
+export interface SyncResult {
+  ok: boolean
+  output?: string
+  error?: string
+}
+
+export async function syncProject(): Promise<SyncResult> {
+  try {
+    const res = await fetch('/api/settings/sync', { method: 'POST' })
+    const body = (await res.json().catch(() => null)) as SyncResult | null
+    if (!res.ok) {
+      return { ok: false, error: body?.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true, output: body?.output }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
+
 export async function saveProjectSettings(repoPath: string): Promise<SaveProjectResult> {
   try {
     const res = await fetch('/api/settings/project', {

@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useProjectSettings } from '../hooks/useProjectSettings'
 
+const DEMO_PATH = '/Users/riaenriala/Documents/etalas/runchise-agent-pipeline'
+
 export default function ProjectSection() {
-  const { repoPath, isSaving, save } = useProjectSettings()
+  const { repoPath, isSaving, isSyncing, save, sync } = useProjectSettings()
   const [input, setInput] = useState('')
+  const [copied, setCopied] = useState(false)
   const seeded = useRef(false)
 
   useEffect(() => {
@@ -12,6 +15,12 @@ export default function ProjectSection() {
       seeded.current = true
     }
   }, [repoPath])
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(DEMO_PATH)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <div className="ds-card-outer ds-shadow-elevated">
@@ -29,13 +38,6 @@ export default function ProjectSection() {
           </p>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-              <span className="text-sm text-white/50 font-light">Current</span>
-              <span className="text-sm text-white/80 font-light font-mono">
-                {repoPath ?? 'Not configured yet'}
-              </span>
-            </div>
-
             <div>
               <label className="text-xs text-white/50 font-light block mb-1.5">
                 Repository path
@@ -49,23 +51,47 @@ export default function ProjectSection() {
               />
             </div>
 
-            <div className="flex items-center justify-end pt-2">
+            <div className="flex items-center justify-between pt-2">
               <button
-                className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={isSaving || input.trim().length === 0}
-                onClick={() => save(input.trim())}
+                onClick={handleCopy}
+                className="text-xs text-white/20 font-mono font-light hover:text-white/40 transition-colors cursor-pointer"
               >
-                <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                <span
-                  className="relative px-5 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
-                  style={{
-                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  {isSaving ? 'Saving…' : 'Save'}
-                </span>
+                {copied ? 'Copied!' : 'copy me'}
               </button>
+              <div className="flex items-center gap-2">
+                <button
+                  className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={isSyncing || !repoPath}
+                  onClick={sync}
+                >
+                  <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                  <span
+                    className="relative px-4 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+                    style={{
+                      boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    {isSyncing ? 'Pulling…' : 'Sync'}
+                  </span>
+                </button>
+                <button
+                  className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={isSaving || input.trim().length === 0}
+                  onClick={() => save(input.trim())}
+                >
+                  <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                  <span
+                    className="relative px-5 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+                    style={{
+                      boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    {isSaving ? 'Saving…' : 'Save'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

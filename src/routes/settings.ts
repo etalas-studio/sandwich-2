@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { getInstanceSettings, completeFirstRun } from "../db/settings.js";
@@ -32,5 +33,24 @@ export function registerSettingsRoutes(
     }
     const settings = completeFirstRun(db, validated.repoPath, new Date().toISOString());
     sendJson(res, 200, settings);
+  });
+
+  router.post("/api/settings/sync", (_req, res) => {
+    const settings = getInstanceSettings(db);
+    if (!settings.repoPath) {
+      sendJson(res, 400, { error: "No project path configured" });
+      return;
+    }
+    try {
+      const output = execSync("git pull", {
+        cwd: settings.repoPath,
+        encoding: "utf-8",
+        timeout: 30_000,
+      });
+      sendJson(res, 200, { ok: true, output: output.trim() });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      sendJson(res, 500, { ok: false, error: message });
+    }
   });
 }

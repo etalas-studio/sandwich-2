@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetchProjectSettings, saveProjectSettings } from '../types'
+import { fetchProjectSettings, saveProjectSettings, syncProject } from '../types'
 import type { ProjectSettings } from '../types'
 
 export function useProjectSettings() {
@@ -12,7 +12,7 @@ export function useProjectSettings() {
     staleTime: 60_000,
   })
 
-  const mutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: (repoPath: string) => saveProjectSettings(repoPath),
     onSuccess: (result) => {
       if (result.ok) {
@@ -27,11 +27,27 @@ export function useProjectSettings() {
     },
   })
 
+  const syncMutation = useMutation({
+    mutationFn: () => syncProject(),
+    onSuccess: (result) => {
+      if (result.ok) {
+        toast.success(result.output || 'Synced')
+      } else {
+        toast.error(result.error ?? 'Sync failed')
+      }
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Sync failed')
+    },
+  })
+
   return {
     repoPath: query.data?.repoPath ?? null,
     isLoading: query.isLoading,
-    isSaving: mutation.isPending,
-    save: (path: string) => mutation.mutate(path),
+    isSaving: saveMutation.isPending,
+    isSyncing: syncMutation.isPending,
+    save: (path: string) => saveMutation.mutate(path),
+    sync: () => syncMutation.mutate(),
     error: query.error instanceof Error ? query.error.message : null,
   }
 }
