@@ -1,22 +1,33 @@
+import { Link, useLocation } from 'react-router-dom'
+
 type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
-const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }[] = [
-  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear' },
-  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear' },
-  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true },
-  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear' },
+const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean; to: string }[] = [
+  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
+  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
+  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
+  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
 ]
 
 interface SidebarProps {
-  active: NavItem
-  onNavigate: (item: NavItem) => void
   username: string
   onLogout: () => void
   onPurge: () => void
 }
 
-export default function Sidebar({ active, onNavigate, username, onLogout, onPurge }: SidebarProps) {
+export default function Sidebar({ username, onLogout, onPurge }: SidebarProps) {
+  const location = useLocation()
   const initials = username.slice(0, 2).toUpperCase() || '?'
+
+  // Derive active nav from current path
+  const getActiveNav = (): NavItem => {
+    const path = location.pathname
+    if (path === '/overview') return 'overview'
+    if (path.startsWith('/tickets')) return 'tickets'
+    if (path === '/settings') return 'settings'
+    return 'overview'
+  }
+  const active = getActiveNav()
 
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
@@ -34,18 +45,16 @@ export default function Sidebar({ active, onNavigate, username, onLogout, onPurg
 
       <nav className="flex flex-col gap-1 p-3">
         {navItems.map((item) => (
-          <button
+          <Link
             key={item.id}
-            onClick={() => !item.disabled && onNavigate(item.id)}
-            disabled={item.disabled}
+            to={item.to}
             className={`
               relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-light transition-colors
-              ${
-                item.disabled
-                  ? 'text-white/20 cursor-not-allowed'
-                  : active === item.id
-                    ? 'text-white'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.02] cursor-pointer'
+              ${item.disabled
+                ? 'text-white/20 cursor-not-allowed pointer-events-none'
+                : active === item.id
+                  ? 'text-white'
+                  : 'text-white/50 hover:text-white hover:bg-white/[0.02] cursor-pointer'
               }
             `}
           >
@@ -61,7 +70,7 @@ export default function Sidebar({ active, onNavigate, username, onLogout, onPurg
               className={`relative z-10 ${item.disabled ? 'text-white/20' : active === item.id ? 'text-white/70' : ''}`}
             />
             <span className="relative z-10">{item.label}</span>
-          </button>
+          </Link>
         ))}
       </nav>
 
