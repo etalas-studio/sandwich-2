@@ -15,12 +15,14 @@ function makeMechanicalResult(): MechanicalResult {
 }
 
 function fullResponse(opts: {
+  projectName?: string | null;
   description?: string | null;
   areas?: Array<{ name: string; paths: string[]; note?: string }>;
   blocklist?: Array<{ pattern: string; reason: string }>;
   recommendations?: Array<{ title: string; description: string }>;
 }): string {
   return JSON.stringify({
+    projectName: opts.projectName ?? null,
     description: opts.description ?? null,
     areas: opts.areas ?? [],
     blocklist: opts.blocklist ?? [],
@@ -37,6 +39,7 @@ async function testParsesFullResponse(): Promise<void> {
       return {
         outcome: "ok" as const,
         finalText: fullResponse({
+          projectName: "my-pipeline",
           description: "A pipeline orchestrator.",
           areas: [
             { name: "Auth", paths: ["src/auth/"], note: "Handles sessions" },
@@ -60,6 +63,7 @@ async function testParsesFullResponse(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
+  assert.equal(result.projectName, "my-pipeline");
   assert.equal(result.description, "A pipeline orchestrator.");
   assert.equal(result.areas.length, 2);
   assert.equal(result.areas[0]!.name, "Auth");

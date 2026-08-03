@@ -219,8 +219,28 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete }: Tick
 
           {/* Backlog state */}
           {ticket.status === 'backlog' && (
-            <div className="text-xs text-white/40">Not yet started.</div>
+            <div className="text-xs text-white/40 mb-6">Not yet started.</div>
           )}
+
+          {/* Run button */}
+          <div className="sticky bottom-0 pt-4 pb-2 -mx-6 px-6 border-t border-white/[0.05] bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/90 to-transparent">
+            <button
+              className="relative inline-flex group w-full"
+              onClick={() => {}}
+            >
+              <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+              <span
+                className="relative flex items-center justify-center gap-2 w-full px-5 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+                style={{
+                  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                <iconify-icon icon="solar:play-linear" width="14" className="text-white/80" />
+                Run
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </>

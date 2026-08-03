@@ -116,14 +116,14 @@ export default function ReadinessCard({ scan }: Props) {
                 <table className="w-full text-sm text-left">
                   <thead>
                     <tr className="border-b border-white/[0.04] bg-[#0a0a0a]/50">
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase w-[35%]">Area</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test-to-Code</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Churn</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase w-[30%]">Risk</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal w-[35%]">Area</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal whitespace-nowrap">Test-to-Code</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal">Churn</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal w-[30%]">Risk</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
-                    {scan.areaSignals.map((area) => {
+                    {[...scan.areaSignals].sort((a, b) => b.churnScore - a.churnScore).map((area) => {
                       const coveragePct = Math.round(area.testToCodeRatio * 100);
                       const coverageColor =
                         area.testToCodeRatio >= 0.7
@@ -133,15 +133,11 @@ export default function ReadinessCard({ scan }: Props) {
                             : "text-[#ff8a8a]";
 
                       const churn = area.churnScore;
-                      const churnLabel = churn >= 0.7 ? "High" : churn >= 0.3 ? "Medium" : churn > 0 ? "Low" : "None";
-                      const churnColor =
-                        churn >= 0.7
-                          ? "text-[#ff8a8a]"
-                          : churn >= 0.3
-                            ? "text-[#f59e0b]"
-                            : churn > 0
-                              ? "text-white/50"
-                              : "text-white/25";
+                      const churnBars = churn === 0 ? 0 : churn <= 0.2 ? 1 : churn <= 0.4 ? 2 : churn <= 0.6 ? 3 : churn <= 0.8 ? 4 : 5;
+                      const churnBarColor =
+                        churnBars <= 1 ? "#8affb1" :
+                        churnBars <= 3 ? "#f59e0b" :
+                        "#ff8a8a";
 
                       return (
                         <tr key={area.area} className="hover:bg-white/[0.02] transition-colors">
@@ -162,9 +158,19 @@ export default function ReadinessCard({ scan }: Props) {
                             )}
                           </td>
                           <td className="px-6 py-3.5">
-                            <span className={`text-xs font-light ${churnColor}`}>
-                              {churnLabel}
-                            </span>
+                            <div className="flex items-center gap-[3px]">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <div
+                                  key={n}
+                                  className={`w-[3px] h-4 rounded-full ${
+                                    n <= churnBars ? '' : 'bg-white/[0.06]'
+                                  }`}
+                                  style={{
+                                    backgroundColor: n <= churnBars ? churnBarColor : undefined,
+                                  }}
+                                />
+                              ))}
+                            </div>
                           </td>
                           <td className="px-6 py-3">
                             <RiskCell note={area.note} />

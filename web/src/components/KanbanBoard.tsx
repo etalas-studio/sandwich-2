@@ -5,6 +5,7 @@ import TicketCard from './TicketCard'
 interface KanbanBoardProps {
   tickets: Ticket[]
   onOpenTicket: (ticket: Ticket) => void
+  onDeleteTicket?: (ticket: Ticket) => void
 }
 
 const COLUMNS: { status: TicketStatus; label: string; dotColor: string; glowColor: string }[] = [
@@ -17,6 +18,7 @@ const COLUMNS: { status: TicketStatus; label: string; dotColor: string; glowColo
 export default function KanbanBoard({
   tickets,
   onOpenTicket,
+  onDeleteTicket,
 }: KanbanBoardProps) {
   const ticketsByStatus = new Map<TicketStatus, Ticket[]>(
     COLUMNS.map((col) => [col.status, []])
@@ -60,6 +62,7 @@ export default function KanbanBoard({
                         key={ticket.key}
                         ticket={ticket}
                         onClick={() => onOpenTicket(ticket)}
+                        onDelete={onDeleteTicket}
                       />
                     ))
                   )}

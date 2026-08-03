@@ -1,9 +1,16 @@
 import type { Ticket } from '../api/tickets'
 import type { PipelineStage } from '../types'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 interface TicketCardProps {
   ticket: Ticket
   onClick: () => void
+  onDelete?: (ticket: Ticket) => void
 }
 
 const STAGE_LABELS: Record<PipelineStage, string> = {
@@ -41,6 +48,7 @@ function formatRelativeTime(iso: string | null): string {
 export default function TicketCard({
   ticket,
   onClick,
+  onDelete,
 }: TicketCardProps) {
   const isInProgress = ticket.status === 'in_progress'
   const isBlocked = ticket.status === 'blocked'
@@ -69,6 +77,28 @@ export default function TicketCard({
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] text-white/30 font-mono">{ticket.key}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="flex items-center justify-center w-5 h-5 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <iconify-icon icon="solar:menu-dots-bold" width="12" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="min-w-28 bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] border border-white/[0.08]"
+              style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05), 0 12px 24px -6px rgba(0,0,0,0.8)' }}
+            >
+              <DropdownMenuItem
+                className="text-xs text-white/60 hover:text-white hover:bg-white/[0.06] focus:!bg-white/[0.06] focus:!text-white cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete?.(ticket)
+                }}
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {isInProgress && ticket.stage && (
             <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
               {STAGE_LABELS[ticket.stage as PipelineStage]}
@@ -103,17 +133,37 @@ export default function TicketCard({
              isDone ? `Finished ${formatRelativeTime(ticket.finishedAt)}` :
              ticket.startedAt ? `Ran ${formatRelativeTime(ticket.startedAt)}` : ''}
           </span>
-          {isDone && ticket.prUrl && (
-            <a
-              href={ticket.prUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[10px] text-[#8affb1] hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              View →
-            </a>
-          )}
+          <div className="flex items-center gap-1.5">
+            {isDone && ticket.prUrl && (
+              <a
+                href={ticket.prUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] text-[#8affb1] hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                View →
+              </a>
+            )}
+            {ticket.status === 'backlog' && (
+              <button
+                className="relative inline-flex group"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                <span
+                  className="relative flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+                  style={{
+                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  }}
+                >
+                  <iconify-icon icon="solar:play-linear" width="10" className="text-white/80" />
+                  Run
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -313,6 +313,7 @@ function TicketsPage() {
             <KanbanBoard
               tickets={tickets}
               onOpenTicket={handleOpenTicket}
+              onDeleteTicket={(ticket) => setDeletingKey(ticket.key)}
             />
           </>
         )}
@@ -367,7 +368,7 @@ function AppLayout({ username, onLogout }: AppProps) {
   return (
     <ModelProvider>
     <div className="ds-bg min-h-screen text-white antialiased">
-      <Toaster theme="dark" position="top-right" />
+      <Toaster theme="dark" position="bottom-center" />
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div
           className="absolute -top-[30%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-white/5 blur-[100px]"

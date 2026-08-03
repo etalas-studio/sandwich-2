@@ -64,7 +64,7 @@ export function createScanRunner(
         : mechanical.areaSignals;
 
     completeReadinessScan(db, scanId, {
-      projectName: mechanical.projectName,
+      projectName: agentResult.projectName ?? mechanical.projectName,
       description,
       techStack: mechanical.techStack,
       testCommand: mechanical.testCommand,

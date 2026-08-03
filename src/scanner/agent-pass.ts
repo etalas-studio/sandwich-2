@@ -25,6 +25,7 @@ export interface Recommendation {
 }
 
 export interface AgentPassResult {
+  projectName: string | null;
   description: string | null;
   areas: AgentDefinedArea[];
   recommendations: Recommendation[];
@@ -36,7 +37,7 @@ const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResult> {
   if (input.signal.aborted) {
-    return { description: null, areas: [], recommendations: [], blocklistProposals: [], outcome: "aborted" };
+    return { projectName: null, description: null, areas: [], recommendations: [], blocklistProposals: [], outcome: "aborted" };
   }
 
   const prompt = buildScanPrompt(input.mechanicalResult);
@@ -49,6 +50,7 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
   const parsed = parseAgentResponse(engineResult.finalText);
 
   return {
+    projectName: parsed.projectName,
     description: parsed.description,
     areas: parsed.areas,
     recommendations: parsed.recommendations,
@@ -58,6 +60,10 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
 }
 
 function buildScanPrompt(mech: MechanicalResult): string {
+  const projectNameHint = mech.projectName !== "unknown"
+    ? `Project name from package.json: ${mech.projectName}`
+    : "Project name not found in package.json — infer one from the codebase (e.g. README title, directory name, or what the project calls itself).";
+
   return [
     "You are analyzing a codebase. Do four things:",
     "",
@@ -71,21 +77,23 @@ function buildScanPrompt(mech: MechanicalResult): string {
     "",
     "4. Recommend 3-5 specific, actionable improvements to make this codebase more autonomous-agent-friendly. Check for: CLAUDE.md or AGENTS.md (agent instructions), architecture documentation, test command in package.json, CI pipeline, CONTRIBUTING.md, specs/plans directory, English README, lint/format config. Only recommend things that are MISSING — don't suggest adding something that already exists. Each recommendation needs a title and a specific description explaining why it matters for autonomous agents.",
     "",
-    `Project name: ${mech.projectName}`,
+    projectNameHint,
     `Detected tech stack: ${mech.techStack}`,
     `Test command: ${mech.testCommand ?? "none"}`,
     "",
-    "Answer ONLY with a JSON object with four fields:",
+    "Answer ONLY with a JSON object with five fields:",
+    `  - \"projectName\" (string — use the name from package.json above if given; ${mech.projectName === "unknown" ? "otherwise infer one" : "otherwise the same value"})`,
     "  - `description` (string)",
     "  - `areas` (array of {name, paths (string array), note})",
     "  - `blocklist` (array of {pattern, reason})",
     "  - `recommendations` (array of {title, description})",
     "",
-    'Example: {"description":"A document processing pipeline that...","areas":[{"name":"Auth & Sessions","paths":["src/auth/"],"note":"Handles credential validation — high-risk area"}],"blocklist":[],"recommendations":[{"title":"Add CLAUDE.md","description":"No agent instructions found. A CLAUDE.md should document conventions and working rules so agents don\'t break them."}]}',
+    'Example: {"projectName":"my-app","description":"A document processing pipeline that...","areas":[{"name":"Auth & Sessions","paths":["src/auth/"],"note":"Handles credential validation — high-risk area"}],"blocklist":[],"recommendations":[{"title":"Add CLAUDE.md","description":"No agent instructions found. A CLAUDE.md should document conventions and working rules so agents don\'t break them."}]}',
   ].join("\n");
 }
 
 interface ParsedResponse {
+  projectName: string | null;
   description: string | null;
   areas: AgentDefinedArea[];
   recommendations: Recommendation[];
@@ -99,6 +107,9 @@ function parseAgentResponse(text: string): ParsedResponse {
     try {
       const parsed = JSON.parse(objMatch[0]) as Record<string, unknown>;
 
+      const projectName = typeof parsed.projectName === "string" && parsed.projectName.length > 0
+        ? parsed.projectName
+        : null;
       const desc = typeof parsed.description === "string" ? parsed.description : null;
 
       const recs = Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
@@ -136,7 +147,7 @@ function parseAgentResponse(text: string): ParsedResponse {
           typeof (entry as Record<string, unknown>).reason === "string",
       );
 
-      return { description: desc, areas, recommendations, blocklist };
+      return { projectName, description: desc, areas, recommendations, blocklist };
     } catch {
       // fall through to old format
     }
@@ -155,12 +166,12 @@ function parseAgentResponse(text: string): ParsedResponse {
             typeof (entry as Record<string, unknown>).pattern === "string" &&
             typeof (entry as Record<string, unknown>).reason === "string",
         );
-        return { description: null, areas: [], recommendations: [], blocklist };
+        return { projectName: null, description: null, areas: [], recommendations: [], blocklist };
       }
     } catch {
       // ignore
     }
   }
 
-  return { description: null, areas: [], recommendations: [], blocklist: [] };
+  return { projectName: null, description: null, areas: [], recommendations: [], blocklist: [] };
 }
