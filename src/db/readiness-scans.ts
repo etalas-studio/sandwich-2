@@ -15,6 +15,7 @@ export interface ReadinessScan {
 export interface AreaSignal {
   area: string;
   files: number;
+  testFileCount: number;
   testToCodeRatio: number;
   churnScore: number;
   note: string;

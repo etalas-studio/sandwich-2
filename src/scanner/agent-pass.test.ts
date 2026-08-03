@@ -9,7 +9,7 @@ function makeMechanicalResult(): MechanicalResult {
     techStack: "Node.js, TypeScript",
     testCommand: "npm test",
     areaSignals: [
-      { area: "src", files: 4, testToCodeRatio: 0.5, churnScore: 1.0, note: "" },
+      { area: "src", files: 4, testFileCount: 2, testToCodeRatio: 0.5, churnScore: 1.0, note: "" },
     ],
   };
 }

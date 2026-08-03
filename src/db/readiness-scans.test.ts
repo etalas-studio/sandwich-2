@@ -34,7 +34,7 @@ function testCompleteReadinessScanSavesResults(): void {
   const db = openTestDb();
   startReadinessScan(db, "scan-1");
 
-  const areaSignals = [{ area: "src", files: 5, testToCodeRatio: 0.6, churnScore: 0.3, note: "ok" }];
+  const areaSignals = [{ area: "src", files: 5, testFileCount: 3, testToCodeRatio: 0.6, churnScore: 0.3, note: "ok" }];
   const scan = completeReadinessScan(db, "scan-1", {
     projectName: "my-app",
     description: "A test app",

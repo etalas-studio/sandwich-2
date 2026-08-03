@@ -94,7 +94,7 @@ export default function ReadinessCard({ scan }: Props) {
                     <tr className="border-b border-white/[0.04] bg-[#0a0a0a]/50">
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Area</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Files</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test Coverage</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test-to-Code Ratio</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Churn</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Risk</th>
                     </tr>
@@ -141,6 +141,11 @@ export default function ReadinessCard({ scan }: Props) {
                               <span className={`text-xs font-mono font-light ${coverageColor}`}>
                                 {coveragePct}%
                               </span>
+                              {area.testFileCount > 0 && (
+                                <span className="text-[10px] text-white/30 font-light">
+                                  ({area.testFileCount} test{area.testFileCount !== 1 ? 's' : ''})
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-3.5">

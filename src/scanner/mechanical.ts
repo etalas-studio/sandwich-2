@@ -83,6 +83,7 @@ export function computeAreaSignalsForPaths(
   return areaData.map((a) => ({
     area: a.name,
     files: a.files,
+    testFileCount: a.testCount,
     testToCodeRatio: a.codeCount > 0 ? a.testCount / a.codeCount : 0,
     churnScore: maxChurn > 0 ? (churnCounts[a.name] ?? 0) / maxChurn : 0,
     note: a.note,
@@ -186,6 +187,7 @@ function computeAreaSignals(repoPath: string): AreaSignal[] {
     areaSignals.push({
       area,
       files,
+      testFileCount: testCount,
       testToCodeRatio: codeCount > 0 ? testCount / codeCount : 0,
       churnScore: maxChurn > 0 ? churnRaw / maxChurn : 0,
       note: "",
