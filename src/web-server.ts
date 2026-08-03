@@ -1,11 +1,12 @@
 import { createServer } from "node:http";
-import type { ServerResponse } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
-import { extname, join, normalize, resolve } from "node:path";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { extname, isAbsolute, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
 import { getTicketByKey, listTickets } from "./db/tickets.js";
 import { getLatestRunForTicket } from "./db/runs.js";
 import { listArtifactsForRun } from "./db/run-artifacts.js";
+import { getInstanceSettings, completeFirstRun } from "./db/settings.js";
 import { loadPipelineConfig } from "./pipeline/config.js";
 import { runPipeline } from "./pipeline/run.js";
 
@@ -69,6 +70,60 @@ function isCrossOriginRequest(origin: string | undefined, host: string | undefin
   return origin !== `http://${host}` && origin !== `https://${host}`;
 }
 
+const MAX_JSON_BODY_BYTES = 64 * 1024;
+
+/** Reads and JSON-parses a request body, capped to avoid an unbounded read. */
+function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    let data = "";
+    let tooLarge = false;
+    req.on("data", (chunk: Buffer) => {
+      if (tooLarge) return;
+      data += chunk.toString("utf8");
+      if (data.length > MAX_JSON_BODY_BYTES) {
+        tooLarge = true;
+        rejectPromise(new Error("request body too large"));
+      }
+    });
+    req.on("end", () => {
+      if (tooLarge) return;
+      try {
+        resolvePromise(data.length === 0 ? {} : JSON.parse(data));
+      } catch {
+        rejectPromise(new Error("request body is not valid JSON"));
+      }
+    });
+    req.on("error", rejectPromise);
+  });
+}
+
+/**
+ * Validates a human-supplied project folder before storing it as the
+ * first-run repo path: must be an absolute path, must exist, must be a
+ * directory, and must actually be a git repo (has a .git entry) — a
+ * pipeline run against a non-repo directory would fail confusingly deep
+ * inside git.ts instead of here, at the point the human chose it.
+ */
+function validateRepoPath(candidate: unknown): { ok: true; repoPath: string } | { ok: false; error: string } {
+  if (typeof candidate !== "string" || candidate.trim().length === 0) {
+    return { ok: false, error: "repoPath is required" };
+  }
+  const repoPath = candidate.trim();
+  if (!isAbsolute(repoPath)) {
+    return { ok: false, error: "repoPath must be an absolute path" };
+  }
+  if (!existsSync(repoPath)) {
+    return { ok: false, error: `no such directory: ${repoPath}` };
+  }
+  if (!statSync(repoPath).isDirectory()) {
+    return { ok: false, error: `not a directory: ${repoPath}` };
+  }
+  if (!existsSync(join(repoPath, ".git"))) {
+    return { ok: false, error: `not a git repository (no .git found in ${repoPath})` };
+  }
+  return { ok: true, repoPath };
+}
+
 /**
  * Minimal API + static server for the new (post-reset) product design.
  * Deliberately separate from server.ts, which serves the prior attempt's
@@ -95,6 +150,7 @@ export function startWebServer(options: WebServerOptions): void {
   let runningTicketKey: string | null = null;
 
   const server = createServer((req, res) => {
+    void (async () => {
     try {
       const url = req.url ?? "/";
       const path = url.split("?")[0] ?? "/";
@@ -121,6 +177,30 @@ export function startWebServer(options: WebServerOptions): void {
         return;
       }
 
+      if (path === "/api/settings/project" && req.method === "GET") {
+        sendJson(res, 200, getInstanceSettings(db));
+        return;
+      }
+
+      if (path === "/api/settings/project" && req.method === "POST") {
+        let body: unknown;
+        try {
+          body = await readJsonBody(req);
+        } catch (err) {
+          sendJson(res, 400, { error: (err as Error).message });
+          return;
+        }
+        const candidate = (body as Record<string, unknown> | null)?.["repoPath"];
+        const validated = validateRepoPath(candidate);
+        if (!validated.ok) {
+          sendJson(res, 400, { error: validated.error });
+          return;
+        }
+        const settings = completeFirstRun(db, validated.repoPath, new Date().toISOString());
+        sendJson(res, 200, settings);
+        return;
+      }
+
       const runMatch = req.method === "POST" ? /^\/api\/tickets\/([^/]+)\/run$/.exec(path) : null;
       if (runMatch) {
         const ticketKey = decodePathSegment(runMatch[1] as string);
@@ -133,8 +213,15 @@ export function startWebServer(options: WebServerOptions): void {
           sendJson(res, 403, { error: "cross-origin run requests are refused" });
           return;
         }
-        if (!pipelineConfig) {
-          sendJson(res, 503, { error: "no pipeline config — see server startup log" });
+        // The chosen-via-UI project folder (first-run setup) always wins
+        // over the static config file's repoPath — the file's value is only
+        // a dev-time fallback for instances that haven't done first-run
+        // setup yet.
+        const repoPath = getInstanceSettings(db).repoPath ?? pipelineConfig?.repoPath ?? null;
+        if (!pipelineConfig || !repoPath) {
+          sendJson(res, 503, {
+            error: "no project folder configured yet — set one in Settings",
+          });
           return;
         }
         if (!getTicketByKey(db, ticketKey)) {
@@ -152,7 +239,7 @@ export function startWebServer(options: WebServerOptions): void {
         }
 
         runningTicketKey = ticketKey;
-        runPipeline(ticketKey, pipelineConfig, db)
+        runPipeline(ticketKey, { ...pipelineConfig, repoPath }, db)
           .catch((err: unknown) => {
             console.error(`Pipeline run for ${ticketKey} failed:`, err);
           })
@@ -178,6 +265,7 @@ export function startWebServer(options: WebServerOptions): void {
         res.end();
       }
     }
+    })();
   });
 
   server.listen(port, "127.0.0.1", () => {

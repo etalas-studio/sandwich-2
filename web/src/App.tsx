@@ -67,11 +67,11 @@ export default function App() {
       {/* Main layout wrapped in card pattern */}
       <div className="ds-card-outer min-h-screen">
         <div className="ds-card-inner flex min-h-screen">
-          {/* Noise texture overlay */}
-          <div className="ds-noise" />
-
           {/* Sidebar */}
           <Sidebar active={activeNav} onNavigate={handleNavigate} />
+
+          {/* Noise texture overlay */}
+          <div className="ds-noise" />
 
           {/* Main content */}
           <main className="relative z-10 flex-1 min-h-screen overflow-hidden">

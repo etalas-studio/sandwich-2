@@ -226,6 +226,43 @@ export async function runTicket(key: string): Promise<RunTicketResult> {
   }
 }
 
+// Project folder chosen via first-run setup (src/db/settings.ts's
+// instance_settings row) — the repo the pipeline actually runs the agent
+// against. null until a human sets one in Settings.
+export interface ProjectSettings {
+  repoPath: string | null
+  firstRunCompletedAt: string | null
+}
+
+export interface SaveProjectResult {
+  ok: boolean
+  message: string
+  settings?: ProjectSettings
+}
+
+export async function fetchProjectSettings(): Promise<ProjectSettings> {
+  const res = await fetch('/api/settings/project')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<ProjectSettings>
+}
+
+export async function saveProjectSettings(repoPath: string): Promise<SaveProjectResult> {
+  try {
+    const res = await fetch('/api/settings/project', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ repoPath }),
+    })
+    const body = (await res.json().catch(() => null)) as (ProjectSettings & { error?: string }) | null
+    if (!res.ok) {
+      return { ok: false, message: body?.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true, message: 'Saved', settings: body ?? undefined }
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : String(e) }
+  }
+}
+
 // One row from run_artifacts (src/db/run-artifacts.ts) — a raw text blob
 // captured by a pipeline stage (transcript, diff, test output).
 export type RunArtifactKind =

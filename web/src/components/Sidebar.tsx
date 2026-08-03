@@ -15,7 +15,7 @@ interface SidebarProps {
 export default function Sidebar({ active, onNavigate }: SidebarProps) {
 
   return (
-    <aside className="relative z-10 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
+    <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
       {/* Logo */}
       <div className="flex items-center gap-3 p-4 border-b border-white/[0.04]">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -2px 6px rgba(0,0,0,0.8)' }}>
@@ -31,7 +31,10 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => !item.disabled && onNavigate(item.id)}
+            onClick={() => {
+              console.log('Click:', item.id, 'disabled:', item.disabled)
+              if (!item.disabled) onNavigate(item.id)
+            }}
             disabled={item.disabled}
             className={`
               relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-light transition-colors

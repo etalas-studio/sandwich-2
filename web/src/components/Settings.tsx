@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ProjectSection from './ProjectSection'
 import BlocklistSection, { mockBlocklist, type BlocklistEntry } from './BlocklistSection'
 import CredentialsSection, { mockCredentials, type Credential } from './CredentialsSection'
 import AccountSection, { mockAccount } from './AccountSection'
@@ -61,12 +62,13 @@ export default function Settings({ onBack }: SettingsProps) {
           </h1>
         </div>
         <p className="text-sm text-white/50 font-light ml-7">
-          Manage blocklist, credentials, and account settings
+          Manage project, blocklist, credentials, and account settings
         </p>
       </div>
 
       {/* Sections */}
       <div className="space-y-6 max-w-3xl">
+        <ProjectSection />
         <BlocklistSection
           entries={blocklist}
           onAdd={handleAddBlocklistEntry}
