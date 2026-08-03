@@ -10,26 +10,43 @@ export function parseCookies(header: string | undefined): Record<string, string>
     if (eq === -1) continue;
     const name = part.slice(0, eq).trim();
     const value = part.slice(eq + 1).trim();
-    if (name) cookies[name] = decodeURIComponent(value);
+    if (!name) continue;
+    try {
+      cookies[name] = decodeURIComponent(value);
+    } catch {
+      // Malformed percent-encoding — skip this entry rather than throwing on attacker-controlled input.
+    }
   }
   return cookies;
 }
 
-export function buildSessionCookie(token: string, secure: boolean): string {
+function buildAttrs(
+  cookieValue: string,
+  maxAge: number,
+  secure: boolean
+): string[] {
   const attrs = [
-    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
+    `${SESSION_COOKIE_NAME}=${cookieValue}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
-    `Max-Age=${SESSION_MAX_AGE_SEC}`,
+    `Max-Age=${maxAge}`,
   ];
   if (secure) attrs.push("Secure");
+  return attrs;
+}
+
+export function buildSessionCookie(token: string, secure: boolean): string {
+  const attrs = buildAttrs(
+    encodeURIComponent(token),
+    SESSION_MAX_AGE_SEC,
+    secure
+  );
   return attrs.join("; ");
 }
 
 export function buildClearedSessionCookie(secure: boolean): string {
-  const attrs = [`${SESSION_COOKIE_NAME}=`, "Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=0"];
-  if (secure) attrs.push("Secure");
+  const attrs = buildAttrs("", 0, secure);
   return attrs.join("; ");
 }
 
