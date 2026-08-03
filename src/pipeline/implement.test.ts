@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
@@ -111,6 +111,69 @@ async function testReturnsNeedsHumanOnBlocklistHit(): Promise<void> {
   console.log("PASS: testReturnsNeedsHumanOnBlocklistHit");
 }
 
+// A pattern like "*.env" is written to mean "secrets anywhere in the repo".
+// It must therefore also catch nested files, not just files at the repo root.
+async function testWildcardPatternMatchesNestedFileByBasename(): Promise<void> {
+  const db = openTestDb();
+  const ctx = makeContext(
+    db,
+    makeEngine(async (options) => {
+      mkdirSync(join(options.cwd, "config"), { recursive: true });
+      writeFileSync(join(options.cwd, "config", "secrets.env"), "API_KEY=x\n");
+      return { outcome: "ok", finalText: "done", transcript: ["done"], durationSec: 0.1, exitCode: 0 };
+    }),
+  );
+  insertBlocklistEntry(db, { pattern: "*.env", reason: "never touch secrets", source: "human" });
+
+  const result = await implement(ctx);
+  assert.equal(result.outcome, "needs_human");
+  assert.equal(result.needsHumanCategory, "forbidden_path_or_action");
+
+  const log = execSync("git log --oneline", { cwd: ctx.worktreePath }).toString();
+  assert.equal(log.trim().split("\n").length, 1, "blocklist hit must not be committed");
+  console.log("PASS: testWildcardPatternMatchesNestedFileByBasename");
+}
+
+// The wildcard regex is anchored at both ends, so trailing content past the
+// intended match is not silently swallowed: "config/*.key" is about .key
+// files, not about "config/prod.key.bak".
+async function testWildcardPatternDoesNotMatchTrailingContent(): Promise<void> {
+  const db = openTestDb();
+  const ctx = makeContext(
+    db,
+    makeEngine(async (options) => {
+      mkdirSync(join(options.cwd, "config"), { recursive: true });
+      writeFileSync(join(options.cwd, "config", "prod.key.bak"), "stale backup\n");
+      return { outcome: "ok", finalText: "done", transcript: ["done"], durationSec: 0.1, exitCode: 0 };
+    }),
+  );
+  insertBlocklistEntry(db, { pattern: "config/*.key", reason: "no private keys", source: "human" });
+
+  const result = await implement(ctx);
+  assert.equal(result.outcome, "changes_committed");
+  console.log("PASS: testWildcardPatternDoesNotMatchTrailingContent");
+}
+
+// A *trailing* wildcard reads as "everything under here", so it still has to
+// cross directory separators — "src/*" covers src/deep/nested/thing.ts.
+async function testTrailingWildcardMatchesEverythingBelowIt(): Promise<void> {
+  const db = openTestDb();
+  const ctx = makeContext(
+    db,
+    makeEngine(async (options) => {
+      mkdirSync(join(options.cwd, "src", "deep", "nested"), { recursive: true });
+      writeFileSync(join(options.cwd, "src", "deep", "nested", "thing.ts"), "export {};\n");
+      return { outcome: "ok", finalText: "done", transcript: ["done"], durationSec: 0.1, exitCode: 0 };
+    }),
+  );
+  insertBlocklistEntry(db, { pattern: "src/*", reason: "hands off src", source: "human" });
+
+  const result = await implement(ctx);
+  assert.equal(result.outcome, "needs_human");
+  assert.equal(result.needsHumanCategory, "forbidden_path_or_action");
+  console.log("PASS: testTrailingWildcardMatchesEverythingBelowIt");
+}
+
 async function testReturnsTimeoutOutcome(): Promise<void> {
   const db = openTestDb();
   const ctx = makeContext(
@@ -134,6 +197,9 @@ async function main(): Promise<void> {
   await testCommitsChangesWhenAgentWritesCode();
   await testReturnsNoChangesWhenAgentDoesNothing();
   await testReturnsNeedsHumanOnBlocklistHit();
+  await testWildcardPatternMatchesNestedFileByBasename();
+  await testWildcardPatternDoesNotMatchTrailingContent();
+  await testTrailingWildcardMatchesEverythingBelowIt();
   await testReturnsTimeoutOutcome();
 }
 

@@ -21,15 +21,39 @@ interface BlocklistHit {
 }
 
 /**
- * Pattern is a path prefix, with `*` supported as a single-path-segment
- * wildcard. Deliberately simple — the blocklist has to be human-readable
- * and auditable, not its own pattern language.
+ * Compiles a wildcard blocklist pattern into a fully anchored regex.
+ *
+ * `*` is a single-path-segment wildcard (`[^/]*`), except a *trailing* `*`,
+ * which reads as "everything under here" and so crosses `/` (`.*`) — that's
+ * what a human writing `src/secrets/*` means. Anchoring both ends matters:
+ * without a trailing `$`, `config/*.key` would also swallow
+ * `config/prod.key.bak`.
+ */
+function compileBlocklistPattern(pattern: string): RegExp {
+  const hasTrailingWildcard = pattern.endsWith("*");
+  const body = hasTrailingWildcard ? pattern.slice(0, -1) : pattern;
+  const escaped = body.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*");
+  return new RegExp(`^${escaped}${hasTrailingWildcard ? ".*" : ""}$`);
+}
+
+/**
+ * Pattern is a path prefix, with `*` supported as a wildcard (see
+ * compileBlocklistPattern). Deliberately simple — the blocklist has to be
+ * human-readable and auditable, not its own pattern language.
+ *
+ * A wildcard pattern is tested against both the full repo-relative path and
+ * the file's basename, so `*.env`/`*.pem`/`*.key` — which a human writes to
+ * mean "secrets anywhere in the repo" — also protect nested files like
+ * `config/secrets.env`, not just files at the repo root. Erring toward
+ * over-blocking is deliberate: while Judge is stubbed, this check is the
+ * only blocklist enforcement there is.
  */
 function matchesBlocklistPattern(file: string, pattern: string): boolean {
   const normalized = file.replace(/^\.\//, "");
   if (pattern.includes("*")) {
-    const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*");
-    return new RegExp(`^${escaped}`).test(normalized);
+    const regex = compileBlocklistPattern(pattern);
+    const basename = normalized.slice(normalized.lastIndexOf("/") + 1);
+    return regex.test(normalized) || regex.test(basename);
   }
   return normalized === pattern || normalized.startsWith(pattern);
 }
