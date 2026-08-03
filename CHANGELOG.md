@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-08-04: restore UI cards | @potensio - restored agentic readiness, recommendations, and area signals cards on overview page; restored stats cards (agent success rate, avg duration, autonomy rate) on tickets page wired to live ticket data; added fix button to scan-driven recommendations
+
 Append-only. One entry per completed implementation task (not per phase, not on a fixed schedule) — logged as part of that task's own completion commit, so this never goes stale relative to what's actually been built.
 
 Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`

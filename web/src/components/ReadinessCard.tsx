@@ -193,10 +193,16 @@ export default function ReadinessCard({ scan }: Props) {
                     <div className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
                       <span className="text-[10px] text-white/40 font-mono">{i + 1}</span>
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-sm text-white/80 font-normal mb-1">{rec.title}</h3>
                       <p className="text-xs text-white/50 font-light leading-relaxed">{rec.description}</p>
                     </div>
+                    <button
+                      type="button"
+                      className="shrink-0 px-3 py-1 text-[10px] text-white/60 bg-white/[0.04] hover:bg-white/[0.08] rounded-md border border-white/[0.06] transition-colors font-light mt-0.5"
+                    >
+                      Fix
+                    </button>
                   </div>
                 ))}
               </div>
