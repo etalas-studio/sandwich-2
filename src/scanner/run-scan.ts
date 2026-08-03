@@ -19,13 +19,10 @@ export function createScanRunner(
 ): (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void> {
   return async (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => {
     // Mechanical pass (synchronous, fast)
-    console.log(`[scan] Mechanical pass starting on: ${repoPath}`);
     let mechanical;
     try {
       mechanical = scanMechanical(repoPath);
-      console.log(`[scan] Mechanical pass done: ${mechanical.projectName}, ${mechanical.techStack}, ${mechanical.areaSignals.length} areas`);
     } catch (err) {
-      console.error("[scan] Mechanical pass failed:", err);
       abortReadinessScan(db, scanId);
       return;
     }
@@ -65,8 +62,6 @@ export function createScanRunner(
       agentResult.areas.length > 0
         ? computeAreaSignalsForPaths(repoPath, agentResult.areas)
         : mechanical.areaSignals;
-
-    console.log(`[scan] Complete. Description: ${description ? description.slice(0, 80) + "..." : "(none)"}, ${areaSignals.length} areas, ${agentResult.blocklistProposals.length} blocklist entries`);
 
     completeReadinessScan(db, scanId, {
       projectName: mechanical.projectName,
