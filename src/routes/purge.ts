@@ -3,9 +3,11 @@ import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
 
 // User data only — schema_migrations is infrastructure, not reset on purge.
+// Children must be deleted before parents (foreign_keys = ON).
+//   blocklist → readiness_scans, sessions → users
 const TABLES = [
-  "readiness_scans",
   "blocklist",
+  "readiness_scans",
   "credentials",
   "sessions",
   "tickets",
