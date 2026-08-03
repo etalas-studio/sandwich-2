@@ -6,6 +6,7 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 
 - 2026-08-04: [settings-screen] | @potensio - Added Settings screen with Blocklist, Credentials, and Account sections (web/src/components/Settings.tsx, web/src/components/BlocklistSection.tsx, web/src/components/CredentialsSection.tsx, web/src/components/AccountSection.tsx)
 - 2026-08-04: [settings-screen] | @potensio - Added reusable Modal component for dialog boxes (web/src/components/Modal.tsx)
+- 2026-08-04: [url-based-navigation] | @potensio - Added URL-based routing with react-router-dom, replacing state-based navigation
 - 2026-08-04: [settings-screen] | @potensio - Updated Sidebar and App.tsx to support navigation between Overview and Settings
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Pipeline shape instance config loader, defaulting engine mode to PTY (src/pipeline/config.ts, config/instance.example.json)
 - 2026-08-03: [pipeline-shape] | @potensio - Added shared pipeline stage types (PipelineContext, Judge/Implement/Verify result types) for the new Judge -> Implement -> Verify sequence (src/pipeline/types.ts)
