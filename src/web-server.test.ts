@@ -90,10 +90,74 @@ async function testLoginWithWrongPasswordFails(): Promise<void> {
   console.log("PASS: testLoginWithWrongPasswordFails");
 }
 
+async function testAuthMeReflectsAllThreeStates(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    const beforeSetupRes = await fetch(`${baseUrl}/api/auth/me`);
+    assert.equal(beforeSetupRes.status, 200);
+    assert.deepEqual(await beforeSetupRes.json(), { state: "setup_required" });
+
+    const registerRes = await fetch(`${baseUrl}/api/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username: "owner", email: "owner@example.com", password: "hunter22" }),
+    });
+    assert.equal(registerRes.status, 200);
+    const cookie = registerRes.headers.get("set-cookie");
+    assert.ok(cookie && cookie.includes("session="));
+    const sessionCookie = cookie!.split(";")[0]!;
+
+    const unauthenticatedRes = await fetch(`${baseUrl}/api/auth/me`);
+    assert.equal(unauthenticatedRes.status, 200);
+    assert.deepEqual(await unauthenticatedRes.json(), { state: "unauthenticated" });
+
+    const authenticatedRes = await fetch(`${baseUrl}/api/auth/me`, {
+      headers: { cookie: sessionCookie },
+    });
+    assert.equal(authenticatedRes.status, 200);
+    assert.deepEqual(await authenticatedRes.json(), {
+      state: "authenticated",
+      user: { username: "owner" },
+    });
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testAuthMeReflectsAllThreeStates");
+}
+
+async function testLoginSucceedsAndCookieAuthorizes(): Promise<void> {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    await fetch(`${baseUrl}/api/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username: "owner", email: "owner@example.com", password: "hunter22" }),
+    });
+
+    const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username: "owner", password: "hunter22" }),
+    });
+    assert.equal(loginRes.status, 200);
+    const cookie = loginRes.headers.get("set-cookie");
+    assert.ok(cookie && cookie.includes("session="));
+    const sessionCookie = cookie!.split(";")[0]!;
+
+    const ticketsRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
+    assert.equal(ticketsRes.status, 200);
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testLoginSucceedsAndCookieAuthorizes");
+}
+
 async function main(): Promise<void> {
   await testTicketsRequiresSession();
   await testRegisterLoginLogoutFlow();
   await testLoginWithWrongPasswordFails();
+  await testAuthMeReflectsAllThreeStates();
+  await testLoginSucceedsAndCookieAuthorizes();
 }
 
 void main();
