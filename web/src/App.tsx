@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTickets, computeStats } from './types'
+import { useTickets, runTicket, computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
@@ -10,6 +10,8 @@ import mockData from './mockData'
 export default function App() {
   const { tickets, error } = useTickets()
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
+  const [runError, setRunError] = useState<string | null>(null)
 
   // Use real tickets if available, otherwise fall back to mock data
   const displayTickets = tickets ?? mockData.tickets
@@ -21,6 +23,22 @@ export default function App() {
 
   const handleCloseTicket = () => {
     setSelectedTicket(null)
+  }
+
+  const handleRunTicket = (key: string) => {
+    setStartingKeys((prev) => new Set(prev).add(key))
+    setRunError(null)
+    runTicket(key)
+      .then((result) => {
+        if (!result.ok) setRunError(`Could not start ${key}: ${result.message}`)
+      })
+      .finally(() => {
+        setStartingKeys((prev) => {
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+      })
   }
 
   return (
@@ -58,6 +76,13 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {runError && (
+                <div className="ds-card-outer mb-6">
+                  <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+                    <p className="text-sm text-[#ff8a8a]">{runError}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Header */}
               <div className="mb-8">
@@ -80,7 +105,12 @@ export default function App() {
               <StatsCards stats={stats} />
 
               {/* Kanban */}
-              <KanbanBoard tickets={displayTickets} onOpenTicket={handleOpenTicket} />
+              <KanbanBoard
+                tickets={displayTickets}
+                onOpenTicket={handleOpenTicket}
+                onRunTicket={handleRunTicket}
+                startingKeys={startingKeys}
+              />
             </div>
           </main>
         </div>
