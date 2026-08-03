@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTickets, runTicket, computeStats } from './types'
+import { useTickets, runTicket, stopTicket, duplicateTicket, deleteTicket, createTicket, computeStats } from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
@@ -10,11 +10,23 @@ import mockData from './mockData'
 
 type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
+// Quick Add: a one-click seed of a known real ticket for demoing/testing,
+// rather than a full ticket-creation form. createTicket auto-suffixes the
+// key if RR-7338 is already taken, so clicking repeatedly just adds more.
+const QUICK_ADD_TICKET = {
+  key: 'RR-7338',
+  url: 'https://runchise.atlassian.net/browse/RR-7338',
+  summary: 'Bug: Exported File Name Replaces Mandarin Characters with Underscores (_)',
+  description:
+    '### Issue\n\nWhen exporting or downloading files, any Mandarin characters included in the file name are replaced with underscores (`_`) instead of being preserved.\n\nThis issue occurs regardless of the system language (Bahasa Indonesia, English, or Mandarin).\n\n**Example**\n\n* **Brand Name:** `Onboard Fajar 库存变动`\n* **Expected File Name:** `Onboard_Fajar_库存变动.xlsx`\n* **Actual File Name:** `Onboard_Fajar_____.xlsx` (Mandarin characters replaced with `_`)\n\n### Expected Behavior\n\n* Preserve all supported Unicode characters (including Mandarin) in exported file names.\n* File names should display correctly across all supported languages without replacing non-Latin characters with underscores.\n* The exported file name should match the original brand name (except for invalid filesystem characters that must still be sanitized).\n\n### Acceptance Criteria\n\n1. Exported file names preserve Mandarin characters.\n2. Exported file names preserve Unicode characters for all supported languages.\n3. Only invalid filename characters (e.g. `\\ / : * ? " < > |`) are sanitized or replaced.\n4. Export works correctly for all export types (e.g. Onboarding, Stock Product, and other exported reports/files).\n5. The issue is resolved regardless of the selected system language (English, Bahasa Indonesia, or Mandarin).',
+}
+
 export default function App() {
   const { tickets, error } = useTickets()
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [activeNav, setActiveNav] = useState<NavItem>('overview')
   const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
+  const [stoppingKeys, setStoppingKeys] = useState<Set<string>>(new Set())
   const [runError, setRunError] = useState<string | null>(null)
 
   // Use real tickets if available, otherwise fall back to mock data
@@ -48,6 +60,44 @@ export default function App() {
           return next
         })
       })
+  }
+
+  const handleStopTicket = (key: string) => {
+    setStoppingKeys((prev) => new Set(prev).add(key))
+    setRunError(null)
+    stopTicket(key)
+      .then((result) => {
+        if (!result.ok) setRunError(`Could not stop ${key}: ${result.message}`)
+      })
+      .finally(() => {
+        setStoppingKeys((prev) => {
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+      })
+  }
+
+  const handleDuplicateTicket = (key: string) => {
+    setRunError(null)
+    duplicateTicket(key).then((result) => {
+      if (!result.ok) setRunError(`Could not duplicate ${key}: ${result.message}`)
+    })
+  }
+
+  const handleDeleteTicket = (key: string) => {
+    if (!window.confirm(`Delete ${key}? This also removes its run history.`)) return
+    setRunError(null)
+    deleteTicket(key).then((result) => {
+      if (!result.ok) setRunError(`Could not delete ${key}: ${result.message}`)
+    })
+  }
+
+  const handleQuickAdd = () => {
+    setRunError(null)
+    createTicket(QUICK_ADD_TICKET).then((result) => {
+      if (!result.ok) setRunError(`Could not add ticket: ${result.message}`)
+    })
   }
 
   return (
@@ -97,20 +147,39 @@ export default function App() {
                 )}
 
                 {/* Header */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
-                      Overview
-                    </h1>
-                    <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-                      Today
-                    </span>
+                <div className="mb-8 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+                        Overview
+                      </h1>
+                      <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                        Today
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/50 font-light">
+                      {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      {' · '}
+                      {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
+                    </p>
                   </div>
-                  <p className="text-sm text-white/50 font-light">
-                    {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    {' · '}
-                    {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
-                  </p>
+                  <button
+                    type="button"
+                    onClick={handleQuickAdd}
+                    className="relative inline-flex group shrink-0"
+                  >
+                    <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                    <span
+                      className="relative px-4 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
+                      style={{
+                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                      }}
+                    >
+                      <iconify-icon icon="solar:add-circle-linear" width="14" />
+                      Quick Add
+                    </span>
+                  </button>
                 </div>
 
                 {/* Stats */}
@@ -121,7 +190,11 @@ export default function App() {
                   tickets={displayTickets}
                   onOpenTicket={handleOpenTicket}
                   onRunTicket={handleRunTicket}
+                  onStopTicket={handleStopTicket}
+                  onDuplicateTicket={handleDuplicateTicket}
+                  onDeleteTicket={handleDeleteTicket}
                   startingKeys={startingKeys}
+                  stoppingKeys={stoppingKeys}
                 />
               </div>
             )}

@@ -48,6 +48,7 @@ function makeContext(db: Database.Database, engine: EngineInvoker): PipelineCont
     baseCommit: repo.baseCommit,
     implementTimeoutMs: 5000,
     verifyTimeoutMs: 5000,
+    signal: new AbortController().signal,
   };
 }
 

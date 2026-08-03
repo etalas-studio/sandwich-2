@@ -20,7 +20,7 @@ export class ClaudeCodeInvoker implements EngineInvoker {
   }
 
   async run(options: EngineRunOptions): Promise<EngineRunResult> {
-    const { prompt, cwd, timeoutMs, onOutputLine } = options;
+    const { prompt, cwd, timeoutMs, onOutputLine, signal } = options;
     const transcript: string[] = [];
 
     const args = [
@@ -34,11 +34,22 @@ export class ClaudeCodeInvoker implements EngineInvoker {
     const result = await runProcess(this.bin, args, {
       cwd,
       timeoutMs,
+      signal,
       onStdoutLine: (line) => {
         transcript.push(line);
         onOutputLine?.(line);
       },
     });
+
+    if (result.aborted) {
+      return {
+        outcome: "aborted",
+        finalText: "",
+        transcript,
+        durationSec: result.durationSec,
+        exitCode: result.exitCode,
+      };
+    }
 
     if (result.timedOut) {
       return {

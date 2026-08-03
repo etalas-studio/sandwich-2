@@ -5,6 +5,7 @@ export interface ProcResult {
   stdout: string;
   stderr: string;
   timedOut: boolean;
+  aborted: boolean;
   durationSec: number;
 }
 
@@ -12,6 +13,7 @@ export interface ProcOptions {
   cwd: string;
   timeoutMs: number;
   onStdoutLine?: (line: string) => void;
+  signal?: AbortSignal;
 }
 
 /**
@@ -19,7 +21,7 @@ export interface ProcOptions {
  * never be shell-interpreted, since prompt text can contain arbitrary content).
  */
 export function runProcess(bin: string, args: string[], options: ProcOptions): Promise<ProcResult> {
-  const { cwd, timeoutMs, onStdoutLine } = options;
+  const { cwd, timeoutMs, onStdoutLine, signal } = options;
   const startedAt = Date.now();
 
   return new Promise((resolve) => {
@@ -28,12 +30,22 @@ export function runProcess(bin: string, args: string[], options: ProcOptions): P
     let stdout = "";
     let stderr = "";
     let timedOut = false;
+    let aborted = false;
     let pending = "";
 
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill("SIGKILL");
     }, timeoutMs);
+
+    const onAbort = () => {
+      aborted = true;
+      child.kill("SIGKILL");
+    };
+    if (signal) {
+      if (signal.aborted) onAbort();
+      else signal.addEventListener("abort", onAbort);
+    }
 
     child.stdout!.setEncoding("utf8");
     child.stdout!.on("data", (chunk: string) => {
@@ -54,8 +66,9 @@ export function runProcess(bin: string, args: string[], options: ProcOptions): P
 
     const finish = (exitCode: number | null) => {
       clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
       if (onStdoutLine && pending.length > 0) onStdoutLine(pending);
-      resolve({ exitCode, stdout, stderr, timedOut, durationSec: (Date.now() - startedAt) / 1000 });
+      resolve({ exitCode, stdout, stderr, timedOut, aborted, durationSec: (Date.now() - startedAt) / 1000 });
     };
 
     child.on("error", (err) => {

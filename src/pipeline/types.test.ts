@@ -39,6 +39,7 @@ function checkContextShape(db: Database.Database): PipelineContext {
     baseCommit: "abc123",
     implementTimeoutMs: 1000,
     verifyTimeoutMs: 1000,
+    signal: new AbortController().signal,
   };
 }
 

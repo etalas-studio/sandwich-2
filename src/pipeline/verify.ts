@@ -60,6 +60,10 @@ function tokenizeCommand(command: string): string[] {
  * stubbed — see the design doc's "Outcome model" section.
  */
 export async function verify(ctx: PipelineContext): Promise<VerifyResult> {
+  if (ctx.signal.aborted) {
+    return { outcome: "verify_aborted", needsHumanCategory: null, needsHumanReason: "stopped by human" };
+  }
+
   const scan = getLatestReadinessScan(ctx.db);
   const testCommand = scan?.testCommand?.trim() ?? "";
 
@@ -85,6 +89,7 @@ export async function verify(ctx: PipelineContext): Promise<VerifyResult> {
   const result = await exec(bin, args, {
     cwd: ctx.worktreePath,
     timeoutMs: ctx.verifyTimeoutMs,
+    signal: ctx.signal,
   });
 
   insertRunArtifact(ctx.db, {
@@ -92,6 +97,10 @@ export async function verify(ctx: PipelineContext): Promise<VerifyResult> {
     kind: "verify_output",
     content: `${result.stdout}\n--- stderr ---\n${result.stderr}`,
   });
+
+  if (result.aborted) {
+    return { outcome: "verify_aborted", needsHumanCategory: null, needsHumanReason: "stopped by human" };
+  }
 
   if (result.timedOut) {
     return {

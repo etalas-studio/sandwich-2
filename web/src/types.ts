@@ -85,8 +85,10 @@ function mapOutcomeToStatus(outcome: string): TicketStatus {
     case 'implement_timeout':
     case 'implement_error':
     case 'implement_nonzero_exit':
+    case 'implement_aborted':
     case 'verify_failed':
     case 'verify_timeout':
+    case 'verify_aborted':
     case 'error':
       return 'blocked'
     case 'ready_for_pr':
@@ -118,9 +120,11 @@ function mapOutcomeToStage(outcome: string): PipelineStage | null {
     case 'implement_timeout':
     case 'implement_error':
     case 'implement_nonzero_exit':
+    case 'implement_aborted':
       return 'implement'
     case 'verify_failed':
     case 'verify_timeout':
+    case 'verify_aborted':
       return 'verify'
     default:
       return null
@@ -213,14 +217,63 @@ export interface RunTicketResult {
   message: string
 }
 
-export async function runTicket(key: string): Promise<RunTicketResult> {
+async function postAction(url: string, okMessage: string): Promise<RunTicketResult> {
   try {
-    const res = await fetch(`/api/tickets/${encodeURIComponent(key)}/run`, { method: 'POST' })
+    const res = await fetch(url, { method: 'POST' })
     const body = (await res.json().catch(() => null)) as { error?: string } | null
     if (!res.ok) {
       return { ok: false, message: body?.error ?? `HTTP ${res.status}` }
     }
-    return { ok: true, message: 'Run started' }
+    return { ok: true, message: okMessage }
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : String(e) }
+  }
+}
+
+export async function runTicket(key: string): Promise<RunTicketResult> {
+  return postAction(`/api/tickets/${encodeURIComponent(key)}/run`, 'Run started')
+}
+
+export interface NewTicketInput {
+  key: string
+  summary: string
+  description: string
+  url?: string | null
+}
+
+export async function createTicket(input: NewTicketInput): Promise<RunTicketResult> {
+  try {
+    const res = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    if (!res.ok) {
+      return { ok: false, message: body?.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true, message: 'Added' }
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : String(e) }
+  }
+}
+
+export async function stopTicket(key: string): Promise<RunTicketResult> {
+  return postAction(`/api/tickets/${encodeURIComponent(key)}/stop`, 'Stopping')
+}
+
+export async function duplicateTicket(key: string): Promise<RunTicketResult> {
+  return postAction(`/api/tickets/${encodeURIComponent(key)}/duplicate`, 'Duplicated')
+}
+
+export async function deleteTicket(key: string): Promise<RunTicketResult> {
+  try {
+    const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, { method: 'DELETE' })
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    if (!res.ok) {
+      return { ok: false, message: body?.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true, message: 'Deleted' }
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : String(e) }
   }

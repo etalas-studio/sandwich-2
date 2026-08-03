@@ -59,6 +59,27 @@ export function listTickets(db: Database.Database): Ticket[] {
   return rows.map(mapRow);
 }
 
+/**
+ * Deletes a ticket and everything that references it (run_artifacts and
+ * reviews for each of its runs, then the runs themselves) — foreign_keys is
+ * ON (see connection.ts), so children have to go first. A no-op if the key
+ * doesn't exist.
+ */
+export function deleteTicket(db: Database.Database, key: string): void {
+  const deleteAll = db.transaction((ticketKey: string) => {
+    const runIds = db
+      .prepare("SELECT id FROM runs WHERE ticket_key = ?")
+      .all(ticketKey) as { id: string }[];
+    for (const { id } of runIds) {
+      db.prepare("DELETE FROM run_artifacts WHERE run_id = ?").run(id);
+      db.prepare("DELETE FROM reviews WHERE run_id = ?").run(id);
+    }
+    db.prepare("DELETE FROM runs WHERE ticket_key = ?").run(ticketKey);
+    db.prepare("DELETE FROM tickets WHERE key = ?").run(ticketKey);
+  });
+  deleteAll(key);
+}
+
 interface RawTicketRow {
   key: string;
   summary: string;

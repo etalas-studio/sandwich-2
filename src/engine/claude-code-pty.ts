@@ -37,7 +37,7 @@ export class ClaudeCodePtyInvoker implements EngineInvoker {
   }
 
   async run(options: EngineRunOptions): Promise<EngineRunResult> {
-    const { prompt, cwd, timeoutMs, onOutputLine } = options;
+    const { prompt, cwd, timeoutMs, onOutputLine, signal } = options;
     const startedAt = Date.now();
 
     return new Promise((resolve) => {
@@ -60,7 +60,22 @@ export class ClaudeCodePtyInvoker implements EngineInvoker {
       const clearTimers = () => {
         if (exitTimer) clearTimeout(exitTimer);
         if (safetyTimer) clearTimeout(safetyTimer);
+        signal?.removeEventListener("abort", onAbort);
       };
+
+      function onAbort(): void {
+        if (finished) return;
+        term.kill();
+        finish("aborted", null);
+      }
+
+      if (signal) {
+        if (signal.aborted) {
+          queueMicrotask(onAbort);
+        } else {
+          signal.addEventListener("abort", onAbort);
+        }
+      }
 
       const finish = (outcome: EngineOutcome, exitCode: number | null) => {
         if (finished) return;

@@ -91,6 +91,7 @@ export async function implement(ctx: PipelineContext): Promise<ImplementResult> 
     prompt: buildImplementPrompt(ctx.ticket),
     cwd: ctx.worktreePath,
     timeoutMs: ctx.implementTimeoutMs,
+    signal: ctx.signal,
     onOutputLine: (line) => {
       linesSoFar.push(line);
       const now = Date.now();
@@ -114,6 +115,13 @@ export async function implement(ctx: PipelineContext): Promise<ImplementResult> 
     content: engineResult.transcript.join("\n"),
   });
 
+  if (engineResult.outcome === "aborted") {
+    return {
+      outcome: "implement_aborted",
+      needsHumanCategory: null,
+      needsHumanReason: "stopped by human",
+    };
+  }
   if (engineResult.outcome === "timeout") {
     return {
       outcome: "implement_timeout",

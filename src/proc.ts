@@ -5,6 +5,7 @@ export interface ExecResult {
   stdout: string;
   stderr: string;
   timedOut: boolean;
+  aborted: boolean;
   durationSec: number;
 }
 
@@ -14,6 +15,7 @@ export interface ExecOptions {
   env?: NodeJS.ProcessEnv;
   /** Dipanggil per baris stdout. Dipakai untuk menampung transcript agent. */
   onStdoutLine?: (line: string) => void;
+  signal?: AbortSignal;
 }
 
 /**
@@ -25,7 +27,7 @@ export function exec(
   args: string[],
   options: ExecOptions = {},
 ): Promise<ExecResult> {
-  const { cwd, timeoutMs, env, onStdoutLine } = options;
+  const { cwd, timeoutMs, env, onStdoutLine, signal } = options;
   const startedAt = Date.now();
 
   return new Promise((resolve) => {
@@ -39,6 +41,7 @@ export function exec(
     let stdout = "";
     let stderr = "";
     let timedOut = false;
+    let aborted = false;
     let pending = "";
 
     const timer =
@@ -48,6 +51,15 @@ export function exec(
             child.kill("SIGKILL");
           }, timeoutMs)
         : null;
+
+    const onAbort = () => {
+      aborted = true;
+      child.kill("SIGKILL");
+    };
+    if (signal) {
+      if (signal.aborted) onAbort();
+      else signal.addEventListener("abort", onAbort);
+    }
 
     child.stdout.setEncoding("utf8");
     child.stdout.on("data", (chunk: string) => {
@@ -68,12 +80,14 @@ export function exec(
 
     const finish = (exitCode: number | null) => {
       if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
       if (onStdoutLine && pending.length > 0) onStdoutLine(pending);
       resolve({
         exitCode,
         stdout,
         stderr,
         timedOut,
+        aborted,
         durationSec: (Date.now() - startedAt) / 1000,
       });
     };

@@ -18,6 +18,8 @@ export interface PipelineContext {
   baseCommit: string;
   implementTimeoutMs: number;
   verifyTimeoutMs: number;
+  /** Never aborted unless a human explicitly stops the run from the UI. */
+  signal: AbortSignal;
 }
 
 /**
@@ -47,7 +49,8 @@ export type ImplementOutcome =
   | "needs_human"
   | "implement_timeout"
   | "implement_error"
-  | "implement_nonzero_exit";
+  | "implement_nonzero_exit"
+  | "implement_aborted";
 
 export interface ImplementResult {
   outcome: ImplementOutcome;
@@ -55,7 +58,12 @@ export interface ImplementResult {
   needsHumanReason: string | null;
 }
 
-export type VerifyOutcome = "ready_for_pr" | "needs_human" | "verify_failed" | "verify_timeout";
+export type VerifyOutcome =
+  | "ready_for_pr"
+  | "needs_human"
+  | "verify_failed"
+  | "verify_timeout"
+  | "verify_aborted";
 
 export interface VerifyResult {
   outcome: VerifyOutcome;

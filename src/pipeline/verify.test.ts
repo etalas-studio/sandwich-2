@@ -40,6 +40,7 @@ function makeContext(db: Database.Database): PipelineContext {
     baseCommit: "0000000000000000000000000000000000000000",
     implementTimeoutMs: 5000,
     verifyTimeoutMs: 5000,
+    signal: new AbortController().signal,
   };
 }
 

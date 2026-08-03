@@ -20,12 +20,17 @@ import type { PipelineContext } from "./types.js";
  * `engineOverride` exists purely for testability (see run.test.ts) — real
  * callers omit it and get the engine createEngineInvoker builds from
  * config.engineMode.
+ *
+ * `signal` lets a human stop an in-flight run from the UI. Omitted callers
+ * (including every existing test) get a signal that's never aborted, so
+ * this is purely additive.
  */
 export async function runPipeline(
   ticketKey: string,
   config: PipelineConfig,
   db: Database.Database,
   engineOverride?: EngineInvoker,
+  signal?: AbortSignal,
 ): Promise<Run> {
   const ticket = getTicketByKey(db, ticketKey);
   if (!ticket) {
@@ -66,6 +71,7 @@ export async function runPipeline(
       baseCommit: worktree.baseCommit,
       implementTimeoutMs: config.implementTimeoutMs,
       verifyTimeoutMs: config.verifyTimeoutMs,
+      signal: signal ?? new AbortController().signal,
     };
 
     const j = await judge(ctx);

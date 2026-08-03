@@ -2,9 +2,10 @@ import { createServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { extname, isAbsolute, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
-import { getTicketByKey, listTickets } from "./db/tickets.js";
+import { getTicketByKey, listTickets, deleteTicket, upsertTicket } from "./db/tickets.js";
 import { getLatestRunForTicket } from "./db/runs.js";
 import { listArtifactsForRun } from "./db/run-artifacts.js";
 import { getInstanceSettings, completeFirstRun } from "./db/settings.js";
@@ -133,6 +134,18 @@ function validateRepoPath(candidate: unknown): { ok: true; repoPath: string } | 
   return { ok: true, repoPath };
 }
 
+/** First available key of the form "<base>", "<base>-copy", "<base>-copy-2", ... */
+function uniqueTicketKey(db: import("better-sqlite3").Database, base: string): string {
+  if (!getTicketByKey(db, base)) return base;
+  let suffix = 2;
+  let candidate = `${base}-copy`;
+  while (getTicketByKey(db, candidate)) {
+    candidate = `${base}-copy-${String(suffix)}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
 /** The repo's currently checked-out branch — used as a baseBranch fallback
  * when there's no static config file to say otherwise, since a hardcoded
  * "main"/"master" guess would be wrong for plenty of real repos. */
@@ -205,8 +218,10 @@ export function startWebServer(options: WebServerOptions): void {
   // spawns a real coding agent, so at most one runPipeline call is ever in
   // flight, whichever ticket it's for. Not a real queue — sequential
   // execution across a backlog is still an unbuilt piece; this just refuses
-  // the second trigger instead of racing it.
+  // the second trigger instead of racing it. The controller lets a human
+  // stop that one in-flight run early from the UI.
   let runningTicketKey: string | null = null;
+  let runningController: AbortController | null = null;
 
   const server = createServer((req, res) => {
     void (async () => {
@@ -220,6 +235,43 @@ export function startWebServer(options: WebServerOptions): void {
           latestRun: getLatestRunForTicket(db, ticket.key),
         }));
         sendJson(res, 200, ticketsWithRuns);
+        return;
+      }
+
+      if (path === "/api/tickets" && req.method === "POST") {
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin requests are refused" });
+          return;
+        }
+        let body: unknown;
+        try {
+          body = await readJsonBody(req);
+        } catch (err) {
+          sendJson(res, 400, { error: (err as Error).message });
+          return;
+        }
+        const input = body as Partial<{
+          key: string;
+          summary: string;
+          description: string;
+          url: string | null;
+        }> | null;
+        if (
+          typeof input?.key !== "string" ||
+          input.key.trim().length === 0 ||
+          typeof input.summary !== "string" ||
+          typeof input.description !== "string"
+        ) {
+          sendJson(res, 400, { error: "key, summary, and description are required strings" });
+          return;
+        }
+        const ticket = upsertTicket(db, {
+          key: uniqueTicketKey(db, input.key.trim()),
+          summary: input.summary,
+          description: input.description,
+          url: input.url ?? null,
+        });
+        sendJson(res, 201, ticket);
         return;
       }
 
@@ -242,6 +294,10 @@ export function startWebServer(options: WebServerOptions): void {
       }
 
       if (path === "/api/settings/project" && req.method === "POST") {
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin requests are refused" });
+          return;
+        }
         let body: unknown;
         try {
           body = await readJsonBody(req);
@@ -293,16 +349,90 @@ export function startWebServer(options: WebServerOptions): void {
           return;
         }
 
+        const controller = new AbortController();
         runningTicketKey = ticketKey;
-        runPipeline(ticketKey, effectiveConfig, db)
+        runningController = controller;
+        runPipeline(ticketKey, effectiveConfig, db, undefined, controller.signal)
           .catch((err: unknown) => {
             console.error(`Pipeline run for ${ticketKey} failed:`, err);
           })
           .finally(() => {
             runningTicketKey = null;
+            runningController = null;
           });
 
         sendJson(res, 202, { status: "started", ticketKey });
+        return;
+      }
+
+      const stopMatch = req.method === "POST" ? /^\/api\/tickets\/([^/]+)\/stop$/.exec(path) : null;
+      if (stopMatch) {
+        const ticketKey = decodePathSegment(stopMatch[1] as string);
+        if (ticketKey === null) {
+          sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
+          return;
+        }
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin requests are refused" });
+          return;
+        }
+        if (runningTicketKey !== ticketKey || !runningController) {
+          sendJson(res, 409, { error: `${ticketKey} is not currently running` });
+          return;
+        }
+        runningController.abort();
+        sendJson(res, 200, { status: "stopping", ticketKey });
+        return;
+      }
+
+      const duplicateMatch =
+        req.method === "POST" ? /^\/api\/tickets\/([^/]+)\/duplicate$/.exec(path) : null;
+      if (duplicateMatch) {
+        const ticketKey = decodePathSegment(duplicateMatch[1] as string);
+        if (ticketKey === null) {
+          sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
+          return;
+        }
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin requests are refused" });
+          return;
+        }
+        const original = getTicketByKey(db, ticketKey);
+        if (!original) {
+          sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
+          return;
+        }
+        const duplicate = upsertTicket(db, {
+          key: uniqueTicketKey(db, original.key),
+          summary: original.summary,
+          description: original.description,
+          url: original.url,
+        });
+        sendJson(res, 201, duplicate);
+        return;
+      }
+
+      const ticketMatch = /^\/api\/tickets\/([^/]+)$/.exec(path);
+      if (ticketMatch && req.method === "DELETE") {
+        const ticketKey = decodePathSegment(ticketMatch[1] as string);
+        if (ticketKey === null) {
+          sendJson(res, 400, { error: "malformed percent-encoding in ticket key" });
+          return;
+        }
+        if (isCrossOriginRequest(req.headers.origin, req.headers.host)) {
+          sendJson(res, 403, { error: "cross-origin requests are refused" });
+          return;
+        }
+        if (!getTicketByKey(db, ticketKey)) {
+          sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
+          return;
+        }
+        if (runningTicketKey === ticketKey) {
+          sendJson(res, 409, { error: `${ticketKey} is currently running — stop it first` });
+          return;
+        }
+        deleteTicket(db, ticketKey);
+        sendJson(res, 200, { status: "deleted", ticketKey });
         return;
       }
 

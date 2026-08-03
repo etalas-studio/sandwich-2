@@ -41,6 +41,7 @@ async function testAlwaysReturnsAgentReady(): Promise<void> {
     baseCommit: "0000000000000000000000000000000000000000",
     implementTimeoutMs: 1000,
     verifyTimeoutMs: 1000,
+    signal: new AbortController().signal,
   };
 
   const result = await judge(ctx);
