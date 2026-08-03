@@ -53,7 +53,7 @@ function buildScanPrompt(mech: MechanicalResult): string {
   return [
     "You are analyzing a codebase. Do two things:",
     "",
-    "1. Write a concise project description (2-4 sentences) that explains what this project does, its architecture, and key characteristics. Base this on the codebase structure, not just the README.",
+    "1. Write a descriptive project overview (4-5 sentences) that explains what this project does, how it's structured, what problem it solves, and any notable architectural decisions visible in the code. Do NOT mention the tech stack — focus on purpose, architecture, and behavior. Base this on the actual source files, not just the README.",
     "",
     "2. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
     "",
