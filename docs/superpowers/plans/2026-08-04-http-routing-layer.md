@@ -934,7 +934,7 @@ git commit -m "feat: add settings and integrations route modules"
 
 **Changes:** Replace the monolithic route handler with router wiring.
 
-- [ ] **Step 1: Rewrite the request handler in `web-server.ts`**
+- [x] **Step 1: Rewrite the request handler in `web-server.ts`**
 
 Replace the current `createServer` callback body with router-based wiring:
 
@@ -1071,7 +1071,7 @@ if (isMain) {
 }
 ```
 
-- [ ] **Step 2: Remove unused imports and dead code from `web-server.ts`**
+- [x] **Step 2: Remove unused imports and dead code from `web-server.ts`**
 
 Remove these imports that are no longer used in `web-server.ts`:
 - `getInstanceSettings`, `completeFirstRun` from `./db/settings.js`
@@ -1089,18 +1089,18 @@ Also remove:
 - The `COOKIE_SECURE` constant (now only in `routes/auth.ts`)
 - The `isTrustedHost` and `originMatchesHost` functions (now in `router.ts`)
 
-- [ ] **Step 3: Remove duplicate `sendJson` import**
+- [x] **Step 3: Remove duplicate `sendJson` import**
 
 If `web-server.ts` still imports `sendJson` from both the old location and `./http-utils.js`, clean up to a single import from `./http-utils.js`.
 
-- [ ] **Step 4: Build and run all tests**
+- [x] **Step 4: Build and run all tests**
 
 Run: `npm run build && npm run test`
 Expected: All tests pass — both unit tests and the existing `web-server.test.ts` integration test.
 
 Specifically verify that `web-server.test.ts` passes — it tests auth flows, CSRF guards, Host guards, and the 404/401 behavior through the full server. All of these must produce identical responses.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/web-server.ts

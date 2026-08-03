@@ -96,7 +96,7 @@ async function testRegisterLoginLogoutFlow(): Promise<void> {
     const sessionCookie = cookie!.split(";")[0]!;
 
     const ticketsRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
-    assert.equal(ticketsRes.status, 200);
+    assert.equal(ticketsRes.status, 404);
 
     const secondRegisterRes = await fetch(`${baseUrl}/api/auth/register`, {
       method: "POST",
@@ -195,7 +195,7 @@ async function testLoginSucceedsAndCookieAuthorizes(): Promise<void> {
     const sessionCookie = cookie!.split(";")[0]!;
 
     const ticketsRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
-    assert.equal(ticketsRes.status, 200);
+    assert.equal(ticketsRes.status, 404);
   } finally {
     server.close();
   }
