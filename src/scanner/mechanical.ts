@@ -25,32 +25,65 @@ const IGNORED_DIRS = new Set([
 
 const TEST_FILE_PATTERNS = [/\.test\./, /\.spec\./, /^__tests__$/];
 
+/** Strip the test-specific suffix to get the base source name.
+ *  "foo.test.ts" → "foo", "bar.spec.js" → "bar", "baz.ts" → "baz" */
+function sourceBaseName(fileName: string): string {
+  const match = fileName.match(/^(.+?)\.(?:test|spec)\.([^.]+)$/);
+  if (match) return match[1]!;
+  const dotIdx = fileName.lastIndexOf(".");
+  return dotIdx > 0 ? fileName.slice(0, dotIdx) : fileName;
+}
+
+/** Walk the entire repo and collect the base names of all source files
+ *  that have at least one test file somewhere. */
+function buildCoveredBaseNames(repoPath: string): Set<string> {
+  const covered = new Set<string>();
+  try {
+    walk(repoPath, (filePath) => {
+      const name = basename(filePath);
+      if (isTestFile(filePath, name)) {
+        covered.add(sourceBaseName(name));
+      }
+    });
+  } catch {
+    // skip
+  }
+  return covered;
+}
+
 export function computeAreaSignalsForPaths(
   repoPath: string,
   agentAreas: AgentDefinedArea[],
 ): AreaSignal[] {
   // Count files per area by walking matching directories
+  const coveredBaseNames = buildCoveredBaseNames(repoPath);
   const areaData = agentAreas.map((area) => {
     let testCount = 0;
     let codeCount = 0;
+    let matchedCodeCount = 0;
     for (const pathPattern of area.paths) {
       const fullPath = join(repoPath, pathPattern);
       try {
         const st = statSync(fullPath);
         if (st.isDirectory()) {
-          const { testCount: tc, codeCount: cc } = countTestFiles(fullPath);
+          const { testCount: tc, codeCount: cc, matchedCodeCount: mc } = countTestFilesWithMatching(fullPath, coveredBaseNames);
           testCount += tc;
           codeCount += cc;
+          matchedCodeCount += mc;
         } else if (st.isFile()) {
           const name = basename(fullPath);
-          if (isTestFile(fullPath, name)) testCount++;
-          else if (isCodeFile(name)) codeCount++;
+          if (isTestFile(fullPath, name)) {
+            testCount++;
+          } else if (isCodeFile(name)) {
+            codeCount++;
+            if (coveredBaseNames.has(sourceBaseName(name))) matchedCodeCount++;
+          }
         }
       } catch {
         // path doesn't exist or is unreadable — skip
       }
     }
-    return { ...area, testCount, codeCount, files: testCount + codeCount };
+    return { ...area, testCount, codeCount, matchedCodeCount, files: testCount + codeCount };
   });
 
   // Compute churn per area using git log
@@ -84,7 +117,7 @@ export function computeAreaSignalsForPaths(
     area: a.name,
     files: a.files,
     testFileCount: a.testCount,
-    testToCodeRatio: a.codeCount > 0 ? a.testCount / a.codeCount : 0,
+    testToCodeRatio: a.codeCount > 0 ? a.matchedCodeCount / a.codeCount : 0,
     churnScore: maxChurn > 0 ? (churnCounts[a.name] ?? 0) / maxChurn : 0,
     note: a.note,
   }));
@@ -178,9 +211,12 @@ function computeAreaSignals(repoPath: string): AreaSignal[] {
 
   const maxChurn = Math.max(1, ...Object.values(churnCounts));
 
+  // Build global index of source-file base names that have a test anywhere
+  const coveredBaseNames = buildCoveredBaseNames(repoPath);
+
   const areaSignals: AreaSignal[] = [];
   for (const area of topLevel.sort()) {
-    const { testCount, codeCount } = countTestFiles(join(repoPath, area));
+    const { testCount, codeCount, matchedCodeCount } = countTestFilesWithMatching(join(repoPath, area), coveredBaseNames);
     const files = testCount + codeCount;
     if (files === 0) continue;
     const churnRaw = churnCounts[area] ?? 0;
@@ -188,7 +224,7 @@ function computeAreaSignals(repoPath: string): AreaSignal[] {
       area,
       files,
       testFileCount: testCount,
-      testToCodeRatio: codeCount > 0 ? testCount / codeCount : 0,
+      testToCodeRatio: codeCount > 0 ? matchedCodeCount / codeCount : 0,
       churnScore: maxChurn > 0 ? churnRaw / maxChurn : 0,
       note: "",
     });
@@ -212,6 +248,26 @@ function countTestFiles(dir: string): { testCount: number; codeCount: number } {
     // skip unreadable dirs
   }
   return { testCount, codeCount };
+}
+
+function countTestFilesWithMatching(dir: string, coveredBaseNames: Set<string>): { testCount: number; codeCount: number; matchedCodeCount: number } {
+  let testCount = 0;
+  let codeCount = 0;
+  let matchedCodeCount = 0;
+  try {
+    walk(dir, (filePath) => {
+      const name = basename(filePath);
+      if (isTestFile(filePath, name)) {
+        testCount++;
+      } else if (isCodeFile(name)) {
+        codeCount++;
+        if (coveredBaseNames.has(sourceBaseName(name))) matchedCodeCount++;
+      }
+    });
+  } catch {
+    // skip unreadable dirs
+  }
+  return { testCount, codeCount, matchedCodeCount };
 }
 
 function walk(dir: string, fn: (path: string) => void): void {

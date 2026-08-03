@@ -178,6 +178,49 @@ function testExcludesIgnoredDirectories(): void {
   console.log("PASS: testExcludesIgnoredDirectories");
 }
 
+function testMatchesTestsByNameAcrossAreas(): void {
+  const dir = makeFixture();
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "app", scripts: {} }),
+  );
+
+  // src area: source files with NO colocated tests
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src", "service.ts"), "// code");
+  writeFileSync(join(dir, "src", "handler.ts"), "// code");
+  writeFileSync(join(dir, "src", "orphan.ts"), "// code — no test anywhere");
+
+  // shared-tests area: tests live here, NOT colocated with source
+  mkdirSync(join(dir, "shared-tests"), { recursive: true });
+  writeFileSync(join(dir, "shared-tests", "service.test.ts"), "// test");
+  writeFileSync(join(dir, "shared-tests", "handler.test.ts"), "// test");
+
+  // Also a test file with no matching source anywhere
+  writeFileSync(join(dir, "shared-tests", "ghost.test.ts"), "// test");
+
+  commitAll(dir, "init");
+
+  const result = scanMechanical(dir);
+
+  // src: 3 code files. service.ts → matched by service.test.ts in shared-tests.
+  // handler.ts → matched by handler.test.ts in shared-tests.
+  // orphan.ts → no match anywhere. ratio = 2/3 ≈ 0.667
+  const src = result.areaSignals.find((a) => a.area === "src");
+  assert.ok(src);
+  assert.equal(src!.files, 3);
+  assert.ok(src!.testToCodeRatio > 0.66 && src!.testToCodeRatio < 0.67,
+    `expected ~0.667, got ${src!.testToCodeRatio}`);
+
+  // shared-tests: 0 code files, 3 test files → ratio 0
+  const sharedTests = result.areaSignals.find((a) => a.area === "shared-tests");
+  assert.ok(sharedTests);
+  assert.equal(sharedTests!.files, 3);
+  assert.equal(sharedTests!.testToCodeRatio, 0.0);
+
+  console.log("PASS: testMatchesTestsByNameAcrossAreas");
+}
+
 function testHandlesMissingPackageJson(): void {
   const dir = makeFixture();
   // Create a dummy file so git commit succeeds
@@ -199,6 +242,7 @@ function main(): void {
   testTestCommandNullWhenMissing();
   testComputesAreaSignals();
   testExcludesIgnoredDirectories();
+  testMatchesTestsByNameAcrossAreas();
   testHandlesMissingPackageJson();
 }
 

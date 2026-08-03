@@ -117,7 +117,7 @@ export default function ReadinessCard({ scan }: Props) {
                   <thead>
                     <tr className="border-b border-white/[0.04] bg-[#0a0a0a]/50">
                       <th className="px-6 py-3 text-xs text-white/40 font-normal w-[35%]">Area</th>
-                      <th className="px-6 py-3 text-xs text-white/40 font-normal whitespace-nowrap">Test-to-Code</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal whitespace-nowrap" title="Source files with a known test file, matched by filename anywhere in the project">Tested Files</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal">Churn</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal w-[30%]">Risk</th>
                     </tr>
