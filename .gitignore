@@ -12,4 +12,3 @@ web/dist/
 *.tsbuildinfo
 web/vite.config.js
 web/vite.config.d.ts
-config/auth.json

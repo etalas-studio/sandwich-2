@@ -41,6 +41,10 @@ export function listCredentialNames(db: Database.Database): string[] {
   return rows.map((row) => row.name);
 }
 
+export function deleteCredential(db: Database.Database, name: string): void {
+  db.prepare("DELETE FROM credentials WHERE name = ?").run(name);
+}
+
 interface RawRow {
   name: string;
   value: string;

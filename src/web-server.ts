@@ -365,7 +365,7 @@ export function startWebServer(options: WebServerOptions): Server {
   }
 
   // Pi SDK integration layer — loads custom providers from config/models.json.
-  initIntegrations().catch((err) => {
+  initIntegrations(db).catch((err) => {
     console.error("Integrations init failed:", err);
   });
 
@@ -726,7 +726,7 @@ export function startWebServer(options: WebServerOptions): Server {
           return;
         }
 
-        const connectMatch = method === "POST" ? /^\/api\/integrations\/(opencode|opencode-go)\/connect$/.exec(path) : null;
+        const connectMatch = method === "POST" ? /^\/api\/integrations\/(opencode-go)\/connect$/.exec(path) : null;
         if (connectMatch) {
           const providerId = connectMatch[1] as string;
           let body: unknown;
@@ -750,7 +750,7 @@ export function startWebServer(options: WebServerOptions): Server {
           return;
         }
 
-        const disconnectMatch = method === "POST" ? /^\/api\/integrations\/(opencode|opencode-go)\/disconnect$/.exec(path) : null;
+        const disconnectMatch = method === "POST" ? /^\/api\/integrations\/(opencode-go)\/disconnect$/.exec(path) : null;
         if (disconnectMatch) {
           const providerId = disconnectMatch[1] as string;
           try {

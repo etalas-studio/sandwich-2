@@ -1,36 +1,33 @@
+import type Database from "better-sqlite3";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { createDbCredentialStore } from "./db-credential-store.js";
+import { upsertCredential, deleteCredential } from "../db/credentials.js";
 
 /**
  * Pi SDK integration layer.
  *
- * OpenCode ("opencode") and OpenAI Codex ("openai-codex") are BUILT-IN
+ * OpenCode Go ("opencode-go") and OpenAI Codex ("openai-codex") are BUILT-IN
  * providers in Pi.  No models.json required — ModelRuntime.create() picks
  * them up automatically from the shipped provider catalog.
  *
- * - opencode / opencode-go:  API key auth (OPENCODE_API_KEY env var or runtime key).
- * - openai-codex:             OAuth-only (ChatGPT Plus/Pro subscription via /login).
+ * - opencode-go:   API key auth (OPENCODE_API_KEY env var or runtime key).
+ * - openai-codex:  OAuth-only (ChatGPT Plus/Pro subscription via /login).
  *
- * IMPORTANT: Uses project-local config/auth.json, NOT the host machine's
- * ~/.pi/agent/auth.json.  The server starts with no pre-existing credentials
- * — all keys come from the web UI at runtime.
+ * Credentials are single-sourced in the app DB's `credentials` table (see
+ * db-credential-store.ts) — no auth.json file, project-local or otherwise.
  */
 
-const AUTH_PATH = "config/auth.json";
-
 let modelRuntime: Awaited<ReturnType<typeof ModelRuntime.create>> | null = null;
+let dbRef: Database.Database | null = null;
 
-export async function initIntegrations(): Promise<void> {
+export async function initIntegrations(db: Database.Database): Promise<void> {
+  dbRef = db;
   modelRuntime = await ModelRuntime.create({
-    authPath: AUTH_PATH,
+    credentials: createDbCredentialStore(db),
     modelsPath: null,
   });
   const providerIds = modelRuntime.getProviders().map((p) => p.id);
-  console.log(
-    `Integrations: loaded ${providerIds.length} providers (${providerIds.join(", ")})`,
-    existsSync(AUTH_PATH) ? "(with project auth)" : "(clean state)",
-  );
+  console.log(`Integrations: loaded ${providerIds.length} providers (${providerIds.join(", ")})`);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -46,38 +43,11 @@ export interface IntegrationStatus {
   error?: string;
 }
 
-const PROVIDER_META: Record<string, { name: string; modelNames: Array<{ id: string; name: string }> }> = {
-  opencode: {
-    name: "OpenCode Zen",
-    modelNames: [
-      { id: "kimi-k2.6", name: "Kimi K2.6" },
-      { id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5" },
-      { id: "claude-opus-4-5", name: "Claude Opus 4.5" },
-      { id: "gpt-5.1", name: "GPT-5.1" },
-    ],
-  },
-  "opencode-go": {
-    name: "OpenCode Go",
-    modelNames: [
-      { id: "kimi-k2.6", name: "Kimi K2.6" },
-      { id: "kimi-k2.7-code", name: "Kimi K2.7 Code" },
-      { id: "kimi-k3", name: "Kimi K3" },
-      { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro" },
-      { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash" },
-      { id: "qwen3.7-max", name: "Qwen3.7 Max" },
-      { id: "minimax-m3", name: "MiniMax-M3" },
-      { id: "grok-4.5", name: "Grok 4.5" },
-    ],
-  },
-  "openai-codex": {
-    name: "OpenAI Codex",
-    modelNames: [
-      { id: "gpt-5.5", name: "GPT-5.5" },
-      { id: "gpt-5.1", name: "GPT-5.1" },
-      { id: "gpt-5-codex", name: "GPT-5 Codex" },
-      { id: "gpt-5-mini", name: "GPT-5 Mini" },
-    ],
-  },
+// Display name only — model lists come from Pi's live provider catalog
+// (modelRuntime.getModels), never hardcoded here.
+const PROVIDER_META: Record<string, { name: string }> = {
+  "opencode-go": { name: "OpenCode Go" },
+  "openai-codex": { name: "OpenAI Codex" },
 };
 
 export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
@@ -127,53 +97,30 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
 }
 
 // ────────────────────────────────────────────────────────────
-// Persist API keys to config/auth.json so they survive restarts.
-// ────────────────────────────────────────────────────────────
-
-function readAuthFile(): Record<string, unknown> {
-  if (!existsSync(AUTH_PATH)) return {};
-  try {
-    return JSON.parse(readFileSync(AUTH_PATH, "utf-8")) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
-
-function writeAuthFile(data: Record<string, unknown>): void {
-  mkdirSync(dirname(AUTH_PATH), { recursive: true });
-  writeFileSync(AUTH_PATH, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
-}
-
-// ────────────────────────────────────────────────────────────
-// Connect / Disconnect
+// Connect / Disconnect — writes go straight through the DB-backed
+// CredentialStore (db-credential-store.ts, same `credentials` table);
+// ModelRuntime.checkAuth() reads the store live, no separate cache to sync.
 // ────────────────────────────────────────────────────────────
 
 export async function connectWithApiKey(providerId: string, apiKey: string): Promise<{ ok: boolean; message: string }> {
-  if (!modelRuntime) {
+  if (!modelRuntime || !dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
   }
 
-  if (providerId !== "opencode" && providerId !== "opencode-go") {
+  if (providerId !== "opencode-go") {
     return { ok: false, message: `${providerId} does not support API key auth — use OAuth instead` };
   }
 
   try {
-    // Both opencode and opencode-go share OPENCODE_API_KEY — set it on both.
-    await modelRuntime.setRuntimeApiKey("opencode", apiKey);
-    await modelRuntime.setRuntimeApiKey("opencode-go", apiKey);
-
-    // Persist to config/auth.json so it survives server restarts.
-    const auth = readAuthFile();
-    auth["opencode"] = { type: "api_key", key: apiKey };
-    auth["opencode-go"] = { type: "api_key", key: apiKey };
-    writeAuthFile(auth);
+    upsertCredential(dbRef, providerId, JSON.stringify({ type: "api_key", key: apiKey }));
 
     const authCheck = await modelRuntime.checkAuth(providerId);
 
     if (authCheck !== undefined) {
-      return { ok: true, message: `Connected to ${providerId === "opencode" ? "OpenCode Zen" : "OpenCode Go"}` };
+      return { ok: true, message: "Connected to OpenCode Go" };
     }
 
+    deleteCredential(dbRef, providerId);
     return { ok: false, message: "authentication failed — check your API key" };
   } catch (err) {
     return {
@@ -184,25 +131,16 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
 }
 
 export async function disconnectApiKey(providerId: string): Promise<{ ok: boolean; message: string }> {
-  if (!modelRuntime) {
+  if (!dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
   }
 
-  if (providerId !== "opencode" && providerId !== "opencode-go") {
+  if (providerId !== "opencode-go") {
     return { ok: false, message: `${providerId} uses OAuth — disconnect via Pi CLI /logout` };
   }
 
   try {
-    // Clear both since they share the same key.
-    await modelRuntime.removeRuntimeApiKey("opencode");
-    await modelRuntime.removeRuntimeApiKey("opencode-go");
-
-    // Persist to config/auth.json.
-    const auth = readAuthFile();
-    delete auth["opencode"];
-    delete auth["opencode-go"];
-    writeAuthFile(auth);
-
+    deleteCredential(dbRef, providerId);
     return { ok: true, message: "Disconnected" };
   } catch (err) {
     return {
