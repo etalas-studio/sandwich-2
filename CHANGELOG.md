@@ -5,6 +5,7 @@ Append-only. One entry per completed implementation task (not per phase, not on 
 Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 
 - 2026-08-04: [frontend-tanstack-query-auth] | @riaenriala - extracted auth API layer, converted useAuth to TanStack Query (useQuery + useMutation), made LoginForm/SetupForm fully dumb (error + isPending as props), added 30 vitest tests across api layer, hook, and forms
+- 2026-08-04: [frontend-tanstack-query-integrations] | @riaenriala - extracted integrations API layer from types.ts into api/integrations.ts, created useIntegrations hook (useQuery + imperative connect/disconnect), rewrote Integrations component to use hook, removed manual useState/useEffect fetching, added 14 vitest tests
 
 - 2026-08-02: frontend-restart | @riaenriala - Stripped readiness scan feature (11 files deleted, 13 edited) and ticket pipeline (27 files deleted, 10 edited), leaving only static UI shells and the Pi SDK integration/engine layer intact.
 
