@@ -4,6 +4,10 @@ Append-only. One entry per completed implementation task (not per phase, not on 
 
 Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 
+- 2026-08-04: [settings-screen] | @potensio - Added Settings screen with Blocklist, Credentials, and Account sections (web/src/components/Settings.tsx, web/src/components/BlocklistSection.tsx, web/src/components/CredentialsSection.tsx, web/src/components/AccountSection.tsx)
+- 2026-08-04: [settings-screen] | @potensio - Added reusable Modal component for dialog boxes (web/src/components/Modal.tsx)
+- 2026-08-04: [settings-screen] | @potensio - Updated Sidebar and App.tsx to support navigation between Overview and Settings
+
 - 2026-08-03: [engine-invocation-layer] | @potensio - PoC comparing headless (`claude -p`) vs interactive PTY Claude Code invocation; selected headless (poc/README.md)
 - 2026-08-03: [engine-invocation-layer] | @potensio - Defined the EngineInvoker interface and result types (src/engine/types.ts)
 - 2026-08-03: [engine-invocation-layer] | @potensio - Implemented ClaudeCodeInvoker for headless claude -p invocation (src/engine/claude-code.ts, src/engine/proc.ts)
@@ -36,3 +40,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [ticket-board-and-readiness] | @potensio - Added List/Board toggle in web/src/Shell.tsx, now the app's entry point
 - 2026-08-03: [visibility-ui-foundation] | @potensio - Rebuilt the frontend onto docs/design-system.html's full token set (sidebar nav, stats cards, kanban board, ticket detail overlay), with mock-data fallback when the API is unreachable (web/src/App.tsx, web/src/mockData.ts)
 - 2026-08-03: [visibility-ui-foundation] | @potensio - Added retroactive spec and plan docs reconciling the ticket-list-view/ticket-board-and-readiness/design-system-rebuild work against docs/roadmap.md's Visibility checkbox (docs/superpowers/specs/2026-08-03-visibility-ui-foundation-design.md, docs/superpowers/plans/2026-08-03-visibility-ui-foundation.md)
+- 2026-08-03: [auth] | @potensio - Session cookie parse/build helpers (src/auth/cookie.ts, src/auth/cookie.test.ts)
