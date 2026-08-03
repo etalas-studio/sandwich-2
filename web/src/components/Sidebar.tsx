@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 
-type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
+type NavItem = 'overview' | 'tickets' | 'pi-poc' | 'users' | 'settings'
 
 const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean; to: string }[] = [
   { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
   { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
+  { id: 'pi-poc', label: 'Pi POC', icon: 'solar:widget-3-linear', to: '/pi-poc' },
   { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
   { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
 ]
@@ -24,6 +25,7 @@ export default function Sidebar({ username, onLogout, onPurge }: SidebarProps) {
     const path = location.pathname
     if (path === '/overview') return 'overview'
     if (path.startsWith('/tickets')) return 'tickets'
+    if (path === '/pi-poc') return 'pi-poc'
     if (path === '/settings') return 'settings'
     return 'overview'
   }

@@ -38,6 +38,12 @@ import {
 import type { PipelineConfig } from "./pipeline/config.js";
 import { runPipeline } from "./pipeline/run.js";
 import { runReadinessScan } from "./pipeline/readiness-scan.js";
+import {
+  initIntegrations,
+  getIntegrationStatus,
+  connectWithApiKey,
+  disconnectApiKey,
+} from "./pipeline/integrations.js";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -357,6 +363,11 @@ export function startWebServer(options: WebServerOptions): Server {
       `Pipeline: no config at ${pipelineConfigPath} — POST /api/tickets/:key/run will return 503 until one exists (copy config/instance.example.json).`,
     );
   }
+
+  // Pi SDK integration layer — loads custom providers from config/models.json.
+  initIntegrations().catch((err) => {
+    console.error("Integrations init failed:", err);
+  });
 
   // Global (process-wide) single-run guard: every run costs real money and
   // spawns a real coding agent, so at most one runPipeline call is ever in
@@ -701,6 +712,53 @@ export function startWebServer(options: WebServerOptions): Server {
           }
           deleteTicket(db, ticketKey);
           sendJson(res, 200, { status: "deleted", ticketKey });
+          return;
+        }
+
+        // --- Integrations (Pi SDK provider management) ---
+        if (method === "GET" && path === "/api/integrations") {
+          try {
+            const status = await getIntegrationStatus();
+            sendJson(res, 200, status);
+          } catch (err) {
+            sendCaughtError(res, err, "integrations list");
+          }
+          return;
+        }
+
+        const connectMatch = method === "POST" ? /^\/api\/integrations\/(opencode|opencode-go)\/connect$/.exec(path) : null;
+        if (connectMatch) {
+          const providerId = connectMatch[1] as string;
+          let body: unknown;
+          try {
+            body = await readJsonBody(req);
+          } catch (err) {
+            sendCaughtError(res, err, "integration connect");
+            return;
+          }
+          const apiKey = (body as Record<string, unknown> | null)?.["apiKey"];
+          if (typeof apiKey !== "string" || apiKey.trim().length === 0) {
+            sendJson(res, 400, { error: "apiKey is required" });
+            return;
+          }
+          try {
+            const result = await connectWithApiKey(providerId, apiKey.trim());
+            sendJson(res, result.ok ? 200 : 400, result);
+          } catch (err) {
+            sendCaughtError(res, err, "integration connect");
+          }
+          return;
+        }
+
+        const disconnectMatch = method === "POST" ? /^\/api\/integrations\/(opencode|opencode-go)\/disconnect$/.exec(path) : null;
+        if (disconnectMatch) {
+          const providerId = disconnectMatch[1] as string;
+          try {
+            const result = await disconnectApiKey(providerId);
+            sendJson(res, result.ok ? 200 : 400, result);
+          } catch (err) {
+            sendCaughtError(res, err, "integration disconnect");
+          }
           return;
         }
 
