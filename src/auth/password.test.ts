@@ -25,11 +25,19 @@ function testVerifyRejectsMalformedStoredHash(): void {
   console.log("PASS: testVerifyRejectsMalformedStoredHash");
 }
 
+function testVerifyRejectsEmptyDerivedKey(): void {
+  // Malformed hash with valid salt but empty derived-key segment
+  const malformedHash = "scrypt$aabbccddaabbccddaabbccddaabbccdd$";
+  assert.equal(verifyPassword("anything", malformedHash), false);
+  console.log("PASS: testVerifyRejectsEmptyDerivedKey");
+}
+
 function main(): void {
   testVerifyAcceptsCorrectPassword();
   testVerifyRejectsWrongPassword();
   testHashesOfSamePasswordDiffer();
   testVerifyRejectsMalformedStoredHash();
+  testVerifyRejectsEmptyDerivedKey();
 }
 
 main();
