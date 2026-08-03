@@ -5,6 +5,7 @@ import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
 import { getTicketByKey, listTickets } from "./db/tickets.js";
 import { getLatestRunForTicket } from "./db/runs.js";
+import { listArtifactsForRun } from "./db/run-artifacts.js";
 import { loadPipelineConfig } from "./pipeline/config.js";
 import { runPipeline } from "./pipeline/run.js";
 
@@ -73,6 +74,15 @@ export function startWebServer(options: WebServerOptions): void {
         latestRun: getLatestRunForTicket(db, ticket.key),
       }));
       sendJson(res, 200, ticketsWithRuns);
+      return;
+    }
+
+    const artifactsMatch =
+      req.method === "GET" ? /^\/api\/tickets\/([^/]+)\/artifacts$/.exec(path) : null;
+    if (artifactsMatch) {
+      const ticketKey = decodeURIComponent(artifactsMatch[1] as string);
+      const run = getLatestRunForTicket(db, ticketKey);
+      sendJson(res, 200, run ? listArtifactsForRun(db, run.id) : []);
       return;
     }
 

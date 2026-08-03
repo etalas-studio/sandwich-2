@@ -1,4 +1,6 @@
+import { useRunArtifacts } from '../types'
 import type { Ticket, PipelineStage, NeedsHumanCategory } from '../types'
+import TranscriptView from './TranscriptView'
 
 interface TicketDetailProps {
   ticket: Ticket
@@ -53,6 +55,9 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
 }
 
 export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
+  const hasRun = ticket.status !== 'backlog'
+  const { artifacts } = useRunArtifacts(ticket.key, hasRun)
+
   return (
     <>
       {/* Backdrop */}
@@ -128,6 +133,14 @@ export default function TicketDetail({ ticket, onClose }: TicketDetailProps) {
               })}
             </div>
           </div>
+
+          {/* Transcript */}
+          {hasRun && (
+            <div className="mb-8">
+              <div className="section-label">Transcript</div>
+              <TranscriptView artifacts={artifacts} />
+            </div>
+          )}
 
           {/* Blocked reason */}
           {ticket.status === 'blocked' && ticket.needsHumanCategory && ticket.needsHumanReason && (

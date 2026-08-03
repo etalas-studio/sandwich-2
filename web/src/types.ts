@@ -212,6 +212,64 @@ export async function runTicket(key: string): Promise<RunTicketResult> {
   }
 }
 
+// One row from run_artifacts (src/db/run-artifacts.ts) — a raw text blob
+// captured by a pipeline stage (transcript, diff, test output).
+export type RunArtifactKind =
+  | 'judge_prompt'
+  | 'judge_transcript'
+  | 'implement_transcript'
+  | 'diff_patch'
+  | 'verify_output'
+
+export interface RunArtifact {
+  id: string
+  runId: string
+  kind: RunArtifactKind
+  content: string
+  createdAt: string
+}
+
+// Polled while the ticket detail panel is open, same stand-in-for-SSE
+// reasoning as useTickets above — the transcript view is the closest thing
+// to "watching the agent work" until real live push exists.
+export function useRunArtifacts(ticketKey: string, active: boolean) {
+  const [artifacts, setArtifacts] = useState<RunArtifact[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!active) return
+
+    let cancelled = false
+
+    const load = () => {
+      fetch(`/api/tickets/${encodeURIComponent(ticketKey)}/artifacts`)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          return res.json() as Promise<RunArtifact[]>
+        })
+        .then(data => {
+          if (!cancelled) {
+            setArtifacts(data)
+            setError(null)
+          }
+        })
+        .catch(e => {
+          if (!cancelled) setError(e instanceof Error ? e.message : String(e))
+        })
+    }
+
+    load()
+    const interval = setInterval(load, POLL_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [ticketKey, active])
+
+  return { artifacts, error }
+}
+
 // Compute stats from tickets
 export function computeStats(tickets: Ticket[]): Stats {
   const done = tickets.filter(t => t.status === 'done')
