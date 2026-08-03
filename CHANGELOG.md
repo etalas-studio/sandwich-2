@@ -41,3 +41,4 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-03: [pipeline-shape] | @potensio - Added the run_artifacts table and repository module for storing per-run transcripts/diffs/test output (src/db/migrations/0002_run_artifacts.ts, src/db/run-artifacts.ts)
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Judge stage, stubbed to always return agent-ready until the readiness-scan piece exists (src/pipeline/judge.ts)
 - 2026-08-03: [pipeline-shape] | @potensio - Added the Implement stage: real agent invocation, diff-time blocklist enforcement, and branch commit (src/pipeline/implement.ts)
+- 2026-08-03: [pipeline-shape] | @potensio - Added the Verify stage: readiness-scan test command lookup and exit-code-only verification (src/pipeline/verify.ts)

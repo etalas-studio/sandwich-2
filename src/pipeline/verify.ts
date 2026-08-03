@@ -1,0 +1,65 @@
+import { exec } from "../proc.js";
+import { getLatestReadinessScan } from "../db/readiness-scans.js";
+import { insertRunArtifact } from "../db/run-artifacts.js";
+import type { PipelineContext, VerifyResult } from "./types.js";
+
+/**
+ * Runs the readiness scan's recorded test command as a plain child process
+ * — never through EngineInvoker, since this is a shell command, not an
+ * agent call. Exit code only, per the Phase 1 spec's "Verify: exit-code
+ * only" architecture decision. The missing-test-command check below is
+ * normally Judge's job (see judge.ts) but lives here while Judge is
+ * stubbed — see the design doc's "Outcome model" section.
+ */
+export async function verify(ctx: PipelineContext): Promise<VerifyResult> {
+  const scan = getLatestReadinessScan(ctx.db);
+  const testCommand = scan?.testCommand?.trim() ?? "";
+
+  if (testCommand.length === 0) {
+    return {
+      outcome: "needs_human",
+      needsHumanCategory: "weak_verification",
+      needsHumanReason: "no readiness scan has recorded a test command yet",
+    };
+  }
+
+  const parts = testCommand.split(/\s+/);
+  const bin = parts[0];
+  if (bin === undefined) {
+    return {
+      outcome: "needs_human",
+      needsHumanCategory: "weak_verification",
+      needsHumanReason: "recorded test command is empty",
+    };
+  }
+  const args = parts.slice(1);
+
+  const result = await exec(bin, args, {
+    cwd: ctx.worktreePath,
+    timeoutMs: ctx.verifyTimeoutMs,
+  });
+
+  insertRunArtifact(ctx.db, {
+    runId: ctx.runId,
+    kind: "verify_output",
+    content: `${result.stdout}\n--- stderr ---\n${result.stderr}`,
+  });
+
+  if (result.timedOut) {
+    return {
+      outcome: "verify_timeout",
+      needsHumanCategory: null,
+      needsHumanReason: `test command exceeded its ${String(ctx.verifyTimeoutMs / 1000)}s timeout`,
+    };
+  }
+
+  if (result.exitCode === 0) {
+    return { outcome: "ready_for_pr", needsHumanCategory: null, needsHumanReason: null };
+  }
+
+  return {
+    outcome: "verify_failed",
+    needsHumanCategory: null,
+    needsHumanReason: `test command exited with code ${String(result.exitCode)}`,
+  };
+}
