@@ -9,6 +9,7 @@ export interface PipelineConfig {
   engineMode: "headless" | "pty";
   implementTimeoutMs: number;
   verifyTimeoutMs: number;
+  scanTimeoutMs: number;
 }
 
 const REQUIRED_STRING_FIELDS = ["repoPath", "worktreeRoot", "branchPrefix", "baseBranch"] as const;
@@ -16,6 +17,7 @@ const REQUIRED_STRING_FIELDS = ["repoPath", "worktreeRoot", "branchPrefix", "bas
 export const DEFAULT_ENGINE_MODE = "pty";
 export const DEFAULT_IMPLEMENT_TIMEOUT_MS = 20 * 60 * 1000;
 export const DEFAULT_VERIFY_TIMEOUT_MS = 30 * 60 * 1000;
+export const DEFAULT_SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 export const DEFAULT_WORKTREE_ROOT = ".work/worktrees";
 export const DEFAULT_BRANCH_PREFIX = "agent/";
 
@@ -88,6 +90,7 @@ export function loadPipelineConfig(configPath: string): PipelineConfig {
 
   const rawImplementTimeoutMs = raw["implementTimeoutMs"];
   const rawVerifyTimeoutMs = raw["verifyTimeoutMs"];
+  const rawScanTimeoutMs = raw["scanTimeoutMs"];
 
   return {
     repoPath: abs(raw["repoPath"] as string),
@@ -99,5 +102,6 @@ export function loadPipelineConfig(configPath: string): PipelineConfig {
       typeof rawImplementTimeoutMs === "number" ? rawImplementTimeoutMs : DEFAULT_IMPLEMENT_TIMEOUT_MS,
     verifyTimeoutMs:
       typeof rawVerifyTimeoutMs === "number" ? rawVerifyTimeoutMs : DEFAULT_VERIFY_TIMEOUT_MS,
+    scanTimeoutMs: typeof rawScanTimeoutMs === "number" ? rawScanTimeoutMs : DEFAULT_SCAN_TIMEOUT_MS,
   };
 }

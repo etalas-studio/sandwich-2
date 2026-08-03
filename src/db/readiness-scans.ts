@@ -9,6 +9,14 @@ export interface AreaSignal {
   churnScore: number;
 }
 
+export type RecommendationSeverity = "high" | "medium" | "low";
+
+export interface ReadinessRecommendation {
+  id: string;
+  severity: RecommendationSeverity;
+  message: string;
+}
+
 export interface ReadinessScan {
   id: string;
   startedAt: string;
@@ -16,14 +24,19 @@ export interface ReadinessScan {
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;
+  recommendations: ReadinessRecommendation[] | null;
+  /** Agent-written 2-3 sentence description of what the codebase actually is/does. */
+  codebaseSummary: string | null;
+  /** Agent-written assessment of whether the repo already has an established, agent-friendly workflow (docs, conventions, CI, testing discipline) or lacks one. */
+  agenticFlowSummary: string | null;
   status: ReadinessScanStatus;
 }
 
 /**
- * area_signals is stored as a single JSON blob per scan rather than a
- * normalized child table — the product spec doesn't call for querying
- * signal trends across scans, so a table with no relational query against
- * it yet would be normalization nobody uses.
+ * area_signals/recommendations are stored as JSON blobs per scan rather
+ * than normalized child tables — the product spec doesn't call for
+ * querying signal trends across scans, so a table with no relational query
+ * against it yet would be normalization nobody uses.
  */
 export function startReadinessScan(db: Database.Database, startedAt: string): ReadinessScan {
   const id = randomUUID();
@@ -39,6 +52,9 @@ export interface CompleteReadinessScanInput {
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;
+  recommendations: ReadinessRecommendation[] | null;
+  codebaseSummary: string | null;
+  agenticFlowSummary: string | null;
   status: "completed" | "failed";
 }
 
@@ -57,6 +73,9 @@ export function completeReadinessScan(
        tech_stack = @techStack,
        test_command = @testCommand,
        area_signals = @areaSignals,
+       recommendations = @recommendations,
+       codebase_summary = @codebaseSummary,
+       agentic_flow_summary = @agenticFlowSummary,
        status = @status
      WHERE id = @id`,
   ).run({
@@ -65,6 +84,9 @@ export function completeReadinessScan(
     techStack: input.techStack,
     testCommand: input.testCommand,
     areaSignals: input.areaSignals ? JSON.stringify(input.areaSignals) : null,
+    recommendations: input.recommendations ? JSON.stringify(input.recommendations) : null,
+    codebaseSummary: input.codebaseSummary,
+    agenticFlowSummary: input.agenticFlowSummary,
     status: input.status,
   });
   return getReadinessScanById(db, id)!;
@@ -91,6 +113,9 @@ interface RawRow {
   tech_stack: string | null;
   test_command: string | null;
   area_signals: string | null;
+  recommendations: string | null;
+  codebase_summary: string | null;
+  agentic_flow_summary: string | null;
   status: string;
 }
 
@@ -102,6 +127,11 @@ function mapRow(row: RawRow): ReadinessScan {
     techStack: row.tech_stack,
     testCommand: row.test_command,
     areaSignals: row.area_signals ? (JSON.parse(row.area_signals) as AreaSignal[]) : null,
+    recommendations: row.recommendations
+      ? (JSON.parse(row.recommendations) as ReadinessRecommendation[])
+      : null,
+    codebaseSummary: row.codebase_summary,
+    agenticFlowSummary: row.agentic_flow_summary,
     status: row.status as ReadinessScanStatus,
   };
 }

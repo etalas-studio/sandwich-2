@@ -1,14 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
-import { useTickets, runTicket, stopTicket, duplicateTicket, deleteTicket, createTicket, computeStats } from './types'
+import { useQueryClient } from '@tanstack/react-query'
+import { Toaster, toast } from 'sonner'
+import {
+  useTickets,
+  TICKETS_QUERY_KEY,
+  runTicket,
+  stopTicket,
+  duplicateTicket,
+  deleteTicket,
+  createTicket,
+  computeStats,
+  fetchProjectSettings,
+  useLatestReadinessScan,
+  READINESS_SCAN_QUERY_KEY,
+  triggerReadinessScan,
+  purgeDatabase,
+} from './types'
 import type { Ticket } from './types'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
+import ReadinessCard from './components/ReadinessCard'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
 import mockData from './mockData'
 
+// Quick Add: a one-click seed of a known real ticket for demoing/testing,
+// rather than a full ticket-creation form. createTicket auto-suffixes the
+// key if RR-7338 is already taken, so clicking repeatedly just adds more.
 const QUICK_ADD_TICKET = {
   key: 'RR-7338',
   url: 'https://runchise.atlassian.net/browse/RR-7338',
@@ -18,6 +38,36 @@ const QUICK_ADD_TICKET = {
 }
 
 function OverviewPage() {
+  const queryClient = useQueryClient()
+  const [repoPath, setRepoPath] = useState<string | null>(null)
+  const { scan, isLoading: scanLoading } = useLatestReadinessScan()
+  const notifiedFailedScanId = useRef<string | null>(null)
+
+  useEffect(() => {
+    fetchProjectSettings()
+      .then((settings) => setRepoPath(settings.repoPath))
+      .catch(() => {
+        /* Overview just shows the "not configured" state if this fails. */
+      })
+  }, [])
+
+  useEffect(() => {
+    if (scan?.status === 'failed' && notifiedFailedScanId.current !== scan.id) {
+      notifiedFailedScanId.current = scan.id
+      toast.error('Readiness scan failed — try again.')
+    }
+  }, [scan])
+
+  const handleRunScan = () => {
+    triggerReadinessScan().then((result) => {
+      if (!result.ok) {
+        toast.error(`Could not start scan: ${result.message}`)
+        return
+      }
+      queryClient.invalidateQueries({ queryKey: READINESS_SCAN_QUERY_KEY })
+    })
+  }
+
   return (
     <div className="h-full overflow-y-auto hide-scrollbar p-6">
       {/* Header */}
@@ -28,21 +78,23 @@ function OverviewPage() {
           </h1>
         </div>
         <p className="text-sm text-white/50 font-light">
-          High-level dashboard coming soon.
+          How AI-ready this project is, at a glance.
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="ds-card-outer">
-        <div className="ds-card-inner p-8 text-center">
-          <p className="text-white/50 font-light">Coming soon</p>
-        </div>
-      </div>
+      <ReadinessCard
+        scan={scan}
+        loading={scanLoading}
+        repoConfigured={repoPath !== null}
+        scanning={scan?.status === 'running'}
+        onScan={handleRunScan}
+      />
     </div>
   )
 }
 
 function TicketsPage() {
+  const queryClient = useQueryClient()
   const { tickets, error } = useTickets()
   const [searchParams, setSearchParams] = useSearchParams()
   const [startingKeys, setStartingKeys] = useState<Set<string>>(new Set())
@@ -71,6 +123,7 @@ function TicketsPage() {
     runTicket(key)
       .then((result) => {
         if (!result.ok) setRunError(`Could not start ${key}: ${result.message}`)
+        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
       })
       .finally(() => {
         setStartingKeys((prev) => {
@@ -87,6 +140,7 @@ function TicketsPage() {
     stopTicket(key)
       .then((result) => {
         if (!result.ok) setRunError(`Could not stop ${key}: ${result.message}`)
+        queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
       })
       .finally(() => {
         setStoppingKeys((prev) => {
@@ -101,6 +155,7 @@ function TicketsPage() {
     setRunError(null)
     duplicateTicket(key).then((result) => {
       if (!result.ok) setRunError(`Could not duplicate ${key}: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
     })
   }
 
@@ -109,6 +164,7 @@ function TicketsPage() {
     setRunError(null)
     deleteTicket(key).then((result) => {
       if (!result.ok) setRunError(`Could not delete ${key}: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
     })
   }
 
@@ -116,6 +172,7 @@ function TicketsPage() {
     setRunError(null)
     createTicket(QUICK_ADD_TICKET).then((result) => {
       if (!result.ok) setRunError(`Could not add ticket: ${result.message}`)
+      queryClient.invalidateQueries({ queryKey: TICKETS_QUERY_KEY })
     })
   }
 
@@ -205,8 +262,20 @@ interface AppProps {
 }
 
 function AppLayout({ username, onLogout }: AppProps) {
+  const handlePurge = () => {
+    if (!window.confirm('Delete EVERYTHING from the database (users, tickets, runs, settings, blocklist)? This cannot be undone.')) return
+    purgeDatabase().then((result) => {
+      if (!result.ok) {
+        toast.error(`Could not purge: ${result.message}`)
+        return
+      }
+      window.location.reload()
+    })
+  }
+
   return (
     <div className="ds-bg min-h-screen text-white antialiased">
+      <Toaster theme="dark" position="top-right" />
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div
           className="absolute -top-[30%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-white/5 blur-[100px]"
@@ -220,7 +289,7 @@ function AppLayout({ username, onLogout }: AppProps) {
 
       <div className="ds-card-outer min-h-screen">
         <div className="ds-card-inner flex min-h-screen">
-          <Sidebar username={username} onLogout={onLogout} />
+          <Sidebar username={username} onLogout={onLogout} onPurge={handlePurge} />
 
           <div className="ds-noise" />
 

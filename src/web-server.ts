@@ -8,6 +8,8 @@ import { getTicketByKey, listTickets, deleteTicket, upsertTicket } from "./db/ti
 import { getLatestRunForTicket } from "./db/runs.js";
 import { listArtifactsForRun } from "./db/run-artifacts.js";
 import { getInstanceSettings, completeFirstRun } from "./db/settings.js";
+import { getLatestReadinessScan } from "./db/readiness-scans.js";
+import { purgeAllData } from "./db/purge.js";
 import { getUserById } from "./db/users.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import {
@@ -29,11 +31,13 @@ import {
   DEFAULT_ENGINE_MODE,
   DEFAULT_IMPLEMENT_TIMEOUT_MS,
   DEFAULT_VERIFY_TIMEOUT_MS,
+  DEFAULT_SCAN_TIMEOUT_MS,
   DEFAULT_WORKTREE_ROOT,
   DEFAULT_BRANCH_PREFIX,
 } from "./pipeline/config.js";
 import type { PipelineConfig } from "./pipeline/config.js";
 import { runPipeline } from "./pipeline/run.js";
+import { runReadinessScan } from "./pipeline/readiness-scan.js";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -327,6 +331,7 @@ function resolveEffectiveConfig(
     engineMode: DEFAULT_ENGINE_MODE,
     implementTimeoutMs: DEFAULT_IMPLEMENT_TIMEOUT_MS,
     verifyTimeoutMs: DEFAULT_VERIFY_TIMEOUT_MS,
+    scanTimeoutMs: DEFAULT_SCAN_TIMEOUT_MS,
   };
 }
 
@@ -361,6 +366,10 @@ export function startWebServer(options: WebServerOptions): Server {
   // stop that one in-flight run early from the UI.
   let runningTicketKey: string | null = null;
   let runningController: AbortController | null = null;
+  // A readiness scan needs the same real shell access to the repo (via a
+  // worktree) that a ticket run does, so it shares the same "only one thing
+  // running at a time" rule rather than getting its own independent guard.
+  let scanRunning = false;
 
   const server = createServer((req, res) => {
     // One wrapper around the entire handler body. Any unexpected throw from
@@ -538,6 +547,53 @@ export function startWebServer(options: WebServerOptions): Server {
           return;
         }
 
+        // TEMPORARY dev-only route — see src/db/purge.ts.
+        if (method === "POST" && path === "/api/dev/purge") {
+          if (runningTicketKey !== null || scanRunning) {
+            sendJson(res, 409, { error: "a run or scan is in flight — stop it before purging" });
+            return;
+          }
+          purgeAllData(db);
+          sendJson(res, 200, { status: "purged" });
+          return;
+        }
+
+        if (method === "GET" && path === "/api/readiness-scans/latest") {
+          sendJson(res, 200, getLatestReadinessScan(db));
+          return;
+        }
+
+        if (method === "POST" && path === "/api/readiness-scans/run") {
+          const effectiveConfig = resolveEffectiveConfig(pipelineConfig, getInstanceSettings(db).repoPath);
+          if (!effectiveConfig) {
+            sendJson(res, 503, {
+              error: "no project folder configured yet — set one in Settings",
+            });
+            return;
+          }
+          if (runningTicketKey !== null || scanRunning) {
+            sendJson(res, 409, {
+              error:
+                runningTicketKey !== null
+                  ? `a ticket run (${runningTicketKey}) is already in flight — only one runs at a time`
+                  : "a readiness scan is already running",
+            });
+            return;
+          }
+
+          scanRunning = true;
+          runReadinessScan(effectiveConfig, db)
+            .catch((err: unknown) => {
+              console.error("Readiness scan failed:", err);
+            })
+            .finally(() => {
+              scanRunning = false;
+            });
+
+          sendJson(res, 202, { status: "started" });
+          return;
+        }
+
         const runMatch = method === "POST" ? /^\/api\/tickets\/([^/]+)\/run$/.exec(path) : null;
         if (runMatch) {
           const ticketKey = decodePathSegment(runMatch[1] as string);
@@ -561,12 +617,14 @@ export function startWebServer(options: WebServerOptions): Server {
             sendJson(res, 404, { error: `no ticket found with key "${ticketKey}"` });
             return;
           }
-          if (runningTicketKey !== null) {
+          if (runningTicketKey !== null || scanRunning) {
             sendJson(res, 409, {
               error:
                 runningTicketKey === ticketKey
                   ? `${ticketKey} is already running`
-                  : `another run (${runningTicketKey}) is already in flight — only one runs at a time`,
+                  : scanRunning
+                    ? "a readiness scan is already in flight — only one runs at a time"
+                    : `another run (${runningTicketKey}) is already in flight — only one runs at a time`,
             });
             return;
           }
