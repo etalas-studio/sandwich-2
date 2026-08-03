@@ -10,6 +10,8 @@ import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
+import { registerScanRoutes } from "./routes/scans.js";
+import { createScanRunner } from "./scanner/run-scan.js";
 
 export interface WebServerOptions {
   dbPath: string;
@@ -56,6 +58,17 @@ export function startWebServer(options: WebServerOptions): Server {
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerSettingsRoutes(router, db);
   registerIntegrationRoutes(router);
+
+  // Scan runner: uses a stub invoker until Pi SDK ModelRuntime is wired in
+  const scanRunner = createScanRunner(db, {
+    async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+      // TODO: replace with Pi SDK ModelRuntime when ModelContext is wired
+      // For now, the mechanical scan runs without an agent pass
+      console.log("Agent pass not yet wired (prompt:", opts.prompt.slice(0, 80) + "...)");
+      return { outcome: "ok" as const, finalText: "[]" };
+    },
+  });
+  registerScanRoutes(router, db, scanRunner);
 
   const server = createServer((req, res) => {
     void (async () => {

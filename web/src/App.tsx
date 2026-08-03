@@ -8,56 +8,113 @@ import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
 import Integrations from './components/Integrations'
+import { Link } from 'react-router-dom'
+import ModelSelector from './components/ModelSelector'
+import { ModelProvider } from './contexts/ModelContext'
+import ReadinessCard from './components/ReadinessCard'
+import { useProjectSettings } from './hooks/useProjectSettings'
+import { useScan } from './hooks/useScan'
 import mockData from './mockData'
 
 function OverviewPage() {
+  const { repoPath } = useProjectSettings()
+  const { latestScan, isRunning, isTriggering, isAborting, trigger, abort } = useScan()
+
+  const hasProject = !!repoPath
+  const hasScan = latestScan && latestScan.status !== 'running'
+
+  const scanButtonLabel = isRunning
+    ? 'Scanning…'
+    : hasScan
+      ? 'Re-scan'
+      : 'Project Scan'
+
   return (
     <div className="h-full overflow-y-auto hide-scrollbar p-6">
       {/* ── Header ── */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
-            Overview
-          </h1>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+              Overview
+            </h1>
+          </div>
+          <p className="text-sm text-white/50 font-light">
+            How AI-ready this project is, at a glance.
+          </p>
         </div>
-        <p className="text-sm text-white/50 font-light">
-          How AI-ready this project is, at a glance.
-        </p>
+        <div className="flex items-center gap-3 shrink-0">
+          <ModelSelector />
+          {isRunning ? (
+            <button
+              type="button"
+              onClick={abort}
+              disabled={isAborting}
+              className="px-4 py-2 text-xs text-[#ff8a8a] bg-[#ff8a8a]/5 hover:bg-[#ff8a8a]/10 rounded-lg border border-[#ff8a8a]/20 transition-colors font-light flex items-center gap-2"
+            >
+              <iconify-icon icon="solar:stop-circle-linear" width="14" />
+              {isAborting ? 'Aborting…' : 'Abort'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={trigger}
+              disabled={!hasProject || isTriggering}
+              className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
+              title={!hasProject ? 'Set a project path in Settings first' : undefined}
+            >
+              <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+              <span
+                className="relative flex items-center gap-2 px-5 py-1.5 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+                style={{
+                  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6), 0 4px 8px -2px rgba(0,0,0,0.6)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                <iconify-icon icon="solar:radar-linear" width="14" className="text-white/80" />
+                {isTriggering ? 'Starting…' : scanButtonLabel}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* ── Project Description ── */}
-      <div className="section-label">Project</div>
-      <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
-        <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
-          <div className="absolute inset-0 ds-noise pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333] ds-shadow-card shrink-0 mt-0.5">
-                <iconify-icon icon="solar:code-linear" width="20" className="text-white/80" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-lg font-normal tracking-tight text-white ds-text-shadow mb-2">
-                  Runchise Agent Pipeline
-                </h2>
-                <p className="text-sm text-white/60 font-light leading-relaxed">
-                  An orchestrator that runs AI coding agents per ticket in isolated git worktrees.
-                  Each attempt goes through a{' '}
-                  <span className="italic font-light text-white/80" style={{ fontFamily: "'Playfair Display', serif" }}>Judge → Implement → Verify</span>
-                  {' '}pipeline with guardrails that block risky changes before a single line of code is touched.
-                  Built to produce evidence — not impressions — for the Runchise pilot.
-                </p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>TypeScript</span>
-                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>Node.js 22+</span>
-                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>React + Vite</span>
-                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>SQLite</span>
-                  <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] text-white/60 text-[10px] font-normal tracking-wide border border-white/[0.05]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>Pi SDK</span>
-                </div>
-              </div>
+      {/* ── No project configured ── */}
+      {!hasProject && (
+        <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+          <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10 text-center py-6">
+              <p className="text-sm text-white/50 font-light mb-3">
+                No project configured yet.
+              </p>
+              <Link
+                to="/settings"
+                className="text-xs text-white/60 hover:text-white transition-colors underline underline-offset-4"
+              >
+                Set a repository path in Settings →
+              </Link>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Scan results ── */}
+      {hasScan && <ReadinessCard scan={latestScan!} />}
+
+      {/* ── Project not yet scanned ── */}
+      {hasProject && !hasScan && !isRunning && (
+        <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+          <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+            <div className="absolute inset-0 ds-noise pointer-events-none" />
+            <div className="relative z-10 text-center py-6">
+              <p className="text-sm text-white/50 font-light">
+                Run a project scan to analyze the codebase and detect its tech stack, test coverage, and churn per area.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Agentic Readiness + Recommendations ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -392,6 +449,7 @@ interface AppProps {
 
 function AppLayout({ username, onLogout }: AppProps) {
   return (
+    <ModelProvider>
     <div className="ds-bg min-h-screen text-white antialiased">
       <Toaster theme="dark" position="top-right" />
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
@@ -423,6 +481,7 @@ function AppLayout({ username, onLogout }: AppProps) {
         </div>
       </div>
     </div>
+    </ModelProvider>
   )
 }
 
