@@ -29,6 +29,9 @@ function testCompletingAScanRoundTripsAreaSignals(): void {
     techStack: "Node/TypeScript",
     testCommand: "npm test",
     areaSignals: [{ pathPrefix: "src/db", testToCodeRatio: 0.8, churnScore: 0.2 }],
+    recommendations: [{ id: "missing-agent-context", severity: "high", message: "No CLAUDE.md or AGENTS.md found." }],
+    codebaseSummary: "A TypeScript CLI that seeds demo tickets.",
+    agenticFlowSummary: "No CLAUDE.md/AGENTS.md found and no CI — little established workflow for an agent to follow.",
     status: "completed",
   });
 
@@ -37,6 +40,14 @@ function testCompletingAScanRoundTripsAreaSignals(): void {
   assert.deepEqual(completed.areaSignals, [
     { pathPrefix: "src/db", testToCodeRatio: 0.8, churnScore: 0.2 },
   ]);
+  assert.deepEqual(completed.recommendations, [
+    { id: "missing-agent-context", severity: "high", message: "No CLAUDE.md or AGENTS.md found." },
+  ]);
+  assert.equal(completed.codebaseSummary, "A TypeScript CLI that seeds demo tickets.");
+  assert.equal(
+    completed.agenticFlowSummary,
+    "No CLAUDE.md/AGENTS.md found and no CI — little established workflow for an agent to follow.",
+  );
 
   const fetched = getReadinessScanById(db, scan.id);
   assert.deepEqual(fetched, completed);
@@ -63,6 +74,9 @@ function testCompleteReadinessScanThrowsForUnknownId(): void {
         techStack: "Node/TypeScript",
         testCommand: "npm test",
         areaSignals: null,
+        recommendations: null,
+        codebaseSummary: null,
+        agenticFlowSummary: null,
         status: "completed",
       }),
     /No readiness scan found with id does-not-exist/,
@@ -79,6 +93,9 @@ function testCompletingAFailedScanAllowsNullFields(): void {
     techStack: null,
     testCommand: null,
     areaSignals: null,
+    recommendations: null,
+    codebaseSummary: null,
+    agenticFlowSummary: null,
     status: "failed",
   });
 
@@ -86,6 +103,9 @@ function testCompletingAFailedScanAllowsNullFields(): void {
   assert.equal(completed.techStack, null);
   assert.equal(completed.testCommand, null);
   assert.equal(completed.areaSignals, null);
+  assert.equal(completed.recommendations, null);
+  assert.equal(completed.codebaseSummary, null);
+  assert.equal(completed.agenticFlowSummary, null);
   console.log("PASS: testCompletingAFailedScanAllowsNullFields");
 }
 

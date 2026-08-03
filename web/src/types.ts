@@ -295,6 +295,12 @@ export interface AreaSignal {
   churnScore: number
 }
 
+export interface ReadinessRecommendation {
+  id: string
+  severity: 'high' | 'medium' | 'low'
+  message: string
+}
+
 export interface ReadinessScan {
   id: string
   startedAt: string
@@ -302,6 +308,9 @@ export interface ReadinessScan {
   techStack: string | null
   testCommand: string | null
   areaSignals: AreaSignal[] | null
+  recommendations: ReadinessRecommendation[] | null
+  codebaseSummary: string | null
+  agenticFlowSummary: string | null
   status: 'running' | 'completed' | 'failed'
 }
 

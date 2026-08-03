@@ -51,6 +51,9 @@ function seedTestCommand(db: Database.Database, testCommand: string): void {
     techStack: "node",
     testCommand,
     areaSignals: null,
+    recommendations: null,
+    codebaseSummary: null,
+    agenticFlowSummary: null,
     status: "completed",
   });
 }

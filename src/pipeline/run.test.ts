@@ -68,6 +68,9 @@ async function testFullRunReachesReadyForPr(): Promise<void> {
     techStack: "node",
     testCommand: "true",
     areaSignals: null,
+    recommendations: null,
+    codebaseSummary: null,
+    agenticFlowSummary: null,
     status: "completed",
   });
 
@@ -105,6 +108,9 @@ async function testReachesVerifyFailedWhenTestsRed(): Promise<void> {
     techStack: "node",
     testCommand: "false",
     areaSignals: null,
+    recommendations: null,
+    codebaseSummary: null,
+    agenticFlowSummary: null,
     status: "completed",
   });
 

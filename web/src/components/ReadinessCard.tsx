@@ -8,6 +8,12 @@ interface ReadinessCardProps {
   onScan: () => void
 }
 
+const SEVERITY_STYLES: Record<string, { icon: string; text: string; border: string }> = {
+  high: { icon: 'solar:danger-triangle-bold', text: 'text-[#ff8a8a]', border: 'border-[#ff8a8a]/20' },
+  medium: { icon: 'solar:danger-circle-linear', text: 'text-[#f59e0b]', border: 'border-[#f59e0b]/20' },
+  low: { icon: 'solar:info-circle-linear', text: 'text-white/60', border: 'border-white/[0.08]' },
+}
+
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diffMs / 60000)
@@ -74,6 +80,48 @@ export default function ReadinessCard({ scan, loading, repoConfigured, scanning,
 
           {scan && scan.status === 'completed' && !scanning && (
             <>
+              {scan.codebaseSummary && (
+                <div className="mb-4">
+                  <p className="text-[11px] text-white/40 font-normal tracking-wide uppercase mb-1.5">
+                    What this is
+                  </p>
+                  <p className="text-xs text-white/70 font-light leading-relaxed">{scan.codebaseSummary}</p>
+                </div>
+              )}
+
+              {scan.agenticFlowSummary && (
+                <div className="mb-4">
+                  <p className="text-[11px] text-white/40 font-normal tracking-wide uppercase mb-1.5">
+                    Existing agentic workflow
+                  </p>
+                  <p className="text-xs text-white/70 font-light leading-relaxed">{scan.agenticFlowSummary}</p>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <p className="text-[11px] text-white/40 font-normal tracking-wide uppercase mb-1.5">
+                  Recommendations
+                </p>
+                {scan.recommendations && scan.recommendations.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {scan.recommendations.map((rec) => {
+                      const style = SEVERITY_STYLES[rec.severity] ?? SEVERITY_STYLES.low
+                      return (
+                        <div
+                          key={rec.id}
+                          className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${style.border} bg-white/[0.02]`}
+                        >
+                          <iconify-icon icon={style.icon} width="14" className={`mt-0.5 shrink-0 ${style.text}`} />
+                          <p className="text-xs text-white/70 font-light leading-relaxed">{rec.message}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-white/40 font-light">Nothing stood out as risky in this scan.</p>
+                )}
+              </div>
+
               <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
                 <span className="text-sm text-white/50 font-light">Tech stack</span>
                 <span className="text-sm text-white/80 font-light">{scan.techStack ?? 'unknown'}</span>
@@ -93,6 +141,9 @@ export default function ReadinessCard({ scan, loading, repoConfigured, scanning,
 
               {scan.areaSignals && scan.areaSignals.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-white/[0.04]">
+                  <p className="text-[11px] text-white/40 font-normal tracking-wide uppercase mb-2">
+                    Per-area signals
+                  </p>
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-[11px] text-white/40 font-normal tracking-wide uppercase">

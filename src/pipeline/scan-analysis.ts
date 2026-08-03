@@ -54,6 +54,44 @@ export function detectTestCommand(repoPath: string): string | null {
   return command && command.trim().length > 0 ? command : null;
 }
 
+const AGENT_CONTEXT_FILES = ["CLAUDE.md", "AGENTS.md", ".cursorrules", ".cursor/rules"];
+
+/** Returns the first agent-context file found at the repo root, or null if none exist. */
+export function detectAgentContextFile(repoPath: string): string | null {
+  for (const file of AGENT_CONTEXT_FILES) {
+    if (existsSync(join(repoPath, file))) return file;
+  }
+  return null;
+}
+
+const SUBSTANTIAL_README_MIN_CHARS = 200;
+
+/** A README that exists but is only a couple of lines carries little real context. */
+export function detectReadme(repoPath: string): { exists: boolean; substantial: boolean } {
+  const candidates = ["README.md", "README.rst", "README.txt", "README"];
+  for (const file of candidates) {
+    const path = join(repoPath, file);
+    if (!existsSync(path)) continue;
+    let contents = "";
+    try {
+      contents = readFileSync(path, "utf8");
+    } catch {
+      /* unreadable README counts as present but not substantial */
+    }
+    return { exists: true, substantial: contents.trim().length >= SUBSTANTIAL_README_MIN_CHARS };
+  }
+  return { exists: false, substantial: false };
+}
+
+const CI_CONFIG_FILES = [".gitlab-ci.yml", "Jenkinsfile", "azure-pipelines.yml", ".circleci/config.yml"];
+
+/** Coarse presence check — a workflows dir with at least one file, or a known single-file CI config. */
+export function detectCI(repoPath: string): boolean {
+  const workflowsDir = join(repoPath, ".github", "workflows");
+  if (existsSync(workflowsDir) && readdirSync(workflowsDir).length > 0) return true;
+  return CI_CONFIG_FILES.some((file) => existsSync(join(repoPath, file)));
+}
+
 const EXCLUDED_DIR_NAMES = new Set(["node_modules", "dist", "build", "out", ".work", "coverage"]);
 const TEST_FILE_PATTERN = /\.(test|spec)\.[^/]+$/;
 
