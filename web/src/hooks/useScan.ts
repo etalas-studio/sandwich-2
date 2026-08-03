@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { fetchLatestScan, triggerScan, abortScan } from "../api/scans";
+import { fetchLatestScan, triggerScan, abortScan, ScanInProgressError } from "../api/scans";
 import type { ScanResult } from "../api/scans";
 
 export function useScan() {
@@ -45,7 +45,11 @@ export function useScan() {
       }, 3000);
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Failed to start scan");
+      if (err instanceof ScanInProgressError) {
+        toast.warning(err.message);
+      } else {
+        toast.error(err instanceof Error ? err.message : "Failed to start scan");
+      }
     },
   });
 

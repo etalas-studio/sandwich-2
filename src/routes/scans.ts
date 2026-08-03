@@ -22,6 +22,12 @@ export function registerScanRoutes(
       return;
     }
 
+    // Only one scan at a time
+    if (inFlight.size > 0) {
+      sendJson(res, 409, { error: "A scan is already in progress. Wait for it to finish or abort it first." });
+      return;
+    }
+
     const scanId = randomUUID();
     startReadinessScan(db, scanId);
 

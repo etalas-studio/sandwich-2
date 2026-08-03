@@ -18,11 +18,20 @@ export interface AreaSignal {
   note: string;
 }
 
+export class ScanInProgressError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ScanInProgressError";
+  }
+}
+
 export async function triggerScan(): Promise<{ scanId: string }> {
   const res = await fetch("/api/scans/run", { method: "POST" });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(body?.error ?? `HTTP ${res.status}`);
+    const message = body?.error ?? `HTTP ${res.status}`;
+    if (res.status === 409) throw new ScanInProgressError(message);
+    throw new Error(message);
   }
   return res.json() as Promise<{ scanId: string }>;
 }

@@ -70,6 +70,26 @@ describe("scan routes", () => {
     assert.equal(res.body, "null");
   });
 
+  it("POST /api/scans/run returns 409 when a scan is already in flight", async () => {
+    // Set repo path
+    db.prepare("UPDATE instance_settings SET repo_path = ? WHERE id = 1").run("/test/repo");
+
+    const router = new Router(new Set(), 0);
+    // The runner never resolves, keeping inFlight non-empty
+    registerScanRoutes(router, db, () => new Promise(() => {}));
+
+    // First scan — should succeed
+    const res1 = mockRes();
+    await router.dispatch(mockReq("POST", "/api/scans/run"), res1);
+    assert.equal(res1.statusCode, 200);
+
+    // Second scan — should get 409
+    const res2 = mockRes();
+    await router.dispatch(mockReq("POST", "/api/scans/run"), res2);
+    assert.equal(res2.statusCode, 409);
+    assert.ok(JSON.parse(res2.body).error.includes("already in progress"));
+  });
+
   it("POST /api/scans/abort returns 404 for unknown scan", async () => {
     const router = new Router(new Set(), 0);
     registerScanRoutes(router, db, async () => {});
