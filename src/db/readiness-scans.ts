@@ -79,7 +79,6 @@ export function getLatestReadinessScan(db: Database.Database): ReadinessScan | n
   const row = db
     .prepare(
       `SELECT * FROM readiness_scans
-       WHERE status != 'running'
        ORDER BY started_at DESC, id DESC
        LIMIT 1`,
     )

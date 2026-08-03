@@ -41,10 +41,6 @@ export function useScan() {
         startedAt: new Date().toISOString(),
         completedAt: null,
       });
-      // Refetch after mechanical scan completes (it takes ~1-2s)
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["scan-latest"] });
-      }, 3000);
     },
     onError: (err) => {
       if (err instanceof ScanInProgressError) {

@@ -41,6 +41,16 @@ describe("scan routes", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
+  it("GET /api/scans/latest returns null when no scan has run", async () => {
+    const router = new Router(new Set(), 0);
+    registerScanRoutes(router, db, async () => {});
+    const res = mockRes();
+    const req = mockReq("GET", "/api/scans/latest");
+    await router.dispatch(req, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body, "null");
+  });
+
   it("POST /api/scans/run returns 503 when no repoPath configured", async () => {
     const router = new Router(new Set(), 0);
     registerScanRoutes(router, db, async () => {});
@@ -66,16 +76,6 @@ describe("scan routes", () => {
     assert.equal(typeof body.scanId, "string");
     // The runner is async, so runCalled may not be true immediately
     // We just check the response shape
-  });
-
-  it("GET /api/scans/latest returns null when no scan has run", async () => {
-    const router = new Router(new Set(), 0);
-    registerScanRoutes(router, db, async () => {});
-    const res = mockRes();
-    const req = mockReq("GET", "/api/scans/latest");
-    await router.dispatch(req, res);
-    assert.equal(res.statusCode, 200);
-    assert.equal(res.body, "null");
   });
 
   it("POST /api/scans/run returns 409 when a scan is already in flight", async () => {

@@ -81,15 +81,17 @@ function testGetLatestReadinessScanReturnsMostRecent(): void {
   console.log("PASS: testGetLatestReadinessScanReturnsMostRecent");
 }
 
-function testGetLatestReadinessScanSkipsRunningScan(): void {
+function testGetLatestReadinessScanIncludesRunningScan(): void {
   const db = openTestDb();
   startReadinessScan(db, "scan-1");
   completeReadinessScan(db, "scan-1", {
     projectName: "app", description: null, techStack: "TS", testCommand: null, areaSignals: [],
   });
+  // A newer running scan should be returned (not filtered out)
   startReadinessScan(db, "scan-2");
-  assert.equal(getLatestReadinessScan(db)!.id, "scan-1");
-  console.log("PASS: testGetLatestReadinessScanSkipsRunningScan");
+  assert.equal(getLatestReadinessScan(db)!.id, "scan-2");
+  assert.equal(getLatestReadinessScan(db)!.status, "running");
+  console.log("PASS: testGetLatestReadinessScanIncludesRunningScan");
 }
 
 function main(): void {
@@ -97,7 +99,7 @@ function main(): void {
   testCompleteReadinessScanSavesResults();
   testAbortReadinessScanMarksAborted();
   testGetLatestReadinessScanReturnsMostRecent();
-  testGetLatestReadinessScanSkipsRunningScan();
+  testGetLatestReadinessScanIncludesRunningScan();
 }
 
 main();

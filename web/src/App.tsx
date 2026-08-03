@@ -10,7 +10,7 @@ import Settings from './components/Settings'
 import Integrations from './components/Integrations'
 import { Link } from 'react-router-dom'
 import ModelSelector from './components/ModelSelector'
-import { ModelProvider } from './contexts/ModelContext'
+import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
 import { useScan } from './hooks/useScan'
@@ -19,8 +19,10 @@ import mockData from './mockData'
 function OverviewPage() {
   const { repoPath } = useProjectSettings()
   const { latestScan, isRunning, isTriggering, isAborting, trigger, abort } = useScan()
+  const { selectedModelId } = useModelContext()
 
   const hasProject = !!repoPath
+  const hasModel = !!selectedModelId
   const hasScan = latestScan && latestScan.status !== 'running'
 
   const scanButtonLabel = isRunning
@@ -59,9 +61,9 @@ function OverviewPage() {
             <button
               type="button"
               onClick={trigger}
-              disabled={!hasProject || isTriggering}
+              disabled={!hasProject || !hasModel || isTriggering}
               className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
-              title={!hasProject ? 'Set a project path in Settings first' : undefined}
+              title={!hasProject ? 'Set a project path in Settings first' : !hasModel ? 'Select a model from the dropdown' : undefined}
             >
               <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
               <span
