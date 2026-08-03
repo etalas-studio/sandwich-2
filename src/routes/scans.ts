@@ -13,9 +13,9 @@ const inFlight = new Map<string, AbortController>();
 export function registerScanRoutes(
   router: Router,
   db: Database.Database,
-  runScan: (scanId: string, repoPath: string, signal: AbortSignal) => Promise<void>,
+  runScan: (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void>,
 ): void {
-  router.post("/api/scans/run", async (_req, res) => {
+  router.post("/api/scans/run", async (req, res) => {
     const settings = getInstanceSettings(db);
     if (!settings.repoPath) {
       sendJson(res, 503, { error: "No project configured. Set a repository path in Settings first." });
@@ -28,6 +28,17 @@ export function registerScanRoutes(
       return;
     }
 
+    // Read optional modelId from body
+    let modelId: string | null = null;
+    try {
+      const body = await readJsonBody(req);
+      if (body && typeof (body as Record<string, unknown>).modelId === "string") {
+        modelId = (body as Record<string, unknown>).modelId as string;
+      }
+    } catch {
+      // body is optional
+    }
+
     const scanId = randomUUID();
     startReadinessScan(db, scanId);
 
@@ -35,7 +46,7 @@ export function registerScanRoutes(
     inFlight.set(scanId, controller);
 
     // Fire-and-forget the scan
-    runScan(scanId, settings.repoPath, controller.signal)
+    runScan(scanId, settings.repoPath, controller.signal, modelId)
       .catch((err) => {
         console.error("Scan failed:", err);
       })

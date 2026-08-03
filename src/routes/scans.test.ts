@@ -7,8 +7,17 @@ import { openDb } from "../db/connection.js";
 import { Router } from "../router.js";
 import { registerScanRoutes } from "./scans.js";
 
-function mockReq(method: string, path: string, headers: Record<string, string> = {}): any {
-  return { method, url: path, headers: { host: "127.0.0.1:0", ...headers }, on: () => {} };
+function mockReq(method: string, path: string, headers: Record<string, string> = {}, body?: string): any {
+  const req: any = {
+    method,
+    url: path,
+    headers: { host: "127.0.0.1:0", ...headers },
+    on: (ev: string, fn: Function) => {
+      if (ev === "data" && body) fn(Buffer.from(body));
+      if (ev === "end") fn();
+    },
+  };
+  return req;
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
@@ -36,7 +45,8 @@ describe("scan routes", () => {
     const router = new Router(new Set(), 0);
     registerScanRoutes(router, db, async () => {});
     const res = mockRes();
-    await router.dispatch(mockReq("POST", "/api/scans/run"), res);
+    const req = mockReq("POST", "/api/scans/run");
+    await router.dispatch(req, res);
     assert.equal(res.statusCode, 503);
     assert.ok(JSON.parse(res.body).error.includes("project"));
   });
@@ -47,10 +57,7 @@ describe("scan routes", () => {
 
     const router = new Router(new Set(), 0);
     // Inject a no-op run function
-    let runCalled = false;
-    registerScanRoutes(router, db, async (_scanId, _repoPath, _signal) => {
-      runCalled = true;
-    });
+    registerScanRoutes(router, db, async () => {});
     const res = mockRes();
     await router.dispatch(mockReq("POST", "/api/scans/run"), res);
     assert.equal(res.statusCode, 200);
@@ -65,7 +72,8 @@ describe("scan routes", () => {
     const router = new Router(new Set(), 0);
     registerScanRoutes(router, db, async () => {});
     const res = mockRes();
-    await router.dispatch(mockReq("GET", "/api/scans/latest"), res);
+    const req = mockReq("GET", "/api/scans/latest");
+    await router.dispatch(req, res);
     assert.equal(res.statusCode, 200);
     assert.equal(res.body, "null");
   });

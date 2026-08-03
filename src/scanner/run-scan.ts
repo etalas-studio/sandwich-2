@@ -7,17 +7,14 @@ import {
 } from "../db/readiness-scans.js";
 import { insertBlocklistEntry } from "../db/blocklist.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PiRuntime = any;
+
 export function createScanRunner(
   db: Database.Database,
-  invoker: {
-    run: (opts: {
-      prompt: string;
-      cwd: string;
-      timeoutMs: number;
-    }) => Promise<{ outcome: string; finalText: string }>;
-  },
-): (scanId: string, repoPath: string, signal: AbortSignal) => Promise<void> {
-  return async (scanId: string, repoPath: string, signal: AbortSignal) => {
+  modelRuntime: PiRuntime | null,
+): (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void> {
+  return async (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => {
     // Mechanical pass (synchronous, fast)
     let mechanical;
     try {
@@ -28,13 +25,13 @@ export function createScanRunner(
       return;
     }
 
-    // Check abort before agent pass
     if (signal.aborted) {
       abortReadinessScan(db, scanId);
       return;
     }
 
-    // Agent pass (blocklist proposals)
+    const invoker = buildInvoker(modelRuntime, modelId);
+
     const agentResult = await runAgentPass({
       repoPath,
       mechanicalResult: mechanical,
@@ -47,7 +44,6 @@ export function createScanRunner(
       return;
     }
 
-    // Insert blocklist entries from agent proposals
     for (const proposal of agentResult.blocklistProposals) {
       insertBlocklistEntry(db, {
         pattern: proposal.pattern,
@@ -57,7 +53,6 @@ export function createScanRunner(
       });
     }
 
-    // Agent description takes priority; fall back to mechanical (README/package.json)
     const description = agentResult.description ?? mechanical.description;
 
     completeReadinessScan(db, scanId, {
@@ -67,5 +62,55 @@ export function createScanRunner(
       testCommand: mechanical.testCommand,
       areaSignals: mechanical.areaSignals,
     });
+  };
+}
+
+function buildInvoker(
+  modelRuntime: PiRuntime | null,
+  modelId: string | null,
+): {
+  run: (opts: { prompt: string; cwd: string; timeoutMs: number }) => Promise<{ outcome: string; finalText: string }>;
+} {
+  let model: unknown = undefined;
+  if (modelRuntime && modelId) {
+    const slashIdx = modelId.indexOf("/");
+    if (slashIdx > 0) {
+      const provider = modelId.slice(0, slashIdx);
+      const id = modelId.slice(slashIdx + 1);
+      model = (modelRuntime as any).getModel(provider, id);
+    }
+  }
+
+  if (!modelRuntime || !model) {
+    return {
+      async run(opts) {
+        console.log("Agent pass not yet wired (prompt:", opts.prompt.slice(0, 80) + "...)");
+        return {
+          outcome: "ok" as const,
+          finalText: JSON.stringify({ description: null, blocklist: [] }),
+        };
+      },
+    };
+  }
+
+  return {
+    async run(opts) {
+      try {
+        const msg = await (modelRuntime as any).completeSimple(
+          model!,
+          { messages: [{ role: "user", content: opts.prompt }] },
+          { timeoutMs: opts.timeoutMs },
+        );
+        const text = (msg.text as Array<{ text: string }> | undefined)?.map((t) => t.text).join("\n") ?? "";
+        return { outcome: "ok" as const, finalText: text };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (message.includes("timeout") || message.includes("aborted") || message.includes("abort")) {
+          return { outcome: "timeout" as const, finalText: "" };
+        }
+        console.error("Agent pass engine error:", message);
+        return { outcome: "process_error" as const, finalText: "" };
+      }
+    },
   };
 }

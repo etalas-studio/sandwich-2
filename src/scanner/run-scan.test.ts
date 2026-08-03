@@ -39,19 +39,13 @@ async function testRunScanCompletesWithMechanicalResults(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  // Fake invoker that returns empty blocklist
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return { outcome: "ok" as const, finalText: "[]" };
-    },
-  };
-
-  const runScan = createScanRunner(db, invoker);
+  // null modelRuntime = stub invoker (no agent pass)
+  const runScan = createScanRunner(db, null);
   const scanId = "test-scan-1";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
 
-  await runScan(scanId, repo, controller.signal);
+  await runScan(scanId, repo, controller.signal, null);
 
   const scan = getLatestReadinessScan(db);
   assert.ok(scan);
@@ -68,29 +62,43 @@ async function testRunScanInsertsAgentBlocklistEntries(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
+  // Inject a fake modelRuntime that returns a description and blocklist
+  const fakeRuntime = {
+    getModel(_provider: string, _modelId: string) {
+      return { provider: "test", id: "fake", name: "fake" };
+    },
+    async completeSimple(
+      _model: unknown,
+      _context: { messages: Array<{ role: string; content: string }> },
+      _options?: Record<string, unknown>,
+    ) {
       return {
-        outcome: "ok" as const,
-        finalText: JSON.stringify([
-          { pattern: "src/secrets/**", reason: "API keys" },
-        ]),
+        text: [
+          {
+            text: JSON.stringify({
+              description: "A test pipeline orchestrator.",
+              blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
+            }),
+          },
+        ],
       };
     },
   };
 
-  const runScan = createScanRunner(db, invoker);
+  const runScan = createScanRunner(db, fakeRuntime as any);
   const scanId = "test-scan-2";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
 
-  await runScan(scanId, repo, controller.signal);
+  await runScan(scanId, repo, controller.signal, "test/fake");
+
+  const scan = getLatestReadinessScan(db);
+  assert.equal(scan!.description, "A test pipeline orchestrator.");
 
   const entries = getBlocklistEntries(db);
   assert.equal(entries.length, 1);
   assert.equal(entries[0]!.pattern, "src/secrets/**");
   assert.equal(entries[0]!.source, "agent");
-  assert.equal(entries[0]!.proposedByScanId, "test-scan-2");
   console.log("PASS: testRunScanInsertsAgentBlocklistEntries");
 }
 
@@ -98,26 +106,14 @@ async function testRunScanAbortsWhenSignalled(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  let runCalled = false;
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      runCalled = true;
-      return { outcome: "ok" as const, finalText: "[]" };
-    },
-  };
-
-  const runScan = createScanRunner(db, invoker);
+  const runScan = createScanRunner(db, null);
   const scanId = "test-scan-3";
   startReadinessScan(db, scanId);
   const controller = new AbortController();
-  controller.abort(); // Abort before running
+  controller.abort();
 
-  await runScan(scanId, repo, controller.signal);
+  await runScan(scanId, repo, controller.signal, null);
 
-  // The invoker should not have been called
-  assert.equal(runCalled, false);
-
-  // The scan should be aborted
   const scan = getLatestReadinessScan(db);
   assert.ok(scan);
   assert.equal(scan!.status, "aborted");

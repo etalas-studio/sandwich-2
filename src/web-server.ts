@@ -3,7 +3,7 @@ import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
-import { initIntegrations } from "./pipeline/integrations.js";
+import { initIntegrations, getModelRuntime } from "./pipeline/integrations.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
@@ -59,20 +59,8 @@ export function startWebServer(options: WebServerOptions): Server {
   registerSettingsRoutes(router, db);
   registerIntegrationRoutes(router);
 
-  // Scan runner: uses a stub invoker until Pi SDK ModelRuntime is wired in
-  const scanRunner = createScanRunner(db, {
-    async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      // TODO: replace with Pi SDK ModelRuntime when ModelContext is wired
-      console.log("Agent pass not yet wired (prompt:", opts.prompt.slice(0, 80) + "...)");
-      return {
-        outcome: "ok" as const,
-        finalText: JSON.stringify({
-          description: null,
-          blocklist: [],
-        }),
-      };
-    },
-  });
+  // Scan runner: uses Pi SDK ModelRuntime when a model is selected, else stub
+  const scanRunner = createScanRunner(db, getModelRuntime());
   registerScanRoutes(router, db, scanRunner);
 
   const server = createServer((req, res) => {

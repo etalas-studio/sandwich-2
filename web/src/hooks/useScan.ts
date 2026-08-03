@@ -3,11 +3,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { fetchLatestScan, triggerScan, abortScan, ScanInProgressError } from "../api/scans";
 import type { ScanResult } from "../api/scans";
+import { useModelContext } from "../contexts/ModelContext";
 
 export function useScan() {
   const queryClient = useQueryClient();
   const [inFlightId, setInFlightId] = useState<string | null>(null);
   const prevStatusRef = useRef<string | undefined>(undefined);
+  const { selectedModelId } = useModelContext();
 
   const {
     data: latestScan,
@@ -24,7 +26,7 @@ export function useScan() {
   });
 
   const triggerMutation = useMutation({
-    mutationFn: triggerScan,
+    mutationFn: () => triggerScan(selectedModelId),
     onSuccess: (result) => {
       setInFlightId(result.scanId);
       // Optimistically set a running scan in cache so polling starts

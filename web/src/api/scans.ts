@@ -25,8 +25,12 @@ export class ScanInProgressError extends Error {
   }
 }
 
-export async function triggerScan(): Promise<{ scanId: string }> {
-  const res = await fetch("/api/scans/run", { method: "POST" });
+export async function triggerScan(modelId?: string | null): Promise<{ scanId: string }> {
+  const res = await fetch("/api/scans/run", {
+    method: "POST",
+    headers: modelId ? { "content-type": "application/json" } : undefined,
+    body: modelId ? JSON.stringify({ modelId }) : undefined,
+  });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
     const message = body?.error ?? `HTTP ${res.status}`;

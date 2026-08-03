@@ -20,6 +20,10 @@ import { upsertCredential, deleteCredential } from "../db/credentials.js";
 let modelRuntime: Awaited<ReturnType<typeof ModelRuntime.create>> | null = null;
 let dbRef: Database.Database | null = null;
 
+export function getModelRuntime(): Awaited<ReturnType<typeof ModelRuntime.create>> | null {
+  return modelRuntime;
+}
+
 export async function initIntegrations(db: Database.Database): Promise<void> {
   dbRef = db;
   modelRuntime = await ModelRuntime.create({
