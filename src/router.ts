@@ -82,6 +82,14 @@ export class Router {
     this.add("POST", path, handler);
   }
 
+  put(path: string, handler: RouteHandler): void {
+    this.add("PUT", path, handler);
+  }
+
+  delete(path: string, handler: RouteHandler): void {
+    this.add("DELETE", path, handler);
+  }
+
   async dispatch(req: IncomingMessage, res: ServerResponse): Promise<void> {
     try {
       // Host guard — use the socket's actual port (in case boundPort was 0 = pick-free)

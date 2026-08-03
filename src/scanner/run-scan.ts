@@ -69,6 +69,7 @@ export function createScanRunner(
       techStack: mechanical.techStack,
       testCommand: mechanical.testCommand,
       areaSignals,
+      recommendations: agentResult.recommendations,
     });
   };
 }

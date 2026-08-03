@@ -41,6 +41,7 @@ function testCompleteReadinessScanSavesResults(): void {
     techStack: "TypeScript, Node.js",
     testCommand: "npm test",
     areaSignals,
+    recommendations: [],
   });
 
   assert.equal(scan.status, "completed");
@@ -69,13 +70,13 @@ function testGetLatestReadinessScanReturnsMostRecent(): void {
 
   startReadinessScan(db, "scan-1");
   completeReadinessScan(db, "scan-1", {
-    projectName: "app1", description: null, techStack: "TypeScript", testCommand: null, areaSignals: [],
+    projectName: "app1", description: null, techStack: "TypeScript", testCommand: null, areaSignals: [], recommendations: [],
   });
   assert.equal(getLatestReadinessScan(db)!.id, "scan-1");
 
   startReadinessScan(db, "scan-2");
   completeReadinessScan(db, "scan-2", {
-    projectName: "app2", description: null, techStack: "TypeScript, React", testCommand: "npm test", areaSignals: [],
+    projectName: "app2", description: null, techStack: "TypeScript, React", testCommand: "npm test", areaSignals: [], recommendations: [],
   });
   assert.equal(getLatestReadinessScan(db)!.id, "scan-2");
   console.log("PASS: testGetLatestReadinessScanReturnsMostRecent");
@@ -85,7 +86,7 @@ function testGetLatestReadinessScanIncludesRunningScan(): void {
   const db = openTestDb();
   startReadinessScan(db, "scan-1");
   completeReadinessScan(db, "scan-1", {
-    projectName: "app", description: null, techStack: "TS", testCommand: null, areaSignals: [],
+    projectName: "app", description: null, techStack: "TS", testCommand: null, areaSignals: [], recommendations: [],
   });
   // A newer running scan should be returned (not filtered out)
   startReadinessScan(db, "scan-2");

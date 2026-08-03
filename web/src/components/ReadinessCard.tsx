@@ -179,6 +179,31 @@ export default function ReadinessCard({ scan }: Props) {
           </div>
         </div>
       )}
+
+      {/* Recommendations */}
+      {scan.recommendations && scan.recommendations.length > 0 && (
+        <div>
+          <div className="section-label">Recommendations</div>
+          <div className="ds-card-outer ds-shadow-elevated mb-8" style={{ height: 'auto' }}>
+            <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
+              <div className="absolute inset-0 ds-noise pointer-events-none" />
+              <div className="relative z-10 flex flex-col gap-3">
+                {scan.recommendations.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-[10px] text-white/40 font-mono">{i + 1}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm text-white/80 font-normal mb-1">{rec.title}</h3>
+                      <p className="text-xs text-white/50 font-light leading-relaxed">{rec.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -12,6 +12,7 @@ CREATE TABLE readiness_scans (
   tech_stack TEXT,
   test_command TEXT,
   area_signals TEXT,
+  recommendations TEXT,
   started_at TEXT NOT NULL,
   completed_at TEXT
 );

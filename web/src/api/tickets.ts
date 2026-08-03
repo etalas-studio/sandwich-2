@@ -34,3 +34,32 @@ export async function fetchTickets(): Promise<Ticket[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<Ticket[]>
 }
+
+export interface UpdateTicketData {
+  description?: string
+  url?: string | null
+  status?: string
+}
+
+export async function updateTicket(key: string, data: UpdateTicketData): Promise<Ticket> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `HTTP ${res.status}`)
+  }
+  return res.json() as Promise<Ticket>
+}
+
+export async function deleteTicket(key: string): Promise<void> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `HTTP ${res.status}`)
+  }
+}

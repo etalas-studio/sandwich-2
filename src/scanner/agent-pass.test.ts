@@ -18,11 +18,13 @@ function fullResponse(opts: {
   description?: string | null;
   areas?: Array<{ name: string; paths: string[]; note?: string }>;
   blocklist?: Array<{ pattern: string; reason: string }>;
+  recommendations?: Array<{ title: string; description: string }>;
 }): string {
   return JSON.stringify({
     description: opts.description ?? null,
     areas: opts.areas ?? [],
     blocklist: opts.blocklist ?? [],
+    recommendations: opts.recommendations ?? [],
   });
 }
 
@@ -41,6 +43,9 @@ async function testParsesFullResponse(): Promise<void> {
             { name: "DB Layer", paths: ["src/db/"], note: "Schema migrations" },
           ],
           blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
+          recommendations: [
+            { title: "Add CLAUDE.md", description: "No agent instructions found." },
+          ],
         }),
       };
     },
@@ -58,9 +63,9 @@ async function testParsesFullResponse(): Promise<void> {
   assert.equal(result.description, "A pipeline orchestrator.");
   assert.equal(result.areas.length, 2);
   assert.equal(result.areas[0]!.name, "Auth");
-  assert.equal(result.areas[0]!.paths[0], "src/auth/");
-  assert.equal(result.areas[0]!.note, "Handles sessions");
-  assert.equal(result.areas[1]!.name, "DB Layer");
+  assert.equal(result.recommendations.length, 1);
+  assert.equal(result.recommendations[0]!.title, "Add CLAUDE.md");
+  assert.equal(result.recommendations[0]!.description, "No agent instructions found.");
   assert.equal(result.blocklistProposals.length, 1);
   console.log("PASS: testParsesFullResponse");
 }

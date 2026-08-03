@@ -63,3 +63,33 @@ export function listTickets(db: Database.Database): Ticket[] {
   const rows = db.prepare("SELECT * FROM tickets ORDER BY created_at DESC, rowid DESC").all() as Record<string, unknown>[];
   return rows.map(normaliseTicket);
 }
+
+export interface UpdateTicketInput {
+  description?: string;
+  url?: string | null;
+  status?: string;
+}
+
+export function updateTicket(db: Database.Database, key: string, input: UpdateTicketInput): Ticket | null {
+  const existing = db.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  if (input.description !== undefined) {
+    db.prepare("UPDATE tickets SET description = ?, updated_at = ? WHERE key = ?").run(input.description, now, key);
+  }
+  if (input.url !== undefined) {
+    db.prepare("UPDATE tickets SET url = ?, updated_at = ? WHERE key = ?").run(input.url, now, key);
+  }
+  if (input.status !== undefined) {
+    db.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE key = ?").run(input.status, now, key);
+  }
+
+  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
+  return normaliseTicket(row);
+}
+
+export function deleteTicket(db: Database.Database, key: string): boolean {
+  const result = db.prepare("DELETE FROM tickets WHERE key = ?").run(key);
+  return result.changes > 0;
+}

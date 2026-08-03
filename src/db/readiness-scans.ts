@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import type { Recommendation } from "../scanner/agent-pass.js";
 
 export interface ReadinessScan {
   id: string;
@@ -8,6 +9,7 @@ export interface ReadinessScan {
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;
+  recommendations: Recommendation[] | null;
   startedAt: string;
   completedAt: string | null;
 }
@@ -27,6 +29,7 @@ export interface ScanResults {
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[];
+  recommendations: Recommendation[];
 }
 
 export function startReadinessScan(db: Database.Database, id: string): ReadinessScan {
@@ -52,6 +55,7 @@ export function completeReadinessScan(
          tech_stack = ?,
          test_command = ?,
          area_signals = ?,
+         recommendations = ?,
          completed_at = ?
      WHERE id = ?`,
   ).run(
@@ -60,6 +64,7 @@ export function completeReadinessScan(
     results.techStack,
     results.testCommand,
     JSON.stringify(results.areaSignals),
+    JSON.stringify(results.recommendations),
     now,
     id,
   );
@@ -107,6 +112,7 @@ interface RawRow {
   tech_stack: string | null;
   test_command: string | null;
   area_signals: string | null;
+  recommendations: string | null;
   started_at: string;
   completed_at: string | null;
 }
@@ -121,11 +127,11 @@ function mapRow(db: Database.Database, id: string): ReadinessScan | null {
 function toScan(row: RawRow): ReadinessScan {
   let areaSignals: AreaSignal[] | null = null;
   if (row.area_signals) {
-    try {
-      areaSignals = JSON.parse(row.area_signals) as AreaSignal[];
-    } catch {
-      areaSignals = null;
-    }
+    try { areaSignals = JSON.parse(row.area_signals) as AreaSignal[]; } catch { areaSignals = null; }
+  }
+  let recommendations: Recommendation[] | null = null;
+  if (row.recommendations) {
+    try { recommendations = JSON.parse(row.recommendations) as Recommendation[]; } catch { recommendations = null; }
   }
   return {
     id: row.id,
@@ -135,6 +141,7 @@ function toScan(row: RawRow): ReadinessScan {
     techStack: row.tech_stack,
     testCommand: row.test_command,
     areaSignals,
+    recommendations,
     startedAt: row.started_at,
     completedAt: row.completed_at,
   };

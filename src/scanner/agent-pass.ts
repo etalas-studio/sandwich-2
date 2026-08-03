@@ -19,9 +19,15 @@ export interface AgentDefinedArea {
   note: string;
 }
 
+export interface Recommendation {
+  title: string;
+  description: string;
+}
+
 export interface AgentPassResult {
   description: string | null;
   areas: AgentDefinedArea[];
+  recommendations: Recommendation[];
   blocklistProposals: Array<{ pattern: string; reason: string }>;
   outcome: "ok" | "timeout" | "process_error" | "nonzero_exit" | "aborted";
 }
@@ -30,7 +36,7 @@ const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResult> {
   if (input.signal.aborted) {
-    return { description: null, areas: [], blocklistProposals: [], outcome: "aborted" };
+    return { description: null, areas: [], recommendations: [], blocklistProposals: [], outcome: "aborted" };
   }
 
   const prompt = buildScanPrompt(input.mechanicalResult);
@@ -45,6 +51,7 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
   return {
     description: parsed.description,
     areas: parsed.areas,
+    recommendations: parsed.recommendations,
     blocklistProposals: parsed.blocklist,
     outcome: engineResult.outcome as AgentPassResult["outcome"],
   };
@@ -52,7 +59,7 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
 
 function buildScanPrompt(mech: MechanicalResult): string {
   return [
-    "You are analyzing a codebase. Do three things:",
+    "You are analyzing a codebase. Do four things:",
     "",
     "IMPORTANT: You are inside the target project's repository. Use the read, grep, find, and ls tools to explore the source files. The project you must describe is the one whose files you are reading right now — NOT the scanner/orchestrator that sent you this prompt.",
     "",
@@ -62,22 +69,26 @@ function buildScanPrompt(mech: MechanicalResult): string {
     "",
     "3. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
     "",
+    "4. Recommend 3-5 specific, actionable improvements to make this codebase more autonomous-agent-friendly. Check for: CLAUDE.md or AGENTS.md (agent instructions), architecture documentation, test command in package.json, CI pipeline, CONTRIBUTING.md, specs/plans directory, English README, lint/format config. Only recommend things that are MISSING — don't suggest adding something that already exists. Each recommendation needs a title and a specific description explaining why it matters for autonomous agents.",
+    "",
     `Project name: ${mech.projectName}`,
     `Detected tech stack: ${mech.techStack}`,
     `Test command: ${mech.testCommand ?? "none"}`,
     "",
-    "Answer ONLY with a JSON object with three fields:",
+    "Answer ONLY with a JSON object with four fields:",
     "  - `description` (string)",
     "  - `areas` (array of {name, paths (string array), note})",
     "  - `blocklist` (array of {pattern, reason})",
+    "  - `recommendations` (array of {title, description})",
     "",
-    'Example: {"description":"A document processing pipeline that...","areas":[{"name":"Auth & Sessions","paths":["src/auth/"],"note":"Handles credential validation — high-risk area"},{"name":"Pipeline Engine","paths":["src/pipeline/","src/engine/"],"note":"Core orchestration logic, actively changing"}],"blocklist":[{"pattern":"src/config/production.yml","reason":"Contains deployment secrets"}]}',
+    'Example: {"description":"A document processing pipeline that...","areas":[{"name":"Auth & Sessions","paths":["src/auth/"],"note":"Handles credential validation — high-risk area"}],"blocklist":[],"recommendations":[{"title":"Add CLAUDE.md","description":"No agent instructions found. A CLAUDE.md should document conventions and working rules so agents don\'t break them."}]}',
   ].join("\n");
 }
 
 interface ParsedResponse {
   description: string | null;
   areas: AgentDefinedArea[];
+  recommendations: Recommendation[];
   blocklist: Array<{ pattern: string; reason: string }>;
 }
 
@@ -89,6 +100,17 @@ function parseAgentResponse(text: string): ParsedResponse {
       const parsed = JSON.parse(objMatch[0]) as Record<string, unknown>;
 
       const desc = typeof parsed.description === "string" ? parsed.description : null;
+
+      const recs = Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
+      const recommendations: Recommendation[] = recs
+        .filter(
+          (r): r is Recommendation =>
+            typeof r === "object" &&
+            r !== null &&
+            typeof (r as Record<string, unknown>).title === "string" &&
+            typeof (r as Record<string, unknown>).description === "string",
+        )
+        .map((r) => ({ title: r.title, description: r.description }));
 
       const areaList = Array.isArray(parsed.areas) ? parsed.areas : [];
       const areas: AgentDefinedArea[] = areaList
@@ -114,7 +136,7 @@ function parseAgentResponse(text: string): ParsedResponse {
           typeof (entry as Record<string, unknown>).reason === "string",
       );
 
-      return { description: desc, areas, blocklist };
+      return { description: desc, areas, recommendations, blocklist };
     } catch {
       // fall through to old format
     }
@@ -133,12 +155,12 @@ function parseAgentResponse(text: string): ParsedResponse {
             typeof (entry as Record<string, unknown>).pattern === "string" &&
             typeof (entry as Record<string, unknown>).reason === "string",
         );
-        return { description: null, areas: [], blocklist };
+        return { description: null, areas: [], recommendations: [], blocklist };
       }
     } catch {
       // ignore
     }
   }
 
-  return { description: null, areas: [], blocklist: [] };
+  return { description: null, areas: [], recommendations: [], blocklist: [] };
 }

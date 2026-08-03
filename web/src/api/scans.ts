@@ -1,3 +1,8 @@
+export interface Recommendation {
+  title: string;
+  description: string;
+}
+
 export interface ScanResult {
   id: string;
   status: "running" | "completed" | "failed" | "aborted";
@@ -6,6 +11,7 @@ export interface ScanResult {
   techStack: string | null;
   testCommand: string | null;
   areaSignals: AreaSignal[] | null;
+  recommendations: Recommendation[] | null;
   startedAt: string;
   completedAt: string | null;
 }

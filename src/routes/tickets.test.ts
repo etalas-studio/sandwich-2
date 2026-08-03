@@ -119,4 +119,57 @@ describe("ticket routes", () => {
     const body = JSON.parse(res.body);
     assert.ok(Array.isArray(body));
   });
+
+  it("PUT /api/tickets/:key updates a ticket", async () => {
+    // Create one first
+    const router = new Router(new Set(), 0);
+    registerTicketRoutes(router, db);
+    await router.dispatch(
+      mockJsonReq("POST", "/api/tickets", { id: "RR-UPD", description: "Original" }),
+      mockRes(),
+    );
+
+    const res = mockRes();
+    await router.dispatch(
+      mockJsonReq("PUT", "/api/tickets/RR-UPD", { description: "Updated", url: "https://example.com" }),
+      res,
+    );
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.equal(body.description, "Updated");
+    assert.equal(body.url, "https://example.com");
+  });
+
+  it("PUT /api/tickets/:key returns 404 for unknown key", async () => {
+    const router = new Router(new Set(), 0);
+    registerTicketRoutes(router, db);
+    const res = mockRes();
+    await router.dispatch(
+      mockJsonReq("PUT", "/api/tickets/NO-EXIST", { description: "Nope" }),
+      res,
+    );
+    assert.equal(res.statusCode, 404);
+  });
+
+  it("DELETE /api/tickets/:key deletes a ticket", async () => {
+    const router = new Router(new Set(), 0);
+    registerTicketRoutes(router, db);
+    await router.dispatch(
+      mockJsonReq("POST", "/api/tickets", { id: "RR-DEL", description: "Delete me" }),
+      mockRes(),
+    );
+
+    const res = mockRes();
+    await router.dispatch(mockReq("DELETE", "/api/tickets/RR-DEL"), res);
+    assert.equal(res.statusCode, 200);
+    assert.ok(JSON.parse(res.body).deleted);
+  });
+
+  it("DELETE /api/tickets/:key returns 404 for unknown key", async () => {
+    const router = new Router(new Set(), 0);
+    registerTicketRoutes(router, db);
+    const res = mockRes();
+    await router.dispatch(mockReq("DELETE", "/api/tickets/NO-EXIST"), res);
+    assert.equal(res.statusCode, 404);
+  });
 });
