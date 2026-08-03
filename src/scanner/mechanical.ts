@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, basename } from "node:path";
 import { execSync } from "node:child_process";
 import type { AreaSignal } from "../db/readiness-scans.js";
+import type { AgentDefinedArea } from "./agent-pass.js";
 
 export interface MechanicalResult {
   projectName: string;
@@ -23,6 +24,70 @@ const IGNORED_DIRS = new Set([
 ]);
 
 const TEST_FILE_PATTERNS = [/\.test\./, /\.spec\./, /^__tests__$/];
+
+export function computeAreaSignalsForPaths(
+  repoPath: string,
+  agentAreas: AgentDefinedArea[],
+): AreaSignal[] {
+  // Count files per area by walking matching directories
+  const areaData = agentAreas.map((area) => {
+    let testCount = 0;
+    let codeCount = 0;
+    for (const pathPattern of area.paths) {
+      const fullPath = join(repoPath, pathPattern);
+      try {
+        const st = statSync(fullPath);
+        if (st.isDirectory()) {
+          const { testCount: tc, codeCount: cc } = countTestFiles(fullPath);
+          testCount += tc;
+          codeCount += cc;
+        } else if (st.isFile()) {
+          const name = basename(fullPath);
+          if (isTestFile(fullPath, name)) testCount++;
+          else if (isCodeFile(name)) codeCount++;
+        }
+      } catch {
+        // path doesn't exist or is unreadable — skip
+      }
+    }
+    return { ...area, testCount, codeCount, files: testCount + codeCount };
+  });
+
+  // Compute churn per area using git log
+  const churnCounts: Record<string, number> = {};
+  for (const a of agentAreas) churnCounts[a.name] = 0;
+
+  try {
+    const output = execSync(
+      "git log --since='90 days ago' --name-only --format=''",
+      { cwd: repoPath, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 10_000 },
+    );
+    for (const line of output.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      for (const area of agentAreas) {
+        for (const prefix of area.paths) {
+          if (trimmed.startsWith(prefix)) {
+            churnCounts[area.name] = (churnCounts[area.name] ?? 0) + 1;
+            break;
+          }
+        }
+      }
+    }
+  } catch {
+    // git may fail
+  }
+
+  const maxChurn = Math.max(1, ...Object.values(churnCounts));
+
+  return areaData.map((a) => ({
+    area: a.name,
+    files: a.files,
+    testToCodeRatio: a.codeCount > 0 ? a.testCount / a.codeCount : 0,
+    churnScore: maxChurn > 0 ? (churnCounts[a.name] ?? 0) / maxChurn : 0,
+    note: a.note,
+  }));
+}
 
 export function scanMechanical(repoPath: string): MechanicalResult {
   const pkgJson = readPkgJson(repoPath);

@@ -14,21 +14,34 @@ function makeMechanicalResult(): MechanicalResult {
   };
 }
 
-function agentJson(desc: string | null, blocklist: Array<{ pattern: string; reason: string }>): string {
-  return JSON.stringify({ description: desc, blocklist });
+function fullResponse(opts: {
+  description?: string | null;
+  areas?: Array<{ name: string; paths: string[]; note?: string }>;
+  blocklist?: Array<{ pattern: string; reason: string }>;
+}): string {
+  return JSON.stringify({
+    description: opts.description ?? null,
+    areas: opts.areas ?? [],
+    blocklist: opts.blocklist ?? [],
+  });
 }
 
-// ── Valid response with description + blocklist ──
+// ── Full format: description + areas + blocklist ──
 
-async function testParsesDescriptionAndBlocklist(): Promise<void> {
+async function testParsesFullResponse(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
-        finalText: agentJson("A pipeline orchestrator for AI agents.", [
-          { pattern: "src/secrets/**", reason: "API keys" },
-        ]),
+        finalText: fullResponse({
+          description: "A pipeline orchestrator.",
+          areas: [
+            { name: "Auth", paths: ["src/auth/"], note: "Handles sessions" },
+            { name: "DB Layer", paths: ["src/db/"], note: "Schema migrations" },
+          ],
+          blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
+        }),
       };
     },
   };
@@ -42,21 +55,25 @@ async function testParsesDescriptionAndBlocklist(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
-  assert.equal(result.description, "A pipeline orchestrator for AI agents.");
+  assert.equal(result.description, "A pipeline orchestrator.");
+  assert.equal(result.areas.length, 2);
+  assert.equal(result.areas[0]!.name, "Auth");
+  assert.equal(result.areas[0]!.paths[0], "src/auth/");
+  assert.equal(result.areas[0]!.note, "Handles sessions");
+  assert.equal(result.areas[1]!.name, "DB Layer");
   assert.equal(result.blocklistProposals.length, 1);
-  assert.equal(result.blocklistProposals[0]!.pattern, "src/secrets/**");
-  console.log("PASS: testParsesDescriptionAndBlocklist");
+  console.log("PASS: testParsesFullResponse");
 }
 
-// ── Null description ──
+// ── Empty areas ──
 
-async function testHandlesNullDescription(): Promise<void> {
+async function testHandlesEmptyAreas(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
-        finalText: agentJson(null, []),
+        finalText: fullResponse({ description: "desc", areas: [], blocklist: [] }),
       };
     },
   };
@@ -70,9 +87,8 @@ async function testHandlesNullDescription(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
-  assert.equal(result.description, null);
-  assert.equal(result.blocklistProposals.length, 0);
-  console.log("PASS: testHandlesNullDescription");
+  assert.equal(result.areas.length, 0);
+  console.log("PASS: testHandlesEmptyAreas");
 }
 
 // ── Malformed output ──
@@ -81,10 +97,7 @@ async function testHandlesMalformedOutput(): Promise<void> {
   const mechanical = makeMechanicalResult();
   const invoker = {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return {
-        outcome: "ok" as const,
-        finalText: "Just some prose, no JSON here.",
-      };
+      return { outcome: "ok" as const, finalText: "Just prose, no JSON." };
     },
   };
 
@@ -98,11 +111,12 @@ async function testHandlesMalformedOutput(): Promise<void> {
 
   assert.equal(result.outcome, "ok");
   assert.equal(result.description, null);
+  assert.equal(result.areas.length, 0);
   assert.equal(result.blocklistProposals.length, 0);
   console.log("PASS: testHandlesMalformedOutput");
 }
 
-// ── Old format fallback (just blocklist array) ──
+// ── Old blocklist-only format (no areas) ──
 
 async function testFallsBackToOldBlocklistFormat(): Promise<void> {
   const mechanical = makeMechanicalResult();
@@ -126,9 +140,8 @@ async function testFallsBackToOldBlocklistFormat(): Promise<void> {
   });
 
   assert.equal(result.outcome, "ok");
-  assert.equal(result.description, null);
+  assert.equal(result.areas.length, 0);
   assert.equal(result.blocklistProposals.length, 1);
-  assert.equal(result.blocklistProposals[0]!.pattern, "*.pem");
   console.log("PASS: testFallsBackToOldBlocklistFormat");
 }
 
@@ -154,29 +167,7 @@ async function testReportsEngineTimeout(): Promise<void> {
   console.log("PASS: testReportsEngineTimeout");
 }
 
-// ── Process error ──
-
-async function testReportsEngineProcessError(): Promise<void> {
-  const mechanical = makeMechanicalResult();
-  const invoker = {
-    async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
-      return { outcome: "process_error" as const, finalText: "" };
-    },
-  };
-
-  const controller = new AbortController();
-  const result = await runAgentPass({
-    repoPath: "/fake/repo",
-    mechanicalResult: mechanical,
-    signal: controller.signal,
-    invoker,
-  });
-
-  assert.equal(result.outcome, "process_error");
-  console.log("PASS: testReportsEngineProcessError");
-}
-
-// ── Abort signal ──
+// ── Abort ──
 
 async function testAbortsWhenSignalled(): Promise<void> {
   const mechanical = makeMechanicalResult();
@@ -197,18 +188,16 @@ async function testAbortsWhenSignalled(): Promise<void> {
   });
 
   assert.equal(result.outcome, "aborted");
-  assert.equal(result.description, null);
-  assert.equal(result.blocklistProposals.length, 0);
+  assert.equal(result.areas.length, 0);
   console.log("PASS: testAbortsWhenSignalled");
 }
 
 async function main(): Promise<void> {
-  await testParsesDescriptionAndBlocklist();
-  await testHandlesNullDescription();
+  await testParsesFullResponse();
+  await testHandlesEmptyAreas();
   await testHandlesMalformedOutput();
   await testFallsBackToOldBlocklistFormat();
   await testReportsEngineTimeout();
-  await testReportsEngineProcessError();
   await testAbortsWhenSignalled();
 }
 

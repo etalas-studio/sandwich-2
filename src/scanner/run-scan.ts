@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import { scanMechanical } from "./mechanical.js";
+import { scanMechanical, computeAreaSignalsForPaths } from "./mechanical.js";
 import { runAgentPass } from "./agent-pass.js";
 import {
   completeReadinessScan,
@@ -60,14 +60,20 @@ export function createScanRunner(
 
     const description = agentResult.description;
 
-    console.log(`[scan] Complete. Description: ${description ? description.slice(0, 80) + "..." : "(none)"}, ${agentResult.blocklistProposals.length} blocklist entries`);
+    // Use AI-defined areas if available, fall back to top-level directory scan
+    const areaSignals =
+      agentResult.areas.length > 0
+        ? computeAreaSignalsForPaths(repoPath, agentResult.areas)
+        : mechanical.areaSignals;
+
+    console.log(`[scan] Complete. Description: ${description ? description.slice(0, 80) + "..." : "(none)"}, ${areaSignals.length} areas, ${agentResult.blocklistProposals.length} blocklist entries`);
 
     completeReadinessScan(db, scanId, {
       projectName: mechanical.projectName,
       description,
       techStack: mechanical.techStack,
       testCommand: mechanical.testCommand,
-      areaSignals: mechanical.areaSignals,
+      areaSignals,
     });
   };
 }

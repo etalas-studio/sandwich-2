@@ -37,6 +37,16 @@ function makeRepo(): string {
   return dir;
 }
 
+function areasResponse(desc: string | null, blocklist: Array<{ pattern: string; reason: string }>): string {
+  return JSON.stringify({
+    description: desc,
+    areas: [
+      { name: "Core", paths: ["src/"], note: "Core logic" },
+    ],
+    blocklist,
+  });
+}
+
 function makeInvokerFactory(responseJson: string): InvokerFactory {
   return (_modelId) => ({
     async run(_opts) {
@@ -51,7 +61,7 @@ async function testRunScanCompletesWithMechanicalResults(): Promise<void> {
 
   const runScan = createScanRunner(
     db,
-    makeInvokerFactory(JSON.stringify({ description: null, blocklist: [] })),
+    makeInvokerFactory(areasResponse(null, [])),
   );
   const scanId = "test-scan-1";
   startReadinessScan(db, scanId);
@@ -79,10 +89,9 @@ async function testRunScanInsertsAgentBlocklistEntries(): Promise<void> {
   const runScan = createScanRunner(
     db,
     makeInvokerFactory(
-      JSON.stringify({
-        description: "A test pipeline orchestrator.",
-        blocklist: [{ pattern: "src/secrets/**", reason: "API keys" }],
-      }),
+      areasResponse("A test pipeline orchestrator.", [
+        { pattern: "src/secrets/**", reason: "API keys" },
+      ]),
     ),
   );
   const scanId = "test-scan-2";
@@ -105,7 +114,7 @@ async function testRunScanAbortsWhenSignalled(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  const runScan = createScanRunner(db, makeInvokerFactory("[]"));
+  const runScan = createScanRunner(db, makeInvokerFactory(areasResponse(null, [])));
   const scanId = "test-scan-3";
   startReadinessScan(db, scanId);
   const controller = new AbortController();

@@ -13,8 +13,15 @@ export interface AgentPassInput {
   };
 }
 
+export interface AgentDefinedArea {
+  name: string;
+  paths: string[];
+  note: string;
+}
+
 export interface AgentPassResult {
   description: string | null;
+  areas: AgentDefinedArea[];
   blocklistProposals: Array<{ pattern: string; reason: string }>;
   outcome: "ok" | "timeout" | "process_error" | "nonzero_exit" | "aborted";
 }
@@ -23,7 +30,7 @@ const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResult> {
   if (input.signal.aborted) {
-    return { description: null, blocklistProposals: [], outcome: "aborted" };
+    return { description: null, areas: [], blocklistProposals: [], outcome: "aborted" };
   }
 
   const prompt = buildScanPrompt(input.mechanicalResult);
@@ -37,68 +44,83 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
 
   return {
     description: parsed.description,
+    areas: parsed.areas,
     blocklistProposals: parsed.blocklist,
     outcome: engineResult.outcome as AgentPassResult["outcome"],
   };
 }
 
 function buildScanPrompt(mech: MechanicalResult): string {
-  const areaLines = mech.areaSignals
-    .map(
-      (a) =>
-        `  ${a.area}: ${a.files} files, test/code ratio ${a.testToCodeRatio.toFixed(1)}, churn ${a.churnScore.toFixed(1)}`,
-    )
-    .join("\n");
-
   return [
-    "You are analyzing a codebase. Do two things:",
+    "You are analyzing a codebase. Do three things:",
     "",
     "IMPORTANT: You are inside the target project's repository. Use the read, grep, find, and ls tools to explore the source files. The project you must describe is the one whose files you are reading right now — NOT the scanner/orchestrator that sent you this prompt.",
     "",
-    "1. Write a descriptive project overview (4-5 sentences) that explains what THIS project (the one whose files you're reading) does, how it's structured, what problem it solves, and any notable architectural decisions. Do NOT mention the tech stack — focus on purpose, architecture, and behavior. Look at the actual source files, package.json scripts, directory layout, and configuration to understand the project.",
+    "1. Write a descriptive project overview (4-5 sentences). What does this project do? How is it structured? What problem does it solve? Any notable architectural decisions? Do NOT mention the tech stack — focus on purpose, architecture, and behavior.",
     "",
-    "2. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
+    "2. Define logical area boundaries. Don't just list top-level directories — understand the architecture (DDD, Clean Architecture, MVC, monolith, microservices, etc.) and group related files into meaningful areas. Each area needs a name, one or more path patterns (directory or file globs like \"src/auth/\" or \"src/middleware/*.ts\"), and a short risk note explaining what makes this area sensitive or stable. Include ALL major areas of the codebase.",
+    "",
+    "3. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
     "",
     `Project name: ${mech.projectName}`,
     `Detected tech stack: ${mech.techStack}`,
     `Test command: ${mech.testCommand ?? "none"}`,
     "",
-    "Area signals:",
-    areaLines,
+    "Answer ONLY with a JSON object with three fields:",
+    "  - `description` (string)",
+    "  - `areas` (array of {name, paths (string array), note})",
+    "  - `blocklist` (array of {pattern, reason})",
     "",
-    "Answer ONLY with a JSON object with two fields: `description` (string) and `blocklist` (array of {pattern, reason}).",
-    'Example: {"description":"A pipeline orchestrator that...","blocklist":[{"pattern":"src/secrets/**","reason":"Contains API keys"}]}',
-    "If nothing is risky, use an empty blocklist array.",
+    'Example: {"description":"A document processing pipeline that...","areas":[{"name":"Auth & Sessions","paths":["src/auth/"],"note":"Handles credential validation — high-risk area"},{"name":"Pipeline Engine","paths":["src/pipeline/","src/engine/"],"note":"Core orchestration logic, actively changing"}],"blocklist":[{"pattern":"src/config/production.yml","reason":"Contains deployment secrets"}]}',
   ].join("\n");
 }
 
 interface ParsedResponse {
   description: string | null;
+  areas: AgentDefinedArea[];
   blocklist: Array<{ pattern: string; reason: string }>;
 }
 
 function parseAgentResponse(text: string): ParsedResponse {
-  // Try to find a JSON object with description + blocklist
-  const objMatch = text.match(/\{[\s\S]*"description"[\s\S]*"blocklist"[\s\S]*\}/);
+  // Try to find a JSON object with all three fields
+  const objMatch = text.match(/\{[\s\S]*"description"[\s\S]*\}/);
   if (objMatch) {
     try {
       const parsed = JSON.parse(objMatch[0]) as Record<string, unknown>;
+
       const desc = typeof parsed.description === "string" ? parsed.description : null;
-      const list = Array.isArray(parsed.blocklist) ? parsed.blocklist : [];
-      const blocklist = list.filter(
+
+      const areaList = Array.isArray(parsed.areas) ? parsed.areas : [];
+      const areas: AgentDefinedArea[] = areaList
+        .filter(
+          (a): a is AgentDefinedArea =>
+            typeof a === "object" &&
+            a !== null &&
+            typeof (a as Record<string, unknown>).name === "string" &&
+            Array.isArray((a as Record<string, unknown>).paths),
+        )
+        .map((a) => ({
+          name: a.name,
+          paths: (a.paths as string[]).filter((p) => typeof p === "string"),
+          note: typeof a.note === "string" ? a.note : "",
+        }));
+
+      const blist = Array.isArray(parsed.blocklist) ? parsed.blocklist : [];
+      const blocklist = blist.filter(
         (entry): entry is { pattern: string; reason: string } =>
           typeof entry === "object" &&
           entry !== null &&
           typeof (entry as Record<string, unknown>).pattern === "string" &&
           typeof (entry as Record<string, unknown>).reason === "string",
       );
-      return { description: desc, blocklist };
+
+      return { description: desc, areas, blocklist };
     } catch {
       // fall through to old format
     }
   }
 
-  // Fallback: old format — just a blocklist array, no description
+  // Fallback: old format — just a blocklist array
   const arrMatch = text.match(/\[[\s\S]*?\]/);
   if (arrMatch) {
     try {
@@ -111,12 +133,12 @@ function parseAgentResponse(text: string): ParsedResponse {
             typeof (entry as Record<string, unknown>).pattern === "string" &&
             typeof (entry as Record<string, unknown>).reason === "string",
         );
-        return { description: null, blocklist };
+        return { description: null, areas: [], blocklist };
       }
     } catch {
       // ignore
     }
   }
 
-  return { description: null, blocklist: [] };
+  return { description: null, areas: [], blocklist: [] };
 }

@@ -96,6 +96,7 @@ export default function ReadinessCard({ scan }: Props) {
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Files</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Test Coverage</th>
                       <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Churn</th>
+                      <th className="px-6 py-3 text-xs text-white/40 font-normal tracking-wide uppercase">Risk</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
@@ -160,6 +161,9 @@ export default function ReadinessCard({ scan }: Props) {
                                 {Math.round(area.churnScore * 100)}
                               </span>
                             </div>
+                          </td>
+                          <td className="px-6 py-3.5 text-white/40 font-light text-xs max-w-48 leading-relaxed">
+                            {area.note || '—'}
                           </td>
                         </tr>
                       );
