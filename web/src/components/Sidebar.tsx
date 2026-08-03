@@ -9,12 +9,18 @@ const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean; 
   { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
 ]
 
-interface SidebarProps {
-  active: NavItem
-}
-
-export default function Sidebar({ active }: SidebarProps) {
+export default function Sidebar() {
   const location = useLocation()
+
+  // Derive active nav from current path
+  const getActiveNav = (): NavItem => {
+    const path = location.pathname
+    if (path === '/overview') return 'overview'
+    if (path.startsWith('/tickets')) return 'tickets'
+    if (path === '/settings') return 'settings'
+    return 'overview'
+  }
+  const active = getActiveNav()
 
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
