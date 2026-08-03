@@ -1,14 +1,11 @@
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import ProjectSection from './ProjectSection'
 import BlocklistSection, { mockBlocklist, type BlocklistEntry } from './BlocklistSection'
 import CredentialsSection, { mockCredentials, type Credential } from './CredentialsSection'
 import AccountSection, { mockAccount } from './AccountSection'
 
-interface SettingsProps {
-  onBack: () => void
-}
-
-export default function Settings({ onBack }: SettingsProps) {
+export default function Settings() {
   // State for mock data (UI-only phase)
   const [blocklist, setBlocklist] = useState<BlocklistEntry[]>(mockBlocklist)
   const [credentials, setCredentials] = useState<Credential[]>(mockCredentials)
@@ -51,12 +48,12 @@ export default function Settings({ onBack }: SettingsProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <button
+          <Link
             className="text-white/40 hover:text-white transition-colors"
-            onClick={onBack}
+            to="/overview"
           >
             <iconify-icon icon="solar:arrow-left-linear" width="16" />
-          </button>
+          </Link>
           <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
             Settings
           </h1>
