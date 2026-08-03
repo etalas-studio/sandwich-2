@@ -5,11 +5,15 @@ import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
 import KanbanBoard from './components/KanbanBoard'
 import TicketDetail from './components/TicketDetail'
+import Settings from './components/Settings'
 import mockData from './mockData'
+
+type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
 export default function App() {
   const { tickets, error } = useTickets()
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [activeNav, setActiveNav] = useState<NavItem>('overview')
 
   // Use real tickets if available, otherwise fall back to mock data
   const displayTickets = tickets ?? mockData.tickets
@@ -20,6 +24,11 @@ export default function App() {
   }
 
   const handleCloseTicket = () => {
+    setSelectedTicket(null)
+  }
+
+  const handleNavigate = (item: NavItem) => {
+    setActiveNav(item)
     setSelectedTicket(null)
   }
 
@@ -44,44 +53,48 @@ export default function App() {
           <div className="ds-noise" />
 
           {/* Sidebar */}
-          <Sidebar />
+          <Sidebar active={activeNav} onNavigate={handleNavigate} />
 
           {/* Main content */}
           <main className="relative z-10 flex-1 min-h-screen overflow-hidden">
-            <div className="h-full overflow-y-auto hide-scrollbar p-6">
-              {/* Error banner */}
-              {error && (
-                <div className="ds-card-outer mb-6">
-                  <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-                    <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
-                    <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
+            {activeNav === 'settings' ? (
+              <Settings onBack={() => setActiveNav('overview')} />
+            ) : (
+              <div className="h-full overflow-y-auto hide-scrollbar p-6">
+                {/* Error banner */}
+                {error && (
+                  <div className="ds-card-outer mb-6">
+                    <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
+                      <p className="text-sm text-[#ff8a8a]">Could not connect to server: {error}</p>
+                      <p className="text-xs text-white/50 mt-1">Showing mock data instead.</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Header */}
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
-                    Overview
-                  </h1>
-                  <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-                    Today
-                  </span>
+                {/* Header */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-2xl font-normal tracking-tight text-white ds-text-shadow">
+                      Overview
+                    </h1>
+                    <span className="px-2.5 py-1 rounded-full border border-white/[0.05] bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[10px] text-white/70" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
+                      Today
+                    </span>
+                  </div>
+                  <p className="text-sm text-white/50 font-light">
+                    {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {' · '}
+                    {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
+                  </p>
                 </div>
-                <p className="text-sm text-white/50 font-light">
-                  {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  {' · '}
-                  {displayTickets.length} tickets · {displayTickets.filter(t => t.status === 'in_progress').length} active
-                </p>
+
+                {/* Stats */}
+                <StatsCards stats={stats} />
+
+                {/* Kanban */}
+                <KanbanBoard tickets={displayTickets} onOpenTicket={handleOpenTicket} />
               </div>
-
-              {/* Stats */}
-              <StatsCards stats={stats} />
-
-              {/* Kanban */}
-              <KanbanBoard tickets={displayTickets} onOpenTicket={handleOpenTicket} />
-            </div>
+            )}
           </main>
         </div>
       </div>

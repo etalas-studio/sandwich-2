@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 type NavItem = 'overview' | 'tickets' | 'users' | 'settings'
 
 const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }[] = [
@@ -9,8 +7,12 @@ const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean }
   { id: 'settings', label: 'Settings', icon: 'solar:settings-linear' },
 ]
 
-export default function Sidebar() {
-  const [active, setActive] = useState<NavItem>('overview')
+interface SidebarProps {
+  active: NavItem
+  onNavigate: (item: NavItem) => void
+}
+
+export default function Sidebar({ active, onNavigate }: SidebarProps) {
 
   return (
     <aside className="relative z-10 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
@@ -29,7 +31,7 @@ export default function Sidebar() {
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => !item.disabled && setActive(item.id)}
+            onClick={() => !item.disabled && onNavigate(item.id)}
             disabled={item.disabled}
             className={`
               relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-light transition-colors
