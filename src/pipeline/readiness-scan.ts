@@ -3,7 +3,7 @@ import { createWorktree, removeWorktree } from "../git.js";
 import { createEngineInvoker } from "../engine/create-invoker.js";
 import type { EngineInvoker } from "../engine/types.js";
 import { startReadinessScan, completeReadinessScan } from "../db/readiness-scans.js";
-import type { AreaSignal, ReadinessScan } from "../db/readiness-scans.js";
+import type { ReadinessScan } from "../db/readiness-scans.js";
 import { insertBlocklistEntry } from "../db/blocklist.js";
 import {
   detectTechStack,
@@ -14,17 +14,11 @@ import {
   computeAreaSignals,
 } from "./scan-analysis.js";
 import { buildScanAssessmentPrompt, parseScanAssessment } from "./scan-prompt.js";
-import type { ScanAssessment } from "./scan-prompt.js";
+import type { ScanAssessment, ScanSignals } from "./scan-prompt.js";
 import { buildRecommendations } from "./scan-recommendations.js";
 import type { PipelineConfig } from "./config.js";
 
 type ScanAssessmentOutcome = ScanAssessment | "engine_failed";
-
-interface ScanSignals {
-  techStack: string;
-  testCommand: string | null;
-  areaSignals: AreaSignal[];
-}
 
 /**
  * Runs the agent assessment pass (codebase summary, agentic-workflow
@@ -58,9 +52,9 @@ async function runScanAssessment(
     const assessment = parseScanAssessment(result.finalText);
     if (assessment === null) {
       console.warn(
-        `Readiness scan ${scanId}: could not parse an assessment from the agent's output — continuing with no summary and zero proposed blocklist entries.`,
+        `Readiness scan ${scanId}: could not parse an assessment from the agent's output — continuing with no summary, zero proposed blocklist entries, and the mechanical top-level-directory area fallback.`,
       );
-      return { codebaseSummary: null, agenticFlowSummary: null, blocklist: [] };
+      return { codebaseSummary: null, agenticFlowSummary: null, blocklist: [], areas: [] };
     }
     return assessment;
   } catch (err) {
@@ -99,15 +93,18 @@ export async function runReadinessScan(
   try {
     const techStack = detectTechStack(config.repoPath);
     const testCommand = detectTestCommand(config.repoPath);
-    const areaSignals = await computeAreaSignals(config.repoPath);
     const agentContextFile = detectAgentContextFile(config.repoPath);
     const readme = detectReadme(config.repoPath);
     const hasCI = detectCI(config.repoPath);
 
+    // Area grouping comes from the agent's assessment (it can see the actual
+    // repo layout), so area signals can't be computed until after this call —
+    // computeAreaSignals falls back to top-level directories on its own if
+    // the agent didn't propose any usable areas.
     const assessment = await runScanAssessment(
       config,
       engineOverride,
-      { techStack, testCommand, areaSignals },
+      { techStack, testCommand },
       scan.id,
     );
     if (assessment === "engine_failed") {
@@ -122,6 +119,8 @@ export async function runReadinessScan(
         status: "failed",
       });
     }
+
+    const areaSignals = await computeAreaSignals(config.repoPath, assessment.areas);
 
     for (const proposal of assessment.blocklist) {
       insertBlocklistEntry(db, {

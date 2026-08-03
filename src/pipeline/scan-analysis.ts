@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { exec } from "../proc.js";
 import type { AreaSignal } from "../db/readiness-scans.js";
+import type { AreaProposal } from "./scan-prompt.js";
 
 interface PackageJsonShape {
   dependencies?: Record<string, string>;
@@ -134,8 +135,27 @@ function countFiles(dirPath: string, inTestDir: boolean): FileCounts {
   return { testFiles, codeFiles };
 }
 
-async function computeChurnByArea(repoPath: string, areas: string[]): Promise<Map<string, number>> {
-  const churn = new Map(areas.map((area) => [area, 0]));
+/**
+ * Agent-proposed area paths can point at a single file (e.g. a
+ * controller), not just a directory — `countFiles` assumes a directory, so
+ * this branches on `statSync` first rather than making every caller do it.
+ */
+function countFilesAtPath(absPath: string): FileCounts {
+  const stat = statSync(absPath);
+  if (stat.isFile()) {
+    const name = absPath.split("/").pop() ?? absPath;
+    return TEST_FILE_PATTERN.test(name) ? { testFiles: 1, codeFiles: 0 } : { testFiles: 0, codeFiles: 1 };
+  }
+  return countFiles(absPath, false);
+}
+
+/** A file is "under" an area path if it *is* that path or sits somewhere below it — not merely string-prefixed (so "src/orders" doesn't match "src/orders-legacy"). */
+function fileIsUnderPath(file: string, areaPath: string): boolean {
+  return file === areaPath || file.startsWith(`${areaPath}/`);
+}
+
+async function computeChurnByArea(repoPath: string, areas: AreaDefinition[]): Promise<Map<string, number>> {
+  const churn = new Map(areas.map((area) => [area.name, 0]));
   const result = await exec("git", ["log", "--since=90 days ago", "--name-only", "--pretty=format:"], {
     cwd: repoPath,
     timeoutMs: 30_000,
@@ -145,29 +165,99 @@ async function computeChurnByArea(repoPath: string, areas: string[]): Promise<Ma
   for (const line of result.stdout.split("\n")) {
     const file = line.trim();
     if (!file) continue;
-    const topLevel = file.split("/")[0];
-    if (topLevel && churn.has(topLevel)) {
-      churn.set(topLevel, (churn.get(topLevel) ?? 0) + 1);
+    for (const area of areas) {
+      if (area.paths.some((path) => fileIsUnderPath(file, path))) {
+        churn.set(area.name, (churn.get(area.name) ?? 0) + 1);
+        // One area's churn count is incremented at most once per file, even if
+        // the file matches more than one of that area's own paths — but a file
+        // can still count toward *multiple different* areas if agent-proposed
+        // groupings overlap. That's an acceptable, rare edge case: overlapping
+        // groupings are the agent's choice, not something this function polices.
+        break;
+      }
     }
   }
   return churn;
 }
 
+interface AreaDefinition {
+  name: string;
+  paths: string[];
+}
+
+/**
+ * Rejects paths that don't resolve to something that actually exists inside
+ * `repoPath` — an agent can hallucinate a path, typo one, or (worst case)
+ * try to walk out of the repo with `../`. Anything that survives this is a
+ * real, in-repo relative path safe to hand to `readdirSync`/`join`.
+ */
+function sanitizeAreaPaths(repoPath: string, rawPaths: string[]): string[] {
+  const valid: string[] = [];
+  for (const raw of rawPaths) {
+    if (typeof raw !== "string") continue;
+    const rel = raw.trim().replace(/^\.\//, "").replace(/\/+$/, "");
+    if (!rel || rel.startsWith("/") || rel.split("/").includes("..")) continue;
+    const abs = join(repoPath, rel);
+    if (!existsSync(abs)) continue;
+    valid.push(rel);
+  }
+  return valid;
+}
+
+/**
+ * Validates agent-proposed area groupings into usable `AreaDefinition`s.
+ * Returns `null` (never an empty array) when nothing proposed survives
+ * validation, so the caller can fall back to the top-level-directory
+ * heuristic instead of reporting zero areas.
+ */
+function toAreaDefinitions(repoPath: string, proposals: AreaProposal[] | undefined): AreaDefinition[] | null {
+  if (!proposals || proposals.length === 0) return null;
+  const defs: AreaDefinition[] = [];
+  const seenNames = new Set<string>();
+  for (const proposal of proposals) {
+    const name = typeof proposal?.name === "string" ? proposal.name.trim() : "";
+    if (!name || seenNames.has(name)) continue;
+    const paths = sanitizeAreaPaths(repoPath, proposal.paths ?? []);
+    if (paths.length === 0) continue;
+    seenNames.add(name);
+    defs.push({ name, paths });
+  }
+  return defs.length > 0 ? defs : null;
+}
+
+function topLevelAreaDefinitions(repoPath: string): AreaDefinition[] {
+  return listTopLevelAreas(repoPath).map((name) => ({ name, paths: [name] }));
+}
+
 /**
  * Per-area test-to-code ratio and normalized churn score, per
  * docs/superpowers/specs/2026-08-04-readiness-scan-design.md. "Areas" are
- * the repo's top-level directories.
+ * agent-proposed logical groupings (feature modules, bounded contexts,
+ * layers — whatever fits this specific codebase's architecture), passed in
+ * as `agentAreas`. Directory layout varies too much across codebases
+ * (monorepos, DDD, MVC, a flat `src/`) for "top-level directory" to mean
+ * the same thing everywhere, so judging what counts as an "area" is left to
+ * the agent, which already has shell access to look at the repo. Falls
+ * back to the repo's top-level directories — the original, purely
+ * mechanical behavior — whenever `agentAreas` is absent or nothing in it
+ * survives validation (hallucinated/malformed/nonexistent paths).
  */
-export async function computeAreaSignals(repoPath: string): Promise<AreaSignal[]> {
-  const areas = listTopLevelAreas(repoPath);
+export async function computeAreaSignals(repoPath: string, agentAreas?: AreaProposal[]): Promise<AreaSignal[]> {
+  const areas = toAreaDefinitions(repoPath, agentAreas) ?? topLevelAreaDefinitions(repoPath);
   const churnByArea = await computeChurnByArea(repoPath, areas);
   const maxChurn = Math.max(0, ...churnByArea.values());
 
   return areas.map((area) => {
-    const { testFiles, codeFiles } = countFiles(join(repoPath, area), false);
-    const rawChurn = churnByArea.get(area) ?? 0;
+    let testFiles = 0;
+    let codeFiles = 0;
+    for (const path of area.paths) {
+      const counts = countFilesAtPath(join(repoPath, path));
+      testFiles += counts.testFiles;
+      codeFiles += counts.codeFiles;
+    }
+    const rawChurn = churnByArea.get(area.name) ?? 0;
     return {
-      pathPrefix: area,
+      pathPrefix: area.name,
       testToCodeRatio: codeFiles === 0 ? 0 : testFiles / codeFiles,
       churnScore: maxChurn === 0 ? 0 : rawChurn / maxChurn,
     };
