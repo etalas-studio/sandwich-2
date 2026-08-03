@@ -13,7 +13,7 @@ Architecture pieces (mirrors the spec's Architecture section):
 - [x] Agent engine (switchable Pi SDK / Claude SDK, headless + PTY toggle) — `docs/superpowers/plans/2026-08-02-engine-invocation-layer.md`, `docs/superpowers/plans/2026-08-03-pty-engine-toggle.md` (both done)
 - [x] Storage (embedded SQLite) — `docs/superpowers/plans/2026-08-03-storage-sqlite.md` (done)
 - [ ] Agent execution (scoped shell access, one worktree per attempt) — no plan yet
-- [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — no plan yet
+- [ ] Pipeline shape (Judge → Implement → Verify → Open PR) — partially done: Implement and Verify are built for real, Judge is stubbed to always agent-ready, and Open PR is out of scope (`docs/superpowers/plans/2026-08-03-pipeline-shape.md`) — real Judge logic and Open PR remain unplanned
 - [ ] Codebase understanding (no persistent index, fresh read per ticket) — no plan yet
 - [ ] Verify (exit-code only) — no plan yet
 - [ ] VCS abstraction (GitHub and Bitbucket, both first-class) — no plan yet
