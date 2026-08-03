@@ -16,8 +16,13 @@ async function git(cwd: string, args: string[]): Promise<string> {
 }
 
 export async function assertCleanRepo(repoPath: string): Promise<void> {
-  const status = await git(repoPath, ["status", "--porcelain"]);
-  if (status.trim().length > 0) {
+  // Cek staged/modified files saja, ignore untracked.
+  // Untracked biasanya artifact/temporary, bukan kerjaan aktif.
+  const result = await exec("git", ["diff-index", "--quiet", "HEAD", "--"], {
+    cwd: repoPath,
+    timeoutMs: GIT_TIMEOUT_MS,
+  });
+  if (result.exitCode !== 0) {
     throw new Error(
       `Repo ${repoPath} punya perubahan yang belum di-commit.\n` +
         `Orchestrator menolak jalan supaya tidak mencampur kerjaan manusia dengan kerjaan agent.`,
