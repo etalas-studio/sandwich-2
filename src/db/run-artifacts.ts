@@ -38,6 +38,27 @@ export function insertRunArtifact(db: Database.Database, input: NewRunArtifact):
   return { id, runId: input.runId, kind: input.kind, content: input.content, createdAt };
 }
 
+/**
+ * Insert-or-update a single evolving artifact (currently: the in-progress
+ * implement transcript) so the UI can show real progress while a stage is
+ * still running, instead of only after `insertRunArtifact` writes the final
+ * content once the stage resolves. One row per (run_id, kind) — later calls
+ * with the same pair replace the content in place rather than adding rows.
+ */
+export function upsertLiveArtifact(db: Database.Database, input: NewRunArtifact): RunArtifact {
+  const existing = db
+    .prepare("SELECT id FROM run_artifacts WHERE run_id = ? AND kind = ?")
+    .get(input.runId, input.kind) as { id: string } | undefined;
+
+  if (existing) {
+    db.prepare("UPDATE run_artifacts SET content = ? WHERE id = ?").run(input.content, existing.id);
+    const row = db.prepare("SELECT * FROM run_artifacts WHERE id = ?").get(existing.id) as RawRow;
+    return mapRow(row);
+  }
+
+  return insertRunArtifact(db, input);
+}
+
 export function listArtifactsForRun(db: Database.Database, runId: string): RunArtifact[] {
   const rows = db
     .prepare("SELECT * FROM run_artifacts WHERE run_id = ? ORDER BY created_at")

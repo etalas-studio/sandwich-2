@@ -1,8 +1,10 @@
 import { summarizeDiff, commitAll } from "../git.js";
 import { listBlocklistEntries } from "../db/blocklist.js";
-import { insertRunArtifact } from "../db/run-artifacts.js";
+import { insertRunArtifact, upsertLiveArtifact } from "../db/run-artifacts.js";
 import type { PipelineContext, ImplementResult } from "./types.js";
 import type { Ticket } from "../db/tickets.js";
+
+const LIVE_TRANSCRIPT_FLUSH_INTERVAL_MS = 2000;
 
 function buildImplementPrompt(ticket: Ticket): string {
   return [
@@ -79,13 +81,34 @@ function findBlocklistHit(
  * doc's "Outcome model" section.
  */
 export async function implement(ctx: PipelineContext): Promise<ImplementResult> {
+  // Flushed to run_artifacts on a throttle as output arrives, not only once
+  // the whole call resolves — otherwise the transcript view has nothing to
+  // show for the entire (often multi-minute) duration of a real agent turn.
+  let lastFlushAt = 0;
+  const linesSoFar: string[] = [];
+
   const engineResult = await ctx.engine.run({
     prompt: buildImplementPrompt(ctx.ticket),
     cwd: ctx.worktreePath,
     timeoutMs: ctx.implementTimeoutMs,
+    onOutputLine: (line) => {
+      linesSoFar.push(line);
+      const now = Date.now();
+      if (now - lastFlushAt >= LIVE_TRANSCRIPT_FLUSH_INTERVAL_MS) {
+        lastFlushAt = now;
+        upsertLiveArtifact(ctx.db, {
+          runId: ctx.runId,
+          kind: "implement_transcript",
+          content: linesSoFar.join("\n"),
+        });
+      }
+    },
   });
 
-  insertRunArtifact(ctx.db, {
+  // Final write with the authoritative complete transcript — always, so the
+  // stored artifact reflects reality even if the last chunk arrived after
+  // the throttle's most recent flush.
+  upsertLiveArtifact(ctx.db, {
     runId: ctx.runId,
     kind: "implement_transcript",
     content: engineResult.transcript.join("\n"),
