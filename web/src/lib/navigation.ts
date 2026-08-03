@@ -1,0 +1,25 @@
+export type NavItem = 'overview' | 'tickets' | 'integrations' | 'users' | 'settings'
+
+export interface NavEntry {
+  id: NavItem
+  label: string
+  icon: string
+  disabled?: boolean
+  to: string
+}
+
+export const NAV_ITEMS: NavEntry[] = [
+  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
+  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
+  { id: 'integrations', label: 'Integrations', icon: 'solar:widget-3-linear', to: '/integrations' },
+  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
+  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
+]
+
+export function getActiveNav(pathname: string): NavItem {
+  if (pathname === '/overview') return 'overview'
+  if (pathname.startsWith('/tickets')) return 'tickets'
+  if (pathname === '/integrations') return 'integrations'
+  if (pathname === '/settings') return 'settings'
+  return 'overview'
+}

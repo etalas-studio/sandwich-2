@@ -1,14 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-
-type NavItem = 'overview' | 'tickets' | 'integrations' | 'users' | 'settings'
-
-const navItems: { id: NavItem; label: string; icon: string; disabled?: boolean; to: string }[] = [
-  { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
-  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
-  { id: 'integrations', label: 'Integrations', icon: 'solar:widget-3-linear', to: '/integrations' },
-  { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
-  { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
-]
+import { NAV_ITEMS, getActiveNav } from '../lib/navigation'
 
 interface SidebarProps {
   username: string
@@ -18,17 +9,7 @@ interface SidebarProps {
 export default function Sidebar({ username, onLogout }: SidebarProps) {
   const location = useLocation()
   const initials = username.slice(0, 2).toUpperCase() || '?'
-
-  // Derive active nav from current path
-  const getActiveNav = (): NavItem => {
-    const path = location.pathname
-    if (path === '/overview') return 'overview'
-    if (path.startsWith('/tickets')) return 'tickets'
-    if (path === '/integrations') return 'integrations'
-    if (path === '/settings') return 'settings'
-    return 'overview'
-  }
-  const active = getActiveNav()
+  const active = getActiveNav(location.pathname)
 
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col">
@@ -45,7 +26,7 @@ export default function Sidebar({ username, onLogout }: SidebarProps) {
       </div>
 
       <nav className="flex flex-col gap-1 p-3">
-        {navItems.map((item) => (
+        {NAV_ITEMS.map((item) => (
           <Link
             key={item.id}
             to={item.to}
