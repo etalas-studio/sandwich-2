@@ -55,8 +55,17 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
       console.log("[invoker] agent session created, sending prompt (length =", opts.prompt.length, ")");
 
       let responseText = "";
+      let eventCount = 0;
 
       session.subscribe((event: any) => {
+        eventCount++;
+        // Diagnostic: log all event types and their sub-structure for the first 20 events
+        if (eventCount <= 20) {
+          const subType = event.assistantMessageEvent?.type ?? "none";
+          const keys = Object.keys(event).join(",");
+          console.log(`[invoker:event #${eventCount}] type=${event.type} subType=${subType} keys=[${keys}]`);
+        }
+
         // Capture streaming text deltas (most common path)
         if (
           event.type === "message_update" &&
@@ -110,7 +119,7 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
 
       try {
         await session.prompt(opts.prompt);
-        console.log("[invoker] session.prompt resolved, responseText length =", responseText.length);
+        console.log("[invoker] session.prompt resolved, total events =", eventCount, "responseText length =", responseText.length);
         // Give event listeners a tick to flush before disposing
         await new Promise((r) => setTimeout(r, 100));
         session.dispose();
