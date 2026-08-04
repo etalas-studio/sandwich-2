@@ -7,11 +7,12 @@ import { isOAuthConnected, disconnectOAuth } from "./oauth-integrations.js";
 /**
  * Pi SDK integration layer.
  *
- * OpenCode Go ("opencode-go") and OpenAI Codex ("openai-codex") are BUILT-IN
+ * OpenCode Go ("opencode-go"), Anthropic ("anthropic"), and OpenAI Codex ("openai-codex") are BUILT-IN
  * providers in Pi.  No models.json required — ModelRuntime.create() picks
  * them up automatically from the shipped provider catalog.
  *
  * - opencode-go:   API key auth (OPENCODE_API_KEY env var or runtime key).
+ * - anthropic:     API key auth (ANTHROPIC_API_KEY env var or runtime key).
  * - openai-codex:  OAuth-only (ChatGPT Plus/Pro subscription via /login).
  *
  * Credentials are single-sourced in the app DB's `credentials` table (see
@@ -52,6 +53,7 @@ export interface IntegrationStatus {
 // (modelRuntime.getModels), never hardcoded here.
 const PROVIDER_META: Record<string, { name: string }> = {
   "opencode-go": { name: "OpenCode Go" },
+  "anthropic": { name: "Claude (Anthropic)" },
   "openai-codex": { name: "OpenAI Codex" },
   "jira": { name: "Jira" },
   "bitbucket": { name: "Bitbucket" },
@@ -62,7 +64,7 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
 
   // ── Pi SDK providers ──
   if (modelRuntime) {
-    for (const providerId of ["opencode-go", "openai-codex"]) {
+    for (const providerId of ["opencode-go", "anthropic", "openai-codex"]) {
       const meta = PROVIDER_META[providerId]!;
       try {
         const usesOAuth = modelRuntime.isUsingOAuth(providerId);
@@ -94,6 +96,7 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
   } else {
     results.push(
       { id: "opencode-go", name: "OpenCode Go", connected: false, authType: "none", models: [], error: "runtime not initialized" },
+      { id: "anthropic", name: "Claude (Anthropic)", connected: false, authType: "none", models: [], error: "runtime not initialized" },
       { id: "openai-codex", name: "OpenAI Codex", connected: false, authType: "none", models: [], error: "runtime not initialized" },
     );
   }
@@ -112,13 +115,14 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     });
   }
 
-  // ── 9Router (static, always available) ──
+  // ── 9Router (disabled for now) ──
   results.push({
     id: "9router",
     name: "9Router",
-    connected: true,
+    connected: false,
     authType: "none",
     models: [],
+    error: "Coming soon",
   });
 
   return results;
@@ -140,7 +144,7 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
     return { ok: true, message: "Use OAuth authorize endpoint: /api/integrations/${providerId}/authorize" };
   }
 
-  if (providerId !== "opencode-go") {
+  if (providerId !== "opencode-go" && providerId !== "anthropic") {
     return { ok: false, message: `${providerId} does not support API key auth — use OAuth instead` };
   }
 
@@ -150,7 +154,8 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
     const authCheck = await modelRuntime.checkAuth(providerId);
 
     if (authCheck !== undefined) {
-      return { ok: true, message: "Connected to OpenCode Go" };
+      const providerName = providerId === "opencode-go" ? "OpenCode Go" : "Claude (Anthropic)";
+      return { ok: true, message: `Connected to ${providerName}` };
     }
 
     deleteCredential(dbRef, providerId);
@@ -173,7 +178,7 @@ export async function disconnectApiKey(providerId: string): Promise<{ ok: boolea
     return { ok: true, message: "Disconnected" };
   }
 
-  if (providerId !== "opencode-go") {
+  if (providerId !== "opencode-go" && providerId !== "anthropic") {
     return { ok: false, message: `${providerId} uses OAuth — disconnect via Pi CLI /logout` };
   }
 

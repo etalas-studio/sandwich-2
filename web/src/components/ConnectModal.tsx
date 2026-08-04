@@ -72,17 +72,23 @@ export default function ConnectModal({
             {/* Provider header */}
             <div className="flex items-center gap-3 mb-3">
               <div
-                className="w-9 h-9 rounded-lg bg-gradient-to-b from-[#2a2a2a] to-[#161616] flex items-center justify-center border border-white/[0.06] shrink-0"
-                style={{
-                  boxShadow:
-                    'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)',
-                }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
+                style={
+                  provider.id === '9router' ? { background: '#ff4405', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
+                  : provider.id === 'anthropic' ? { background: '#d67660', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
+                  : provider.id === 'opencode-go' ? { background: '#f0f0f0', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }
+                  : { background: 'linear-gradient(to bottom, #2a2a2a, #161616)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)' }
+                }
               >
-                <iconify-icon
-                  icon={provider.logo}
-                  width="18"
-                  className="text-white/60"
-                />
+                {provider.logo.startsWith('/') ? (
+                  <img src={provider.logo} alt={provider.name} width="20" height="20" className="object-contain" />
+                ) : (
+                  <iconify-icon
+                    icon={provider.logo}
+                    width="18"
+                    className="text-white/60"
+                  />
+                )}
               </div>
               <div>
                 <DialogTitle className="!text-sm !font-normal !text-white ds-text-shadow !leading-none">
@@ -171,10 +177,10 @@ export default function ConnectModal({
                       width="14"
                       className="animate-spin"
                     />
-                    Connecting…
+                    Adding…
                   </>
                 ) : (
-                  'Connect'
+                  'Add key'
                 )}
               </span>
             </button>
