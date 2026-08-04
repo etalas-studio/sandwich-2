@@ -113,7 +113,7 @@ export async function runTicketPipeline(
       };
       if (result.choices && result.choices.length > 0) {
         updateInput.quickWinChoices = JSON.stringify(result.choices);
-        updateInput.needsHumanCategory = "quick_win";
+        updateInput.needsHumanCategory = "second_chance";
       }
       updateTicket(db, ticketKey, updateInput);
       emit({ type: "stage_end", stage, ticket: getTicket(db, ticketKey)! });
@@ -173,7 +173,7 @@ async function runJudge(
     return { ok: true };
   }
 
-  // Cap quick-win rounds at 1
+  // Cap second-chance rounds at 1
   const attempts = ticket.quickWinAttempts ?? 0;
   const allowChoices = attempts < 1;
 
@@ -185,15 +185,16 @@ async function runJudge(
     "- Small, clear changes (typo fixes, simple refactors, config changes) should pass.",
     "- Before flagging as ambiguous, check the codebase for existing conventions that answer the question (.prettierrc, .eslintrc, tsconfig.json, package.json scripts, etc.).",
     "- If the project already has config files or code patterns that make the answer obvious, use those as defaults and pass the ticket.",
-    "- If there IS a small missing decision (e.g. 'which formatter' when Prettier is already configured) and the answer comes down to 2-3 clear options informed by the codebase, return choices. This is a 'quick win'.",
+    "- If there IS a small missing decision (e.g. 'which formatter' when Prettier is already configured) and the answer comes down to 2-3 clear options informed by the codebase, return choices. This is a 'second chance'.",
     "- Only block as truly ambiguous if the gap would fundamentally change the implementation approach or the codebase provides no hints.",
     "",
     "Answer ONLY with a JSON object:",
     '{"agentReady": true/false, "reason": "one short sentence explaining why"}',
     "",
-    `For quick wins (small missing decision with clear options), add a "choices" array: ${allowChoices ? '{"agentReady": false, "reason": "...", "choices": [{"label": "Use Prettier", "description": "Project already has .prettierrc", "inject": "Format code with Prettier (npx prettier --write)"}]}' : 'choices are NOT allowed on this ticket — just use ambiguous_ticket'}`,
+    `For second chances (small missing decision with clear options), add a "choices" array: ${allowChoices ? '{"agentReady": false, "reason": "...", "choices": [{"label": "Use Prettier", "description": "Project already has .prettierrc", "inject": "Format code with Prettier (npx prettier --write)"}]}' : 'choices are NOT allowed on this ticket — just use ambiguous_ticket'}`,
     "Each choice needs: label (short), description (why this option), inject (the text to add to the ticket description when chosen). Max 3 choices.",
     "",
+    ticket.summary ? `Ticket title: ${ticket.summary}` : "",
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
     ticket.url ? `Ticket URL: ${ticket.url}` : "",
@@ -230,7 +231,7 @@ async function runJudge(
           return {
             ok: false,
             reason: parsed.reason ?? "Quick decision needed",
-            category: "quick_win",
+            category: "second_chance",
             choices,
           };
         }
@@ -311,6 +312,7 @@ async function runImplement(
     "- Run the test command to verify your work.",
     "- Do NOT modify files outside the scope of this ticket.",
     "",
+    ticket.summary ? `Title: ${ticket.summary}` : "",
     `Ticket: ${ticket.key}`,
     `Description: ${ticket.description}`,
     ticket.url ? `Source: ${ticket.url}` : "",
@@ -424,7 +426,14 @@ async function runVerify(
 
   const invoker = createInvoker(modelId);
   const prompt = [
-    "Review your own implementation. Check:",
+    "Review your own implementation against the ticket requirements.",
+    "",
+    ticket.summary ? `Ticket title: ${ticket.summary}` : "",
+    `Ticket key: ${ticket.key}`,
+    `Ticket description: ${ticket.description}`,
+    ticket.url ? `Ticket URL: ${ticket.url}` : "",
+    "",
+    "Check:",
     "- Do tests pass?",
     "- Does the change match the ticket requirements?",
     "- Any unexpected side effects?",
@@ -435,7 +444,7 @@ async function runVerify(
     "If tests pass and the change is correct, mark ok: true.",
     "If there are issues, mark ok: false and explain.",
     "Use warnings for things the human should know about (e.g., 'touched an unrelated file'), even when ok: true.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   try {
     const result = await invoker.run({
