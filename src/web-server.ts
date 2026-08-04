@@ -32,7 +32,7 @@ function parseTrustedHosts(): Set<string> {
   );
 }
 
-const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/integrations/jira/callback", "/api/integrations/bitbucket/callback"]);
+const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/integrations/jira/callback", "/api/integrations/bitbucket/callback", "/api/integrations/github/callback"]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { dbPath, port, webRoot } = options;
