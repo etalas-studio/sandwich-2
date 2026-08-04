@@ -288,6 +288,7 @@ body {
   color: rgba(255, 255, 255, 0.5);
   text-decoration: underline;
   text-underline-offset: 2px;
+  word-break: break-all;
 }
 .ticket-description a:hover {
   color: rgba(255, 255, 255, 0.8);
