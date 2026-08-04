@@ -305,7 +305,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
           <div className="mb-8">
             <div className="section-label">Description</div>
             <div
-              className="text-sm text-white/60 font-light leading-relaxed ticket-description"
+              className="text-sm text-white/80 font-light leading-relaxed ticket-description"
               dangerouslySetInnerHTML={{ __html: marked.parse(ticket.description, { async: false }) as string }}
             />
           </div>
