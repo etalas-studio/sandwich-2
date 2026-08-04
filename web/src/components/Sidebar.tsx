@@ -14,12 +14,7 @@ export default function Sidebar({ username, onLogout }: SidebarProps) {
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col h-full">
       <div className="flex items-center gap-3 p-4 border-b border-white/[0.04]">
-        <div
-          className="w-8 h-8 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333]"
-          style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -2px 6px rgba(0,0,0,0.8)' }}
-        >
-          <iconify-icon icon="solar:cat-linear" width="16" className="text-white/90" />
-        </div>
+        <iconify-icon icon="solar:hand-shake-linear" width="22" className="text-white/60" />
         <span className="text-white text-sm font-normal tracking-tight ds-text-shadow">Runchise</span>
       </div>
 

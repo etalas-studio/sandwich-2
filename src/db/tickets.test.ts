@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
-import { createTicket, listTickets, updateTicket, deleteTicket } from "./tickets.js";
+import { createTicket, listTickets, updateTicket, deleteTicket, getTicket } from "./tickets.js";
 
 describe("tickets repository", () => {
   let db: ReturnType<typeof openDb>;
@@ -113,5 +113,21 @@ describe("tickets repository", () => {
   it("deleteTicket returns false for unknown key", () => {
     const result = deleteTicket(db, "NO-EXIST");
     assert.equal(result, false);
+  });
+
+  it("stores and reads back jira status", () => {
+    createTicket(db, { id: "RR-JIRA", description: "Jira status test", url: null });
+
+    // Simulate what pullJiraTickets does: set jira_status after insert
+    db.prepare("UPDATE tickets SET jira_status = ? WHERE key = ?").run("In Progress", "RR-JIRA");
+
+    const ticket = getTicket(db, "RR-JIRA");
+    assert.ok(ticket);
+    assert.equal(ticket!.jiraStatus, "In Progress");
+  });
+
+  it("jiraStatus defaults to null for new tickets", () => {
+    const ticket = createTicket(db, { id: "RR-JIRA-NULL", description: "No jira status", url: null });
+    assert.equal(ticket.jiraStatus, null);
   });
 });

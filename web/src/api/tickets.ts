@@ -26,6 +26,7 @@ export interface Ticket {
   assignee: string | null
   parentKey: string | null
   attachments: string | null
+  jiraStatus: string | null
 }
 
 export async function createTicket(data: CreateTicketData): Promise<Ticket> {

@@ -8,6 +8,7 @@ import { migration0007JiraFields } from "./0007_jira_fields.js";
 import { migration0008ProjectProvider } from "./0008_project_provider.js";
 import { migration0009DropRepoPath } from "./0009_drop_repo_path.js";
 import { migration0010TicketBranch } from "./0010_ticket_branch.js";
+import { migration0011JiraStatus } from "./0011_jira_status.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
@@ -19,4 +20,5 @@ export const MIGRATIONS: Migration[] = [
   migration0008ProjectProvider,
   migration0009DropRepoPath,
   migration0010TicketBranch,
+  migration0011JiraStatus,
 ];

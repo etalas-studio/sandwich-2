@@ -344,7 +344,25 @@ async function runImplement(
         });
       }
     } catch {
-      // Non-fatal — the verify stage will catch missing changes
+      // Commit failed — fall through to the mechanical check below
+    }
+
+    // Mechanical guard: the agent must produce actual changes (committed or
+    // uncommitted). An empty worktree means the agent hallucinated success.
+    const hasUncommitted = execSync(
+      `git -C "${worktreePath}" status --porcelain`,
+      { encoding: "utf-8" },
+    ).trim();
+    const commitCount = execSync(
+      `git -C "${worktreePath}" rev-list --count "origin/${defaultBranch}"..HEAD`,
+      { encoding: "utf-8" },
+    ).trim();
+    if (!hasUncommitted && commitCount === "0") {
+      return {
+        ok: false,
+        reason: "Implementation produced no changes",
+        category: "empty_implementation",
+      };
     }
 
     return { ok: true };
@@ -374,6 +392,36 @@ async function runVerify(
     return { ok: false, reason: "No model or worktree", category: "agent_error" };
   }
 
+  const project = getCurrentProject(db);
+  const defaultBranch = project?.defaultBranch ?? "main";
+
+  // Mechanical guard 1: worktree must have commits (uncommitted changes
+  // from a failed auto-commit are still real work — commit them now).
+  try {
+    const status = execSync(`git -C "${fresh.worktreePath}" status --porcelain`, { encoding: "utf-8" });
+    if (status.trim()) {
+      execSync(`git -C "${fresh.worktreePath}" add -A`, { encoding: "utf-8", timeout: 10_000 });
+      execSync(`git -C "${fresh.worktreePath}" commit -m "${ticket.key}: auto-commit uncommitted changes"`, {
+        encoding: "utf-8",
+        timeout: 10_000,
+      });
+    }
+  } catch {
+    // If commit fails, check commit count below anyway
+  }
+
+  const commitCount = execSync(
+    `git -C "${fresh.worktreePath}" rev-list --count "origin/${defaultBranch}"..HEAD`,
+    { encoding: "utf-8" },
+  ).trim();
+  if (commitCount === "0") {
+    return {
+      ok: false,
+      reason: "Verification failed: worktree has no commits — implementation produced no changes",
+      category: "empty_implementation",
+    };
+  }
+
   const invoker = createInvoker(modelId);
   const prompt = [
     "Review your own implementation. Check:",
@@ -397,23 +445,28 @@ async function runVerify(
     });
 
     const jsonMatch = result.finalText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]) as { ok?: boolean; summary?: string; warnings?: string[] };
-      if (parsed.ok === false) {
-        return {
-          ok: false,
-          reason: parsed.summary ?? "Verification failed",
-          category: "weak_verification",
-        };
-      }
-      // Store warnings if any
-      if (parsed.warnings?.length) {
-        const existingReason = ticket.needsHumanReason ?? "";
-        const warningText = `[WARNINGS] ${parsed.warnings.join("; ")}`;
-        updateTicket(db, ticket.key, {
-          needsHumanReason: existingReason ? `${existingReason}\n${warningText}` : warningText,
-        });
-      }
+    if (!jsonMatch) {
+      return {
+        ok: false,
+        reason: "Verify agent returned no valid JSON response",
+        category: "weak_verification",
+      };
+    }
+    const parsed = JSON.parse(jsonMatch[0]) as { ok?: boolean; summary?: string; warnings?: string[] };
+    if (parsed.ok === false) {
+      return {
+        ok: false,
+        reason: parsed.summary ?? "Verification failed",
+        category: "weak_verification",
+      };
+    }
+    // Store warnings if any
+    if (parsed.warnings?.length) {
+      const existingReason = ticket.needsHumanReason ?? "";
+      const warningText = `[WARNINGS] ${parsed.warnings.join("; ")}`;
+      updateTicket(db, ticket.key, {
+        needsHumanReason: existingReason ? `${existingReason}\n${warningText}` : warningText,
+      });
     }
 
     return { ok: true };

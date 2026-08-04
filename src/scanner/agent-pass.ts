@@ -41,11 +41,18 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
   }
 
   const prompt = buildScanPrompt(input.mechanicalResult);
+  console.log("[scan:agent-pass] invoking agent, cwd =", input.repoPath);
   const engineResult = await input.invoker.run({
     prompt,
     cwd: input.repoPath,
     timeoutMs: SCAN_TIMEOUT_MS,
   });
+  console.log("[scan:agent-pass] agent outcome =", engineResult.outcome, "finalText length =", engineResult.finalText.length);
+  if (engineResult.finalText.length < 500) {
+    console.log("[scan:agent-pass] finalText =", engineResult.finalText);
+  } else {
+    console.log("[scan:agent-pass] finalText (first 500 chars) =", engineResult.finalText.slice(0, 500));
+  }
 
   const parsed = parseAgentResponse(engineResult.finalText);
 
@@ -67,7 +74,7 @@ function buildScanPrompt(mech: MechanicalResult): string {
   return [
     "You are analyzing a codebase. Do four things:",
     "",
-    "IMPORTANT: You are inside the target project's repository. Use the read, grep, find, and ls tools to explore the source files. The project you must describe is the one whose files you are reading right now — NOT the scanner/orchestrator that sent you this prompt.",
+    "IMPORTANT: You are inside the target project's repository. Use the read, grep, find, ls, and bash tools to explore the source files. The project you must describe is the one whose files you are reading right now — NOT the scanner/orchestrator that sent you this prompt.",
     "",
     "1. Write a descriptive project overview (4-5 sentences). What does this project do? How is it structured? What problem does it solve? Any notable architectural decisions? Do NOT mention the tech stack — focus on purpose, architecture, and behavior.",
     "",

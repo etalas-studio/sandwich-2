@@ -27,6 +27,7 @@ export interface Ticket {
   assignee: string | null;
   parentKey: string | null;
   attachments: string | null;
+  jiraStatus: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,6 +81,7 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     assignee: nullish(row.assignee),
     parentKey: nullish(row.parent_key),
     attachments: nullish(row.attachments),
+    jiraStatus: nullish(row.jira_status),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };

@@ -82,6 +82,15 @@ function MetadataBlock({ ticket }: { ticket: Ticket }) {
       <div className="section-label mb-2">Details</div>
       <div className="ds-card-outer" style={{ height: 'auto' }}>
         <div className="ds-card-inner p-3 space-y-2" style={{ height: 'auto' }}>
+          {/* Row 0: Jira Status */}
+          {ticket.jiraStatus && (
+            <div className="flex items-center gap-1.5 pb-1.5 mb-1 border-b border-white/[0.05]">
+              <iconify-icon icon="solar:check-circle-linear" width="13" className="text-[#8affb1] shrink-0" />
+              <span className="text-[11px] text-white/50 font-light">Status</span>
+              <span className="text-xs font-normal text-[#8affb1]">{ticket.jiraStatus}</span>
+            </div>
+          )}
+
           {/* Row 1: Type + Priority */}
           <div className="flex gap-6">
             <div className="flex-1 min-w-0 flex items-center gap-1.5">
@@ -304,7 +313,7 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
           <div className="mb-8">
             <div className="section-label">Description</div>
             <div
-              className="text-sm text-white/80 font-light leading-relaxed ticket-description"
+              className="text-base text-white/80 font-light leading-relaxed ticket-description"
               dangerouslySetInnerHTML={{ __html: marked.parse(ticket.description, { async: false }) as string }}
             />
           </div>

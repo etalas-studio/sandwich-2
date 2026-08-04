@@ -420,10 +420,10 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
   const insert = dbRef.prepare(
     `INSERT OR IGNORE INTO tickets (key, summary, description, url, status,
       issue_type, priority, sprint, story_points, team, assignee, parent_key, attachments,
-      created_at, updated_at)
+      jira_status, created_at, updated_at)
      VALUES (?, ?, ?, ?, 'backlog',
       ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?)`,
+      ?, ?, ?)`,
   );
 
   for (const issue of issues) {
@@ -473,10 +473,12 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
         )
       : null;
 
+    const jiraStatus = (fields.status as Record<string, unknown> | null)?.name ?? null;
+
     insert.run(
       key, summary || null, description, issueUrl,
       issueType, priority || null, sprint, storyPoints, team, assignee, parent,
-      attachments, now, now,
+      attachments, jiraStatus, now, now,
     );
     imported++;
   }

@@ -29,6 +29,7 @@ const ticket: Ticket = {
   assignee: null,
   parentKey: null,
   attachments: null,
+  jiraStatus: null,
 }
 
 describe('EditTicketModal', () => {
