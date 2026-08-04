@@ -2,7 +2,7 @@ import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { execSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
@@ -36,6 +36,11 @@ export async function runTicketPipeline(
   const emit = (event: TicketRunEvent) => {
     if (!signal.aborted) onEvent(event);
   };
+
+  // Resolve once here so every stage's `git -C <repoPath>` calls see an
+  // unambiguous absolute path (a relative repoPath resolves against -C's
+  // dir, not the process cwd, which breaks worktree path construction).
+  repoPath = resolve(repoPath);
 
   // Fetch ticket
   const ticket = getTicket(db, ticketKey);
