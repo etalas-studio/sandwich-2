@@ -18,6 +18,7 @@ import type { UpdateTicketData } from './api/tickets'
 import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket, pullJiraTickets } from './api/tickets'
 import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
+import { useIntegrations } from './hooks/useIntegrations'
 import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
 import { useScan } from './hooks/useScan'
@@ -245,6 +246,8 @@ function TicketsPage() {
     setSearchParams({})
   }
 
+  const { integrations } = useIntegrations()
+  const jiraConnected = integrations.some((i) => i.id === 'jira' && i.connected)
   const [isPulling, setIsPulling] = useState(false)
 
   const handlePull = async () => {
@@ -329,7 +332,7 @@ function TicketsPage() {
           <button
             className="relative inline-flex group"
             onClick={handlePull}
-            disabled={isPulling}
+            disabled={isPulling || !jiraConnected}
           >
             <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
             <span
@@ -342,7 +345,7 @@ function TicketsPage() {
               {isPulling ? (
                 <iconify-icon icon="solar:refresh-linear" width="14" className="text-white/80 animate-spin" />
               ) : (
-                <iconify-icon icon="simple-icons:jira" width="14" className="text-[#2684FF]" />
+                <iconify-icon icon="simple-icons:jira" width="14" className={jiraConnected ? 'text-[#2684FF]' : 'text-white/30'} />
               )}
               {isPulling ? 'Pulling…' : 'Pull Tickets'}
             </span>
