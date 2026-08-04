@@ -1,9 +1,11 @@
+import "dotenv/config";
 import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
 import { initIntegrations, getModelRuntime } from "./pipeline/integrations.js";
+import { initOAuth } from "./pipeline/oauth-integrations.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
@@ -11,6 +13,7 @@ import { registerAuthRoutes } from "./routes/auth.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerScanRoutes } from "./routes/scans.js";
+import { registerOAuthRoutes } from "./routes/oauth.js";
 import { registerPurgeRoute } from "./routes/purge.js";
 import { registerTicketRoutes } from "./routes/tickets.js";
 import { registerTicketRunRoutes } from "./routes/ticket-run.js";
@@ -29,7 +32,7 @@ function parseTrustedHosts(): Set<string> {
   );
 }
 
-const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout"]);
+const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/integrations/jira/callback", "/api/integrations/bitbucket/callback"]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { dbPath, port, webRoot } = options;
@@ -39,6 +42,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
 
   // Pi SDK integrations
   await initIntegrations(db);
+  initOAuth(db);
 
   // Build router
   const router = new Router(trustedHosts, boundPort);
@@ -68,6 +72,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   const scanRunner = createScanRunner(db, piInvokerFactory);
   registerScanRoutes(router, db, scanRunner);
   registerTicketRunRoutes(router, db, piInvokerFactory);
+  registerOAuthRoutes(router);
 
   const server = createServer((req, res) => {
     void (async () => {

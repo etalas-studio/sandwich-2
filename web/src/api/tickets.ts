@@ -17,6 +17,15 @@ export interface Ticket {
   quickWinAttempts: number
   createdAt: string
   updatedAt: string
+  // Jira metadata (informational)
+  issueType: string | null
+  priority: string | null
+  sprint: string | null
+  storyPoints: number | null
+  team: string | null
+  assignee: string | null
+  parentKey: string | null
+  attachments: string | null
 }
 
 export async function createTicket(data: CreateTicketData): Promise<Ticket> {

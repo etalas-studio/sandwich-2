@@ -11,6 +11,54 @@ const SOURCE_CONFIG: Record<TicketSource, { icon: string; label: string; color: 
   internal:{ icon: 'solar:document-linear',label: 'Internal',color: 'text-white/40' },
 }
 
+const ISSUE_TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
+  Story:   { icon: 'solar:bookmark-linear',     color: 'text-[#65ba69]' },
+  Bug:     { icon: 'solar:bug-linear',           color: 'text-[#e5484d]' },
+  Task:    { icon: 'solar:checklist-linear',     color: 'text-[#4d83f8]' },
+  Subtask: { icon: 'solar:documents-linear',     color: 'text-[#94a3b8]' },
+  Epic:    { icon: 'solar:lightning-linear',     color: 'text-[#b084f4]' },
+}
+
+const PRIORITY_COLORS: Record<string, string> = {
+  Highest: 'text-[#ff8a8a]',
+  High:    'text-[#f59e0b]',
+  Medium:  'text-[#94a3b8]',
+  Low:     'text-[#6b7280]',
+  Lowest:  'text-[#4b5563]',
+}
+
+const PRIORITY_ICONS: Record<string, string> = {
+  Highest: 'solar:double-alt-arrow-up-linear',
+  High:    'solar:alt-arrow-up-linear',
+  Medium:  'solar:alt-arrow-right-linear',
+  Low:     'solar:alt-arrow-down-linear',
+  Lowest:  'solar:double-alt-arrow-down-linear',
+}
+
+interface AttachmentMeta {
+  filename: string
+  mimeType: string
+  size: number
+  url: string
+}
+
+function parseAttachments(raw: string | null): AttachmentMeta[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+  } catch {
+    return []
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 function getTicketSource(url: string | null): TicketSource {
   if (!url) return 'internal'
   try {
@@ -20,6 +68,107 @@ function getTicketSource(url: string | null): TicketSource {
     if (host.includes('github.com')) return 'github'
   } catch { /* fall through */ }
   return 'internal'
+}
+
+function MetadataBlock({ ticket }: { ticket: Ticket }) {
+  const itCfg = ticket.issueType ? ISSUE_TYPE_CONFIG[ticket.issueType] : null
+  const prioColor = ticket.priority ? PRIORITY_COLORS[ticket.priority] : null
+  const prioIcon = ticket.priority ? PRIORITY_ICONS[ticket.priority] : null
+
+  return (
+    <div className="mb-6">
+      <div className="section-label mb-2">Details</div>
+      <div className="ds-card-outer" style={{ height: 'auto' }}>
+        <div className="ds-card-inner p-3 space-y-2" style={{ height: 'auto' }}>
+          {/* Row 1: Type + Priority */}
+          <div className="flex gap-6">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              {itCfg ? (
+                <iconify-icon icon={itCfg.icon} width="13" className={itCfg.color + ' shrink-0'} />
+              ) : (
+                <iconify-icon icon="solar:bookmark-linear" width="13" className="text-white/20 shrink-0" />
+              )}
+              <span className="text-[11px] text-white/50 font-light">Type</span>
+              <span className={`text-xs font-normal ${ticket.issueType ? 'text-white/70' : 'text-white/20'}`}>{ticket.issueType || '—'}</span>
+            </div>
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              {prioIcon ? (
+                <iconify-icon icon={prioIcon} width="13" className={(prioColor || 'text-white/20') + ' shrink-0'} />
+              ) : (
+                <iconify-icon icon="solar:alt-arrow-right-linear" width="13" className="text-white/20 shrink-0" />
+              )}
+              <span className="text-[11px] text-white/50 font-light">Priority</span>
+              <span className={`text-xs font-normal ${prioColor || (ticket.priority ? 'text-white/70' : 'text-white/20')}`}>{ticket.priority || '—'}</span>
+            </div>
+          </div>
+
+          {/* Row 2: Team + Assignee */}
+          <div className="flex gap-6">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <iconify-icon icon="solar:users-group-two-rounded-linear" width="13" className="text-white/20 shrink-0" />
+              <span className="text-[11px] text-white/50 font-light">Team</span>
+              <span className={`text-xs font-normal truncate ${ticket.team ? 'text-white/70' : 'text-white/20'}`}>{ticket.team || '—'}</span>
+            </div>
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <iconify-icon icon="solar:user-circle-linear" width="13" className="text-white/20 shrink-0" />
+              <span className="text-[11px] text-white/50 font-light">Assignee</span>
+              <span className={`text-xs font-normal truncate ${ticket.assignee ? 'text-white/70' : 'text-white/20'}`}>{ticket.assignee || '—'}</span>
+            </div>
+          </div>
+
+          {/* Row 3: Sprint + Story Points */}
+          <div className="flex gap-6">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <iconify-icon icon="solar:clock-circle-linear" width="13" className="text-white/20 shrink-0" />
+              <span className="text-[11px] text-white/50 font-light">Sprint</span>
+              <span className={`text-xs font-normal truncate ${ticket.sprint ? 'text-white/70' : 'text-white/20'}`}>{ticket.sprint || '—'}</span>
+            </div>
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <iconify-icon icon="solar:star-linear" width="13" className="text-white/20 shrink-0" />
+              <span className="text-[11px] text-white/50 font-light">Points</span>
+              <span className={`text-xs font-mono font-normal ${ticket.storyPoints != null ? 'text-white/70' : 'text-white/20'}`}>{ticket.storyPoints != null ? ticket.storyPoints : '—'}</span>
+            </div>
+          </div>
+
+          {/* Parent */}
+          <div className="flex items-center gap-1.5">
+            <iconify-icon icon="solar:link-circle-linear" width="13" className="text-white/20 shrink-0" />
+            <span className="text-[11px] text-white/50 font-light">Parent</span>
+            <span className={`text-xs font-mono font-normal ${ticket.parentKey ? 'text-white/70' : 'text-white/20'}`}>{ticket.parentKey || '—'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AttachmentsSection({ attachments }: { attachments: AttachmentMeta[] }) {
+  return (
+    <div className="mb-6">
+      <div className="section-label mb-2">Attachments ({attachments.length})</div>
+      {attachments.length === 0 ? (
+        <div className="px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+          <span className="text-xs text-white/20 font-light">No attachments</span>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {attachments.map((att, i) => (
+            <a
+              key={i}
+              href={att.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors group"
+            >
+              <iconify-icon icon="solar:paperclip-linear" width="13" className="text-white/30 group-hover:text-white/50 shrink-0 transition-colors" />
+              <span className="text-xs text-white/60 font-light truncate flex-1 group-hover:text-white/80 transition-colors">{att.filename}</span>
+              <span className="text-[10px] text-white/30 font-mono shrink-0">{formatFileSize(att.size)}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 interface TicketDetailProps {
@@ -96,6 +245,18 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-white/40 font-mono">{ticket.key}</span>
+                {ticket.issueType && ISSUE_TYPE_CONFIG[ticket.issueType] && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06]">
+                    <iconify-icon icon={ISSUE_TYPE_CONFIG[ticket.issueType].icon} width="10" className={ISSUE_TYPE_CONFIG[ticket.issueType].color} />
+                    <span className="text-[10px] text-white/30 font-normal">{ticket.issueType}</span>
+                  </span>
+                )}
+                {ticket.priority && (
+                  <span className={`inline-flex items-center gap-0.5 text-[10px] font-normal ${PRIORITY_COLORS[ticket.priority] || 'text-white/50'}`}>
+                    {PRIORITY_ICONS[ticket.priority] && <iconify-icon icon={PRIORITY_ICONS[ticket.priority]} width="10" />}
+                    {ticket.priority}
+                  </span>
+                )}
                 {(() => {
                   const src = getTicketSource(ticket.url)
                   const cfg = SOURCE_CONFIG[src]
@@ -128,6 +289,12 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
               {ticket.url}
             </a>
           )}
+
+          {/* Metadata */}
+          <MetadataBlock ticket={ticket} />
+
+          {/* Attachments */}
+          <AttachmentsSection attachments={parseAttachments(ticket.attachments)} />
 
           {/* Description */}
           <div className="mb-8">

@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { createDbCredentialStore } from "./db-credential-store.js";
 import { upsertCredential, deleteCredential } from "../db/credentials.js";
+import { isOAuthConnected, disconnectOAuth } from "./oauth-integrations.js";
 
 /**
  * Pi SDK integration layer.
@@ -52,50 +53,73 @@ export interface IntegrationStatus {
 const PROVIDER_META: Record<string, { name: string }> = {
   "opencode-go": { name: "OpenCode Go" },
   "openai-codex": { name: "OpenAI Codex" },
+  "jira": { name: "Jira" },
+  "bitbucket": { name: "Bitbucket" },
 };
 
 export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
-  if (!modelRuntime) {
-    return Object.entries(PROVIDER_META).map(([id, meta]) => ({
-      id,
-      name: meta.name,
-      connected: false,
-      authType: "none" as const,
-      models: [],
-      error: "integration runtime not initialized",
-    }));
-  }
-
   const results: IntegrationStatus[] = [];
 
-  for (const [providerId, meta] of Object.entries(PROVIDER_META)) {
-    try {
-      const usesOAuth = modelRuntime.isUsingOAuth(providerId);
-      const authCheck = await modelRuntime.checkAuth(providerId);
-      const connected = authCheck !== undefined;
-      const runtimeModels: Array<{ id: string; name: string }> = connected
-        ? modelRuntime.getModels(providerId).map((m) => ({ id: `${m.provider}/${m.id}`, name: m.name }))
-        : [];
+  // ── Pi SDK providers ──
+  if (modelRuntime) {
+    for (const providerId of ["opencode-go", "openai-codex"]) {
+      const meta = PROVIDER_META[providerId]!;
+      try {
+        const usesOAuth = modelRuntime.isUsingOAuth(providerId);
+        const authCheck = await modelRuntime.checkAuth(providerId);
+        const connected = authCheck !== undefined;
+        const runtimeModels: Array<{ id: string; name: string }> = connected
+          ? modelRuntime.getModels(providerId).map((m) => ({ id: `${m.provider}/${m.id}`, name: m.name }))
+          : [];
 
-      results.push({
-        id: providerId,
-        name: meta.name,
-        connected,
-        authType: usesOAuth ? "oauth" : "api_key",
-        models: runtimeModels,
-        error: connected ? undefined : (usesOAuth ? "OAuth not configured — login via Pi CLI" : "API key not set"),
-      });
-    } catch (err) {
-      results.push({
-        id: providerId,
-        name: meta.name,
-        connected: false,
-        authType: "none",
-        models: [],
-        error: err instanceof Error ? err.message : "unknown error",
-      });
+        results.push({
+          id: providerId,
+          name: meta.name,
+          connected,
+          authType: usesOAuth ? "oauth" : "api_key",
+          models: runtimeModels,
+          error: connected ? undefined : (usesOAuth ? "OAuth not configured — login via Pi CLI" : "API key not set"),
+        });
+      } catch (err) {
+        results.push({
+          id: providerId,
+          name: meta.name,
+          connected: false,
+          authType: "none",
+          models: [],
+          error: err instanceof Error ? err.message : "unknown error",
+        });
+      }
     }
+  } else {
+    results.push(
+      { id: "opencode-go", name: "OpenCode Go", connected: false, authType: "none", models: [], error: "runtime not initialized" },
+      { id: "openai-codex", name: "OpenAI Codex", connected: false, authType: "none", models: [], error: "runtime not initialized" },
+    );
   }
+
+  // ── OAuth providers (Jira / Bitbucket) ──
+  for (const providerId of ["jira", "bitbucket"]) {
+    const meta = PROVIDER_META[providerId]!;
+    const connected = isOAuthConnected(providerId);
+    results.push({
+      id: providerId,
+      name: meta.name,
+      connected,
+      authType: "oauth",
+      models: [],
+      error: connected ? undefined : "Not connected",
+    });
+  }
+
+  // ── 9Router (static, always available) ──
+  results.push({
+    id: "9router",
+    name: "9Router",
+    connected: true,
+    authType: "none",
+    models: [],
+  });
 
   return results;
 }
@@ -109,6 +133,11 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
 export async function connectWithApiKey(providerId: string, apiKey: string): Promise<{ ok: boolean; message: string }> {
   if (!modelRuntime || !dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
+  }
+
+  // OAuth providers — handled by the authorize redirect
+  if (providerId === "jira" || providerId === "bitbucket") {
+    return { ok: true, message: "Use OAuth authorize endpoint: /api/integrations/${providerId}/authorize" };
   }
 
   if (providerId !== "opencode-go") {
@@ -137,6 +166,11 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
 export async function disconnectApiKey(providerId: string): Promise<{ ok: boolean; message: string }> {
   if (!dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
+  }
+
+  if (providerId === "jira" || providerId === "bitbucket") {
+    disconnectOAuth(providerId);
+    return { ok: true, message: "Disconnected" };
   }
 
   if (providerId !== "opencode-go") {

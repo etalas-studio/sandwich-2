@@ -21,6 +21,14 @@ const ticket: Ticket = {
   quickWinAttempts: 0,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
+  issueType: null,
+  priority: null,
+  sprint: null,
+  storyPoints: null,
+  team: null,
+  assignee: null,
+  parentKey: null,
+  attachments: null,
 }
 
 describe('EditTicketModal', () => {

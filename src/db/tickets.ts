@@ -17,6 +17,15 @@ export interface Ticket {
   worktreePath: string | null;
   quickWinChoices: string | null;
   quickWinAttempts: number;
+  // Informational Jira fields (nullable — pipeline never reads these)
+  issueType: string | null;
+  priority: string | null;
+  sprint: string | null;
+  storyPoints: number | null;
+  team: string | null;
+  assignee: string | null;
+  parentKey: string | null;
+  attachments: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,11 +35,22 @@ export interface CreateTicketInput {
   summary?: string;
   description: string;
   url: string | null;
+  issueType?: string | null;
+  priority?: string | null;
+  sprint?: string | null;
+  storyPoints?: number | null;
+  team?: string | null;
+  assignee?: string | null;
+  parentKey?: string | null;
+  attachments?: string | null;
 }
 
 function validate(input: CreateTicketInput): void {
   if (!input.description.trim()) throw new Error("description must not be empty");
 }
+
+const nullishNum = (v: unknown): number | null =>
+  v === undefined || v === null ? null : Number(v);
 
 function normaliseTicket(row: Record<string, unknown>): Ticket {
   const nullish = (v: unknown) => (v === undefined || v === null ? null : String(v));
@@ -50,6 +70,14 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     worktreePath: nullish(row.worktree_path),
     quickWinChoices: nullish(row.quick_win_choices),
     quickWinAttempts: typeof row.quick_win_attempts === "number" ? row.quick_win_attempts : 0,
+    issueType: nullish(row.issue_type),
+    priority: nullish(row.priority),
+    sprint: nullish(row.sprint),
+    storyPoints: nullishNum(row.story_points),
+    team: nullish(row.team),
+    assignee: nullish(row.assignee),
+    parentKey: nullish(row.parent_key),
+    attachments: nullish(row.attachments),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -60,9 +88,16 @@ export function createTicket(db: Database.Database, input: CreateTicketInput): T
   const key = input.id.trim() || `T-${randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
   db.prepare(
-    `INSERT INTO tickets (key, summary, description, url, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'backlog', ?, ?)`,
-  ).run(key, input.summary ?? null, input.description, input.url, now, now);
+    `INSERT INTO tickets (key, summary, description, url, status, created_at, updated_at,
+      issue_type, priority, sprint, story_points, team, assignee, parent_key, attachments)
+     VALUES (?, ?, ?, ?, 'backlog', ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    key, input.summary ?? null, input.description, input.url, now, now,
+    input.issueType ?? null, input.priority ?? null, input.sprint ?? null,
+    input.storyPoints ?? null, input.team ?? null, input.assignee ?? null,
+    input.parentKey ?? null, input.attachments ?? null,
+  );
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
   return normaliseTicket(row);
 }
@@ -93,6 +128,14 @@ export interface UpdateTicketInput {
   needsHumanReason?: string | null;
   quickWinChoices?: string | null;
   quickWinAttempts?: number;
+  issueType?: string | null;
+  priority?: string | null;
+  sprint?: string | null;
+  storyPoints?: number | null;
+  team?: string | null;
+  assignee?: string | null;
+  parentKey?: string | null;
+  attachments?: string | null;
 }
 
 export function updateTicket(db: Database.Database, key: string, input: UpdateTicketInput): Ticket | null {
@@ -141,6 +184,30 @@ export function updateTicket(db: Database.Database, key: string, input: UpdateTi
   }
   if (input.quickWinAttempts !== undefined) {
     db.prepare("UPDATE tickets SET quick_win_attempts = ?, updated_at = ? WHERE key = ?").run(input.quickWinAttempts, now, key);
+  }
+  if (input.issueType !== undefined) {
+    db.prepare("UPDATE tickets SET issue_type = ?, updated_at = ? WHERE key = ?").run(input.issueType, now, key);
+  }
+  if (input.priority !== undefined) {
+    db.prepare("UPDATE tickets SET priority = ?, updated_at = ? WHERE key = ?").run(input.priority, now, key);
+  }
+  if (input.sprint !== undefined) {
+    db.prepare("UPDATE tickets SET sprint = ?, updated_at = ? WHERE key = ?").run(input.sprint, now, key);
+  }
+  if (input.storyPoints !== undefined) {
+    db.prepare("UPDATE tickets SET story_points = ?, updated_at = ? WHERE key = ?").run(input.storyPoints, now, key);
+  }
+  if (input.team !== undefined) {
+    db.prepare("UPDATE tickets SET team = ?, updated_at = ? WHERE key = ?").run(input.team, now, key);
+  }
+  if (input.assignee !== undefined) {
+    db.prepare("UPDATE tickets SET assignee = ?, updated_at = ? WHERE key = ?").run(input.assignee, now, key);
+  }
+  if (input.parentKey !== undefined) {
+    db.prepare("UPDATE tickets SET parent_key = ?, updated_at = ? WHERE key = ?").run(input.parentKey, now, key);
+  }
+  if (input.attachments !== undefined) {
+    db.prepare("UPDATE tickets SET attachments = ?, updated_at = ? WHERE key = ?").run(input.attachments, now, key);
   }
 
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
