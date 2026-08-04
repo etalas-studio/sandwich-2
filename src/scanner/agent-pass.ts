@@ -37,7 +37,14 @@ const SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResult> {
   if (input.signal.aborted) {
-    return { projectName: null, description: null, areas: [], recommendations: [], blocklistProposals: [], outcome: "aborted" };
+    return {
+      projectName: null,
+      description: null,
+      areas: [],
+      recommendations: [],
+      blocklistProposals: [],
+      outcome: "aborted",
+    };
   }
 
   const prompt = buildScanPrompt(input.mechanicalResult);
@@ -47,11 +54,19 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
     cwd: input.repoPath,
     timeoutMs: SCAN_TIMEOUT_MS,
   });
-  console.log("[scan:agent-pass] agent outcome =", engineResult.outcome, "finalText length =", engineResult.finalText.length);
+  console.log(
+    "[scan:agent-pass] agent outcome =",
+    engineResult.outcome,
+    "finalText length =",
+    engineResult.finalText.length,
+  );
   if (engineResult.finalText.length < 500) {
     console.log("[scan:agent-pass] finalText =", engineResult.finalText);
   } else {
-    console.log("[scan:agent-pass] finalText (first 500 chars) =", engineResult.finalText.slice(0, 500));
+    console.log(
+      "[scan:agent-pass] finalText (first 500 chars) =",
+      engineResult.finalText.slice(0, 500),
+    );
   }
 
   const parsed = parseAgentResponse(engineResult.finalText);
@@ -67,9 +82,10 @@ export async function runAgentPass(input: AgentPassInput): Promise<AgentPassResu
 }
 
 function buildScanPrompt(mech: MechanicalResult): string {
-  const projectNameHint = mech.projectName !== "unknown"
-    ? `Project name from package.json: ${mech.projectName}`
-    : "Project name not found in package.json — infer one from the codebase (e.g. README title, directory name, or what the project calls itself).";
+  const projectNameHint =
+    mech.projectName !== "unknown"
+      ? `Project name from package.json: ${mech.projectName}`
+      : "Project name not found in package.json — infer one from the codebase (e.g. README title, directory name, or what the project calls itself).";
 
   return [
     "You are analyzing a codebase. Do four things:",
@@ -78,7 +94,7 @@ function buildScanPrompt(mech: MechanicalResult): string {
     "",
     "1. Write a descriptive project overview (4-5 sentences). What does this project do? How is it structured? What problem does it solve? Any notable architectural decisions? Do NOT mention the tech stack — focus on purpose, architecture, and behavior.",
     "",
-    "2. Define logical area boundaries. Don't just list top-level directories — understand the architecture (DDD, Clean Architecture, MVC, monolith, microservices, etc.) and group related files into meaningful areas. Each area needs a name, one or more path patterns (directory or file globs like \"src/auth/\" or \"src/middleware/*.ts\"), and a short risk note explaining what makes this area sensitive or stable. Include ALL major areas of the codebase.",
+    '2. Define logical area boundaries. Don\'t just list top-level directories — understand the architecture (DDD, Clean Architecture, MVC, monolith, microservices, etc.) and group related files into meaningful areas. Each area needs a name, one or more path patterns (directory or file globs like "src/auth/" or "src/middleware/*.ts"), and a short risk note explaining what makes this area sensitive or stable. Include ALL major areas of the codebase.',
     "",
     "3. Identify files, directories, or operations that an AI agent should NEVER touch without human review. Consider: credential files, production configs, database migrations, deployment scripts, auth modules.",
     "",
@@ -114,9 +130,10 @@ function parseAgentResponse(text: string): ParsedResponse {
     try {
       const parsed = JSON.parse(objMatch[0]) as Record<string, unknown>;
 
-      const projectName = typeof parsed.projectName === "string" && parsed.projectName.length > 0
-        ? parsed.projectName
-        : null;
+      const projectName =
+        typeof parsed.projectName === "string" && parsed.projectName.length > 0
+          ? parsed.projectName
+          : null;
       const desc = typeof parsed.description === "string" ? parsed.description : null;
 
       const recs = Array.isArray(parsed.recommendations) ? parsed.recommendations : [];

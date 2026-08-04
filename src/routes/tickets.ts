@@ -22,9 +22,16 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     }
 
     const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
-    const summary = typeof candidate.summary === "string" && candidate.summary.trim() !== "" ? candidate.summary.trim() : undefined;
-    const description = typeof candidate.description === "string" ? candidate.description.trim() : "";
-    const url = typeof candidate.url === "string" && candidate.url.trim() !== "" ? candidate.url.trim() : null;
+    const summary =
+      typeof candidate.summary === "string" && candidate.summary.trim() !== ""
+        ? candidate.summary.trim()
+        : undefined;
+    const description =
+      typeof candidate.description === "string" ? candidate.description.trim() : "";
+    const url =
+      typeof candidate.url === "string" && candidate.url.trim() !== ""
+        ? candidate.url.trim()
+        : null;
 
     if (!description) {
       sendJson(res, 400, { error: "description is required" });

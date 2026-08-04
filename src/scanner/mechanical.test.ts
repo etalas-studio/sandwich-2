@@ -60,10 +60,7 @@ function testDetectsReactAndExpress(): void {
 
 function testFallbackToNodeOnly(): void {
   const dir = makeFixture();
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({ name: "bare", scripts: {} }),
-  );
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "bare", scripts: {} }));
   commitAll(dir, "init");
 
   const result = scanMechanical(dir);
@@ -88,10 +85,7 @@ function testExtractsTestCommand(): void {
 
 function testTestCommandNullWhenMissing(): void {
   const dir = makeFixture();
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({ name: "app", scripts: {} }),
-  );
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app", scripts: {} }));
   commitAll(dir, "init");
 
   const result = scanMechanical(dir);
@@ -103,10 +97,7 @@ function testTestCommandNullWhenMissing(): void {
 
 function testComputesAreaSignals(): void {
   const dir = makeFixture();
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({ name: "app", scripts: {} }),
-  );
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app", scripts: {} }));
 
   // Create src with test and non-test files
   mkdirSync(join(dir, "src"), { recursive: true });
@@ -150,10 +141,7 @@ function testComputesAreaSignals(): void {
 
 function testExcludesIgnoredDirectories(): void {
   const dir = makeFixture();
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({ name: "app", scripts: {} }),
-  );
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app", scripts: {} }));
 
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(join(dir, "src", "index.ts"), "// code");
@@ -180,10 +168,7 @@ function testExcludesIgnoredDirectories(): void {
 
 function testMatchesTestsByNameAcrossAreas(): void {
   const dir = makeFixture();
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({ name: "app", scripts: {} }),
-  );
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app", scripts: {} }));
 
   // src area: source files with NO colocated tests
   mkdirSync(join(dir, "src"), { recursive: true });
@@ -209,8 +194,10 @@ function testMatchesTestsByNameAcrossAreas(): void {
   const src = result.areaSignals.find((a) => a.area === "src");
   assert.ok(src);
   assert.equal(src!.files, 3);
-  assert.ok(src!.testToCodeRatio > 0.66 && src!.testToCodeRatio < 0.67,
-    `expected ~0.667, got ${src!.testToCodeRatio}`);
+  assert.ok(
+    src!.testToCodeRatio > 0.66 && src!.testToCodeRatio < 0.67,
+    `expected ~0.667, got ${src!.testToCodeRatio}`,
+  );
 
   // shared-tests: 0 code files, 3 test files → ratio 0
   const sharedTests = result.areaSignals.find((a) => a.area === "shared-tests");

@@ -1,4 +1,13 @@
-import type { VcsClient, VcsCreatePrInput, VcsFindPrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
+import type {
+  VcsClient,
+  VcsCreatePrInput,
+  VcsFindPrInput,
+  VcsOrg,
+  VcsPrResult,
+  VcsRepo,
+  VcsRepoPage,
+  FetchFn,
+} from "./vcs-types.js";
 
 const API_BASE = "https://api.bitbucket.org/2.0";
 
@@ -62,12 +71,18 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
       throw new Error("Bitbucket workspaces unavailable");
     },
 
-    async listRepos(token: string, org: string, opts: { page: number; q?: string }): Promise<VcsRepoPage> {
+    async listRepos(
+      token: string,
+      org: string,
+      opts: { page: number; q?: string },
+    ): Promise<VcsRepoPage> {
       const headers = { Authorization: `Bearer ${token}` };
       const params = new URLSearchParams({ page: String(opts.page), pagelen: "30" });
       if (opts.q) params.set("q", `name~"${opts.q}"`);
 
-      const res = await fetchFn(`${API_BASE}/repositories/${org}?${params.toString()}`, { headers });
+      const res = await fetchFn(`${API_BASE}/repositories/${org}?${params.toString()}`, {
+        headers,
+      });
       if (!res.ok) throw new Error(`Bitbucket repos failed: ${res.status}`);
       const body = (await res.json()) as { values: BitbucketRepoResponse[]; next?: string };
       return { repos: body.values.map(toRepo), nextPage: nextPageFromNextUrl(body.next) };
@@ -101,13 +116,17 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
 
     async findPullRequest(input: VcsFindPrInput): Promise<VcsPrResult | null> {
       const headers = { Authorization: `Bearer ${input.token}` };
-      const params = new URLSearchParams({ q: `source.branch.name="${input.headBranch}" AND state="OPEN"` });
+      const params = new URLSearchParams({
+        q: `source.branch.name="${input.headBranch}" AND state="OPEN"`,
+      });
       const res = await fetchFn(
         `${API_BASE}/repositories/${input.owner}/${input.repoSlug}/pullrequests?${params.toString()}`,
         { headers },
       );
       if (!res.ok) throw new Error(`Bitbucket PR lookup failed: ${res.status}`);
-      const data = (await res.json()) as { values: Array<{ links: { html: { href: string } }; id: number }> };
+      const data = (await res.json()) as {
+        values: Array<{ links: { html: { href: string } }; id: number }>;
+      };
       return data.values.length > 0
         ? { url: data.values[0]!.links.html.href, number: data.values[0]!.id }
         : null;

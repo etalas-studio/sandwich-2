@@ -17,7 +17,10 @@ export function createDbCredentialStore(db: Database.Database): NonNullable<PiCr
       return row ? JSON.parse(row.value) : undefined;
     },
     async list() {
-      const row = db.prepare("SELECT name, value FROM credentials").all() as Array<{ name: string; value: string }>;
+      const row = db.prepare("SELECT name, value FROM credentials").all() as Array<{
+        name: string;
+        value: string;
+      }>;
       return row.map((r) => ({ providerId: r.name, type: JSON.parse(r.value).type }));
     },
     async modify(providerId: string, fn: (current: unknown) => Promise<unknown>) {

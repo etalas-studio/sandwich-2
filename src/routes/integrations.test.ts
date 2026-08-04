@@ -15,10 +15,20 @@ function mockReq(method: string, path: string, headers: Record<string, string> =
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
   let _resolve: () => void;
-  res.ended = new Promise<void>((r) => { _resolve = r; });
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; _resolve(); };
-  res.destroy = () => { _resolve(); };
+  res.ended = new Promise<void>((r) => {
+    _resolve = r;
+  });
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+    _resolve();
+  };
+  res.destroy = () => {
+    _resolve();
+  };
   return res;
 }
 
@@ -65,8 +75,10 @@ describe("integrations routes", () => {
       const res = mockRes();
 
       await router.dispatch(
-        mockReqWithBody("POST", "/api/integrations/opencode-go/connect", { apiKey: "sk-test-key-123" }),
-        res
+        mockReqWithBody("POST", "/api/integrations/opencode-go/connect", {
+          apiKey: "sk-test-key-123",
+        }),
+        res,
       );
       await res.ended;
 
@@ -81,8 +93,10 @@ describe("integrations routes", () => {
       const res = mockRes();
 
       await router.dispatch(
-        mockReqWithBody("POST", "/api/integrations/anthropic/connect", { apiKey: "sk-ant-test-key-123" }),
-        res
+        mockReqWithBody("POST", "/api/integrations/anthropic/connect", {
+          apiKey: "sk-ant-test-key-123",
+        }),
+        res,
       );
       await res.ended;
 
@@ -100,8 +114,10 @@ describe("integrations routes", () => {
 
       const res = mockRes();
       await router.dispatch(
-        mockReqWithBody("POST", "/api/integrations/unknown-provider/connect", { apiKey: "sk-test" }),
-        res
+        mockReqWithBody("POST", "/api/integrations/unknown-provider/connect", {
+          apiKey: "sk-test",
+        }),
+        res,
       );
       await res.ended;
 
@@ -120,7 +136,7 @@ describe("integrations routes", () => {
 
       await router.dispatch(
         mockReqWithBody("POST", "/api/integrations/opencode-go/connect", {}),
-        res
+        res,
       );
       await res.ended;
 
@@ -136,7 +152,7 @@ describe("integrations routes", () => {
 
       await router.dispatch(
         mockReqWithBody("POST", "/api/integrations/opencode-go/connect", { apiKey: "   " }),
-        res
+        res,
       );
       await res.ended;
 
@@ -152,10 +168,7 @@ describe("integrations routes", () => {
       registerIntegrationRoutes(router);
 
       const res = mockRes();
-      await router.dispatch(
-        mockReq("POST", "/api/integrations/opencode-go/disconnect"),
-        res
-      );
+      await router.dispatch(mockReq("POST", "/api/integrations/opencode-go/disconnect"), res);
       await res.ended;
 
       // Without runtime init, this returns 400 - but the route exists
@@ -167,10 +180,7 @@ describe("integrations routes", () => {
       registerIntegrationRoutes(router);
 
       const res = mockRes();
-      await router.dispatch(
-        mockReq("POST", "/api/integrations/unknown-provider/disconnect"),
-        res
-      );
+      await router.dispatch(mockReq("POST", "/api/integrations/unknown-provider/disconnect"), res);
       await res.ended;
 
       // Route exists, but provider validation should reject it
@@ -195,10 +205,13 @@ describe("integrations routes", () => {
 
       const providerIds = body.map((p: any) => p.id);
       assert.ok(providerIds.includes("opencode-go"), "should include opencode-go");
-      
+
       // THIS IS THE FAILING TEST: anthropic is not yet included in the results
-      assert.ok(providerIds.includes("anthropic"), "should include anthropic - THIS WILL FAIL until implemented");
-      
+      assert.ok(
+        providerIds.includes("anthropic"),
+        "should include anthropic - THIS WILL FAIL until implemented",
+      );
+
       assert.ok(providerIds.includes("openai-codex"), "should include openai-codex");
       assert.ok(providerIds.includes("jira"), "should include jira");
       assert.ok(providerIds.includes("bitbucket"), "should include bitbucket");

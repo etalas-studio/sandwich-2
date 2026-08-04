@@ -68,7 +68,14 @@ export function runProcess(bin: string, args: string[], options: ProcOptions): P
       clearTimeout(timer);
       signal?.removeEventListener("abort", onAbort);
       if (onStdoutLine && pending.length > 0) onStdoutLine(pending);
-      resolve({ exitCode, stdout, stderr, timedOut, aborted, durationSec: (Date.now() - startedAt) / 1000 });
+      resolve({
+        exitCode,
+        stdout,
+        stderr,
+        timedOut,
+        aborted,
+        durationSec: (Date.now() - startedAt) / 1000,
+      });
     };
 
     child.on("error", (err) => {

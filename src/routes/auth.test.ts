@@ -13,14 +13,29 @@ function mockReq(method: string, path: string, headers: Record<string, string> =
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
   let _resolve: () => void;
-  res.ended = new Promise<void>((r) => { _resolve = r; });
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; _resolve(); };
-  res.destroy = () => { _resolve(); };
+  res.ended = new Promise<void>((r) => {
+    _resolve = r;
+  });
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+    _resolve();
+  };
+  res.destroy = () => {
+    _resolve();
+  };
   return res;
 }
 
-const PUBLIC = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout"]);
+const PUBLIC = new Set([
+  "/api/auth/me",
+  "/api/auth/register",
+  "/api/auth/login",
+  "/api/auth/logout",
+]);
 
 describe("auth routes", () => {
   let db: ReturnType<typeof openDb>;
@@ -51,8 +66,13 @@ describe("auth routes", () => {
     registerAuthRoutes(router, db, PUBLIC);
     const res = mockRes();
     const req: any = {
-      method: "POST", url: "/api/auth/register", headers: { host: "127.0.0.1:0" },
-      on: (ev: string, fn: Function) => { if (ev === "data") fn(Buffer.from("{}")); if (ev === "end") fn(); },
+      method: "POST",
+      url: "/api/auth/register",
+      headers: { host: "127.0.0.1:0" },
+      on: (ev: string, fn: Function) => {
+        if (ev === "data") fn(Buffer.from("{}"));
+        if (ev === "end") fn();
+      },
     };
     await router.dispatch(req, res);
     await res.ended;
@@ -66,9 +86,14 @@ describe("auth routes", () => {
     // Register
     const regRes = mockRes();
     const regReq: any = {
-      method: "POST", url: "/api/auth/register", headers: { host: "127.0.0.1:0" },
+      method: "POST",
+      url: "/api/auth/register",
+      headers: { host: "127.0.0.1:0" },
       on: (ev: string, fn: Function) => {
-        if (ev === "data") fn(Buffer.from(JSON.stringify({ username: "a", email: "a@b.com", password: "hunter22" })));
+        if (ev === "data")
+          fn(
+            Buffer.from(JSON.stringify({ username: "a", email: "a@b.com", password: "hunter22" })),
+          );
         if (ev === "end") fn();
       },
     };
@@ -79,7 +104,9 @@ describe("auth routes", () => {
     // Login with wrong password
     const badRes = mockRes();
     const badReq: any = {
-      method: "POST", url: "/api/auth/login", headers: { host: "127.0.0.1:0" },
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { host: "127.0.0.1:0" },
       on: (ev: string, fn: Function) => {
         if (ev === "data") fn(Buffer.from(JSON.stringify({ username: "a", password: "wrong" })));
         if (ev === "end") fn();
@@ -92,7 +119,9 @@ describe("auth routes", () => {
     // Login correct
     const okRes = mockRes();
     const okReq: any = {
-      method: "POST", url: "/api/auth/login", headers: { host: "127.0.0.1:0" },
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { host: "127.0.0.1:0" },
       on: (ev: string, fn: Function) => {
         if (ev === "data") fn(Buffer.from(JSON.stringify({ username: "a", password: "hunter22" })));
         if (ev === "end") fn();

@@ -110,7 +110,9 @@ export function readJsonBody(req: IncomingMessage): Promise<unknown> {
  * pipeline run against a non-repo directory would fail confusingly deep
  * inside git.ts instead of here, at the point the human chose it.
  */
-export function validateRepoPath(candidate: unknown): { ok: true; repoPath: string } | { ok: false; error: string } {
+export function validateRepoPath(
+  candidate: unknown,
+): { ok: true; repoPath: string } | { ok: false; error: string } {
   if (typeof candidate !== "string" || candidate.trim().length === 0) {
     return { ok: false, error: "repoPath is required" };
   }

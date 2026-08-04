@@ -16,11 +16,7 @@ import {
   buildSessionCookie,
   parseCookies,
 } from "../auth/cookie.js";
-import {
-  sendJson,
-  sendCaughtError,
-  readJsonBody,
-} from "../http-utils.js";
+import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
 
@@ -61,7 +57,11 @@ export function registerAuthRoutes(
 
   router.post("/api/auth/register", async (req, res) => {
     try {
-      const body = (await readJsonBody(req)) as { username?: string; email?: string; password?: string };
+      const body = (await readJsonBody(req)) as {
+        username?: string;
+        email?: string;
+        password?: string;
+      };
       if (!body.username || !body.email || !body.password) {
         throw new AuthError(400, "username, email, and password are required");
       }

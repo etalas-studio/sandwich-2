@@ -3,7 +3,13 @@ import { describe, it } from "node:test";
 import { Router } from "./router.js";
 
 function mockReq(method: string, path: string, headers: Record<string, string> = {}): any {
-  return { method, url: path, headers: { host: "127.0.0.1:0", ...headers }, socket: { localPort: 0 }, on: () => {} };
+  return {
+    method,
+    url: path,
+    headers: { host: "127.0.0.1:0", ...headers },
+    socket: { localPort: 0 },
+    on: () => {},
+  };
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
@@ -11,7 +17,9 @@ function mockRes(): any {
     res.statusCode = status;
     if (headers) Object.assign(res.headers, headers);
   };
-  res.end = (payload?: string) => { if (payload !== undefined) res.body = payload; };
+  res.end = (payload?: string) => {
+    if (payload !== undefined) res.body = payload;
+  };
   res.destroy = () => {};
   return res;
 }
@@ -53,7 +61,10 @@ describe("Router", () => {
   it("returns 405 for wrong method on existing path", async () => {
     const router = new Router(new Set(), 0);
     const res = mockRes();
-    router.get("/api/test", (_req, res, _params) => { res.writeHead(200); res.end("ok"); });
+    router.get("/api/test", (_req, res, _params) => {
+      res.writeHead(200);
+      res.end("ok");
+    });
     await router.dispatch(mockReq("POST", "/api/test"), res);
     assert.equal(res.statusCode, 405);
   });
@@ -73,7 +84,10 @@ describe("Router", () => {
   it("returns 404 when :param prefix mismatches", async () => {
     const router = new Router(new Set(), 0);
     const res = mockRes();
-    router.get("/api/integrations/:id/connect", (_req, res, _params) => { res.writeHead(200); res.end("ok"); });
+    router.get("/api/integrations/:id/connect", (_req, res, _params) => {
+      res.writeHead(200);
+      res.end("ok");
+    });
     await router.dispatch(mockReq("GET", "/api/other/x/connect"), res);
     assert.equal(res.statusCode, 404);
   });
@@ -89,7 +103,9 @@ describe("Router", () => {
       return false;
     });
     let handlerRan = false;
-    router.get("/api/test", () => { handlerRan = true; });
+    router.get("/api/test", () => {
+      handlerRan = true;
+    });
     await router.dispatch(mockReq("GET", "/api/test"), res);
     assert.equal(middlewareRan, true);
     assert.equal(handlerRan, false);
@@ -101,9 +117,15 @@ describe("Router", () => {
     const router = new Router(new Set(), 0);
     const res = mockRes();
     let middlewareRan = false;
-    router.use(() => { middlewareRan = true; });
+    router.use(() => {
+      middlewareRan = true;
+    });
     let handlerRan = false;
-    router.get("/api/test", (_req, res, _params) => { handlerRan = true; res.writeHead(200); res.end("ok"); });
+    router.get("/api/test", (_req, res, _params) => {
+      handlerRan = true;
+      res.writeHead(200);
+      res.end("ok");
+    });
     await router.dispatch(mockReq("GET", "/api/test"), res);
     assert.equal(middlewareRan, true);
     assert.equal(handlerRan, true);
@@ -112,7 +134,9 @@ describe("Router", () => {
   it("catches thrown errors and responds 500", async () => {
     const router = new Router(new Set(), 0);
     const res = mockRes();
-    router.get("/api/test", () => { throw new Error("boom"); });
+    router.get("/api/test", () => {
+      throw new Error("boom");
+    });
     await router.dispatch(mockReq("GET", "/api/test"), res);
     assert.equal(res.statusCode, 500);
     assert.deepEqual(JSON.parse(res.body), { error: "internal error" });
@@ -121,7 +145,10 @@ describe("Router", () => {
   it("rejects untrusted Host header with 403", async () => {
     const router = new Router(new Set(), 4319);
     const res = mockRes();
-    router.get("/api/test", (_req, res, _params) => { res.writeHead(200); res.end("ok"); });
+    router.get("/api/test", (_req, res, _params) => {
+      res.writeHead(200);
+      res.end("ok");
+    });
     await router.dispatch(mockReq("GET", "/api/test", { host: "evil.example" }), res);
     assert.equal(res.statusCode, 403);
     assert.deepEqual(JSON.parse(res.body), { error: "forbidden" });

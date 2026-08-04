@@ -12,12 +12,24 @@ import { registerTicketRunRoutes } from "./ticket-run.js";
 const REPOS_DIR = "/data/repos";
 
 function mockReq(method: string, path: string): any {
-  return { method, url: path, headers: { host: "127.0.0.1:0" }, on: (ev: string, fn: Function) => { if (ev === "end") fn(); } };
+  return {
+    method,
+    url: path,
+    headers: { host: "127.0.0.1:0" },
+    on: (ev: string, fn: Function) => {
+      if (ev === "end") fn();
+    },
+  };
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; };
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+  };
   res.destroy = () => {};
   return res;
 }
@@ -39,7 +51,12 @@ describe("ticket run routes", () => {
   it("POST /api/tickets/:key/run returns 503 when no project configured", async () => {
     createTicket(db, { id: "T-1", description: "do a thing", url: null });
     const router = new Router(new Set(), 0);
-    registerTicketRunRoutes(router, db, () => ({ run: async () => ({ outcome: "ok", finalText: "" }) }), REPOS_DIR);
+    registerTicketRunRoutes(
+      router,
+      db,
+      () => ({ run: async () => ({ outcome: "ok", finalText: "" }) }),
+      REPOS_DIR,
+    );
     const res = mockRes();
     await router.dispatch(mockReq("POST", "/api/tickets/T-1/run"), res);
     assert.equal(res.statusCode, 503);
@@ -47,12 +64,22 @@ describe("ticket run routes", () => {
   });
 
   it("POST /api/tickets/:key/run starts a run when a project is ready", async () => {
-    const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+    const project = createProject(db, {
+      provider: "github",
+      owner: "acme",
+      repoSlug: "widgets",
+      defaultBranch: "main",
+    });
     markProjectReady(db, project.id);
     createTicket(db, { id: "T-2", description: "do a thing", url: null });
 
     const router = new Router(new Set(), 0);
-    registerTicketRunRoutes(router, db, () => ({ run: async () => ({ outcome: "ok", finalText: "" }) }), REPOS_DIR);
+    registerTicketRunRoutes(
+      router,
+      db,
+      () => ({ run: async () => ({ outcome: "ok", finalText: "" }) }),
+      REPOS_DIR,
+    );
     const res = mockRes();
     await router.dispatch(mockReq("POST", "/api/tickets/T-2/run"), res);
     assert.equal(res.statusCode, 200);

@@ -1,5 +1,12 @@
 import type { Router } from "../router.js";
-import { startJiraAuth, startBitbucketAuth, startGithubAuth, handleJiraCallback, handleBitbucketCallback, handleGithubCallback } from "../pipeline/oauth-integrations.js";
+import {
+  startJiraAuth,
+  startBitbucketAuth,
+  startGithubAuth,
+  handleJiraCallback,
+  handleBitbucketCallback,
+  handleGithubCallback,
+} from "../pipeline/oauth-integrations.js";
 
 export function registerOAuthRoutes(router: Router): void {
   // ── Jira OAuth ──

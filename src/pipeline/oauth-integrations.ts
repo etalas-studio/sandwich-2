@@ -151,7 +151,9 @@ export async function handleBitbucketCallback(code: string, state: string): Prom
   pendingStates.delete(state);
 
   try {
-    const auth = Buffer.from(`${bitbucketClientId()}:${bitbucketClientSecret()}`).toString("base64");
+    const auth = Buffer.from(`${bitbucketClientId()}:${bitbucketClientSecret()}`).toString(
+      "base64",
+    );
     const callbackUrl = `${baseUrl()}/api/integrations/bitbucket/callback`;
     const res = await fetch("https://bitbucket.org/site/oauth2/access_token", {
       method: "POST",
@@ -223,7 +225,11 @@ export async function handleGithubCallback(code: string, state: string): Promise
 
     const data = (await res.json()) as { access_token?: string; error?: string };
     if (!data.access_token) {
-      return { ok: false, returnTo: pending.returnTo, error: data.error ?? "No access token in response" };
+      return {
+        ok: false,
+        returnTo: pending.returnTo,
+        error: data.error ?? "No access token in response",
+      };
     }
 
     // GitHub OAuth App tokens (unlike Jira/Bitbucket) don't expire and carry
@@ -261,7 +267,9 @@ export function initOAuth(db: Database.Database): void {
 export function isOAuthConnected(provider: string): boolean {
   if (!dbRef) return false;
   try {
-    const cred = dbRef.prepare("SELECT value FROM credentials WHERE name = ?").get(credentialName(provider)) as { value: string } | undefined;
+    const cred = dbRef
+      .prepare("SELECT value FROM credentials WHERE name = ?")
+      .get(credentialName(provider)) as { value: string } | undefined;
     if (!cred) return false;
     const data = JSON.parse(cred.value) as { type: string; accessToken: string };
     return data.type === "oauth" && !!data.accessToken;
@@ -281,7 +289,9 @@ export function disconnectOAuth(provider: string): void {
 export function getOAuthToken(provider: string): string | null {
   if (!dbRef) return null;
   try {
-    const cred = dbRef.prepare("SELECT value FROM credentials WHERE name = ?").get(credentialName(provider)) as { value: string } | undefined;
+    const cred = dbRef
+      .prepare("SELECT value FROM credentials WHERE name = ?")
+      .get(credentialName(provider)) as { value: string } | undefined;
     if (!cred) return null;
     const data = JSON.parse(cred.value) as { type: string; accessToken: string };
     return data.type === "oauth" ? data.accessToken : null;
@@ -300,7 +310,9 @@ interface StoredOAuthCredential {
 function getStoredOAuthCredential(provider: string): StoredOAuthCredential | null {
   if (!dbRef) return null;
   try {
-    const cred = dbRef.prepare("SELECT value FROM credentials WHERE name = ?").get(credentialName(provider)) as { value: string } | undefined;
+    const cred = dbRef
+      .prepare("SELECT value FROM credentials WHERE name = ?")
+      .get(credentialName(provider)) as { value: string } | undefined;
     if (!cred) return null;
     const data = JSON.parse(cred.value) as StoredOAuthCredential;
     return data.type === "oauth" ? data : null;
@@ -315,7 +327,10 @@ function getStoredOAuthCredential(provider: string): StoredOAuthCredential | nul
  * for github). Fixes the "Reconnect" prompt every ~1h documented as a known
  * gap in docs/superpowers/specs/2026-08-04-project-selection-design.md.
  */
-export async function getValidOAuthToken(provider: string, fetchFn: typeof fetch = fetch): Promise<string | null> {
+export async function getValidOAuthToken(
+  provider: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<string | null> {
   const cred = getStoredOAuthCredential(provider);
   if (!cred) return null;
 
@@ -325,7 +340,9 @@ export async function getValidOAuthToken(provider: string, fetchFn: typeof fetch
   }
 
   try {
-    const auth = Buffer.from(`${bitbucketClientId()}:${bitbucketClientSecret()}`).toString("base64");
+    const auth = Buffer.from(`${bitbucketClientId()}:${bitbucketClientSecret()}`).toString(
+      "base64",
+    );
     const res = await fetchFn("https://bitbucket.org/site/oauth2/access_token", {
       method: "POST",
       headers: {
@@ -394,7 +411,8 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
       headers: { Authorization: `Bearer ${token}` },
     });
     const sites = (await res.json()) as Array<{ id: string; url: string }> | null;
-    if (!sites || !sites.length) return { ok: false, imported: 0, skipped: 0, error: "No Jira sites accessible" };
+    if (!sites || !sites.length)
+      return { ok: false, imported: 0, skipped: 0, error: "No Jira sites accessible" };
     cloudId = sites[0]!.id;
   } catch {
     return { ok: false, imported: 0, skipped: 0, error: "Failed to get cloudId" };
@@ -410,7 +428,12 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
     const data = (await res.json()) as { issues?: Array<Record<string, unknown>> };
     issues = data.issues ?? [];
   } catch (err) {
-    return { ok: false, imported: 0, skipped: 0, error: err instanceof Error ? err.message : "Search failed" };
+    return {
+      ok: false,
+      imported: 0,
+      skipped: 0,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
   }
 
   const now = new Date().toISOString();
@@ -432,7 +455,10 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
 
     // Check if already imported
     const existing = dbRef.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
-    if (existing) { skipped++; continue; }
+    if (existing) {
+      skipped++;
+      continue;
+    }
 
     const description = adfToText(fields.description);
     const summary = String(fields.summary ?? "");
@@ -476,9 +502,21 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
     const jiraStatus = (fields.status as Record<string, unknown> | null)?.name ?? null;
 
     insert.run(
-      key, summary || null, description, issueUrl,
-      issueType, priority || null, sprint, storyPoints, team, assignee, parent,
-      attachments, jiraStatus, now, now,
+      key,
+      summary || null,
+      description,
+      issueUrl,
+      issueType,
+      priority || null,
+      sprint,
+      storyPoints,
+      team,
+      assignee,
+      parent,
+      attachments,
+      jiraStatus,
+      now,
+      now,
     );
     imported++;
   }

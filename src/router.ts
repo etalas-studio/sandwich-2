@@ -7,10 +7,7 @@ export type RouteHandler = (
   params: Record<string, string>,
 ) => void | Promise<void>;
 
-export type MiddlewareFn = (
-  req: IncomingMessage,
-  res: ServerResponse,
-) => boolean | void;
+export type MiddlewareFn = (req: IncomingMessage, res: ServerResponse) => boolean | void;
 
 interface RouteEntry {
   method: string;
@@ -40,10 +37,7 @@ function isTrustedHost(
   return false;
 }
 
-function originMatchesHost(
-  originHeader: string,
-  hostHeader: string | undefined,
-): boolean {
+function originMatchesHost(originHeader: string, hostHeader: string | undefined): boolean {
   if (!hostHeader) return false;
   let originHost: string;
   try {
@@ -160,7 +154,10 @@ export class Router {
           const rSeg = route.segments[i]!;
           const qSeg = reqSegs[i]!;
           if (rSeg.startsWith(":")) continue;
-          if (rSeg.toLowerCase() !== qSeg.toLowerCase()) { pathMatch = false; break; }
+          if (rSeg.toLowerCase() !== qSeg.toLowerCase()) {
+            pathMatch = false;
+            break;
+          }
         }
         if (pathMatch) {
           sendJson(res, 405, { error: "method not allowed" });

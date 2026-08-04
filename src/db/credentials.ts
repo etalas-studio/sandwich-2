@@ -28,8 +28,7 @@ export function upsertCredential(db: Database.Database, name: string, value: str
 
 export function getCredential(db: Database.Database, name: string): Credential | null {
   const row = db.prepare("SELECT * FROM credentials WHERE name = ?").get(name) as
-    | RawRow
-    | undefined;
+    RawRow | undefined;
   return row ? mapRow(row) : null;
 }
 

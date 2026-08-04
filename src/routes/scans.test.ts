@@ -11,11 +11,21 @@ import { createProject, markProjectReady } from "../db/project.js";
 const REPOS_DIR = "/data/repos";
 
 function connectReadyProject(db: ReturnType<typeof openDb>): void {
-  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  const project = createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
   markProjectReady(db, project.id);
 }
 
-function mockReq(method: string, path: string, headers: Record<string, string> = {}, body?: string): any {
+function mockReq(
+  method: string,
+  path: string,
+  headers: Record<string, string> = {},
+  body?: string,
+): any {
   const req: any = {
     method,
     url: path,
@@ -29,8 +39,13 @@ function mockReq(method: string, path: string, headers: Record<string, string> =
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; };
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+  };
   res.destroy = () => {};
   return res;
 }
@@ -109,7 +124,9 @@ describe("scan routes", () => {
     registerScanRoutes(router, db, async () => {}, REPOS_DIR);
     const res = mockRes();
     const req: any = {
-      method: "POST", url: "/api/scans/abort", headers: { host: "127.0.0.1:0", "content-type": "application/json" },
+      method: "POST",
+      url: "/api/scans/abort",
+      headers: { host: "127.0.0.1:0", "content-type": "application/json" },
       on: (ev: string, fn: Function) => {
         if (ev === "data") fn(Buffer.from(JSON.stringify({ scanId: "nonexistent" })));
         if (ev === "end") fn();

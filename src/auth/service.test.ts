@@ -57,9 +57,7 @@ async function testConcurrentRegistrationsCannotBothSucceed(): Promise<void> {
     "the losing registration should fail with a clean 409, not a raw DB constraint error",
   );
 
-  const userCount = (
-    db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }
-  ).n;
+  const userCount = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
   assert.equal(userCount, 1, "only one account may ever exist");
   console.log("PASS: testConcurrentRegistrationsCannotBothSucceed");
 }

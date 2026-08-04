@@ -3,7 +3,14 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
-import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject, getProjectRepoPath } from "./project.js";
+import {
+  createProject,
+  getCurrentProject,
+  markProjectReady,
+  markProjectFailed,
+  clearProject,
+  getProjectRepoPath,
+} from "./project.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "project-test-"));
@@ -40,7 +47,12 @@ function testCreateProjectStartsInCloningStatus(): void {
 function testGetCurrentProjectReturnsMostRecentlyConnected(): void {
   const db = openTestDb();
   createProject(db, { provider: "github", owner: "acme", repoSlug: "old", defaultBranch: "main" });
-  const newest = createProject(db, { provider: "bitbucket", owner: "acme", repoSlug: "new", defaultBranch: "main" });
+  const newest = createProject(db, {
+    provider: "bitbucket",
+    owner: "acme",
+    repoSlug: "new",
+    defaultBranch: "main",
+  });
 
   const current = getCurrentProject(db);
   assert.equal(current?.id, newest.id);
@@ -49,7 +61,12 @@ function testGetCurrentProjectReturnsMostRecentlyConnected(): void {
 
 function testMarkProjectReadySetsStatus(): void {
   const db = openTestDb();
-  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  const project = createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
 
   const updated = markProjectReady(db, project.id);
   assert.equal(updated.cloneStatus, "ready");
@@ -59,7 +76,12 @@ function testMarkProjectReadySetsStatus(): void {
 
 function testMarkProjectFailedSetsStatusAndError(): void {
   const db = openTestDb();
-  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  const project = createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
 
   const updated = markProjectFailed(db, project.id, "network timeout");
   assert.equal(updated.cloneStatus, "failed");
@@ -69,7 +91,12 @@ function testMarkProjectFailedSetsStatusAndError(): void {
 
 function testClearProjectDeletesRow(): void {
   const db = openTestDb();
-  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  const project = createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
   markProjectReady(db, project.id);
 
   clearProject(db);
@@ -86,14 +113,24 @@ function testGetProjectRepoPathReturnsNullWhenNoProject(): void {
 
 function testGetProjectRepoPathReturnsNullWhileCloning(): void {
   const db = openTestDb();
-  createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
   assert.equal(getProjectRepoPath(db, "/data/repos"), null);
   console.log("PASS: testGetProjectRepoPathReturnsNullWhileCloning");
 }
 
 function testGetProjectRepoPathReturnsJoinedPathWhenReady(): void {
   const db = openTestDb();
-  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  const project = createProject(db, {
+    provider: "github",
+    owner: "acme",
+    repoSlug: "widgets",
+    defaultBranch: "main",
+  });
   markProjectReady(db, project.id);
 
   assert.equal(getProjectRepoPath(db, "/data/repos"), `/data/repos/${project.id}`);

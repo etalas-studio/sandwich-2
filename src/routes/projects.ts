@@ -5,11 +5,19 @@ import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import type { VcsClient } from "../pipeline/vcs-types.js";
 import type { ProjectProvider } from "../db/project.js";
-import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject as clearProjectRow } from "../db/project.js";
+import {
+  createProject,
+  getCurrentProject,
+  markProjectReady,
+  markProjectFailed,
+  clearProject as clearProjectRow,
+} from "../db/project.js";
 import { buildCloneUrl, cloneRepo as defaultCloneRepo } from "../pipeline/project-clone.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
 
-export type GitPullFn = (dir: string) => Promise<{ ok: true; output: string } | { ok: false; error: string }>;
+export type GitPullFn = (
+  dir: string,
+) => Promise<{ ok: true; output: string } | { ok: false; error: string }>;
 
 export interface ProjectRouteDeps {
   vcsClients: Record<ProjectProvider, VcsClient>;
@@ -23,7 +31,9 @@ function isProjectProvider(value: unknown): value is ProjectProvider {
   return value === "github" || value === "bitbucket";
 }
 
-function defaultGitPull(dir: string): Promise<{ ok: true; output: string } | { ok: false; error: string }> {
+function defaultGitPull(
+  dir: string,
+): Promise<{ ok: true; output: string } | { ok: false; error: string }> {
   return new Promise((resolve) => {
     execFile("git", ["-C", dir, "pull"], { timeout: 30_000 }, (err, stdout, stderr) => {
       if (err) {
@@ -109,7 +119,12 @@ export function registerProjectRoutes(
       return;
     }
     const { provider, owner, repoSlug, defaultBranch } = (body as Record<string, unknown>) ?? {};
-    if (!isProjectProvider(provider) || typeof owner !== "string" || typeof repoSlug !== "string" || typeof defaultBranch !== "string") {
+    if (
+      !isProjectProvider(provider) ||
+      typeof owner !== "string" ||
+      typeof repoSlug !== "string" ||
+      typeof defaultBranch !== "string"
+    ) {
       sendJson(res, 400, { error: "provider, owner, repoSlug, and defaultBranch are required" });
       return;
     }

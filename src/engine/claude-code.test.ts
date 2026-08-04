@@ -11,10 +11,7 @@ async function testExtractsFinalTextFromResultLine(): Promise<void> {
   // real subscription.
   const scratchDir = mkdtempSync(join(tmpdir(), "claude-code-invoker-test-"));
   const fakeBinPath = join(scratchDir, "fake-claude.sh");
-  writeFileSync(
-    fakeBinPath,
-    `#!/bin/sh\necho '{"type":"result","result":"the answer is 42"}'\n`,
-  );
+  writeFileSync(fakeBinPath, `#!/bin/sh\necho '{"type":"result","result":"the answer is 42"}'\n`);
   chmodSync(fakeBinPath, 0o755);
 
   const invoker = new ClaudeCodeInvoker({ bin: fakeBinPath });

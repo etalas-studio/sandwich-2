@@ -23,13 +23,7 @@ export class ClaudeCodeInvoker implements EngineInvoker {
     const { prompt, cwd, timeoutMs, onOutputLine, signal } = options;
     const transcript: string[] = [];
 
-    const args = [
-      "-p",
-      prompt,
-      "--output-format",
-      "stream-json",
-      "--verbose",
-    ];
+    const args = ["-p", prompt, "--output-format", "stream-json", "--verbose"];
 
     const result = await runProcess(this.bin, args, {
       cwd,

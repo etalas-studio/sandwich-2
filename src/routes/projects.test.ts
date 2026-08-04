@@ -23,8 +23,13 @@ function mockReq(method: string, path: string, body?: unknown): any {
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; };
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+  };
   res.destroy = () => {};
   return res;
 }
@@ -32,7 +37,10 @@ function mockRes(): any {
 function fakeVcsClient(overrides: Partial<VcsClient> = {}): VcsClient {
   return {
     listOrgs: async () => [{ slug: "acme", name: "acme", isPersonal: false }],
-    listRepos: async () => ({ repos: [{ owner: "acme", slug: "widgets", defaultBranch: "main" }], nextPage: null }),
+    listRepos: async () => ({
+      repos: [{ owner: "acme", slug: "widgets", defaultBranch: "main" }],
+      nextPage: null,
+    }),
     createPullRequest: async () => ({ url: "https://github.com/acme/widgets/pull/1", number: 1 }),
     findPullRequest: async () => null,
     ...overrides,
@@ -102,7 +110,10 @@ describe("project routes", () => {
     const router = new Router(new Set(), 0);
     registerProjectRoutes(router, db, deps);
     const res = mockRes();
-    await router.dispatch(mockReq("GET", "/api/projects/repos?provider=github&org=acme&page=1"), res);
+    await router.dispatch(
+      mockReq("GET", "/api/projects/repos?provider=github&org=acme&page=1"),
+      res,
+    );
     assert.equal(res.statusCode, 200);
     const body = JSON.parse(res.body);
     assert.deepEqual(body.repos, [{ owner: "acme", slug: "widgets", defaultBranch: "main" }]);
@@ -114,7 +125,12 @@ describe("project routes", () => {
     registerProjectRoutes(router, db, deps);
     const res = mockRes();
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       res,
     );
     assert.equal(res.statusCode, 200);
@@ -135,14 +151,24 @@ describe("project routes", () => {
     const router = new Router(new Set(), 0);
     registerProjectRoutes(router, db, deps);
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       mockRes(),
     );
     await new Promise((r) => setTimeout(r, 20));
 
     const res = mockRes();
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "other", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "other",
+        defaultBranch: "main",
+      }),
       res,
     );
     assert.equal(res.statusCode, 409);
@@ -154,7 +180,12 @@ describe("project routes", () => {
     registerProjectRoutes(router, db, deps);
     const res = mockRes();
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       res,
     );
     await new Promise((r) => setTimeout(r, 20));
@@ -173,14 +204,24 @@ describe("project routes", () => {
     const router = new Router(new Set(), 0);
     registerProjectRoutes(router, db, deps);
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       mockRes(),
     );
     await new Promise((r) => setTimeout(r, 20));
 
     const res = mockRes();
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "other", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "other",
+        defaultBranch: "main",
+      }),
       res,
     );
     assert.equal(res.statusCode, 409);
@@ -190,7 +231,12 @@ describe("project routes", () => {
     const router = new Router(new Set(), 0);
     registerProjectRoutes(router, db, deps);
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       mockRes(),
     );
     await new Promise((r) => setTimeout(r, 20));
@@ -220,7 +266,12 @@ describe("project routes", () => {
     const router = new Router(new Set(), 0);
     registerProjectRoutes(router, db, deps);
     await router.dispatch(
-      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockReq("POST", "/api/projects/connect", {
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
       mockRes(),
     );
     await new Promise((r) => setTimeout(r, 20));

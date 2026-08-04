@@ -123,13 +123,9 @@ describe("ticket-runner pipeline", () => {
     );
 
     // Should have stopped at implement — never reached verify or open_pr
-    const implementEnd = events.find(
-      (e) => e.type === "stage_end" && e.stage === "implement",
-    );
+    const implementEnd = events.find((e) => e.type === "stage_end" && e.stage === "implement");
     assert.ok(implementEnd, "implement stage should have ended");
-    const verifyStart = events.find(
-      (e) => e.type === "stage_start" && e.stage === "verify",
-    );
+    const verifyStart = events.find((e) => e.type === "stage_start" && e.stage === "verify");
     assert.equal(verifyStart, undefined, "verify should NOT have started");
   });
 
