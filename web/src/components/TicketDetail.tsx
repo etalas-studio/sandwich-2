@@ -202,6 +202,7 @@ const STAGE_LABELS: Record<PipelineStage, string> = {
 const NEEDS_HUMAN_LABELS: Record<NeedsHumanCategory, string> = {
   ambiguous_ticket: 'Ambiguous Ticket',
   quick_win: 'Quick Win',
+  second_chance: 'Second Chance',
   forbidden_path: 'Forbidden Path',
   forbidden_path_or_action: 'Forbidden Path/Action',
   weak_verification: 'Weak Verification',
@@ -348,7 +349,7 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
           {/* Blocked reason */}
           {ticket.status === 'blocked' && (ticket.needsHumanReason || ticket.needsHumanCategory) && (
             <div className="ds-card-outer mb-6" style={{ height: 'auto' }}>
-              <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]" style={{ height: 'auto' }}>
+              <div className={`ds-card-inner p-4 border-l-2 ${ticket.needsHumanCategory === 'second_chance' ? 'border-l-[#6a9fff]' : 'border-l-[#ff8a8a]'}`} style={{ height: 'auto' }}>
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">
                   {ticket.needsHumanCategory
                     ? `Needs Human — ${NEEDS_HUMAN_LABELS[ticket.needsHumanCategory as NeedsHumanCategory] || ticket.needsHumanCategory}`
@@ -358,7 +359,7 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
                   <p className="text-xs text-white/50 font-light">{ticket.needsHumanReason}</p>
                 )}
 
-                {/* Quick-win choices */}
+                {/* Second-chance choices */}
                 {ticket.quickWinChoices && (() => {
                   let choices: QuickWinChoice[] = [];
                   try { choices = JSON.parse(ticket.quickWinChoices); } catch { /* invalid JSON */ }
