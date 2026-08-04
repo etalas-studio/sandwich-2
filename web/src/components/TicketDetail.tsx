@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { marked } from 'marked'
+import { XIcon } from 'lucide-react'
 import type { Ticket, QuickWinChoice } from '../api/tickets'
 import type { PipelineStage, NeedsHumanCategory } from '../types'
 
@@ -228,6 +230,15 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
 }
 
 export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun, onResolve }: TicketDetailProps) {
+  // Close on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <>
       {/* Panel */}
@@ -265,10 +276,10 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
               <h2 className="text-xl font-normal text-white ds-text-shadow">{ticket.summary || ticket.description}</h2>
             </div>
             <button 
-              className="text-white/40 hover:text-white text-sm transition-colors"
+              className="text-white/40 hover:text-white transition-colors"
               onClick={onClose}
             >
-              Close
+              <XIcon className="w-5 h-5" />
             </button>
           </div>
 
