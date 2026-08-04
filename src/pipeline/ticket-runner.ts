@@ -6,6 +6,10 @@ import { join } from "node:path";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
+import { getCurrentProject } from "../db/project.js";
+import { getOAuthToken } from "./oauth-integrations.js";
+import { createGithubVcsClient } from "./vcs-github.js";
+import { createBitbucketVcsClient } from "./vcs-bitbucket.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 
 export type StageName = "judge" | "implement" | "verify" | "open_pr";
@@ -82,7 +86,7 @@ export async function runTicketPipeline(
           result = await runVerify(db, createInvoker, ticket, repoPath, modelId, emit, signal);
           break;
         case "open_pr":
-          result = await runOpenPr(db, ticket, emit, signal);
+          result = await runOpenPr(db, ticket, repoPath, emit, signal);
           break;
         default:
           result = { ok: false, reason: "unknown stage" };
@@ -252,19 +256,25 @@ async function runImplement(
     return { ok: false, reason: "No model selected", category: "credential_missing" };
   }
 
-  // Create worktree
-  const worktreeName = `ticket-${ticket.key}-${randomUUID().slice(0, 6)}`.toLowerCase();
+  // Create worktree on a named branch (needed for push/PR)
+  const branchName = `ticket-${ticket.key}-${randomUUID().slice(0, 6)}`.toLowerCase();
+  const worktreeName = branchName;
   const worktreesDir = join(repoPath, ".worktrees");
   const worktreePath = join(worktreesDir, worktreeName);
 
   try {
     execSync(`mkdir -p "${worktreesDir}"`, { encoding: "utf-8" });
-    execSync(`git -C "${repoPath}" worktree add "${worktreePath}" HEAD`, {
+    // Create a branch from HEAD, then add a worktree on that branch
+    execSync(`git -C "${repoPath}" checkout -b "${branchName}"`, {
+      encoding: "utf-8",
+      timeout: 30_000,
+    });
+    execSync(`git -C "${repoPath}" worktree add "${worktreePath}" "${branchName}"`, {
       encoding: "utf-8",
       timeout: 30_000,
     });
 
-    updateTicket(db, ticket.key, { worktreePath });
+    updateTicket(db, ticket.key, { worktreePath, branchName });
   } catch (err) {
     return {
       ok: false,
@@ -390,33 +400,101 @@ async function runVerify(
 async function runOpenPr(
   db: Database.Database,
   ticket: Ticket,
+  repoPath: string,
   emit: (event: TicketRunEvent) => void,
   signal: AbortSignal,
 ): Promise<StageResult> {
-  const fakePrUrl = `https://github.com/etalas/runchise/pull/fake-${randomUUID().slice(0, 8)}`;
-
-  // Refetch — worktreePath was set during implement stage
   const fresh = getTicket(db, ticket.key);
   const worktreePath = fresh?.worktreePath;
+  const branchName = fresh?.branchName;
+
+  const project = getCurrentProject(db);
+  if (!project || project.cloneStatus !== "ready") {
+    return { ok: false, reason: "No project configured", category: "agent_error" };
+  }
+
+  const token = getOAuthToken(project.provider);
+  if (!token) {
+    return { ok: false, reason: `${project.provider} is not connected`, category: "credential_missing" };
+  }
+
+  if (!branchName) {
+    return { ok: false, reason: "No branch name — implement stage may have failed", category: "agent_error" };
+  }
+
+  // Push the branch
+  try {
+    execSync(`git -C "${repoPath}" push origin "${branchName}"`, {
+      encoding: "utf-8",
+      timeout: 30_000,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `Failed to push branch: ${err instanceof Error ? err.message : "unknown"}`,
+      category: "agent_error",
+    };
+  }
+
+  // Create the PR via the appropriate VCS client
+  const vcsClient = project.provider === "github"
+    ? createGithubVcsClient(fetch)
+    : createBitbucketVcsClient(fetch);
+
+  const title = ticket.summary
+    ? `Fix: ${ticket.summary}`
+    : `Fix: ${ticket.key}`;
+  const description = [
+    ticket.description,
+    ticket.url ? `\nSource: ${ticket.url}` : "",
+    `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+  ].filter(Boolean).join("\n");
+
+  let prUrl: string;
+  try {
+    const pr = await vcsClient.createPullRequest({
+      token,
+      owner: project.owner,
+      repoSlug: project.repoSlug,
+      title,
+      headBranch: branchName,
+      baseBranch: project.defaultBranch,
+      description,
+    });
+    prUrl = pr.url;
+  } catch (err) {
+    // Clean up the remote branch on failure
+    try { execSync(`git -C "${repoPath}" push origin --delete "${branchName}"`, { timeout: 10_000 }); } catch { /* ignore */ }
+    return {
+      ok: false,
+      reason: `PR creation failed: ${err instanceof Error ? err.message : "unknown"}`,
+      category: "agent_error",
+    };
+  }
 
   // Cleanup worktree
   if (worktreePath && existsSync(worktreePath)) {
     try {
-      execSync(`git -C "${worktreePath}" worktree remove --force "${worktreePath}" 2>/dev/null || rm -rf "${worktreePath}"`, {
-        timeout: 10_000,
-      });
+      execSync(`git -C "${repoPath}" worktree remove --force "${worktreePath}"`, { timeout: 10_000 });
     } catch {
       try { rmSync(worktreePath, { recursive: true, force: true }); } catch { /* ignore */ }
     }
   }
 
+  // Delete local branch
+  try {
+    execSync(`git -C "${repoPath}" checkout "${project.defaultBranch}"`, { timeout: 10_000 });
+    execSync(`git -C "${repoPath}" branch -D "${branchName}"`, { timeout: 10_000 });
+  } catch { /* ignore */ }
+
   updateTicket(db, ticket.key, {
     status: "done",
     stage: "open_pr",
-    prUrl: fakePrUrl,
-    prSummary: "Implementation complete. (Fake PR — PR creation is out of scope.)",
+    prUrl,
+    prSummary: `PR created against ${project.defaultBranch}`,
     finishedAt: new Date().toISOString(),
     worktreePath: null,
+    branchName: null,
   });
 
   return { ok: true };

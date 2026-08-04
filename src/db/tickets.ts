@@ -15,6 +15,7 @@ export interface Ticket {
   startedAt: string | null;
   finishedAt: string | null;
   worktreePath: string | null;
+  branchName: string | null;
   quickWinChoices: string | null;
   quickWinAttempts: number;
   // Informational Jira fields (nullable — pipeline never reads these)
@@ -68,6 +69,7 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     startedAt: nullish(row.started_at),
     finishedAt: nullish(row.finished_at),
     worktreePath: nullish(row.worktree_path),
+    branchName: nullish(row.branch_name),
     quickWinChoices: nullish(row.quick_win_choices),
     quickWinAttempts: typeof row.quick_win_attempts === "number" ? row.quick_win_attempts : 0,
     issueType: nullish(row.issue_type),
@@ -120,6 +122,7 @@ export interface UpdateTicketInput {
   status?: string;
   stage?: string | null;
   worktreePath?: string | null;
+  branchName?: string | null;
   startedAt?: string | null;
   finishedAt?: string | null;
   prUrl?: string | null;
@@ -160,6 +163,9 @@ export function updateTicket(db: Database.Database, key: string, input: UpdateTi
   }
   if (input.worktreePath !== undefined) {
     db.prepare("UPDATE tickets SET worktree_path = ?, updated_at = ? WHERE key = ?").run(input.worktreePath, now, key);
+  }
+  if (input.branchName !== undefined) {
+    db.prepare("UPDATE tickets SET branch_name = ?, updated_at = ? WHERE key = ?").run(input.branchName, now, key);
   }
   if (input.startedAt !== undefined) {
     db.prepare("UPDATE tickets SET started_at = ?, updated_at = ? WHERE key = ?").run(input.startedAt, now, key);

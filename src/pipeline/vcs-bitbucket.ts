@@ -1,4 +1,4 @@
-import type { VcsClient, VcsOrg, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
+import type { VcsClient, VcsCreatePrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
 
 const API_BASE = "https://api.bitbucket.org/2.0";
 
@@ -71,6 +71,32 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
       if (!res.ok) throw new Error(`Bitbucket repos failed: ${res.status}`);
       const body = (await res.json()) as { values: BitbucketRepoResponse[]; next?: string };
       return { repos: body.values.map(toRepo), nextPage: nextPageFromNextUrl(body.next) };
+    },
+
+    async createPullRequest(input: VcsCreatePrInput): Promise<VcsPrResult> {
+      const headers = {
+        Authorization: `Bearer ${input.token}`,
+        "Content-Type": "application/json",
+      };
+      const body = JSON.stringify({
+        title: input.title,
+        source: { branch: { name: input.headBranch } },
+        destination: { branch: { name: input.baseBranch } },
+        description: input.description ?? "",
+      });
+      const res = await fetchFn(
+        `${API_BASE}/repositories/${input.owner}/${input.repoSlug}/pullrequests`,
+        { method: "POST", headers, body },
+      );
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "<unreadable>");
+        throw new Error(`Bitbucket PR creation failed: ${res.status} — ${errBody.slice(0, 300)}`);
+      }
+      const data = (await res.json()) as {
+        links: { html: { href: string } };
+        id: number;
+      };
+      return { url: data.links.html.href, number: data.id };
     },
   };
 }

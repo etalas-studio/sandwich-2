@@ -46,6 +46,34 @@ async function testListOrgsReturnsPersonalAccountAndOrgs(): Promise<void> {
   console.log("PASS: testListOrgsReturnsPersonalAccountAndOrgs");
 }
 
+async function testListReposForPersonalAccountUsesUserRepos(): Promise<void> {
+  let listOrgsCalls = 0;
+  const fakeFetch = (async (url: string) => {
+    if (url === "https://api.github.com/user") {
+      listOrgsCalls++;
+      return fakeResponse({ login: "jane" }) as unknown as Response;
+    }
+    if (url === "https://api.github.com/user/orgs") {
+      listOrgsCalls++;
+      return fakeResponse([]) as unknown as Response;
+    }
+    assert.ok(url.startsWith("https://api.github.com/user/repos"));
+    assert.ok(url.includes("page=1"));
+    assert.ok(url.includes("type=all"));
+    return fakeResponse([
+      { name: "my-project", owner: { login: "jane" }, default_branch: "main" },
+    ]) as unknown as Response;
+  }) as typeof fetch;
+
+  const client = createGithubVcsClient(fakeFetch);
+  await client.listOrgs("test-token");
+  const page = await client.listRepos("test-token", "jane", { page: 1 });
+  assert.deepEqual(page.repos, [
+    { owner: "jane", slug: "my-project", defaultBranch: "main" },
+  ]);
+  console.log("PASS: testListReposForPersonalAccountUsesUserRepos");
+}
+
 async function testListReposForOrgWithoutSearch(): Promise<void> {
   const fakeFetch = (async (url: string) => {
     assert.ok(url.startsWith("https://api.github.com/orgs/acme/repos"));
@@ -96,37 +124,29 @@ async function testListReposWithSearchQueryUsesSearchEndpoint(): Promise<void> {
   console.log("PASS: testListReposWithSearchQueryUsesSearchEndpoint");
 }
 
-async function testListReposForPersonalAccountUsesUserRepos(): Promise<void> {
-  // Create a client and call listOrgs first to set personalLogin
-  let listOrgsCalls = 0;
-  const fakeFetch = (async (url: string) => {
-    if (url === "https://api.github.com/user") {
-      listOrgsCalls++;
-      return fakeResponse({ login: "jane" }) as unknown as Response;
-    }
-    if (url === "https://api.github.com/user/orgs") {
-      listOrgsCalls++;
-      return fakeResponse([]) as unknown as Response;
-    }
-    // listRepos for personal account should use /user/repos
-    assert.ok(url.startsWith("https://api.github.com/user/repos"));
-    assert.ok(url.includes("page=1"));
-    assert.ok(url.includes("type=all"));
-    return fakeResponse([
-      { name: "my-project", owner: { login: "jane" }, default_branch: "main" },
-    ]) as unknown as Response;
+async function testCreatePullRequest(): Promise<void> {
+  const fakeFetch = (async (url: string, init?: { method?: string; body?: string }) => {
+    assert.equal(url, "https://api.github.com/repos/acme/widgets/pulls");
+    assert.equal(init?.method, "POST");
+    const body = JSON.parse(init?.body ?? "{}");
+    assert.equal(body.title, "Fix: test");
+    assert.equal(body.head, "feature-branch");
+    assert.equal(body.base, "main");
+    return fakeResponse({ html_url: "https://github.com/acme/widgets/pull/42", number: 42 }) as unknown as Response;
   }) as typeof fetch;
 
   const client = createGithubVcsClient(fakeFetch);
-
-  // Must call listOrgs first so personalLogin gets set
-  await client.listOrgs("test-token");
-
-  const page = await client.listRepos("test-token", "jane", { page: 1 });
-  assert.deepEqual(page.repos, [
-    { owner: "jane", slug: "my-project", defaultBranch: "main" },
-  ]);
-  console.log("PASS: testListReposForPersonalAccountUsesUserRepos");
+  const pr = await client.createPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    title: "Fix: test",
+    headBranch: "feature-branch",
+    baseBranch: "main",
+    description: "PR body",
+  });
+  assert.deepEqual(pr, { url: "https://github.com/acme/widgets/pull/42", number: 42 });
+  console.log("PASS: testCreatePullRequest");
 }
 
 async function main(): Promise<void> {
@@ -135,6 +155,7 @@ async function main(): Promise<void> {
   await testListReposForOrgWithoutSearch();
   await testListReposHasNoNextPageWhenLinkHeaderMissing();
   await testListReposWithSearchQueryUsesSearchEndpoint();
+  await testCreatePullRequest();
 }
 
 main();

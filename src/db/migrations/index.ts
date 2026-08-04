@@ -7,6 +7,7 @@ import { migration0006QuickWin } from "./0006_quick_win.js";
 import { migration0007JiraFields } from "./0007_jira_fields.js";
 import { migration0008ProjectProvider } from "./0008_project_provider.js";
 import { migration0009DropRepoPath } from "./0009_drop_repo_path.js";
+import { migration0010TicketBranch } from "./0010_ticket_branch.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
@@ -17,4 +18,5 @@ export const MIGRATIONS: Migration[] = [
   migration0007JiraFields,
   migration0008ProjectProvider,
   migration0009DropRepoPath,
+  migration0010TicketBranch,
 ];

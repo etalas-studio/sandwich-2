@@ -22,9 +22,25 @@ export interface VcsRepoPage {
   nextPage: number | null;
 }
 
+export interface VcsCreatePrInput {
+  token: string;
+  owner: string;
+  repoSlug: string;
+  title: string;
+  headBranch: string;
+  baseBranch: string;
+  description?: string;
+}
+
+export interface VcsPrResult {
+  url: string;
+  number: number;
+}
+
 export interface VcsClient {
   listOrgs(token: string): Promise<VcsOrg[]>;
   listRepos(token: string, org: string, opts: { page: number; q?: string }): Promise<VcsRepoPage>;
+  createPullRequest(input: VcsCreatePrInput): Promise<VcsPrResult>;
 }
 
 /** Injectable in tests, defaults to the global fetch in production. */

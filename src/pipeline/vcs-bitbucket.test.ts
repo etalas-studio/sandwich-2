@@ -100,12 +100,41 @@ async function testListReposWithSearchQueryFiltersByName(): Promise<void> {
   console.log("PASS: testListReposWithSearchQueryFiltersByName");
 }
 
+async function testCreatePullRequest(): Promise<void> {
+  const fakeFetch = (async (url: string, init?: { method?: string; body?: string }) => {
+    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"));
+    assert.equal(init?.method, "POST");
+    const body = JSON.parse(init?.body ?? "{}");
+    assert.equal(body.title, "Fix: test");
+    assert.equal(body.source.branch.name, "feature-branch");
+    assert.equal(body.destination.branch.name, "main");
+    return fakeResponse({
+      links: { html: { href: "https://bitbucket.org/acme/widgets/pull-requests/7" } },
+      id: 7,
+    });
+  }) as typeof fetch;
+
+  const client = createBitbucketVcsClient(fakeFetch);
+  const pr = await client.createPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    title: "Fix: test",
+    headBranch: "feature-branch",
+    baseBranch: "main",
+    description: "PR body",
+  });
+  assert.deepEqual(pr, { url: "https://bitbucket.org/acme/widgets/pull-requests/7", number: 7 });
+  console.log("PASS: testCreatePullRequest");
+}
+
 async function main(): Promise<void> {
   await testListOrgsReturnsWorkspaces();
   await testListOrgsFallsBackToUserEndpoint();
   await testListReposForWorkspaceWithoutSearch();
   await testListReposHasNoNextPageWhenAbsent();
   await testListReposWithSearchQueryFiltersByName();
+  await testCreatePullRequest();
 }
 
 main();

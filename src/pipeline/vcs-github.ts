@@ -1,4 +1,4 @@
-import type { VcsClient, VcsOrg, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
+import type { VcsClient, VcsCreatePrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
 
 const API_BASE = "https://api.github.com";
 
@@ -63,6 +63,31 @@ export function createGithubVcsClient(fetchFn: FetchFn): VcsClient {
       if (!res.ok) throw new Error(`GitHub repos failed: ${res.status}`);
       const body = (await res.json()) as GithubRepoResponse[];
       return { repos: body.map(toRepo), nextPage: nextPageFromLinkHeader(res.headers.get("link")) };
+    },
+
+    async createPullRequest(input: VcsCreatePrInput): Promise<VcsPrResult> {
+      const headers = {
+        Authorization: `Bearer ${input.token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      };
+      const body = JSON.stringify({
+        title: input.title,
+        head: input.headBranch,
+        base: input.baseBranch,
+        body: input.description ?? "",
+      });
+      const res = await fetchFn(`${API_BASE}/repos/${input.owner}/${input.repoSlug}/pulls`, {
+        method: "POST",
+        headers,
+        body,
+      });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "<unreadable>");
+        throw new Error(`GitHub PR creation failed: ${res.status} — ${errBody.slice(0, 300)}`);
+      }
+      const data = (await res.json()) as { html_url: string; number: number };
+      return { url: data.html_url, number: data.number };
     },
   };
 }
