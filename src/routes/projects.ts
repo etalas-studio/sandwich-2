@@ -5,7 +5,7 @@ import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import type { VcsClient } from "../pipeline/vcs-types.js";
 import type { ProjectProvider } from "../db/project.js";
-import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject } from "../db/project.js";
+import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject as clearProjectRow } from "../db/project.js";
 import { buildCloneUrl, cloneRepo as defaultCloneRepo } from "../pipeline/project-clone.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
 
@@ -131,10 +131,15 @@ export function registerProjectRoutes(
       if (result.ok) {
         markProjectReady(db, project.id);
       } else {
-        markProjectFailed(db, project.id, result.error ?? "clone failed");
-        // Auto-clear on failure per design doc — no retryable "failed" row left around.
+        // Remove any partial clone artifacts, but leave the row itself in
+        // 'failed' status (with its error) so a client polling
+        // GET /api/projects/current can actually observe and display why it
+        // failed — clearing immediately here would race the poll. The
+        // frontend's "Back to repos" action calls POST /api/projects/clear
+        // to reset (safe: a failed clone never created tickets/blocklist/
+        // scans, so clear is just removing this one row).
         if (existsSync(targetDir)) rmSync(targetDir, { recursive: true, force: true });
-        clearProject(db);
+        markProjectFailed(db, project.id, result.error ?? "clone failed");
       }
     })();
   });
@@ -148,7 +153,7 @@ export function registerProjectRoutes(
         db.prepare("DELETE FROM tickets").run();
         db.prepare("DELETE FROM blocklist").run();
         db.prepare("DELETE FROM readiness_scans").run();
-        clearProject(db);
+        clearProjectRow(db);
       })();
     }
     sendJson(res, 200, { cleared: true });

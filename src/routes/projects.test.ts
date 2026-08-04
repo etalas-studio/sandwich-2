@@ -157,8 +157,31 @@ describe("project routes", () => {
     );
     await new Promise((r) => setTimeout(r, 20));
 
-    // Failed clones auto-clear the row per design doc — current project goes back to null
-    assert.equal(getCurrentProject(db), null);
+    // The row stays around in 'failed' status (with its error) so a client
+    // polling GET /api/projects/current can observe why it failed — it is
+    // not auto-cleared, to avoid racing the poll. Clearing is a separate,
+    // explicit client action (POST /api/projects/clear).
+    const project = getCurrentProject(db);
+    assert.equal(project?.cloneStatus, "failed");
+    assert.equal(project?.cloneError, "auth failed");
+  });
+
+  it("POST /api/projects/connect returns 409 when a failed project is still present (not cleared)", async () => {
+    deps.cloneRepo = async () => ({ ok: false, error: "auth failed" });
+    const router = new Router(new Set(), 0);
+    registerProjectRoutes(router, db, deps);
+    await router.dispatch(
+      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      mockRes(),
+    );
+    await new Promise((r) => setTimeout(r, 20));
+
+    const res = mockRes();
+    await router.dispatch(
+      mockReq("POST", "/api/projects/connect", { provider: "github", owner: "acme", repoSlug: "other", defaultBranch: "main" }),
+      res,
+    );
+    assert.equal(res.statusCode, 409);
   });
 
   it("POST /api/projects/clear removes the project, its clone dir, and cascades deletes", async () => {
