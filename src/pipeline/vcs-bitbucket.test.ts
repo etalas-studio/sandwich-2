@@ -128,6 +128,42 @@ async function testCreatePullRequest(): Promise<void> {
   console.log("PASS: testCreatePullRequest");
 }
 
+async function testFindPullRequestReturnsExistingOpenPr(): Promise<void> {
+  const fakeFetch = (async (url: string) => {
+    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"));
+    assert.ok(url.includes("feature-branch"));
+    return fakeResponse({
+      values: [
+        { links: { html: { href: "https://bitbucket.org/acme/widgets/pull-requests/3" } }, id: 3 },
+      ],
+    });
+  }) as typeof fetch;
+
+  const client = createBitbucketVcsClient(fakeFetch);
+  const pr = await client.findPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    headBranch: "feature-branch",
+  });
+  assert.deepEqual(pr, { url: "https://bitbucket.org/acme/widgets/pull-requests/3", number: 3 });
+  console.log("PASS: testFindPullRequestReturnsExistingOpenPr");
+}
+
+async function testFindPullRequestReturnsNullWhenNoneOpen(): Promise<void> {
+  const fakeFetch = (async () => fakeResponse({ values: [] })) as typeof fetch;
+
+  const client = createBitbucketVcsClient(fakeFetch);
+  const pr = await client.findPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    headBranch: "feature-branch",
+  });
+  assert.equal(pr, null);
+  console.log("PASS: testFindPullRequestReturnsNullWhenNoneOpen");
+}
+
 async function main(): Promise<void> {
   await testListOrgsReturnsWorkspaces();
   await testListOrgsFallsBackToUserEndpoint();
@@ -135,6 +171,8 @@ async function main(): Promise<void> {
   await testListReposHasNoNextPageWhenAbsent();
   await testListReposWithSearchQueryFiltersByName();
   await testCreatePullRequest();
+  await testFindPullRequestReturnsExistingOpenPr();
+  await testFindPullRequestReturnsNullWhenNoneOpen();
 }
 
 main();

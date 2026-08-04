@@ -37,10 +37,19 @@ export interface VcsPrResult {
   number: number;
 }
 
+export interface VcsFindPrInput {
+  token: string;
+  owner: string;
+  repoSlug: string;
+  headBranch: string;
+}
+
 export interface VcsClient {
   listOrgs(token: string): Promise<VcsOrg[]>;
   listRepos(token: string, org: string, opts: { page: number; q?: string }): Promise<VcsRepoPage>;
   createPullRequest(input: VcsCreatePrInput): Promise<VcsPrResult>;
+  /** Looks up an already-open PR for this head branch — used to make PR creation idempotent on retry. */
+  findPullRequest(input: VcsFindPrInput): Promise<VcsPrResult | null>;
 }
 
 /** Injectable in tests, defaults to the global fetch in production. */

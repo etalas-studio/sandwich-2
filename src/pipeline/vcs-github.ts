@@ -1,4 +1,4 @@
-import type { VcsClient, VcsCreatePrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
+import type { VcsClient, VcsCreatePrInput, VcsFindPrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
 
 const API_BASE = "https://api.github.com";
 
@@ -88,6 +88,15 @@ export function createGithubVcsClient(fetchFn: FetchFn): VcsClient {
       }
       const data = (await res.json()) as { html_url: string; number: number };
       return { url: data.html_url, number: data.number };
+    },
+
+    async findPullRequest(input: VcsFindPrInput): Promise<VcsPrResult | null> {
+      const headers = { Authorization: `Bearer ${input.token}`, Accept: "application/vnd.github+json" };
+      const params = new URLSearchParams({ head: `${input.owner}:${input.headBranch}`, state: "open" });
+      const res = await fetchFn(`${API_BASE}/repos/${input.owner}/${input.repoSlug}/pulls?${params.toString()}`, { headers });
+      if (!res.ok) throw new Error(`GitHub PR lookup failed: ${res.status}`);
+      const data = (await res.json()) as Array<{ html_url: string; number: number }>;
+      return data.length > 0 ? { url: data[0]!.html_url, number: data[0]!.number } : null;
     },
   };
 }

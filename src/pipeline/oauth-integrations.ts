@@ -290,6 +290,74 @@ export function getOAuthToken(provider: string): string | null {
   }
 }
 
+interface StoredOAuthCredential {
+  type: string;
+  accessToken: string;
+  refreshToken: string | null;
+  expiresAt: number | null;
+}
+
+function getStoredOAuthCredential(provider: string): StoredOAuthCredential | null {
+  if (!dbRef) return null;
+  try {
+    const cred = dbRef.prepare("SELECT value FROM credentials WHERE name = ?").get(credentialName(provider)) as { value: string } | undefined;
+    if (!cred) return null;
+    const data = JSON.parse(cred.value) as StoredOAuthCredential;
+    return data.type === "oauth" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Like getOAuthToken, but refreshes the Bitbucket access token first if it's
+ * expired (GitHub App tokens never expire, so this is a no-op passthrough
+ * for github). Fixes the "Reconnect" prompt every ~1h documented as a known
+ * gap in docs/superpowers/specs/2026-08-04-project-selection-design.md.
+ */
+export async function getValidOAuthToken(provider: string, fetchFn: typeof fetch = fetch): Promise<string | null> {
+  const cred = getStoredOAuthCredential(provider);
+  if (!cred) return null;
+
+  const isExpired = cred.expiresAt !== null && Date.now() >= cred.expiresAt;
+  if (!isExpired || provider !== "bitbucket" || !cred.refreshToken) {
+    return cred.accessToken;
+  }
+
+  try {
+    const auth = Buffer.from(`${bitbucketClientId()}:${bitbucketClientSecret()}`).toString("base64");
+    const res = await fetchFn("https://bitbucket.org/site/oauth2/access_token", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: cred.refreshToken,
+      }).toString(),
+    });
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as { access_token?: string; refresh_token?: string };
+    if (!data.access_token) return null;
+
+    upsertCredential(
+      dbRef!,
+      credentialName("bitbucket"),
+      JSON.stringify({
+        type: "oauth",
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token ?? cred.refreshToken,
+        expiresAt: Date.now() + 3600 * 1000,
+      }),
+    );
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
 // ── ADF → plain text
 export function adfToText(adf: unknown): string {
   if (!adf || typeof adf !== "object") return "";

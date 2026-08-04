@@ -34,6 +34,7 @@ function fakeVcsClient(overrides: Partial<VcsClient> = {}): VcsClient {
     listOrgs: async () => [{ slug: "acme", name: "acme", isPersonal: false }],
     listRepos: async () => ({ repos: [{ owner: "acme", slug: "widgets", defaultBranch: "main" }], nextPage: null }),
     createPullRequest: async () => ({ url: "https://github.com/acme/widgets/pull/1", number: 1 }),
+    findPullRequest: async () => null,
     ...overrides,
   };
 }

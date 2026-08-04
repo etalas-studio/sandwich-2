@@ -149,6 +149,41 @@ async function testCreatePullRequest(): Promise<void> {
   console.log("PASS: testCreatePullRequest");
 }
 
+async function testFindPullRequestReturnsExistingOpenPr(): Promise<void> {
+  const fakeFetch = (async (url: string) => {
+    assert.ok(url.startsWith("https://api.github.com/repos/acme/widgets/pulls"));
+    assert.ok(url.includes("head=acme%3Afeature-branch"));
+    assert.ok(url.includes("state=open"));
+    return fakeResponse([
+      { html_url: "https://github.com/acme/widgets/pull/9", number: 9 },
+    ]) as unknown as Response;
+  }) as typeof fetch;
+
+  const client = createGithubVcsClient(fakeFetch);
+  const pr = await client.findPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    headBranch: "feature-branch",
+  });
+  assert.deepEqual(pr, { url: "https://github.com/acme/widgets/pull/9", number: 9 });
+  console.log("PASS: testFindPullRequestReturnsExistingOpenPr");
+}
+
+async function testFindPullRequestReturnsNullWhenNoneOpen(): Promise<void> {
+  const fakeFetch = (async () => fakeResponse([]) as unknown as Response) as typeof fetch;
+
+  const client = createGithubVcsClient(fakeFetch);
+  const pr = await client.findPullRequest({
+    token: "test-token",
+    owner: "acme",
+    repoSlug: "widgets",
+    headBranch: "feature-branch",
+  });
+  assert.equal(pr, null);
+  console.log("PASS: testFindPullRequestReturnsNullWhenNoneOpen");
+}
+
 async function main(): Promise<void> {
   await testListOrgsReturnsPersonalAccountAndOrgs();
   await testListReposForPersonalAccountUsesUserRepos();
@@ -156,6 +191,8 @@ async function main(): Promise<void> {
   await testListReposHasNoNextPageWhenLinkHeaderMissing();
   await testListReposWithSearchQueryUsesSearchEndpoint();
   await testCreatePullRequest();
+  await testFindPullRequestReturnsExistingOpenPr();
+  await testFindPullRequestReturnsNullWhenNoneOpen();
 }
 
 main();

@@ -7,7 +7,8 @@ import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
 import { getCurrentProject } from "../db/project.js";
-import { getOAuthToken } from "./oauth-integrations.js";
+import { getValidOAuthToken } from "./oauth-integrations.js";
+import { buildCloneUrl } from "./project-clone.js";
 import { createGithubVcsClient } from "./vcs-github.js";
 import { createBitbucketVcsClient } from "./vcs-bitbucket.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
@@ -127,6 +128,12 @@ interface StageResult {
   reason?: string;
   category?: string;
   choices?: Array<{ label: string; description: string; inject: string }>;
+}
+
+/** Strips an OAuth token from a string before it's stored/displayed — git error
+ * messages echo the failing command, which embeds the token when pushing via URL. */
+function redactToken(text: string, token: string): string {
+  return token ? text.split(token).join("***") : text;
 }
 
 // ── Stage: Judge ──
@@ -256,23 +263,24 @@ async function runImplement(
     return { ok: false, reason: "No model selected", category: "credential_missing" };
   }
 
+  const project = getCurrentProject(db);
+  const defaultBranch = project?.defaultBranch ?? "main";
+
   // Create worktree on a named branch (needed for push/PR)
   const branchName = `ticket-${ticket.key}-${randomUUID().slice(0, 6)}`.toLowerCase();
-  const worktreeName = branchName;
   const worktreesDir = join(repoPath, ".worktrees");
-  const worktreePath = join(worktreesDir, worktreeName);
+  const worktreePath = join(worktreesDir, branchName);
 
   try {
     execSync(`mkdir -p "${worktreesDir}"`, { encoding: "utf-8" });
-    // Create a branch from HEAD, then add a worktree on that branch
-    execSync(`git -C "${repoPath}" checkout -b "${branchName}"`, {
-      encoding: "utf-8",
-      timeout: 30_000,
-    });
-    execSync(`git -C "${repoPath}" worktree add "${worktreePath}" "${branchName}"`, {
-      encoding: "utf-8",
-      timeout: 30_000,
-    });
+    // Refresh the default branch so new tickets branch off latest remote, not a stale local HEAD
+    execSync(`git -C "${repoPath}" fetch origin "${defaultBranch}"`, { encoding: "utf-8", timeout: 30_000 });
+    // Create branch + worktree in one step, off the fresh remote ref — never touches
+    // the main repo's checkout, so it's safe to run for multiple tickets concurrently.
+    execSync(
+      `git -C "${repoPath}" worktree add -b "${branchName}" "${worktreePath}" "origin/${defaultBranch}"`,
+      { encoding: "utf-8", timeout: 30_000 },
+    );
 
     // Configure git identity in the worktree so the agent can commit
     execSync(`git -C "${worktreePath}" config user.name "Runchise Agent"`, { encoding: "utf-8" });
@@ -431,25 +439,27 @@ async function runOpenPr(
     return { ok: false, reason: "No project configured", category: "agent_error" };
   }
 
-  const token = getOAuthToken(project.provider);
+  const token = await getValidOAuthToken(project.provider);
   if (!token) {
-    return { ok: false, reason: `${project.provider} is not connected`, category: "credential_missing" };
+    return { ok: false, reason: `${project.provider} is not connected or its token expired — reconnect it`, category: "credential_missing" };
   }
 
   if (!branchName) {
     return { ok: false, reason: "No branch name — implement stage may have failed", category: "agent_error" };
   }
 
-  // Push the branch
+  // Push using a fresh authenticated URL rather than the `origin` remote, whose
+  // embedded token was baked in at clone time and may since have expired/rotated.
+  const pushUrl = buildCloneUrl(project.provider, project.owner, project.repoSlug, token);
   try {
-    execSync(`git -C "${repoPath}" push origin "${branchName}"`, {
+    execSync(`git -C "${repoPath}" push "${pushUrl}" "${branchName}"`, {
       encoding: "utf-8",
       timeout: 30_000,
     });
   } catch (err) {
     return {
       ok: false,
-      reason: `Failed to push branch: ${err instanceof Error ? err.message : "unknown"}`,
+      reason: `Failed to push branch: ${redactToken(err instanceof Error ? err.message : "unknown", token)}`,
       category: "agent_error",
     };
   }
@@ -468,21 +478,33 @@ async function runOpenPr(
     `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
   ].filter(Boolean).join("\n");
 
+  // If a PR for this branch already exists (e.g. a previous run crashed after
+  // creating it but before recording prUrl), reuse it instead of creating a duplicate.
   let prUrl: string;
   try {
-    const pr = await vcsClient.createPullRequest({
+    const existingPr = await vcsClient.findPullRequest({
       token,
       owner: project.owner,
       repoSlug: project.repoSlug,
-      title,
       headBranch: branchName,
-      baseBranch: project.defaultBranch,
-      description,
     });
-    prUrl = pr.url;
+    if (existingPr) {
+      prUrl = existingPr.url;
+    } else {
+      const pr = await vcsClient.createPullRequest({
+        token,
+        owner: project.owner,
+        repoSlug: project.repoSlug,
+        title,
+        headBranch: branchName,
+        baseBranch: project.defaultBranch,
+        description,
+      });
+      prUrl = pr.url;
+    }
   } catch (err) {
     // Clean up the remote branch on failure
-    try { execSync(`git -C "${repoPath}" push origin --delete "${branchName}"`, { timeout: 10_000 }); } catch { /* ignore */ }
+    try { execSync(`git -C "${repoPath}" push "${pushUrl}" --delete "${branchName}"`, { timeout: 10_000 }); } catch { /* ignore */ }
     return {
       ok: false,
       reason: `PR creation failed: ${err instanceof Error ? err.message : "unknown"}`,
@@ -499,9 +521,8 @@ async function runOpenPr(
     }
   }
 
-  // Delete local branch
+  // Delete local branch (main repo never checks it out, so no checkout needed first)
   try {
-    execSync(`git -C "${repoPath}" checkout "${project.defaultBranch}"`, { timeout: 10_000 });
     execSync(`git -C "${repoPath}" branch -D "${branchName}"`, { timeout: 10_000 });
   } catch { /* ignore */ }
 

@@ -1,4 +1,4 @@
-import type { VcsClient, VcsCreatePrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
+import type { VcsClient, VcsCreatePrInput, VcsFindPrInput, VcsOrg, VcsPrResult, VcsRepo, VcsRepoPage, FetchFn } from "./vcs-types.js";
 
 const API_BASE = "https://api.bitbucket.org/2.0";
 
@@ -97,6 +97,20 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
         id: number;
       };
       return { url: data.links.html.href, number: data.id };
+    },
+
+    async findPullRequest(input: VcsFindPrInput): Promise<VcsPrResult | null> {
+      const headers = { Authorization: `Bearer ${input.token}` };
+      const params = new URLSearchParams({ q: `source.branch.name="${input.headBranch}" AND state="OPEN"` });
+      const res = await fetchFn(
+        `${API_BASE}/repositories/${input.owner}/${input.repoSlug}/pullrequests?${params.toString()}`,
+        { headers },
+      );
+      if (!res.ok) throw new Error(`Bitbucket PR lookup failed: ${res.status}`);
+      const data = (await res.json()) as { values: Array<{ links: { html: { href: string } }; id: number }> };
+      return data.values.length > 0
+        ? { url: data.values[0]!.links.html.href, number: data.values[0]!.id }
+        : null;
     },
   };
 }
