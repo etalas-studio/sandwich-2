@@ -54,16 +54,15 @@ export function getCurrentProject(db: Database.Database): Project | null {
 }
 
 export function markProjectReady(db: Database.Database, id: string): Project {
-  db.prepare(
-    `UPDATE project SET clone_status = 'ready', clone_error = NULL WHERE id = ?`,
-  ).run(id);
+  db.prepare(`UPDATE project SET clone_status = 'ready', clone_error = NULL WHERE id = ?`).run(id);
   return getById(db, id)!;
 }
 
 export function markProjectFailed(db: Database.Database, id: string, error: string): Project {
-  db.prepare(
-    `UPDATE project SET clone_status = 'failed', clone_error = ? WHERE id = ?`,
-  ).run(error, id);
+  db.prepare(`UPDATE project SET clone_status = 'failed', clone_error = ? WHERE id = ?`).run(
+    error,
+    id,
+  );
   return getById(db, id)!;
 }
 

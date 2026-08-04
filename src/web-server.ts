@@ -32,11 +32,22 @@ export interface WebServerOptions {
 
 function parseTrustedHosts(): Set<string> {
   return new Set(
-    (process.env.TRUSTED_HOSTS ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean),
+    (process.env.TRUSTED_HOSTS ?? "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean),
   );
 }
 
-const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/integrations/jira/callback", "/api/integrations/bitbucket/callback", "/api/integrations/github/callback"]);
+const PUBLIC_API_PATHS = new Set([
+  "/api/auth/me",
+  "/api/auth/register",
+  "/api/auth/login",
+  "/api/auth/logout",
+  "/api/integrations/jira/callback",
+  "/api/integrations/bitbucket/callback",
+  "/api/integrations/github/callback",
+]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { dbPath, port, webRoot, reposDir } = options;
@@ -67,7 +78,10 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   // Register route modules
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerProjectRoutes(router, db, {
-    vcsClients: { github: createGithubVcsClient(fetch), bitbucket: createBitbucketVcsClient(fetch) },
+    vcsClients: {
+      github: createGithubVcsClient(fetch),
+      bitbucket: createBitbucketVcsClient(fetch),
+    },
     getOAuthToken,
     reposDir,
   });
@@ -87,7 +101,10 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
       try {
         const url = req.url ?? "/";
         const path = url.split("?")[0] ?? "/";
-        if (path === "/api" || path.startsWith("/api/")) { await router.dispatch(req, res); return; }
+        if (path === "/api" || path.startsWith("/api/")) {
+          await router.dispatch(req, res);
+          return;
+        }
         if ((req.method ?? "GET") === "GET" && serveStatic(path, webRoot, res)) return;
         sendJson(res, 404, { error: "not found" });
       } catch (err) {

@@ -34,7 +34,9 @@ function testCompleteReadinessScanSavesResults(): void {
   const db = openTestDb();
   startReadinessScan(db, "scan-1");
 
-  const areaSignals = [{ area: "src", files: 5, testFileCount: 3, testToCodeRatio: 0.6, churnScore: 0.3, note: "ok" }];
+  const areaSignals = [
+    { area: "src", files: 5, testFileCount: 3, testToCodeRatio: 0.6, churnScore: 0.3, note: "ok" },
+  ];
   const scan = completeReadinessScan(db, "scan-1", {
     projectName: "my-app",
     description: "A test app",
@@ -70,13 +72,23 @@ function testGetLatestReadinessScanReturnsMostRecent(): void {
 
   startReadinessScan(db, "scan-1");
   completeReadinessScan(db, "scan-1", {
-    projectName: "app1", description: null, techStack: "TypeScript", testCommand: null, areaSignals: [], recommendations: [],
+    projectName: "app1",
+    description: null,
+    techStack: "TypeScript",
+    testCommand: null,
+    areaSignals: [],
+    recommendations: [],
   });
   assert.equal(getLatestReadinessScan(db)!.id, "scan-1");
 
   startReadinessScan(db, "scan-2");
   completeReadinessScan(db, "scan-2", {
-    projectName: "app2", description: null, techStack: "TypeScript, React", testCommand: "npm test", areaSignals: [], recommendations: [],
+    projectName: "app2",
+    description: null,
+    techStack: "TypeScript, React",
+    testCommand: "npm test",
+    areaSignals: [],
+    recommendations: [],
   });
   assert.equal(getLatestReadinessScan(db)!.id, "scan-2");
   console.log("PASS: testGetLatestReadinessScanReturnsMostRecent");
@@ -86,7 +98,12 @@ function testGetLatestReadinessScanIncludesRunningScan(): void {
   const db = openTestDb();
   startReadinessScan(db, "scan-1");
   completeReadinessScan(db, "scan-1", {
-    projectName: "app", description: null, techStack: "TS", testCommand: null, areaSignals: [], recommendations: [],
+    projectName: "app",
+    description: null,
+    techStack: "TS",
+    testCommand: null,
+    areaSignals: [],
+    recommendations: [],
   });
   // A newer running scan should be returned (not filtered out)
   startReadinessScan(db, "scan-2");

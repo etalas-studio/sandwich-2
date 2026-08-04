@@ -66,7 +66,11 @@ export function computeAreaSignalsForPaths(
       try {
         const st = statSync(fullPath);
         if (st.isDirectory()) {
-          const { testCount: tc, codeCount: cc, matchedCodeCount: mc } = countTestFilesWithMatching(fullPath, coveredBaseNames);
+          const {
+            testCount: tc,
+            codeCount: cc,
+            matchedCodeCount: mc,
+          } = countTestFilesWithMatching(fullPath, coveredBaseNames);
           testCount += tc;
           codeCount += cc;
           matchedCodeCount += mc;
@@ -91,10 +95,12 @@ export function computeAreaSignalsForPaths(
   for (const a of agentAreas) churnCounts[a.name] = 0;
 
   try {
-    const output = execSync(
-      "git log --since='90 days ago' --name-only --format=''",
-      { cwd: repoPath, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 10_000 },
-    );
+    const output = execSync("git log --since='90 days ago' --name-only --format=''", {
+      cwd: repoPath,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+      timeout: 10_000,
+    });
     for (const line of output.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed) continue;
@@ -152,17 +158,10 @@ function readPkgJson(repoPath: string): PkgJson | null {
   }
 }
 
-function detectTechStack(
-  repoPath: string,
-  pkgJson: PkgJson | null,
-): string {
+function detectTechStack(repoPath: string, pkgJson: PkgJson | null): string {
   const deps = new Set<string>();
   if (pkgJson) {
-    const depSources = [
-      pkgJson.dependencies,
-      pkgJson.devDependencies,
-      pkgJson.peerDependencies,
-    ];
+    const depSources = [pkgJson.dependencies, pkgJson.devDependencies, pkgJson.peerDependencies];
     for (const obj of depSources) {
       if (obj && typeof obj === "object") {
         for (const dep of Object.keys(obj)) deps.add(dep);
@@ -216,7 +215,10 @@ function computeAreaSignals(repoPath: string): AreaSignal[] {
 
   const areaSignals: AreaSignal[] = [];
   for (const area of topLevel.sort()) {
-    const { testCount, codeCount, matchedCodeCount } = countTestFilesWithMatching(join(repoPath, area), coveredBaseNames);
+    const { testCount, codeCount, matchedCodeCount } = countTestFilesWithMatching(
+      join(repoPath, area),
+      coveredBaseNames,
+    );
     const files = testCount + codeCount;
     if (files === 0) continue;
     const churnRaw = churnCounts[area] ?? 0;
@@ -250,7 +252,10 @@ function countTestFiles(dir: string): { testCount: number; codeCount: number } {
   return { testCount, codeCount };
 }
 
-function countTestFilesWithMatching(dir: string, coveredBaseNames: Set<string>): { testCount: number; codeCount: number; matchedCodeCount: number } {
+function countTestFilesWithMatching(
+  dir: string,
+  coveredBaseNames: Set<string>,
+): { testCount: number; codeCount: number; matchedCodeCount: number } {
   let testCount = 0;
   let codeCount = 0;
   let matchedCodeCount = 0;
@@ -308,8 +313,7 @@ function isTestFile(filePath: string, name: string): boolean {
 function isCodeFile(name: string): boolean {
   const codeExts = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
   // Don't count test files or declaration files as code
-  if (name.endsWith(".d.ts") || name.endsWith(".d.mts") || name.endsWith(".d.cts"))
-    return false;
+  if (name.endsWith(".d.ts") || name.endsWith(".d.mts") || name.endsWith(".d.cts")) return false;
   return codeExts.some((ext) => name.endsWith(ext));
 }
 
@@ -328,7 +332,8 @@ function readReadmePreview(repoPath: string): string | null {
         const trimmed = line.trim();
         // Skip headings, badges, empty lines before content starts
         if (!inParagraph) {
-          if (trimmed.startsWith("#") || trimmed.startsWith("[") || trimmed.startsWith("<")) continue;
+          if (trimmed.startsWith("#") || trimmed.startsWith("[") || trimmed.startsWith("<"))
+            continue;
           if (trimmed.length === 0) continue;
           inParagraph = true;
         }
@@ -345,23 +350,17 @@ function readReadmePreview(repoPath: string): string | null {
   return null;
 }
 
-function computeChurn(
-  repoPath: string,
-  areas: string[],
-): Record<string, number> {
+function computeChurn(repoPath: string, areas: string[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const area of areas) counts[area] = 0;
 
   try {
-    const output = execSync(
-      "git log --since='90 days ago' --name-only --format=''",
-      {
-        cwd: repoPath,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-        timeout: 10_000,
-      },
-    );
+    const output = execSync("git log --since='90 days ago' --name-only --format=''", {
+      cwd: repoPath,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+      timeout: 10_000,
+    });
     for (const line of output.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed) continue;

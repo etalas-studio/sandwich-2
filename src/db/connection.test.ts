@@ -33,9 +33,8 @@ function testMigratingTwiceIsANoOp(): void {
   openDb(dbPath).close();
   const db2 = openDb(dbPath);
 
-  const count = (
-    db2.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as { c: number }
-  ).c;
+  const count = (db2.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as { c: number })
+    .c;
   // Compared against MIGRATIONS.length rather than a hardcoded count: the
   // point of this test is "reopening doesn't re-apply anything", which must
   // stay true as migrations are added (it broke when 0002 landed).

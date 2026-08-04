@@ -3,11 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
-import {
-  insertBlocklistEntry,
-  getBlocklistEntries,
-  deleteBlocklistEntry,
-} from "./blocklist.js";
+import { insertBlocklistEntry, getBlocklistEntries, deleteBlocklistEntry } from "./blocklist.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "blocklist-test-"));

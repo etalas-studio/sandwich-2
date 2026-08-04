@@ -40,7 +40,11 @@ async function testCloneRepoInvokesGitCloneWithUrlAndTargetDir(): Promise<void> 
 async function testCloneRepoReturnsFailureReasonWhenExecFails(): Promise<void> {
   const fakeExec = async () => ({ ok: false as const, error: "authentication failed" });
 
-  const result = await cloneRepo("https://x@github.com/acme/widgets.git", "/tmp/repos/abc-123", fakeExec);
+  const result = await cloneRepo(
+    "https://x@github.com/acme/widgets.git",
+    "/tmp/repos/abc-123",
+    fakeExec,
+  );
 
   assert.equal(result.ok, false);
   assert.equal(result.error, "authentication failed");

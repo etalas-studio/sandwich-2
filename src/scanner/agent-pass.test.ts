@@ -133,9 +133,7 @@ async function testFallsBackToOldBlocklistFormat(): Promise<void> {
     async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
       return {
         outcome: "ok" as const,
-        finalText: JSON.stringify([
-          { pattern: "*.pem", reason: "Private keys" },
-        ]),
+        finalText: JSON.stringify([{ pattern: "*.pem", reason: "Private keys" }]),
       };
     },
   };

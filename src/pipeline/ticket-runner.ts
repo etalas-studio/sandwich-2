@@ -191,14 +191,16 @@ async function runJudge(
     "Answer ONLY with a JSON object:",
     '{"agentReady": true/false, "reason": "one short sentence explaining why"}',
     "",
-    `For second chances (small missing decision with clear options), add a "choices" array: ${allowChoices ? '{"agentReady": false, "reason": "...", "choices": [{"label": "Use Prettier", "description": "Project already has .prettierrc", "inject": "Format code with Prettier (npx prettier --write)"}]}' : 'choices are NOT allowed on this ticket — just use ambiguous_ticket'}`,
+    `For second chances (small missing decision with clear options), add a "choices" array: ${allowChoices ? '{"agentReady": false, "reason": "...", "choices": [{"label": "Use Prettier", "description": "Project already has .prettierrc", "inject": "Format code with Prettier (npx prettier --write)"}]}' : "choices are NOT allowed on this ticket — just use ambiguous_ticket"}`,
     "Each choice needs: label (short), description (why this option), inject (the text to add to the ticket description when chosen). Max 3 choices.",
     "",
     ticket.summary ? `Ticket title: ${ticket.summary}` : "",
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
     ticket.url ? `Ticket URL: ${ticket.url}` : "",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   try {
     const result = await invoker.run({
@@ -223,10 +225,12 @@ async function runJudge(
         choices?: Array<{ label: string; description: string; inject: string }>;
       };
       if (parsed.agentReady === false) {
-        const choices = parsed.choices?.slice(0, 3).filter(
-          (c): c is { label: string; description: string; inject: string } =>
-            typeof c.label === "string" && typeof c.inject === "string",
-        );
+        const choices = parsed.choices
+          ?.slice(0, 3)
+          .filter(
+            (c): c is { label: string; description: string; inject: string } =>
+              typeof c.label === "string" && typeof c.inject === "string",
+          );
         if (choices && choices.length > 0 && allowChoices) {
           return {
             ok: false,
@@ -280,7 +284,10 @@ async function runImplement(
   try {
     execSync(`mkdir -p "${worktreesDir}"`, { encoding: "utf-8" });
     // Refresh the default branch so new tickets branch off latest remote, not a stale local HEAD
-    execSync(`git -C "${repoPath}" fetch origin "${defaultBranch}"`, { encoding: "utf-8", timeout: 30_000 });
+    execSync(`git -C "${repoPath}" fetch origin "${defaultBranch}"`, {
+      encoding: "utf-8",
+      timeout: 30_000,
+    });
     // Create branch + worktree in one step, off the fresh remote ref — never touches
     // the main repo's checkout, so it's safe to run for multiple tickets concurrently.
     execSync(
@@ -290,7 +297,9 @@ async function runImplement(
 
     // Configure git identity in the worktree so the agent can commit
     execSync(`git -C "${worktreePath}" config user.name "Runchise Agent"`, { encoding: "utf-8" });
-    execSync(`git -C "${worktreePath}" config user.email "agent@runchise.local"`, { encoding: "utf-8" });
+    execSync(`git -C "${worktreePath}" config user.email "agent@runchise.local"`, {
+      encoding: "utf-8",
+    });
 
     updateTicket(db, ticket.key, { worktreePath, branchName });
   } catch (err) {
@@ -318,7 +327,9 @@ async function runImplement(
     ticket.url ? `Source: ${ticket.url}` : "",
     "",
     "When done, your final message should summarize what you changed.",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   try {
     const result = await invoker.run({
@@ -340,10 +351,13 @@ async function runImplement(
       const status = execSync(`git -C "${worktreePath}" status --porcelain`, { encoding: "utf-8" });
       if (status.trim()) {
         execSync(`git -C "${worktreePath}" add -A`, { encoding: "utf-8", timeout: 10_000 });
-        execSync(`git -C "${worktreePath}" commit -m "${ticket.key}: ${ticket.summary ?? ticket.description.slice(0, 60)}"`, {
-          encoding: "utf-8",
-          timeout: 10_000,
-        });
+        execSync(
+          `git -C "${worktreePath}" commit -m "${ticket.key}: ${ticket.summary ?? ticket.description.slice(0, 60)}"`,
+          {
+            encoding: "utf-8",
+            timeout: 10_000,
+          },
+        );
       }
     } catch {
       // Commit failed — fall through to the mechanical check below
@@ -351,10 +365,9 @@ async function runImplement(
 
     // Mechanical guard: the agent must produce actual changes (committed or
     // uncommitted). An empty worktree means the agent hallucinated success.
-    const hasUncommitted = execSync(
-      `git -C "${worktreePath}" status --porcelain`,
-      { encoding: "utf-8" },
-    ).trim();
+    const hasUncommitted = execSync(`git -C "${worktreePath}" status --porcelain`, {
+      encoding: "utf-8",
+    }).trim();
     const commitCount = execSync(
       `git -C "${worktreePath}" rev-list --count "origin/${defaultBranch}"..HEAD`,
       { encoding: "utf-8" },
@@ -400,13 +413,18 @@ async function runVerify(
   // Mechanical guard 1: worktree must have commits (uncommitted changes
   // from a failed auto-commit are still real work — commit them now).
   try {
-    const status = execSync(`git -C "${fresh.worktreePath}" status --porcelain`, { encoding: "utf-8" });
+    const status = execSync(`git -C "${fresh.worktreePath}" status --porcelain`, {
+      encoding: "utf-8",
+    });
     if (status.trim()) {
       execSync(`git -C "${fresh.worktreePath}" add -A`, { encoding: "utf-8", timeout: 10_000 });
-      execSync(`git -C "${fresh.worktreePath}" commit -m "${ticket.key}: auto-commit uncommitted changes"`, {
-        encoding: "utf-8",
-        timeout: 10_000,
-      });
+      execSync(
+        `git -C "${fresh.worktreePath}" commit -m "${ticket.key}: auto-commit uncommitted changes"`,
+        {
+          encoding: "utf-8",
+          timeout: 10_000,
+        },
+      );
     }
   } catch {
     // If commit fails, check commit count below anyway
@@ -444,7 +462,9 @@ async function runVerify(
     "If tests pass and the change is correct, mark ok: true.",
     "If there are issues, mark ok: false and explain.",
     "Use warnings for things the human should know about (e.g., 'touched an unrelated file'), even when ok: true.",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   try {
     const result = await invoker.run({
@@ -461,7 +481,11 @@ async function runVerify(
         category: "weak_verification",
       };
     }
-    const parsed = JSON.parse(jsonMatch[0]) as { ok?: boolean; summary?: string; warnings?: string[] };
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      ok?: boolean;
+      summary?: string;
+      warnings?: string[];
+    };
     if (parsed.ok === false) {
       return {
         ok: false,
@@ -508,11 +532,19 @@ async function runOpenPr(
 
   const token = await getValidOAuthToken(project.provider);
   if (!token) {
-    return { ok: false, reason: `${project.provider} is not connected or its token expired — reconnect it`, category: "credential_missing" };
+    return {
+      ok: false,
+      reason: `${project.provider} is not connected or its token expired — reconnect it`,
+      category: "credential_missing",
+    };
   }
 
   if (!branchName) {
-    return { ok: false, reason: "No branch name — implement stage may have failed", category: "agent_error" };
+    return {
+      ok: false,
+      reason: "No branch name — implement stage may have failed",
+      category: "agent_error",
+    };
   }
 
   // Push using a fresh authenticated URL rather than the `origin` remote, whose
@@ -532,18 +564,17 @@ async function runOpenPr(
   }
 
   // Create the PR via the appropriate VCS client
-  const vcsClient = project.provider === "github"
-    ? createGithubVcsClient(fetch)
-    : createBitbucketVcsClient(fetch);
+  const vcsClient =
+    project.provider === "github" ? createGithubVcsClient(fetch) : createBitbucketVcsClient(fetch);
 
-  const title = ticket.summary
-    ? `Fix: ${ticket.summary}`
-    : `Fix: ${ticket.key}`;
+  const title = ticket.summary ? `Fix: ${ticket.summary}` : `Fix: ${ticket.key}`;
   const description = [
     ticket.description,
     ticket.url ? `\nSource: ${ticket.url}` : "",
     `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   // If a PR for this branch already exists (e.g. a previous run crashed after
   // creating it but before recording prUrl), reuse it instead of creating a duplicate.
@@ -571,7 +602,13 @@ async function runOpenPr(
     }
   } catch (err) {
     // Clean up the remote branch on failure
-    try { execSync(`git -C "${repoPath}" push "${pushUrl}" --delete "${branchName}"`, { timeout: 10_000 }); } catch { /* ignore */ }
+    try {
+      execSync(`git -C "${repoPath}" push "${pushUrl}" --delete "${branchName}"`, {
+        timeout: 10_000,
+      });
+    } catch {
+      /* ignore */
+    }
     return {
       ok: false,
       reason: `PR creation failed: ${err instanceof Error ? err.message : "unknown"}`,
@@ -582,16 +619,24 @@ async function runOpenPr(
   // Cleanup worktree
   if (worktreePath && existsSync(worktreePath)) {
     try {
-      execSync(`git -C "${repoPath}" worktree remove --force "${worktreePath}"`, { timeout: 10_000 });
+      execSync(`git -C "${repoPath}" worktree remove --force "${worktreePath}"`, {
+        timeout: 10_000,
+      });
     } catch {
-      try { rmSync(worktreePath, { recursive: true, force: true }); } catch { /* ignore */ }
+      try {
+        rmSync(worktreePath, { recursive: true, force: true });
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   // Delete local branch (main repo never checks it out, so no checkout needed first)
   try {
     execSync(`git -C "${repoPath}" branch -D "${branchName}"`, { timeout: 10_000 });
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   updateTicket(db, ticket.key, {
     status: "done",

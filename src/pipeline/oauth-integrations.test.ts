@@ -11,11 +11,15 @@ function openTestDb() {
   return openDb(join(dir, "db.sqlite"));
 }
 
-function storeCredential(db: ReturnType<typeof openTestDb>, provider: string, opts: {
-  accessToken: string;
-  refreshToken: string | null;
-  expiresAt: number | null;
-}): void {
+function storeCredential(
+  db: ReturnType<typeof openTestDb>,
+  provider: string,
+  opts: {
+    accessToken: string;
+    refreshToken: string | null;
+    expiresAt: number | null;
+  },
+): void {
   upsertCredential(db, `oauth:${provider}`, JSON.stringify({ type: "oauth", ...opts }));
 }
 
@@ -78,11 +82,12 @@ async function testReturnsNullWhenRefreshFails(): Promise<void> {
     expiresAt: Date.now() - 1000,
   });
 
-  const fakeFetch = (async () => ({
-    ok: false,
-    status: 400,
-    json: async () => ({ error: "invalid_grant" }),
-  } as unknown as Response)) as typeof fetch;
+  const fakeFetch = (async () =>
+    ({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "invalid_grant" }),
+    }) as unknown as Response) as typeof fetch;
 
   const token = await getValidOAuthToken("bitbucket", fakeFetch);
   assert.equal(token, null);

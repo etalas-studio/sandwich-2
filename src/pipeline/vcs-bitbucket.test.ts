@@ -34,7 +34,8 @@ async function testListOrgsFallsBackToUserEndpoint(): Promise<void> {
   let callCount = 0;
   const fakeFetch = (async (url: string) => {
     callCount++;
-    if (url.includes("/user/permissions/workspaces")) return fakeResponse({ values: [] }, { status: 410 });
+    if (url.includes("/user/permissions/workspaces"))
+      return fakeResponse({ values: [] }, { status: 410 });
     if (url.includes("/user/workspaces")) return fakeResponse({ values: [] }, { status: 410 });
     if (url.includes("/user")) {
       return fakeResponse({ username: "myuser", display_name: "My User" });
@@ -45,9 +46,7 @@ async function testListOrgsFallsBackToUserEndpoint(): Promise<void> {
   const client = createBitbucketVcsClient(fakeFetch);
   const orgs = await client.listOrgs("test-token");
 
-  assert.deepEqual(orgs, [
-    { slug: "myuser", name: "My User", isPersonal: true },
-  ]);
+  assert.deepEqual(orgs, [{ slug: "myuser", name: "My User", isPersonal: true }]);
   console.log("PASS: testListOrgsFallsBackToUserEndpoint");
 }
 
@@ -56,7 +55,12 @@ async function testListReposForWorkspaceWithoutSearch(): Promise<void> {
     assert.ok(url.startsWith("https://api.bitbucket.org/2.0/repositories/acme"));
     return fakeResponse({
       values: [
-        { name: "widgets", slug: "widgets", workspace: { slug: "acme" }, mainbranch: { name: "main" } },
+        {
+          name: "widgets",
+          slug: "widgets",
+          workspace: { slug: "acme" },
+          mainbranch: { name: "main" },
+        },
       ],
       next: "https://api.bitbucket.org/2.0/repositories/acme?page=2",
     });
@@ -73,7 +77,9 @@ async function testListReposForWorkspaceWithoutSearch(): Promise<void> {
 async function testListReposHasNoNextPageWhenAbsent(): Promise<void> {
   const fakeFetch = (async () => {
     return fakeResponse({
-      values: [{ name: "solo", slug: "solo", workspace: { slug: "acme" }, mainbranch: { name: "main" } }],
+      values: [
+        { name: "solo", slug: "solo", workspace: { slug: "acme" }, mainbranch: { name: "main" } },
+      ],
     });
   }) as typeof fetch;
 
@@ -89,7 +95,14 @@ async function testListReposWithSearchQueryFiltersByName(): Promise<void> {
     assert.ok(url.includes("q="));
     assert.ok(url.includes("widg"));
     return fakeResponse({
-      values: [{ name: "widgets", slug: "widgets", workspace: { slug: "acme" }, mainbranch: { name: "main" } }],
+      values: [
+        {
+          name: "widgets",
+          slug: "widgets",
+          workspace: { slug: "acme" },
+          mainbranch: { name: "main" },
+        },
+      ],
     });
   }) as typeof fetch;
 
@@ -102,7 +115,9 @@ async function testListReposWithSearchQueryFiltersByName(): Promise<void> {
 
 async function testCreatePullRequest(): Promise<void> {
   const fakeFetch = (async (url: string, init?: { method?: string; body?: string }) => {
-    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"));
+    assert.ok(
+      url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"),
+    );
     assert.equal(init?.method, "POST");
     const body = JSON.parse(init?.body ?? "{}");
     assert.equal(body.title, "Fix: test");
@@ -130,7 +145,9 @@ async function testCreatePullRequest(): Promise<void> {
 
 async function testFindPullRequestReturnsExistingOpenPr(): Promise<void> {
   const fakeFetch = (async (url: string) => {
-    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"));
+    assert.ok(
+      url.startsWith("https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests"),
+    );
     assert.ok(url.includes("feature-branch"));
     return fakeResponse({
       values: [

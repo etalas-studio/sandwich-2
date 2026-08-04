@@ -1,28 +1,40 @@
 import type Database from "better-sqlite3";
 import { scanMechanical, computeAreaSignalsForPaths } from "./mechanical.js";
 import { runAgentPass } from "./agent-pass.js";
-import {
-  completeReadinessScan,
-  abortReadinessScan,
-} from "../db/readiness-scans.js";
+import { completeReadinessScan, abortReadinessScan } from "../db/readiness-scans.js";
 import { insertBlocklistEntry } from "../db/blocklist.js";
 
-export type InvokerFactory = (
-  modelId: string | null,
-) => {
-  run: (opts: { prompt: string; cwd: string; timeoutMs: number }) => Promise<{ outcome: string; finalText: string }>;
+export type InvokerFactory = (modelId: string | null) => {
+  run: (opts: {
+    prompt: string;
+    cwd: string;
+    timeoutMs: number;
+  }) => Promise<{ outcome: string; finalText: string }>;
 };
 
 export function createScanRunner(
   db: Database.Database,
   createInvoker: InvokerFactory,
-): (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void> {
+): (
+  scanId: string,
+  repoPath: string,
+  signal: AbortSignal,
+  modelId: string | null,
+) => Promise<void> {
   return async (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => {
     // Mechanical pass (synchronous, fast)
     let mechanical;
     try {
       mechanical = scanMechanical(repoPath);
-      console.log("[scan:runner] mechanical pass ok, techStack =", mechanical.techStack, "testCommand =", mechanical.testCommand, "areaSignals =", mechanical.areaSignals.length, "areas");
+      console.log(
+        "[scan:runner] mechanical pass ok, techStack =",
+        mechanical.techStack,
+        "testCommand =",
+        mechanical.testCommand,
+        "areaSignals =",
+        mechanical.areaSignals.length,
+        "areas",
+      );
     } catch (err) {
       console.error("[scan:runner] mechanical pass failed:", err);
       abortReadinessScan(db, scanId);
@@ -45,7 +57,14 @@ export function createScanRunner(
       signal,
       invoker,
     });
-    console.log("[scan:runner] agent pass done, outcome =", agentResult.outcome, "areas =", agentResult.areas.length, "description =", agentResult.description?.slice(0, 80));
+    console.log(
+      "[scan:runner] agent pass done, outcome =",
+      agentResult.outcome,
+      "areas =",
+      agentResult.areas.length,
+      "description =",
+      agentResult.description?.slice(0, 80),
+    );
 
     if (agentResult.outcome === "aborted") {
       abortReadinessScan(db, scanId);

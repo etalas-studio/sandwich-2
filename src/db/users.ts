@@ -27,7 +27,13 @@ export function createUser(db: Database.Database, input: NewUser): User {
   db.prepare(
     `INSERT INTO users (id, username, email, password_hash, created_at)
      VALUES (@id, @username, @email, @passwordHash, @createdAt)`,
-  ).run({ id, username: input.username, email: input.email, passwordHash: input.passwordHash, createdAt });
+  ).run({
+    id,
+    username: input.username,
+    email: input.email,
+    passwordHash: input.passwordHash,
+    createdAt,
+  });
   return getUserById(db, id)!;
 }
 
@@ -38,8 +44,7 @@ export function getUserById(db: Database.Database, id: string): User | null {
 
 export function getUserByUsername(db: Database.Database, username: string): User | null {
   const row = db.prepare("SELECT * FROM users WHERE username = ?").get(username) as
-    | RawRow
-    | undefined;
+    RawRow | undefined;
   return row ? mapRow(row) : null;
 }
 

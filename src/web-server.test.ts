@@ -100,13 +100,19 @@ async function testRegisterLoginLogoutFlow(): Promise<void> {
     assert.ok(cookie && cookie.includes("session="));
     const sessionCookie = cookie!.split(";")[0]!;
 
-    const ticketsRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
+    const ticketsRes = await fetch(`${baseUrl}/api/tickets`, {
+      headers: { cookie: sessionCookie },
+    });
     assert.equal(ticketsRes.status, 404);
 
     const secondRegisterRes = await fetch(`${baseUrl}/api/auth/register`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username: "someone-else", email: "x@example.com", password: "whatever1" }),
+      body: JSON.stringify({
+        username: "someone-else",
+        email: "x@example.com",
+        password: "whatever1",
+      }),
     });
     assert.equal(secondRegisterRes.status, 409);
 
@@ -116,7 +122,9 @@ async function testRegisterLoginLogoutFlow(): Promise<void> {
     });
     assert.equal(logoutRes.status, 204);
 
-    const afterLogoutRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
+    const afterLogoutRes = await fetch(`${baseUrl}/api/tickets`, {
+      headers: { cookie: sessionCookie },
+    });
     assert.equal(afterLogoutRes.status, 401);
   } finally {
     server.close();
@@ -199,7 +207,9 @@ async function testLoginSucceedsAndCookieAuthorizes(): Promise<void> {
     assert.ok(cookie && cookie.includes("session="));
     const sessionCookie = cookie!.split(";")[0]!;
 
-    const ticketsRes = await fetch(`${baseUrl}/api/tickets`, { headers: { cookie: sessionCookie } });
+    const ticketsRes = await fetch(`${baseUrl}/api/tickets`, {
+      headers: { cookie: sessionCookie },
+    });
     assert.equal(ticketsRes.status, 404);
   } finally {
     server.close();
@@ -351,7 +361,12 @@ async function testSettingsProjectRequiresSession(): Promise<void> {
     const postRes = await fetch(`${baseUrl}/api/projects/connect`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
+      body: JSON.stringify({
+        provider: "github",
+        owner: "acme",
+        repoSlug: "widgets",
+        defaultBranch: "main",
+      }),
     });
     assert.equal(postRes.status, 401);
   } finally {
@@ -395,7 +410,9 @@ async function testTicketCreateStopDuplicateDeleteRequireSession(): Promise<void
     const stopRes = await fetch(`${baseUrl}/api/tickets/some-key/stop`, { method: "POST" });
     assert.equal(stopRes.status, 401);
 
-    const duplicateRes = await fetch(`${baseUrl}/api/tickets/some-key/duplicate`, { method: "POST" });
+    const duplicateRes = await fetch(`${baseUrl}/api/tickets/some-key/duplicate`, {
+      method: "POST",
+    });
     assert.equal(duplicateRes.status, 401);
 
     const deleteRes = await fetch(`${baseUrl}/api/tickets/some-key`, { method: "DELETE" });

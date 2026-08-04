@@ -26,9 +26,7 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
 
       const slashIdx = modelId.indexOf("/");
       if (slashIdx <= 0) {
-        throw new Error(
-          `Invalid model ID format: "${modelId}". Expected "provider/model".`,
-        );
+        throw new Error(`Invalid model ID format: "${modelId}". Expected "provider/model".`);
       }
 
       const provider = modelId.slice(0, slashIdx);
@@ -52,7 +50,11 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
           compaction: { enabled: false },
         }),
       });
-      console.log("[invoker] agent session created, sending prompt (length =", opts.prompt.length, ")");
+      console.log(
+        "[invoker] agent session created, sending prompt (length =",
+        opts.prompt.length,
+        ")",
+      );
 
       let responseText = "";
       let eventCount = 0;
@@ -78,10 +80,7 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         }
 
         // Capture streaming text deltas (most common path)
-        if (
-          event.type === "message_update" &&
-          event.assistantMessageEvent?.type === "text_delta"
-        ) {
+        if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
           responseText += event.assistantMessageEvent.delta;
           return;
         }
@@ -130,7 +129,14 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
 
       try {
         await session.prompt(opts.prompt);
-        console.log("[invoker] session.prompt resolved, total events =", eventCount, "toolCalls =", toolUseCount, "responseText length =", responseText.length);
+        console.log(
+          "[invoker] session.prompt resolved, total events =",
+          eventCount,
+          "toolCalls =",
+          toolUseCount,
+          "responseText length =",
+          responseText.length,
+        );
         console.log("[invoker] event type counts:", JSON.stringify(eventTypeCounts));
         if (responseText) {
           console.log("[invoker] responseText first 300 chars:", responseText.slice(0, 300));

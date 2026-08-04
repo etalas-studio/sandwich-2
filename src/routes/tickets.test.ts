@@ -12,8 +12,13 @@ function mockReq(method: string, path: string, headers: Record<string, string> =
 }
 function mockRes(): any {
   const res: any = { statusCode: 0, body: "", headers: {} };
-  res.writeHead = (s: number, h?: any) => { res.statusCode = s; if (h) Object.assign(res.headers, h); };
-  res.end = (p?: string) => { if (p !== undefined) res.body = p; };
+  res.writeHead = (s: number, h?: any) => {
+    res.statusCode = s;
+    if (h) Object.assign(res.headers, h);
+  };
+  res.end = (p?: string) => {
+    if (p !== undefined) res.body = p;
+  };
   res.destroy = () => {};
   return res;
 }
@@ -131,7 +136,10 @@ describe("ticket routes", () => {
 
     const res = mockRes();
     await router.dispatch(
-      mockJsonReq("PUT", "/api/tickets/RR-UPD", { description: "Updated", url: "https://example.com" }),
+      mockJsonReq("PUT", "/api/tickets/RR-UPD", {
+        description: "Updated",
+        url: "https://example.com",
+      }),
       res,
     );
     assert.equal(res.statusCode, 200);

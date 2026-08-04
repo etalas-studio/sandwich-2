@@ -51,11 +51,11 @@ export interface IntegrationStatus {
 // (modelRuntime.getModels), never hardcoded here.
 const PROVIDER_META: Record<string, { name: string }> = {
   "opencode-go": { name: "OpenCode Go" },
-  "anthropic": { name: "Claude (Anthropic)" },
+  anthropic: { name: "Claude (Anthropic)" },
   "openai-codex": { name: "OpenAI Codex" },
-  "jira": { name: "Jira" },
-  "bitbucket": { name: "Bitbucket" },
-  "github": { name: "GitHub" },
+  jira: { name: "Jira" },
+  bitbucket: { name: "Bitbucket" },
+  github: { name: "GitHub" },
 };
 
 export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
@@ -70,7 +70,9 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
         const authCheck = await modelRuntime.checkAuth(providerId);
         const connected = authCheck !== undefined;
         const runtimeModels: Array<{ id: string; name: string }> = connected
-          ? modelRuntime.getModels(providerId).map((m) => ({ id: `${m.provider}/${m.id}`, name: m.name }))
+          ? modelRuntime
+              .getModels(providerId)
+              .map((m) => ({ id: `${m.provider}/${m.id}`, name: m.name }))
           : [];
 
         results.push({
@@ -79,7 +81,11 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
           connected,
           authType: usesOAuth ? "oauth" : "api_key",
           models: runtimeModels,
-          error: connected ? undefined : (usesOAuth ? "OAuth not configured — login via Pi CLI" : "API key not set"),
+          error: connected
+            ? undefined
+            : usesOAuth
+              ? "OAuth not configured — login via Pi CLI"
+              : "API key not set",
         });
       } catch (err) {
         results.push({
@@ -94,9 +100,30 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     }
   } else {
     results.push(
-      { id: "opencode-go", name: "OpenCode Go", connected: false, authType: "none", models: [], error: "runtime not initialized" },
-      { id: "anthropic", name: "Claude (Anthropic)", connected: false, authType: "none", models: [], error: "runtime not initialized" },
-      { id: "openai-codex", name: "OpenAI Codex", connected: false, authType: "none", models: [], error: "runtime not initialized" },
+      {
+        id: "opencode-go",
+        name: "OpenCode Go",
+        connected: false,
+        authType: "none",
+        models: [],
+        error: "runtime not initialized",
+      },
+      {
+        id: "anthropic",
+        name: "Claude (Anthropic)",
+        connected: false,
+        authType: "none",
+        models: [],
+        error: "runtime not initialized",
+      },
+      {
+        id: "openai-codex",
+        name: "OpenAI Codex",
+        connected: false,
+        authType: "none",
+        models: [],
+        error: "runtime not initialized",
+      },
     );
   }
 
@@ -133,18 +160,27 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
 // ModelRuntime.checkAuth() reads the store live, no separate cache to sync.
 // ────────────────────────────────────────────────────────────
 
-export async function connectWithApiKey(providerId: string, apiKey: string): Promise<{ ok: boolean; message: string }> {
+export async function connectWithApiKey(
+  providerId: string,
+  apiKey: string,
+): Promise<{ ok: boolean; message: string }> {
   if (!modelRuntime || !dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
   }
 
   // OAuth providers — handled by the authorize redirect
   if (providerId === "jira" || providerId === "bitbucket" || providerId === "github") {
-    return { ok: true, message: "Use OAuth authorize endpoint: /api/integrations/${providerId}/authorize" };
+    return {
+      ok: true,
+      message: "Use OAuth authorize endpoint: /api/integrations/${providerId}/authorize",
+    };
   }
 
   if (providerId !== "opencode-go" && providerId !== "anthropic") {
-    return { ok: false, message: `${providerId} does not support API key auth — use OAuth instead` };
+    return {
+      ok: false,
+      message: `${providerId} does not support API key auth — use OAuth instead`,
+    };
   }
 
   try {
@@ -167,7 +203,9 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
   }
 }
 
-export async function disconnectApiKey(providerId: string): Promise<{ ok: boolean; message: string }> {
+export async function disconnectApiKey(
+  providerId: string,
+): Promise<{ ok: boolean; message: string }> {
   if (!dbRef) {
     return { ok: false, message: "integration runtime not initialized" };
   }

@@ -18,7 +18,10 @@ export function buildCloneUrl(
   return `https://x-token-auth:${token}@bitbucket.org/${owner}/${repoSlug}.git`;
 }
 
-export type ExecFn = (cmd: string, args: string[]) => Promise<{ ok: true } | { ok: false; error: string }>;
+export type ExecFn = (
+  cmd: string,
+  args: string[],
+) => Promise<{ ok: true } | { ok: false; error: string }>;
 
 export interface CloneResult {
   ok: boolean;
@@ -36,7 +39,10 @@ export async function cloneRepo(
   return { ok: true };
 }
 
-function defaultExec(cmd: string, args: string[]): Promise<{ ok: true } | { ok: false; error: string }> {
+function defaultExec(
+  cmd: string,
+  args: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
   return new Promise((resolve) => {
     execFile(cmd, args, { timeout: 5 * 60 * 1000 }, (err, _stdout, stderr) => {
       if (err) {

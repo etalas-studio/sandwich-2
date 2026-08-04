@@ -127,7 +127,11 @@ describe("tickets repository", () => {
   });
 
   it("jiraStatus defaults to null for new tickets", () => {
-    const ticket = createTicket(db, { id: "RR-JIRA-NULL", description: "No jira status", url: null });
+    const ticket = createTicket(db, {
+      id: "RR-JIRA-NULL",
+      description: "No jira status",
+      url: null,
+    });
     assert.equal(ticket.jiraStatus, null);
   });
 });

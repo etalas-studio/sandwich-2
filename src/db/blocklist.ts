@@ -32,9 +32,7 @@ export function insertBlocklistEntry(
 }
 
 export function getBlocklistEntries(db: Database.Database): BlocklistEntry[] {
-  const rows = db
-    .prepare("SELECT * FROM blocklist ORDER BY pattern")
-    .all() as RawRow[];
+  const rows = db.prepare("SELECT * FROM blocklist ORDER BY pattern").all() as RawRow[];
   return rows.map(toEntry);
 }
 

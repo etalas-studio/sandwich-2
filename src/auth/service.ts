@@ -51,10 +51,7 @@ export function setupRequired(db: Database.Database): boolean {
   return !anyUserExists(db);
 }
 
-export async function register(
-  db: Database.Database,
-  input: RegisterInput,
-): Promise<AuthResult> {
+export async function register(db: Database.Database, input: RegisterInput): Promise<AuthResult> {
   // Hash BEFORE the "has anyone registered yet?" check, not after.
   //
   // This ordering is load-bearing. `anyUserExists` + `createUser` are both

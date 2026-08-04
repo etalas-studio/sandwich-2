@@ -97,22 +97,35 @@ export function createTicket(db: Database.Database, input: CreateTicketInput): T
      VALUES (?, ?, ?, ?, 'backlog', ?, ?,
       ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
-    key, input.summary ?? null, input.description, input.url, now, now,
-    input.issueType ?? null, input.priority ?? null, input.sprint ?? null,
-    input.storyPoints ?? null, input.team ?? null, input.assignee ?? null,
-    input.parentKey ?? null, input.attachments ?? null,
+    key,
+    input.summary ?? null,
+    input.description,
+    input.url,
+    now,
+    now,
+    input.issueType ?? null,
+    input.priority ?? null,
+    input.sprint ?? null,
+    input.storyPoints ?? null,
+    input.team ?? null,
+    input.assignee ?? null,
+    input.parentKey ?? null,
+    input.attachments ?? null,
   );
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
   return normaliseTicket(row);
 }
 
 export function listTickets(db: Database.Database): Ticket[] {
-  const rows = db.prepare("SELECT * FROM tickets ORDER BY created_at DESC, rowid DESC").all() as Record<string, unknown>[];
+  const rows = db
+    .prepare("SELECT * FROM tickets ORDER BY created_at DESC, rowid DESC")
+    .all() as Record<string, unknown>[];
   return rows.map(normaliseTicket);
 }
 
 export function getTicket(db: Database.Database, key: string): Ticket | null {
-  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown> | undefined;
+  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as
+    Record<string, unknown> | undefined;
   if (!row) return null;
   return normaliseTicket(row);
 }
@@ -143,79 +156,171 @@ export interface UpdateTicketInput {
   attachments?: string | null;
 }
 
-export function updateTicket(db: Database.Database, key: string, input: UpdateTicketInput): Ticket | null {
+export function updateTicket(
+  db: Database.Database,
+  key: string,
+  input: UpdateTicketInput,
+): Ticket | null {
   const existing = db.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
   if (!existing) return null;
 
   const now = new Date().toISOString();
   if (input.description !== undefined) {
-    db.prepare("UPDATE tickets SET description = ?, updated_at = ? WHERE key = ?").run(input.description, now, key);
+    db.prepare("UPDATE tickets SET description = ?, updated_at = ? WHERE key = ?").run(
+      input.description,
+      now,
+      key,
+    );
   }
   if (input.summary !== undefined) {
-    db.prepare("UPDATE tickets SET summary = ?, updated_at = ? WHERE key = ?").run(input.summary, now, key);
+    db.prepare("UPDATE tickets SET summary = ?, updated_at = ? WHERE key = ?").run(
+      input.summary,
+      now,
+      key,
+    );
   }
   if (input.url !== undefined) {
     db.prepare("UPDATE tickets SET url = ?, updated_at = ? WHERE key = ?").run(input.url, now, key);
   }
   if (input.status !== undefined) {
-    db.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE key = ?").run(input.status, now, key);
+    db.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE key = ?").run(
+      input.status,
+      now,
+      key,
+    );
   }
   if (input.stage !== undefined) {
-    db.prepare("UPDATE tickets SET stage = ?, updated_at = ? WHERE key = ?").run(input.stage, now, key);
+    db.prepare("UPDATE tickets SET stage = ?, updated_at = ? WHERE key = ?").run(
+      input.stage,
+      now,
+      key,
+    );
   }
   if (input.worktreePath !== undefined) {
-    db.prepare("UPDATE tickets SET worktree_path = ?, updated_at = ? WHERE key = ?").run(input.worktreePath, now, key);
+    db.prepare("UPDATE tickets SET worktree_path = ?, updated_at = ? WHERE key = ?").run(
+      input.worktreePath,
+      now,
+      key,
+    );
   }
   if (input.branchName !== undefined) {
-    db.prepare("UPDATE tickets SET branch_name = ?, updated_at = ? WHERE key = ?").run(input.branchName, now, key);
+    db.prepare("UPDATE tickets SET branch_name = ?, updated_at = ? WHERE key = ?").run(
+      input.branchName,
+      now,
+      key,
+    );
   }
   if (input.startedAt !== undefined) {
-    db.prepare("UPDATE tickets SET started_at = ?, updated_at = ? WHERE key = ?").run(input.startedAt, now, key);
+    db.prepare("UPDATE tickets SET started_at = ?, updated_at = ? WHERE key = ?").run(
+      input.startedAt,
+      now,
+      key,
+    );
   }
   if (input.finishedAt !== undefined) {
-    db.prepare("UPDATE tickets SET finished_at = ?, updated_at = ? WHERE key = ?").run(input.finishedAt, now, key);
+    db.prepare("UPDATE tickets SET finished_at = ?, updated_at = ? WHERE key = ?").run(
+      input.finishedAt,
+      now,
+      key,
+    );
   }
   if (input.prUrl !== undefined) {
-    db.prepare("UPDATE tickets SET pr_url = ?, updated_at = ? WHERE key = ?").run(input.prUrl, now, key);
+    db.prepare("UPDATE tickets SET pr_url = ?, updated_at = ? WHERE key = ?").run(
+      input.prUrl,
+      now,
+      key,
+    );
   }
   if (input.prSummary !== undefined) {
-    db.prepare("UPDATE tickets SET pr_summary = ?, updated_at = ? WHERE key = ?").run(input.prSummary, now, key);
+    db.prepare("UPDATE tickets SET pr_summary = ?, updated_at = ? WHERE key = ?").run(
+      input.prSummary,
+      now,
+      key,
+    );
   }
   if (input.needsHumanCategory !== undefined) {
-    db.prepare("UPDATE tickets SET needs_human_category = ?, updated_at = ? WHERE key = ?").run(input.needsHumanCategory, now, key);
+    db.prepare("UPDATE tickets SET needs_human_category = ?, updated_at = ? WHERE key = ?").run(
+      input.needsHumanCategory,
+      now,
+      key,
+    );
   }
   if (input.needsHumanReason !== undefined) {
-    db.prepare("UPDATE tickets SET needs_human_reason = ?, updated_at = ? WHERE key = ?").run(input.needsHumanReason, now, key);
+    db.prepare("UPDATE tickets SET needs_human_reason = ?, updated_at = ? WHERE key = ?").run(
+      input.needsHumanReason,
+      now,
+      key,
+    );
   }
   if (input.quickWinChoices !== undefined) {
-    db.prepare("UPDATE tickets SET quick_win_choices = ?, updated_at = ? WHERE key = ?").run(input.quickWinChoices, now, key);
+    db.prepare("UPDATE tickets SET quick_win_choices = ?, updated_at = ? WHERE key = ?").run(
+      input.quickWinChoices,
+      now,
+      key,
+    );
   }
   if (input.quickWinAttempts !== undefined) {
-    db.prepare("UPDATE tickets SET quick_win_attempts = ?, updated_at = ? WHERE key = ?").run(input.quickWinAttempts, now, key);
+    db.prepare("UPDATE tickets SET quick_win_attempts = ?, updated_at = ? WHERE key = ?").run(
+      input.quickWinAttempts,
+      now,
+      key,
+    );
   }
   if (input.issueType !== undefined) {
-    db.prepare("UPDATE tickets SET issue_type = ?, updated_at = ? WHERE key = ?").run(input.issueType, now, key);
+    db.prepare("UPDATE tickets SET issue_type = ?, updated_at = ? WHERE key = ?").run(
+      input.issueType,
+      now,
+      key,
+    );
   }
   if (input.priority !== undefined) {
-    db.prepare("UPDATE tickets SET priority = ?, updated_at = ? WHERE key = ?").run(input.priority, now, key);
+    db.prepare("UPDATE tickets SET priority = ?, updated_at = ? WHERE key = ?").run(
+      input.priority,
+      now,
+      key,
+    );
   }
   if (input.sprint !== undefined) {
-    db.prepare("UPDATE tickets SET sprint = ?, updated_at = ? WHERE key = ?").run(input.sprint, now, key);
+    db.prepare("UPDATE tickets SET sprint = ?, updated_at = ? WHERE key = ?").run(
+      input.sprint,
+      now,
+      key,
+    );
   }
   if (input.storyPoints !== undefined) {
-    db.prepare("UPDATE tickets SET story_points = ?, updated_at = ? WHERE key = ?").run(input.storyPoints, now, key);
+    db.prepare("UPDATE tickets SET story_points = ?, updated_at = ? WHERE key = ?").run(
+      input.storyPoints,
+      now,
+      key,
+    );
   }
   if (input.team !== undefined) {
-    db.prepare("UPDATE tickets SET team = ?, updated_at = ? WHERE key = ?").run(input.team, now, key);
+    db.prepare("UPDATE tickets SET team = ?, updated_at = ? WHERE key = ?").run(
+      input.team,
+      now,
+      key,
+    );
   }
   if (input.assignee !== undefined) {
-    db.prepare("UPDATE tickets SET assignee = ?, updated_at = ? WHERE key = ?").run(input.assignee, now, key);
+    db.prepare("UPDATE tickets SET assignee = ?, updated_at = ? WHERE key = ?").run(
+      input.assignee,
+      now,
+      key,
+    );
   }
   if (input.parentKey !== undefined) {
-    db.prepare("UPDATE tickets SET parent_key = ?, updated_at = ? WHERE key = ?").run(input.parentKey, now, key);
+    db.prepare("UPDATE tickets SET parent_key = ?, updated_at = ? WHERE key = ?").run(
+      input.parentKey,
+      now,
+      key,
+    );
   }
   if (input.attachments !== undefined) {
-    db.prepare("UPDATE tickets SET attachments = ?, updated_at = ? WHERE key = ?").run(input.attachments, now, key);
+    db.prepare("UPDATE tickets SET attachments = ?, updated_at = ? WHERE key = ?").run(
+      input.attachments,
+      now,
+      key,
+    );
   }
 
   const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;

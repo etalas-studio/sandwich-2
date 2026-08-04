@@ -20,11 +20,7 @@ export function parseCookies(header: string | undefined): Record<string, string>
   return cookies;
 }
 
-function buildAttrs(
-  cookieValue: string,
-  maxAge: number,
-  secure: boolean
-): string[] {
+function buildAttrs(cookieValue: string, maxAge: number, secure: boolean): string[] {
   const attrs = [
     `${SESSION_COOKIE_NAME}=${cookieValue}`,
     "Path=/",
@@ -37,11 +33,7 @@ function buildAttrs(
 }
 
 export function buildSessionCookie(token: string, secure: boolean): string {
-  const attrs = buildAttrs(
-    encodeURIComponent(token),
-    SESSION_MAX_AGE_SEC,
-    secure
-  );
+  const attrs = buildAttrs(encodeURIComponent(token), SESSION_MAX_AGE_SEC, secure);
   return attrs.join("; ");
 }
 

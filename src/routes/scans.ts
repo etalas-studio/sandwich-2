@@ -15,7 +15,12 @@ const inFlight = new Map<string, AbortController>();
 export function registerScanRoutes(
   router: Router,
   db: Database.Database,
-  runScan: (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void>,
+  runScan: (
+    scanId: string,
+    repoPath: string,
+    signal: AbortSignal,
+    modelId: string | null,
+  ) => Promise<void>,
   reposDir: string,
 ): void {
   router.post("/api/scans/run", async (req, res) => {
@@ -27,7 +32,9 @@ export function registerScanRoutes(
 
     // Only one scan at a time
     if (inFlight.size > 0) {
-      sendJson(res, 409, { error: "A scan is already in progress. Wait for it to finish or abort it first." });
+      sendJson(res, 409, {
+        error: "A scan is already in progress. Wait for it to finish or abort it first.",
+      });
       return;
     }
 

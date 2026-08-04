@@ -13,7 +13,9 @@ function fakeResponse(body: unknown, opts: { status?: number; link?: string } = 
     ok: (opts.status ?? 200) < 400,
     status: opts.status ?? 200,
     json: async () => body,
-    headers: { get: (name: string) => (name.toLowerCase() === "link" ? opts.link ?? null : null) },
+    headers: {
+      get: (name: string) => (name.toLowerCase() === "link" ? (opts.link ?? null) : null),
+    },
   };
 }
 
@@ -25,10 +27,7 @@ async function testListOrgsReturnsPersonalAccountAndOrgs(): Promise<void> {
       return fakeResponse({ login: "jane" }) as unknown as Response;
     }
     if (url === "https://api.github.com/user/orgs") {
-      return fakeResponse([
-        { login: "acme" },
-        { login: "widgets-inc" },
-      ]) as unknown as Response;
+      return fakeResponse([{ login: "acme" }, { login: "widgets-inc" }]) as unknown as Response;
     }
     throw new Error(`unexpected url: ${url}`);
   }) as typeof fetch;
@@ -68,9 +67,7 @@ async function testListReposForPersonalAccountUsesUserRepos(): Promise<void> {
   const client = createGithubVcsClient(fakeFetch);
   await client.listOrgs("test-token");
   const page = await client.listRepos("test-token", "jane", { page: 1 });
-  assert.deepEqual(page.repos, [
-    { owner: "jane", slug: "my-project", defaultBranch: "main" },
-  ]);
+  assert.deepEqual(page.repos, [{ owner: "jane", slug: "my-project", defaultBranch: "main" }]);
   console.log("PASS: testListReposForPersonalAccountUsesUserRepos");
 }
 
@@ -78,10 +75,13 @@ async function testListReposForOrgWithoutSearch(): Promise<void> {
   const fakeFetch = (async (url: string) => {
     assert.ok(url.startsWith("https://api.github.com/orgs/acme/repos"));
     assert.ok(url.includes("page=1"));
-    return fakeResponse([
-      { name: "widgets", owner: { login: "acme" }, default_branch: "main" },
-      { name: "gadgets", owner: { login: "acme" }, default_branch: "trunk" },
-    ], { link: '<https://api.github.com/orgs/acme/repos?page=2>; rel="next"' }) as unknown as Response;
+    return fakeResponse(
+      [
+        { name: "widgets", owner: { login: "acme" }, default_branch: "main" },
+        { name: "gadgets", owner: { login: "acme" }, default_branch: "trunk" },
+      ],
+      { link: '<https://api.github.com/orgs/acme/repos?page=2>; rel="next"' },
+    ) as unknown as Response;
   }) as typeof fetch;
 
   const client = createGithubVcsClient(fakeFetch);
@@ -97,7 +97,9 @@ async function testListReposForOrgWithoutSearch(): Promise<void> {
 
 async function testListReposHasNoNextPageWhenLinkHeaderMissing(): Promise<void> {
   const fakeFetch = (async () => {
-    return fakeResponse([{ name: "solo", owner: { login: "acme" }, default_branch: "main" }]) as unknown as Response;
+    return fakeResponse([
+      { name: "solo", owner: { login: "acme" }, default_branch: "main" },
+    ]) as unknown as Response;
   }) as typeof fetch;
 
   const client = createGithubVcsClient(fakeFetch);
@@ -132,7 +134,10 @@ async function testCreatePullRequest(): Promise<void> {
     assert.equal(body.title, "Fix: test");
     assert.equal(body.head, "feature-branch");
     assert.equal(body.base, "main");
-    return fakeResponse({ html_url: "https://github.com/acme/widgets/pull/42", number: 42 }) as unknown as Response;
+    return fakeResponse({
+      html_url: "https://github.com/acme/widgets/pull/42",
+      number: 42,
+    }) as unknown as Response;
   }) as typeof fetch;
 
   const client = createGithubVcsClient(fakeFetch);

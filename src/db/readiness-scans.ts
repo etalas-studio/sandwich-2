@@ -119,19 +119,26 @@ interface RawRow {
 
 function mapRow(db: Database.Database, id: string): ReadinessScan | null {
   const row = db.prepare("SELECT * FROM readiness_scans WHERE id = ?").get(id) as
-    | RawRow
-    | undefined;
+    RawRow | undefined;
   return row ? toScan(row) : null;
 }
 
 function toScan(row: RawRow): ReadinessScan {
   let areaSignals: AreaSignal[] | null = null;
   if (row.area_signals) {
-    try { areaSignals = JSON.parse(row.area_signals) as AreaSignal[]; } catch { areaSignals = null; }
+    try {
+      areaSignals = JSON.parse(row.area_signals) as AreaSignal[];
+    } catch {
+      areaSignals = null;
+    }
   }
   let recommendations: Recommendation[] | null = null;
   if (row.recommendations) {
-    try { recommendations = JSON.parse(row.recommendations) as Recommendation[]; } catch { recommendations = null; }
+    try {
+      recommendations = JSON.parse(row.recommendations) as Recommendation[];
+    } catch {
+      recommendations = null;
+    }
   }
   return {
     id: row.id,

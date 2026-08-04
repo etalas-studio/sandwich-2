@@ -37,12 +37,13 @@ function makeRepo(): string {
   return dir;
 }
 
-function areasResponse(desc: string | null, blocklist: Array<{ pattern: string; reason: string }>): string {
+function areasResponse(
+  desc: string | null,
+  blocklist: Array<{ pattern: string; reason: string }>,
+): string {
   return JSON.stringify({
     description: desc,
-    areas: [
-      { name: "Core", paths: ["src/"], note: "Core logic" },
-    ],
+    areas: [{ name: "Core", paths: ["src/"], note: "Core logic" }],
     blocklist,
   });
 }
@@ -59,10 +60,7 @@ async function testRunScanCompletesWithMechanicalResults(): Promise<void> {
   const db = openTestDb();
   const repo = makeRepo();
 
-  const runScan = createScanRunner(
-    db,
-    makeInvokerFactory(areasResponse(null, [])),
-  );
+  const runScan = createScanRunner(db, makeInvokerFactory(areasResponse(null, [])));
   const scanId = "test-scan-1";
   startReadinessScan(db, scanId);
   const controller = new AbortController();

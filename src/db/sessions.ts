@@ -20,9 +20,7 @@ export function createSession(db: Database.Database, userId: string, expiresAt: 
 }
 
 export function getSessionByToken(db: Database.Database, token: string): Session | null {
-  const row = db.prepare("SELECT * FROM sessions WHERE token = ?").get(token) as
-    | RawRow
-    | undefined;
+  const row = db.prepare("SELECT * FROM sessions WHERE token = ?").get(token) as RawRow | undefined;
   return row ? mapRow(row) : null;
 }
 
@@ -38,5 +36,10 @@ interface RawRow {
 }
 
 function mapRow(row: RawRow): Session {
-  return { token: row.token, userId: row.user_id, createdAt: row.created_at, expiresAt: row.expires_at };
+  return {
+    token: row.token,
+    userId: row.user_id,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+  };
 }

@@ -63,7 +63,11 @@ export function registerTicketRunRoutes(
       if (!clients) return;
       const data = `data: ${JSON.stringify(event)}\n\n`;
       for (const client of clients) {
-        try { client.write(data); } catch { clients.delete(client); }
+        try {
+          client.write(data);
+        } catch {
+          clients.delete(client);
+        }
       }
     };
 
@@ -75,7 +79,11 @@ export function registerTicketRunRoutes(
         const clients = sseClients.get(ticketKey);
         if (clients) {
           for (const client of clients) {
-            try { client.end(); } catch { /* ignore */ }
+            try {
+              client.end();
+            } catch {
+              /* ignore */
+            }
           }
           sseClients.delete(ticketKey);
         }
@@ -164,7 +172,11 @@ export function registerTicketRunRoutes(
       if (!clients) return;
       const data = `data: ${JSON.stringify(event)}\n\n`;
       for (const client of clients) {
-        try { client.write(data); } catch { clients.delete(client); }
+        try {
+          client.write(data);
+        } catch {
+          clients.delete(client);
+        }
       }
     };
 
@@ -175,7 +187,11 @@ export function registerTicketRunRoutes(
         const clients = sseClients.get(ticketKey);
         if (clients) {
           for (const client of clients) {
-            try { client.end(); } catch { /* ignore */ }
+            try {
+              client.end();
+            } catch {
+              /* ignore */
+            }
           }
           sseClients.delete(ticketKey);
         }

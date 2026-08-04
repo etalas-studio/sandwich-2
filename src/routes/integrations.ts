@@ -4,11 +4,7 @@ import {
   connectWithApiKey,
   disconnectApiKey,
 } from "../pipeline/integrations.js";
-import {
-  sendJson,
-  sendCaughtError,
-  readJsonBody,
-} from "../http-utils.js";
+import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 export function registerIntegrationRoutes(router: Router): void {
   router.get("/api/integrations", async (_req, res) => {
