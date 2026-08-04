@@ -230,14 +230,8 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
 export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun, onResolve }: TicketDetailProps) {
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
-
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md ds-bg border-l border-white/[0.05] z-50 flex flex-col">
+      <div className="fixed top-0 right-0 h-full w-full max-w-lg ds-bg border-l border-white/[0.05] z-50 flex flex-col">
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto hide-scrollbar p-6 pb-0">
           {/* Header */}
