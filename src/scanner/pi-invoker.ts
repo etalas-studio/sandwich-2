@@ -56,14 +56,25 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
 
       let responseText = "";
       let eventCount = 0;
+      let toolUseCount = 0;
+      const eventTypeCounts: Record<string, number> = {};
 
       session.subscribe((event: any) => {
         eventCount++;
-        // Diagnostic: log all event types and their sub-structure for the first 20 events
-        if (eventCount <= 20) {
-          const subType = event.assistantMessageEvent?.type ?? "none";
+        const subType = event.assistantMessageEvent?.type ?? event.type;
+        eventTypeCounts[subType] = (eventTypeCounts[subType] ?? 0) + 1;
+
+        // Log first 5 events of each type for visibility
+        if ((eventTypeCounts[subType] ?? 0) <= 5) {
           const keys = Object.keys(event).join(",");
-          console.log(`[invoker:event #${eventCount}] type=${event.type} subType=${subType} keys=[${keys}]`);
+          console.log(`[invoker:event] type=${event.type} subType=${subType} keys=[${keys}]`);
+        }
+
+        // Track tool usage
+        if (subType === "tool_use") {
+          toolUseCount++;
+          const toolName = event.assistantMessageEvent?.name ?? "?";
+          console.log(`[invoker:tool] #${toolUseCount} ${toolName}`);
         }
 
         // Capture streaming text deltas (most common path)
@@ -119,7 +130,11 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
 
       try {
         await session.prompt(opts.prompt);
-        console.log("[invoker] session.prompt resolved, total events =", eventCount, "responseText length =", responseText.length);
+        console.log("[invoker] session.prompt resolved, total events =", eventCount, "toolCalls =", toolUseCount, "responseText length =", responseText.length);
+        console.log("[invoker] event type counts:", JSON.stringify(eventTypeCounts));
+        if (responseText) {
+          console.log("[invoker] responseText first 300 chars:", responseText.slice(0, 300));
+        }
         // Give event listeners a tick to flush before disposing
         await new Promise((r) => setTimeout(r, 100));
         session.dispose();
