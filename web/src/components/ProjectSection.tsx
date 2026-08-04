@@ -121,6 +121,13 @@ function RepoPicker({
     <div>
       <p className="text-xs text-white/50 font-light mb-4">Pick a repository to connect.</p>
 
+      {orgsQuery.isLoading && (
+        <div className="flex items-center gap-2 mb-3 text-xs text-white/40">
+          <iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />
+          Syncing workspaces…
+        </div>
+      )}
+
       {orgsQuery.isError && (
         <div className="mb-3 p-2.5 rounded border border-[#ff8a8a]/20 bg-[#ff8a8a]/[0.04]">
           <p className="text-xs text-[#ff8a8a] font-light">
@@ -176,6 +183,12 @@ function RepoPicker({
       />
 
       <div className="space-y-1.5 max-h-64 overflow-y-auto">
+        {reposQuery.isLoading && (
+          <div className="flex items-center gap-2 px-3 py-2 text-xs text-white/40">
+            <iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />
+            Loading repositories…
+          </div>
+        )}
         {allRepos.map((repo) => (
           <button
             key={`${repo.owner}/${repo.slug}`}
