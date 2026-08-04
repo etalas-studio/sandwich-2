@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 
 export type ProjectProvider = "github" | "bitbucket";
 export type CloneStatus = "cloning" | "ready" | "failed";
@@ -71,6 +72,19 @@ export function markProjectFailed(db: Database.Database, id: string, error: stri
  * (see src/routes/projects.ts). */
 export function clearProject(db: Database.Database): void {
   db.prepare("DELETE FROM project").run();
+}
+
+/**
+ * Replaces the old `getInstanceSettings(db).repoPath` read every pipeline/
+ * scan consumer used to do — returns the clone directory only once the
+ * project is actually ready (never mid-clone or absent), null otherwise.
+ * See docs/superpowers/specs/2026-08-04-project-selection-design.md
+ * "Migrating existing repoPath consumers".
+ */
+export function getProjectRepoPath(db: Database.Database, reposDir: string): string | null {
+  const project = getCurrentProject(db);
+  if (!project || project.cloneStatus !== "ready") return null;
+  return join(reposDir, project.id);
 }
 
 // ── internal ──

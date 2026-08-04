@@ -10,7 +10,7 @@ import { authenticateRequest } from "./auth/middleware.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
-import { registerSettingsRoutes } from "./routes/settings.js";
+import { registerProjectRoutes } from "./routes/projects.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerScanRoutes } from "./routes/scans.js";
 import { registerOAuthRoutes } from "./routes/oauth.js";
@@ -19,11 +19,15 @@ import { registerTicketRoutes } from "./routes/tickets.js";
 import { registerTicketRunRoutes } from "./routes/ticket-run.js";
 import { createScanRunner } from "./scanner/run-scan.js";
 import { createPiInvokerFactory } from "./scanner/pi-invoker.js";
+import { getOAuthToken } from "./pipeline/oauth-integrations.js";
+import { createGithubVcsClient } from "./pipeline/vcs-github.js";
+import { createBitbucketVcsClient } from "./pipeline/vcs-bitbucket.js";
 
 export interface WebServerOptions {
   dbPath: string;
   port: number;
   webRoot: string;
+  reposDir: string;
 }
 
 function parseTrustedHosts(): Set<string> {
@@ -35,7 +39,7 @@ function parseTrustedHosts(): Set<string> {
 const PUBLIC_API_PATHS = new Set(["/api/auth/me", "/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/integrations/jira/callback", "/api/integrations/bitbucket/callback", "/api/integrations/github/callback"]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
-  const { dbPath, port, webRoot } = options;
+  const { dbPath, port, webRoot, reposDir } = options;
   const db = openDb(dbPath);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
@@ -62,7 +66,11 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
 
   // Register route modules
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
-  registerSettingsRoutes(router, db);
+  registerProjectRoutes(router, db, {
+    vcsClients: { github: createGithubVcsClient(fetch), bitbucket: createBitbucketVcsClient(fetch) },
+    getOAuthToken,
+    reposDir,
+  });
   registerIntegrationRoutes(router);
   registerTicketRoutes(router, db);
   registerPurgeRoute(router, db);
@@ -70,8 +78,8 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   // Scan runner: uses Pi SDK createAgentSession when a model is selected
   const piInvokerFactory = createPiInvokerFactory(getModelRuntime());
   const scanRunner = createScanRunner(db, piInvokerFactory);
-  registerScanRoutes(router, db, scanRunner);
-  registerTicketRunRoutes(router, db, piInvokerFactory);
+  registerScanRoutes(router, db, scanRunner, reposDir);
+  registerTicketRunRoutes(router, db, piInvokerFactory, reposDir);
   registerOAuthRoutes(router);
 
   const server = createServer((req, res) => {
@@ -120,6 +128,7 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,
     webRoot: process.env.WEB_ROOT ?? "web/dist",
+    reposDir: process.env.REPOS_DIR ?? "data/repos",
   }).catch((err) => {
     console.error("Failed to start:", err);
     process.exit(1);

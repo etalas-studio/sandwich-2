@@ -50,11 +50,16 @@ function tempWebRoot(): string {
   return mkdtempSync(join(tmpdir(), "web-server-webroot-"));
 }
 
+function tempReposDir(): string {
+  return mkdtempSync(join(tmpdir(), "web-server-repos-"));
+}
+
 async function startTestServer() {
   const server = await startWebServer({
     dbPath: tempDbPath(),
     port: 0,
     webRoot: tempWebRoot(),
+    reposDir: tempReposDir(),
   });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const { port } = server.address() as AddressInfo;
@@ -340,13 +345,13 @@ async function testOversizedBodyIsRejected(): Promise<void> {
 async function testSettingsProjectRequiresSession(): Promise<void> {
   const { server, baseUrl } = await startTestServer();
   try {
-    const getRes = await fetch(`${baseUrl}/api/settings/project`);
+    const getRes = await fetch(`${baseUrl}/api/projects/current`);
     assert.equal(getRes.status, 401);
 
-    const postRes = await fetch(`${baseUrl}/api/settings/project`, {
+    const postRes = await fetch(`${baseUrl}/api/projects/connect`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ repoPath: "/tmp/whatever" }),
+      body: JSON.stringify({ provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" }),
     });
     assert.equal(postRes.status, 401);
   } finally {

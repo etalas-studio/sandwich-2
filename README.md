@@ -58,7 +58,7 @@ src/
                    kept as a reference for the approach the Pi SDK replaced
   pipeline/        Pi SDK integration layer, credential store, OAuth (Jira/Bitbucket),
                    ticket-runner.ts (the Judge/Implement/Verify/Open PR pipeline)
-  routes/          HTTP route handlers (auth, settings, integrations, oauth, scans,
+  routes/          HTTP route handlers (auth, projects, integrations, oauth, scans,
                    tickets, ticket-run, purge)
   scanner/         Readiness scan: mechanical pass + AI agent pass
   router.ts        Trie-based HTTP router with middleware
@@ -77,9 +77,12 @@ web/
 | POST | `/api/auth/register` | Create first/only account |
 | POST | `/api/auth/login` | Login, returns session cookie |
 | POST | `/api/auth/logout` | Clear session |
-| GET | `/api/settings/project` | Get repo path and first-run status |
-| POST | `/api/settings/project` | Set repo path |
-| POST | `/api/settings/sync` | `git pull` the configured repo path |
+| GET | `/api/projects/current` | Get the currently connected project (or `null`) |
+| GET | `/api/projects/orgs?provider=<p>` | List orgs/workspaces visible to the connected provider |
+| GET | `/api/projects/repos?provider=<p>&org=<o>&page=<n>&q=<q>` | Paginated, searchable repo list within an org/workspace |
+| POST | `/api/projects/connect` | Connect a repo — creates the project row and clones it asynchronously |
+| POST | `/api/projects/clear` | Disconnect the current project — deletes tickets/blocklist/scans and the clone directory |
+| POST | `/api/projects/sync` | `git pull` the connected project's managed clone |
 | GET | `/api/integrations` | List provider connection status |
 | POST | `/api/integrations/:providerId/connect` | Add API key for a provider |
 | POST | `/api/integrations/:providerId/disconnect` | Remove API key |
@@ -87,6 +90,8 @@ web/
 | GET | `/api/integrations/jira/callback` | Jira OAuth callback (public) |
 | GET | `/api/integrations/bitbucket/authorize` | Start Bitbucket OAuth flow |
 | GET | `/api/integrations/bitbucket/callback` | Bitbucket OAuth callback (public) |
+| GET | `/api/integrations/github/authorize` | Start GitHub OAuth flow |
+| GET | `/api/integrations/github/callback` | GitHub OAuth callback (public) |
 | GET | `/api/scans/latest` | Most recent readiness scan result |
 | POST | `/api/scans/run` | Start a new readiness scan |
 | POST | `/api/scans/abort` | Abort a running scan |
@@ -107,7 +112,8 @@ Single SQLite file at `data/instance.sqlite` (configurable via `DB_PATH`). Table
 - `users` — single-account auth
 - `sessions` — bearer tokens with expiry
 - `credentials` — provider API keys
-- `instance_settings` — repo path, first-run timestamp
+- `instance_settings` — instance-wide settings (currently unused; project state moved to `project`)
+- `project` — the connected VCS project (provider, owner, repo, default branch, clone status) — see `docs/superpowers/specs/2026-08-04-project-selection-design.md`
 - `readiness_scans` — scan results (status, tech stack, area signals, recommendations)
 - `blocklist` — files/patterns agents should never touch
 - `tickets` — improvement tickets with status tracking
@@ -122,6 +128,9 @@ Foreign keys are enforced. Migrations run automatically on startup.
 | `PORT` | `4319` | Server port |
 | `DB_PATH` | `data/instance.sqlite` | SQLite database path |
 | `WEB_ROOT` | `web/dist` | Static file serving directory |
+| `REPOS_DIR` | `data/repos` | Directory managed clones are stored under (one subdirectory per project, keyed by opaque UUID) |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | (unset) | GitHub OAuth App credentials |
+| `BITBUCKET_CLIENT_ID` / `BITBUCKET_CLIENT_SECRET` | (unset) | Bitbucket OAuth consumer credentials |
 | `COOKIE_SECURE` | `0` | Set to `1` for HTTPS-only session cookies |
 | `TRUSTED_HOSTS` | (empty) | Comma-separated allowed Host header values |
 | `ALLOW_LIVE_CLAUDE_CHECK` | (unset) | Must be `1` to run live Claude Code tests (costs real tokens) |

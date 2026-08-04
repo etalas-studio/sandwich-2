@@ -3,7 +3,7 @@ import type Database from "better-sqlite3";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
-import { getInstanceSettings } from "../db/settings.js";
+import { getProjectRepoPath } from "../db/project.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import { runTicketPipeline } from "../pipeline/ticket-runner.js";
 import type { TicketRunEvent } from "../pipeline/ticket-runner.js";
@@ -16,11 +16,12 @@ export function registerTicketRunRoutes(
   router: Router,
   db: Database.Database,
   createInvoker: InvokerFactory,
+  reposDir: string,
 ): void {
   // Trigger a ticket pipeline run
   router.post("/api/tickets/:key/run", async (req, res, params) => {
-    const settings = getInstanceSettings(db);
-    if (!settings.repoPath) {
+    const repoPath = getProjectRepoPath(db, reposDir);
+    if (!repoPath) {
       sendJson(res, 503, { error: "No project configured." });
       return;
     }
@@ -66,7 +67,7 @@ export function registerTicketRunRoutes(
       }
     };
 
-    runTicketPipeline(db, createInvoker, ticketKey, settings.repoPath, modelId, broadcast, controller.signal)
+    runTicketPipeline(db, createInvoker, ticketKey, repoPath, modelId, broadcast, controller.signal)
       .catch(() => {})
       .finally(() => {
         inFlight.delete(ticketKey);
@@ -138,8 +139,8 @@ export function registerTicketRunRoutes(
     });
 
     // Trigger re-run
-    const settings = getInstanceSettings(db);
-    if (!settings.repoPath) {
+    const repoPath = getProjectRepoPath(db, reposDir);
+    if (!repoPath) {
       sendJson(res, 200, { resolved: true, rerun: false, error: "No project configured" });
       return;
     }
@@ -167,7 +168,7 @@ export function registerTicketRunRoutes(
       }
     };
 
-    runTicketPipeline(db, createInvoker, ticketKey, settings.repoPath, modelId, broadcast, controller.signal)
+    runTicketPipeline(db, createInvoker, ticketKey, repoPath, modelId, broadcast, controller.signal)
       .catch(() => {})
       .finally(() => {
         inFlight.delete(ticketKey);

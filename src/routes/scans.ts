@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
-import { getInstanceSettings } from "../db/settings.js";
+import { getProjectRepoPath } from "../db/project.js";
 import {
   startReadinessScan,
   failReadinessScan,
@@ -16,11 +16,12 @@ export function registerScanRoutes(
   router: Router,
   db: Database.Database,
   runScan: (scanId: string, repoPath: string, signal: AbortSignal, modelId: string | null) => Promise<void>,
+  reposDir: string,
 ): void {
   router.post("/api/scans/run", async (req, res) => {
-    const settings = getInstanceSettings(db);
-    if (!settings.repoPath) {
-      sendJson(res, 503, { error: "No project configured. Set a repository path in Settings first." });
+    const repoPath = getProjectRepoPath(db, reposDir);
+    if (!repoPath) {
+      sendJson(res, 503, { error: "No project configured. Connect a project in Settings first." });
       return;
     }
 
@@ -48,7 +49,7 @@ export function registerScanRoutes(
     inFlight.set(scanId, controller);
 
     // Fire-and-forget the scan
-    runScan(scanId, settings.repoPath, controller.signal, modelId)
+    runScan(scanId, repoPath, controller.signal, modelId)
       .catch((_err) => {
         failReadinessScan(db, scanId);
       })

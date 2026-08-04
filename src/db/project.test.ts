@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./connection.js";
-import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject } from "./project.js";
+import { createProject, getCurrentProject, markProjectReady, markProjectFailed, clearProject, getProjectRepoPath } from "./project.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "project-test-"));
@@ -78,6 +78,28 @@ function testClearProjectDeletesRow(): void {
   console.log("PASS: testClearProjectDeletesRow");
 }
 
+function testGetProjectRepoPathReturnsNullWhenNoProject(): void {
+  const db = openTestDb();
+  assert.equal(getProjectRepoPath(db, "/data/repos"), null);
+  console.log("PASS: testGetProjectRepoPathReturnsNullWhenNoProject");
+}
+
+function testGetProjectRepoPathReturnsNullWhileCloning(): void {
+  const db = openTestDb();
+  createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  assert.equal(getProjectRepoPath(db, "/data/repos"), null);
+  console.log("PASS: testGetProjectRepoPathReturnsNullWhileCloning");
+}
+
+function testGetProjectRepoPathReturnsJoinedPathWhenReady(): void {
+  const db = openTestDb();
+  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  markProjectReady(db, project.id);
+
+  assert.equal(getProjectRepoPath(db, "/data/repos"), `/data/repos/${project.id}`);
+  console.log("PASS: testGetProjectRepoPathReturnsJoinedPathWhenReady");
+}
+
 function main(): void {
   testFreshDatabaseHasNoProject();
   testCreateProjectStartsInCloningStatus();
@@ -85,6 +107,9 @@ function main(): void {
   testMarkProjectReadySetsStatus();
   testMarkProjectFailedSetsStatusAndError();
   testClearProjectDeletesRow();
+  testGetProjectRepoPathReturnsNullWhenNoProject();
+  testGetProjectRepoPathReturnsNullWhileCloning();
+  testGetProjectRepoPathReturnsJoinedPathWhenReady();
 }
 
 main();
