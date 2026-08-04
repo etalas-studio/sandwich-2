@@ -231,7 +231,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
   return (
     <>
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-lg ds-bg border-l border-white/[0.05] z-50 flex flex-col">
+      <div className="fixed top-0 right-0 h-full w-full max-w-lg ds-bg border-l border-white/[0.05] z-50 flex flex-col animate-in slide-in-from-right duration-200">
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto hide-scrollbar p-6 pb-0">
           {/* Header */}
