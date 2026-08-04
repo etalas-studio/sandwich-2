@@ -57,6 +57,7 @@ const PROVIDER_META: Record<string, { name: string }> = {
   "openai-codex": { name: "OpenAI Codex" },
   "jira": { name: "Jira" },
   "bitbucket": { name: "Bitbucket" },
+  "github": { name: "GitHub" },
 };
 
 export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
@@ -101,8 +102,8 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     );
   }
 
-  // ── OAuth providers (Jira / Bitbucket) ──
-  for (const providerId of ["jira", "bitbucket"]) {
+  // ── OAuth providers (Jira / Bitbucket / GitHub) ──
+  for (const providerId of ["jira", "bitbucket", "github"]) {
     const meta = PROVIDER_META[providerId]!;
     const connected = isOAuthConnected(providerId);
     results.push({
@@ -140,7 +141,7 @@ export async function connectWithApiKey(providerId: string, apiKey: string): Pro
   }
 
   // OAuth providers — handled by the authorize redirect
-  if (providerId === "jira" || providerId === "bitbucket") {
+  if (providerId === "jira" || providerId === "bitbucket" || providerId === "github") {
     return { ok: true, message: "Use OAuth authorize endpoint: /api/integrations/${providerId}/authorize" };
   }
 
@@ -173,7 +174,7 @@ export async function disconnectApiKey(providerId: string): Promise<{ ok: boolea
     return { ok: false, message: "integration runtime not initialized" };
   }
 
-  if (providerId === "jira" || providerId === "bitbucket") {
+  if (providerId === "jira" || providerId === "bitbucket" || providerId === "github") {
     disconnectOAuth(providerId);
     return { ok: true, message: "Disconnected" };
   }
