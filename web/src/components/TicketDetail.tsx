@@ -176,7 +176,6 @@ function AttachmentsSection({ attachments }: { attachments: AttachmentMeta[] }) 
 interface TicketDetailProps {
   ticket: Ticket
   onClose: () => void
-  onEdit?: () => void
   onDelete?: () => void
   onRun?: (ticket: Ticket) => void
   onResolve?: (ticketKey: string, choiceIndex: number) => void
@@ -229,7 +228,7 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
   pending: { border: 'border-white/[0.08]', bg: 'bg-transparent', text: 'text-white/30', dot: 'bg-white/30' },
 }
 
-export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun, onResolve }: TicketDetailProps) {
+export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResolve }: TicketDetailProps) {
   // Close on ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -408,14 +407,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
         {/* Bottom bar — Run + Delete */}
         <div className="shrink-0 p-4 pt-3 pb-5 border-t border-white/[0.05] bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f] to-[#0a0a0a]">
           <div className="flex gap-2">
-            {ticket.status === 'blocked' && onEdit && (
-              <button
-                onClick={onEdit}
-                className="flex items-center justify-center w-[38px] h-[38px] rounded-lg text-white/50 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-white/20 transition-colors shrink-0"
-              >
-                <iconify-icon icon="solar:pen-linear" width="16" />
-              </button>
-            )}
+
             <button
               className="relative inline-flex group flex-1"
               onClick={() => onRun?.(ticket)}

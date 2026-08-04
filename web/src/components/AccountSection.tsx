@@ -9,6 +9,7 @@ export interface Account {
 interface AccountSectionProps {
   account: Account
   onChangePassword: (currentPassword: string, newPassword: string) => void
+  onPurge?: () => void
 }
 
 // Mock data for UI development
@@ -17,12 +18,13 @@ export const mockAccount: Account = {
   email: 'jane@example.com',
 }
 
-export default function AccountSection({ account, onChangePassword }: AccountSectionProps) {
+export default function AccountSection({ account, onChangePassword, onPurge }: AccountSectionProps) {
   const [showModal, setShowModal] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false)
 
   const handleSave = () => {
     setError(null)
@@ -91,6 +93,17 @@ export default function AccountSection({ account, onChangePassword }: AccountSec
                   Change password
                 </button>
               </div>
+              {onPurge && (
+                <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
+                  <span className="text-sm text-white/50 font-light">Danger zone</span>
+                  <button
+                    className="px-4 py-1.5 text-xs text-[#ff8a8a]/70 bg-[#ff8a8a]/5 rounded-lg border border-[#ff8a8a]/15 transition-colors font-light hover:bg-[#ff8a8a]/10 hover:border-[#ff8a8a]/25"
+                    onClick={() => setShowPurgeConfirm(true)}
+                  >
+                    Purge all data
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -166,6 +179,49 @@ export default function AccountSection({ account, onChangePassword }: AccountSec
           </div>
         </div>
       </Modal>
+
+      {/* Purge Confirmation Modal */}
+      {onPurge && (
+        <Modal
+          open={showPurgeConfirm}
+          onClose={() => setShowPurgeConfirm(false)}
+          title="Purge All Data"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-[#3a1d1d]/50 border border-[#522525]">
+              <iconify-icon icon="solar:danger-triangle-linear" width="18" className="text-[#ff8a8a] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-[#ff8a8a] font-normal mb-1">This action is irreversible</p>
+                <p className="text-xs text-[#ff8a8a]/60 font-light">
+                  This will permanently delete all tickets, pipeline runs, scan results, and settings.
+                  You will be logged out after the purge completes.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.04]">
+              <button
+                className="px-4 py-2 text-xs text-white/70 bg-white/[0.03] rounded-lg border border-white/[0.05] transition-colors font-light hover:bg-white/[0.06]"
+                onClick={() => setShowPurgeConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="relative inline-flex group"
+                onClick={() => {
+                  onPurge();
+                  setShowPurgeConfirm(false);
+                }}
+              >
+                <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-[#ff8a8a]/30 to-transparent opacity-80" />
+                <span className="relative px-5 py-2 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#8b3a3a] to-[#3a1a1a]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                  Purge everything
+                </span>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }

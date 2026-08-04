@@ -6,16 +6,6 @@ interface SidebarProps {
   onLogout: () => void
 }
 
-async function purgeAndLogout(onLogout: () => void) {
-  try {
-    const res = await fetch("/api/purge", { method: "POST" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  } catch (err) {
-    console.error("Purge failed:", err);
-  }
-  onLogout();
-}
-
 export default function Sidebar({ username, onLogout }: SidebarProps) {
   const location = useLocation()
   const initials = username.slice(0, 2).toUpperCase() || '?'
@@ -81,14 +71,7 @@ export default function Sidebar({ username, onLogout }: SidebarProps) {
             <iconify-icon icon="solar:logout-2-linear" width="14" />
           </button>
         </div>
-        <button
-          type="button"
-          onClick={() => purgeAndLogout(onLogout)}
-          className="w-full px-3 py-1.5 rounded-lg text-[11px] text-[#ff8a8a]/50 hover:text-[#ff8a8a] hover:bg-[#ff8a8a]/5 transition-colors font-light flex items-center gap-2"
-        >
-          <iconify-icon icon="solar:trash-bin-trash-linear" width="12" />
-          Purge all data
-        </button>
+
       </div>
     </aside>
   )

@@ -396,7 +396,6 @@ function TicketsPage() {
         <TicketDetail
           ticket={displayTicket}
           onClose={handleCloseTicket}
-          onEdit={displayTicket.status === 'blocked' ? () => { setEditError(null); setEditingTicket(displayTicket) } : undefined}
           onDelete={() => setDeletingKey(displayTicket.key)}
           onResolve={(ticketKey, choiceIndex) => {
             resolveTicket(ticketKey, choiceIndex, selectedModelId ?? undefined)
@@ -473,7 +472,7 @@ function AppLayout({ username, onLogout }: AppProps) {
             <Routes>
               <Route path="/overview" element={<OverviewPage />} />
               <Route path="/tickets" element={<TicketsPage />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings" element={<Settings onPurge={async () => { await fetch('/api/purge', { method: 'POST' }); onLogout(); }} />} />
               <Route path="/integrations" element={<Integrations />} />
               <Route path="/" element={<Navigate to="/tickets" replace />} />
             </Routes>
