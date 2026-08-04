@@ -52,7 +52,7 @@ export default function ReadinessCard({ scan, onFix }: Props) {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-[#333] to-[#111] flex items-center justify-center border border-[#333] ds-shadow-card">
-                  <iconify-icon icon="solar:radar-linear" width="16" className="text-white/80" />
+                  <iconify-icon icon="solar:book-2-linear" width="16" className="text-white/80" />
                 </div>
                 <h3 className="text-sm font-normal text-white ds-text-shadow">
                   Project Scan
