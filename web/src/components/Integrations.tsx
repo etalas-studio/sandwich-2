@@ -10,42 +10,43 @@ const PROVIDERS = [
     id: 'opencode-go',
     name: 'OpenCode Go',
     logo: '/logos/opencode-logo.png',
-    description: 'Premium tier with DeepSeek V4, Kimi K3, Qwen3.7, MiniMax-M3, Grok 4.5, and more. Get your key at opencode.ai.',
+    description: 'Premium models — DeepSeek V4, Kimi K3, Qwen3.7, Grok 4.5, and more.',
     docsUrl: 'https://opencode.ai',
   },
   {
     id: 'anthropic',
     name: 'Claude (Anthropic)',
     logo: '/logos/claude-logo.png',
-    description: 'Claude models direct from Anthropic — Opus, Sonnet, Haiku, and Fable series. Get your API key at console.anthropic.com.',
+    description: 'Claude models direct from Anthropic — Opus, Sonnet, Haiku, Fable.',
     docsUrl: 'https://console.anthropic.com',
   },
   {
     id: 'openai-codex',
     name: 'OpenAI Codex',
     logo: '/logos/codex-logo.png',
-    description: 'Requires ChatGPT Plus or Pro subscription. Login via Pi CLI to connect your Codex subscription for GPT-5.5.',
+    description: 'GPT-5.x Codex models via ChatGPT Plus/Pro subscription.',
     docsUrl: 'https://github.com/openai/codex',
   },
   {
     id: '9router',
     name: '9Router',
     logo: '/logos/9router-logo.png',
-    description: 'Intelligent AI request router — automatically selects the best model across providers based on cost, latency, and capability.',
+    description: 'Intelligent router — auto-selects best model by cost and latency.',
     docsUrl: 'https://9router.com',
+    disabled: true,
   },
   {
     id: 'jira',
     name: 'Jira',
     logo: 'simple-icons:jira',
-    description: 'Pull tickets from your Jira project via OAuth 2.0. Create an app at developer.atlassian.com with read:jira-work and read:jira-user scopes.',
+    description: 'Pull tickets from your Jira project via OAuth 2.0.',
     docsUrl: 'https://developer.atlassian.com/console/myapps/',
   },
   {
     id: 'bitbucket',
     name: 'Bitbucket',
     logo: 'simple-icons:bitbucket',
-    description: 'Connect your Bitbucket workspace via OAuth 2.0. Create an OAuth consumer in workspace settings with repository and pullrequest.',
+    description: 'Connect your Bitbucket workspace via OAuth 2.0.',
     docsUrl: 'https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/',
   },
 ] as const
@@ -104,6 +105,7 @@ export default function Integrations() {
           const isAnthropic = provider.id === 'anthropic'
           const isOpencode = provider.id === 'opencode-go'
           const isCodex = provider.id === 'openai-codex'
+          const isDisabled = 'disabled' in provider && provider.disabled
 
           return (
             <div key={provider.id} className="ds-card-outer">
@@ -111,9 +113,9 @@ export default function Integrations() {
                 <div className="absolute inset-0 ds-noise pointer-events-none" />
                 <div className="relative z-10 flex flex-col h-full">
 
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
                         style={isAtlassianOAuth ? { background: 'linear-gradient(to bottom, #2684FF, #1a5dc4)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.4)' }
                           : is9router ? { background: '#ff4405', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
                           : isAnthropic ? { background: '#d67660', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
@@ -121,32 +123,32 @@ export default function Integrations() {
                           : isCodex ? { background: '#fffefa', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }
                           : { background: 'linear-gradient(to bottom, #2a2a2a, #161616)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)' }}>
                         {provider.logo.startsWith('/') ? (
-                          <img src={provider.logo} alt={provider.name} width="20" height="20" className="object-contain" />
+                          <img src={provider.logo} alt={provider.name} width="24" height="24" className="object-contain" />
                         ) : (
-                          <iconify-icon icon={provider.logo} width="16"
+                          <iconify-icon icon={provider.logo} width="20"
                             className={isAtlassianOAuth ? 'text-white' : state === 'connected' ? 'text-emerald-400' : 'text-white/60'} />
                         )}
                       </div>
-                      <h3 className="text-xs font-normal text-white ds-text-shadow truncate">{provider.name}</h3>
+                      <h3 className="text-sm font-medium text-white ds-text-shadow truncate">{provider.name}</h3>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {isAtlassianOAuth && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[7px] font-normal border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
                       )}
                       {isOAuth && !isAtlassianOAuth && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[7px] font-normal border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
                       )}
-                      <span className={`w-1.5 h-1.5 rounded-full ${state === 'connected' ? 'bg-emerald-400 animate-pulse' : state === 'connecting' ? 'bg-amber-400 animate-pulse' : 'bg-white/20'}`} />
+                      <span className={`w-2 h-2 rounded-full ${state === 'connected' ? 'bg-emerald-400 animate-pulse' : state === 'connecting' ? 'bg-amber-400 animate-pulse' : 'bg-white/20'}`} />
                     </div>
                   </div>
 
-                  <p className="text-[10px] text-white/50 font-light leading-relaxed mb-3 flex-1">{provider.description}</p>
+                  <p className="text-xs text-white/60 font-light leading-relaxed mb-4 flex-1">{provider.description}</p>
 
                   {/* ── Jira disconnected ── */}
                   {jiraProvider && state !== 'connected' && (
                     <>
                       <div className="mb-2 p-2 rounded border border-[#2684FF]/10 bg-[#2684FF]/[0.03]">
-                        <p className="text-[9px] text-[#2684FF]/60 font-light leading-relaxed">
+                        <p className="text-xs text-[#2684FF]/60 font-light leading-relaxed">
                           Scopes: <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">read:jira-work</code>{' '}
                           <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">read:jira-user</code>
                         </p>
@@ -155,9 +157,9 @@ export default function Integrations() {
                         <button type="button" onClick={() => { window.location.href = '/api/integrations/jira/authorize' }} disabled={state === 'connecting'}
                           className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                          <span className="relative px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
                             style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Connect'}
+                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />Connecting…</> : 'Connect'}
                           </span>
                         </button>
                       </div>
@@ -168,7 +170,7 @@ export default function Integrations() {
                   {bbProvider && state !== 'connected' && (
                     <>
                       <div className="mb-2 p-2 rounded border border-[#2684FF]/10 bg-[#2684FF]/[0.03]">
-                        <p className="text-[9px] text-[#2684FF]/60 font-light leading-relaxed">
+                        <p className="text-xs text-[#2684FF]/60 font-light leading-relaxed">
                           Scopes: <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">repository</code>{' '}
                           <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">pullrequest</code>
                         </p>
@@ -177,9 +179,9 @@ export default function Integrations() {
                         <button type="button" onClick={() => { window.location.href = '/api/integrations/bitbucket/authorize' }} disabled={state === 'connecting'}
                           className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                          <span className="relative px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
                             style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Connect'}
+                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />Connecting…</> : 'Connect'}
                           </span>
                         </button>
                       </div>
@@ -189,12 +191,14 @@ export default function Integrations() {
                   {/* ── Engine disconnected ── */}
                   {isEngine && !isOAuth && state !== 'connected' && (
                     <div>
-                      <button type="button" onClick={() => { setSelectedProviderId(provider.id); setModalOpen(true) }} disabled={state === 'connecting'}
+                      <button type="button" 
+                        onClick={() => { if (!isDisabled) { setSelectedProviderId(provider.id); setModalOpen(true) }}} 
+                        disabled={state === 'connecting' || isDisabled}
                         className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                         <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                        <span className="relative px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
+                        <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
                           style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                          {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Add key'}
+                          {isDisabled ? 'Soon!' : state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />Connecting…</> : 'Add key'}
                         </span>
                       </button>
                     </div>
@@ -203,19 +207,19 @@ export default function Integrations() {
                   {/* ── Engine OAuth (Codex) disconnected ── */}
                   {isEngine && isOAuth && state !== 'connected' && (
                     <div className="p-2 rounded border border-purple-500/10 bg-purple-500/[0.03]">
-                      <p className="text-[9px] text-purple-300/70 font-light leading-relaxed">
-                        Run <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">pi --login codex</code> in your terminal. Requires ChatGPT Plus/Pro.
+                      <p className="text-xs text-purple-300/70 font-light leading-relaxed">
+                        Run <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">pi --login codex</code> in your terminal.
                       </p>
                     </div>
                   )}
 
                   {/* ── Engine connected disconnect ── */}
                   {state === 'connected' && !jiraProvider && !bbProvider && (
-                    <div className="pt-2 border-t border-white/[0.04]">
+                    <div className="pt-3 border-t border-white/[0.04]">
                       <button type="button" onClick={() => disconnect(provider.id)} disabled={connectingId === provider.id}
                         className="w-fit relative inline-flex group disabled:opacity-50">
                         <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/20 to-transparent opacity-60" />
-                        <span className="relative px-3 py-1 rounded-md text-[9px] font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
+                        <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
                           style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.5)' }}>Disconnect</span>
                       </button>
                     </div>
@@ -225,13 +229,13 @@ export default function Integrations() {
                   {jiraProvider && state === 'connected' && (
                     <div className="mt-auto">
                       <div className="mb-2 p-2 rounded border border-emerald-500/10 bg-emerald-500/[0.03]">
-                        <p className="text-[9px] text-emerald-400/70 font-light">Connected. Tickets will appear in the pipeline.</p>
+                        <p className="text-xs text-emerald-400/70 font-light">Connected. Tickets will appear in the pipeline.</p>
                       </div>
-                      <div className="pt-2 border-t border-white/[0.04]">
+                      <div className="pt-3 border-t border-white/[0.04]">
                         <button type="button" onClick={() => disconnect(provider.id)} disabled={connectingId === provider.id}
                           className="w-fit relative inline-flex group disabled:opacity-50">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/20 to-transparent opacity-60" />
-                          <span className="relative px-3 py-1 rounded-md text-[9px] font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
                             style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.5)' }}>Disconnect</span>
                         </button>
                       </div>
@@ -242,13 +246,13 @@ export default function Integrations() {
                   {bbProvider && state === 'connected' && (
                     <div className="mt-auto">
                       <div className="mb-2 p-2 rounded border border-emerald-500/10 bg-emerald-500/[0.03]">
-                        <p className="text-[9px] text-emerald-400/70 font-light">Connected. Repos and PRs are now available.</p>
+                        <p className="text-xs text-emerald-400/70 font-light">Connected. Repos and PRs are now available.</p>
                       </div>
-                      <div className="pt-2 border-t border-white/[0.04]">
+                      <div className="pt-3 border-t border-white/[0.04]">
                         <button type="button" onClick={() => disconnect(provider.id)} disabled={connectingId === provider.id}
                           className="w-fit relative inline-flex group disabled:opacity-50">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/20 to-transparent opacity-60" />
-                          <span className="relative px-3 py-1 rounded-md text-[9px] font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
                             style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.5)' }}>Disconnect</span>
                         </button>
                       </div>
@@ -257,13 +261,13 @@ export default function Integrations() {
 
                   {/* ── Engine connected models ── */}
                   {state === 'connected' && !jiraProvider && !bbProvider && models.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-white/[0.04]">
+                    <div className="mt-3 pt-3 border-t border-white/[0.04]">
                       <div className="flex items-center gap-1 overflow-hidden">
                         {models.slice(0, 3).map((m) => (
-                          <span key={m.id} className="px-1.5 py-0.5 rounded-md text-[8px] font-light text-white/60 bg-white/[0.04] border border-white/[0.06] shrink-0">{m.id}</span>
+                          <span key={m.id} className="px-2 py-0.5 rounded-md text-[10px] font-light text-white/60 bg-white/[0.04] border border-white/[0.06] shrink-0">{m.id}</span>
                         ))}
                         {models.length > 3 && (
-                          <span className="px-1.5 py-0.5 rounded-md text-[8px] font-light text-white/40 bg-white/[0.04] border border-white/[0.06] shrink-0">+{models.length - 3}</span>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-light text-white/40 bg-white/[0.04] border border-white/[0.06] shrink-0">+{models.length - 3}</span>
                         )}
                       </div>
                     </div>

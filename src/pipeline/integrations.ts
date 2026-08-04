@@ -115,13 +115,14 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     });
   }
 
-  // ── 9Router (static, always available) ──
+  // ── 9Router (disabled for now) ──
   results.push({
     id: "9router",
     name: "9Router",
-    connected: true,
+    connected: false,
     authType: "none",
     models: [],
+    error: "Coming soon",
   });
 
   return results;
