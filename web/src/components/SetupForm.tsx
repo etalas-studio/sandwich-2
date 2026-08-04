@@ -19,13 +19,8 @@ export default function SetupForm({ onSubmit, error, isPending }: SetupFormProps
   }
 
   return (
-    <div
-      className="ds-bg min-h-screen flex items-center justify-center text-white antialiased relative"
-      style={{
-        backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)',
-        backgroundSize: '4px 4px',
-      }}
-    >
+    <div className="ds-bg min-h-screen flex items-center justify-center text-white antialiased relative">
+      <div className="ds-noise" />
       <div className="w-full max-w-sm mx-4 relative z-10">
         <h1 className="text-xl font-normal tracking-tight ds-text-shadow mb-1">Create your account</h1>
         <p className="text-sm text-white/50 font-light mb-6">This is the one account for this instance.</p>

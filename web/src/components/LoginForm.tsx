@@ -18,13 +18,8 @@ export default function LoginForm({ onSubmit, error, isPending }: LoginFormProps
   }
 
   return (
-    <div
-      className="ds-bg min-h-screen flex items-center justify-center text-white antialiased relative"
-      style={{
-        backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)',
-        backgroundSize: '4px 4px',
-      }}
-    >
+    <div className="ds-bg min-h-screen flex items-center justify-center text-white antialiased relative">
+      <div className="ds-noise" />
       <div className="w-full max-w-sm mx-4 relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-8">
