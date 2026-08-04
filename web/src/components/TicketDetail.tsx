@@ -284,7 +284,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
               href={ticket.url}
               target="_blank"
               rel="noreferrer"
-              className="text-xs text-white/40 hover:text-white/70 hover:underline block mb-4"
+              className="text-xs text-white/40 hover:text-white/70 hover:underline block mb-4 break-all"
             >
               {ticket.url}
             </a>
@@ -386,7 +386,7 @@ export default function TicketDetail({ ticket, onClose, onEdit, onDelete, onRun,
                   href={ticket.prUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-[#8affb1] hover:underline"
+                  className="text-xs text-[#8affb1] hover:underline break-all"
                 >
                   {ticket.prUrl}
                 </a>
