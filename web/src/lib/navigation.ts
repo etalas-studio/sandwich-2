@@ -10,8 +10,8 @@ export interface NavEntry {
 
 export const NAV_ITEMS: NavEntry[] = [
   { id: 'overview', label: 'Overview', icon: 'solar:home-2-linear', to: '/overview' },
-  { id: 'tickets', label: 'Tickets', icon: 'solar:document-text-linear', to: '/tickets' },
-  { id: 'integrations', label: 'Integrations', icon: 'solar:widget-3-linear', to: '/integrations' },
+  { id: 'tickets', label: 'Tickets', icon: 'solar:notes-linear', to: '/tickets' },
+  { id: 'integrations', label: 'Integrations', icon: 'solar:link-round-angle-linear', to: '/integrations' },
   { id: 'users', label: 'Users', icon: 'solar:users-group-rounded-linear', disabled: true, to: '/users' },
   { id: 'settings', label: 'Settings', icon: 'solar:settings-linear', to: '/settings' },
 ]

@@ -23,6 +23,7 @@ import ReadinessCard from './components/ReadinessCard'
 import { useProjectSettings } from './hooks/useProjectSettings'
 import { useScan } from './hooks/useScan'
 import { useTicketRun } from './hooks/useTicketRun'
+import { Plus } from 'lucide-react'
 
 function OverviewPage() {
   const { repoPath } = useProjectSettings()
@@ -81,7 +82,7 @@ function OverviewPage() {
                   textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                 }}
               >
-                <iconify-icon icon="solar:radar-linear" width="14" className="text-white/80" />
+                <iconify-icon icon="solar:scanner-linear" width="14" className="text-white/80" />
                 {isTriggering ? 'Starting…' : scanButtonLabel}
               </span>
             </button>
@@ -362,7 +363,7 @@ function TicketsPage() {
                 textShadow: '0 1px 2px rgba(0,0,0,0.8)',
               }}
             >
-              <iconify-icon icon="solar:add-circle-linear" width="14" className="text-white/80" />
+              <Plus size={14} className="text-white/80" />
               Add Ticket
             </span>
           </button>
@@ -449,7 +450,7 @@ interface AppProps {
 function AppLayout({ username, onLogout }: AppProps) {
   return (
     <ModelProvider>
-    <div className="ds-bg min-h-screen text-white antialiased">
+    <div className="ds-bg h-screen overflow-hidden text-white antialiased">
       <Toaster theme="dark" position="bottom-center" />
       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
         <div
@@ -462,13 +463,13 @@ function AppLayout({ username, onLogout }: AppProps) {
         />
       </div>
 
-      <div className="ds-card-outer min-h-screen">
-        <div className="ds-card-inner flex min-h-screen">
+      <div className="ds-card-outer h-screen overflow-hidden">
+        <div className="ds-card-inner flex h-full overflow-hidden">
           <Sidebar username={username} onLogout={onLogout} />
 
           <div className="ds-noise" />
 
-          <main className="relative z-10 flex-1 min-h-screen overflow-hidden">
+          <main className="relative z-10 flex-1 h-full overflow-hidden">
             <Routes>
               <Route path="/overview" element={<OverviewPage />} />
               <Route path="/tickets" element={<TicketsPage />} />
