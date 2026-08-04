@@ -32,8 +32,6 @@ export async function initIntegrations(db: Database.Database): Promise<void> {
     credentials: createDbCredentialStore(db),
     modelsPath: null,
   });
-  const providerIds = modelRuntime.getProviders().map((p) => p.id);
-  console.log(`Integrations: loaded ${providerIds.length} providers (${providerIds.join(", ")})`);
 }
 
 // ────────────────────────────────────────────────────────────

@@ -67,7 +67,6 @@ export function startBitbucketAuth(returnTo: string): string {
     state,
     redirect_uri: callbackUrl,
   });
-  console.log(`Bitbucket OAuth authorize URL: https://bitbucket.org/site/oauth2/authorize?${params.toString()}`);
   return `https://bitbucket.org/site/oauth2/authorize?${params.toString()}`;
 }
 

@@ -64,7 +64,7 @@ export default function Settings() {
       </div>
 
       {/* Sections */}
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6 max-w-3xl mx-auto">
         <ProjectSection />
         <BlocklistSection
           entries={blocklist}

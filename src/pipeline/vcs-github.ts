@@ -22,6 +22,8 @@ function nextPageFromLinkHeader(linkHeader: string | null): number | null {
 }
 
 export function createGithubVcsClient(fetchFn: FetchFn): VcsClient {
+  let personalLogin: string | null = null;
+
   return {
     async listOrgs(token: string): Promise<VcsOrg[]> {
       const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" };
@@ -29,6 +31,7 @@ export function createGithubVcsClient(fetchFn: FetchFn): VcsClient {
       const userRes = await fetchFn(`${API_BASE}/user`, { headers });
       if (!userRes.ok) throw new Error(`GitHub /user failed: ${userRes.status}`);
       const user = (await userRes.json()) as { login: string };
+      personalLogin = user.login;
 
       const orgsRes = await fetchFn(`${API_BASE}/user/orgs`, { headers });
       if (!orgsRes.ok) throw new Error(`GitHub /user/orgs failed: ${orgsRes.status}`);
@@ -54,8 +57,9 @@ export function createGithubVcsClient(fetchFn: FetchFn): VcsClient {
         return { repos: body.items.map(toRepo), nextPage: null };
       }
 
-      const params = new URLSearchParams({ page: String(opts.page), per_page: "30" });
-      const res = await fetchFn(`${API_BASE}/orgs/${org}/repos?${params.toString()}`, { headers });
+      const reposPath = org === personalLogin ? "/user/repos" : `/orgs/${org}/repos`;
+      const params = new URLSearchParams({ page: String(opts.page), per_page: "30", type: "all" });
+      const res = await fetchFn(`${API_BASE}${reposPath}?${params.toString()}`, { headers });
       if (!res.ok) throw new Error(`GitHub repos failed: ${res.status}`);
       const body = (await res.json()) as GithubRepoResponse[];
       return { repos: body.map(toRepo), nextPage: nextPageFromLinkHeader(res.headers.get("link")) };

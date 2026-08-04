@@ -6,7 +6,6 @@ function fakeResponse(body: unknown, opts: { status?: number } = {}) {
     ok: (opts.status ?? 200) < 400,
     status: opts.status ?? 200,
     json: async () => body,
-    text: async () => JSON.stringify(body),
   } as unknown as Response;
 }
 

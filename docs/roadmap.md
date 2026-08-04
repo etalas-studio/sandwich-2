@@ -36,6 +36,16 @@ Items explicitly pushed out of Phase 1, to be designed properly (their own brain
 - Multi-project / multi-tenant serving from one instance — currently ruled out entirely, would need to be deliberately reopened, not just added.
 - Scheduled/periodic re-scanning (readiness scan is manual-trigger only today, by deliberate choice — see `docs/superpowers/specs/2026-08-04-readiness-scan-design.md`).
 
+## Phase 3 — AI engineering partner (not yet designed)
+
+Added 4 August 2026, straight from user discussion — not yet brainstormed or spec'd. Direction: evolve the product from an AI coding assistant into an AI engineering partner that owns more of the SDLC while keeping humans in control at the right moments. Five largely-independent pieces; each gets its own brainstorm → spec → plan cycle when picked up, not one shared design:
+
+- **Autonomous PR iteration** — agent keeps iterating on an opened PR (address review comments, fix CI failures) until it's ready to merge, without constant human prompting. Depends on Phase 1's still-open VCS abstraction / real Open PR work — can't iterate on a PR that doesn't really exist yet.
+- **Settings / Configuration page** — a proper UI+backend surface for execution policy: max concurrent agent runs, cost guards/budgets, environment variables, auto-merge ("YOLO") mode, other execution preferences. Currently the only settings surface is the Settings > Project repo-path field.
+- **Continuous recommendation workflow** — evolve today's one-shot readiness-scan recommendations into something revisitable over time, categorized (Agentic Readiness, Security, Test Coverage, Code Quality, Performance, etc.), and grounded in the project's own existing patterns rather than generic best-practice advice.
+- **Project Creation Mode** — a new entry point: start from a conversation plus attachments, agent runs a brainstorming/discovery interview (Superpowers-style), and produces a roadmap that becomes the project's implementation checklist — a living document the user and agent both keep iterating on.
+- **Human-in-the-loop notifications** — webhooks/notifications fired whenever the agent hits a point requiring human input, so a blocked run can be unblocked quickly instead of sitting idle. Likely a cross-cutting piece other items above plug into (PR iteration escalations, quick-win judge questions, etc.) rather than a standalone feature.
+
 ## How This Gets Used
 
-When Phase 2 (or any later phase) actually starts, it goes through the same cycle Phase 1 did: brainstorming → design doc in `docs/superpowers/specs/` → self-review → `writing-plans` → implementation. This file gets a new section added at that point, structured the same way: one checkbox per architecture piece from that phase's spec, checked off when its plan(s) are fully done.
+When Phase 2, Phase 3, or any later phase actually starts, it goes through the same cycle Phase 1 did: brainstorming → design doc in `docs/superpowers/specs/` → self-review → `writing-plans` → implementation. This file gets a new section added at that point, structured the same way: one checkbox per architecture piece from that phase's spec, checked off when its plan(s) are fully done.

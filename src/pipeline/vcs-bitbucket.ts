@@ -21,22 +21,13 @@ function nextPageFromNextUrl(nextUrl: string | undefined): number | null {
   return match ? Number(match[1]) : null;
 }
 
-async function tryFetch(fetchFn: FetchFn, token: string, path: string): Promise<Response> {
-  const res = await fetchFn(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "<unreadable>");
-    console.error(`Bitbucket ${path} → ${res.status}: ${body.slice(0, 500)}`);
-  }
-  return res;
-}
-
 export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
   return {
     async listOrgs(token: string): Promise<VcsOrg[]> {
+      const headers = { Authorization: `Bearer ${token}` };
+
       // Strategy 1: try /user/permissions/workspaces (includes name)
-      let res = await tryFetch(fetchFn, token, "/user/permissions/workspaces");
+      let res = await fetchFn(`${API_BASE}/user/permissions/workspaces`, { headers });
       if (res.ok) {
         const body = (await res.json()) as {
           values: Array<{ workspace: { slug: string; name: string } }>;
@@ -49,7 +40,7 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
       }
 
       // Strategy 2: try /user/workspaces (no name field, use slug)
-      res = await tryFetch(fetchFn, token, "/user/workspaces");
+      res = await fetchFn(`${API_BASE}/user/workspaces`, { headers });
       if (res.ok) {
         const body = (await res.json()) as {
           values: Array<{ workspace: { slug: string } }>;
@@ -62,13 +53,13 @@ export function createBitbucketVcsClient(fetchFn: FetchFn): VcsClient {
       }
 
       // Strategy 3: get /user to find the account's own workspace slug
-      res = await tryFetch(fetchFn, token, "/user");
+      res = await fetchFn(`${API_BASE}/user`, { headers });
       if (res.ok) {
         const user = (await res.json()) as { username: string; display_name: string };
         return [{ slug: user.username, name: user.display_name, isPersonal: true }];
       }
 
-      throw new Error("All Bitbucket workspace endpoints failed — check server logs for details");
+      throw new Error("Bitbucket workspaces unavailable");
     },
 
     async listRepos(token: string, org: string, opts: { page: number; q?: string }): Promise<VcsRepoPage> {
