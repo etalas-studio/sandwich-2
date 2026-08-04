@@ -13,6 +13,7 @@ const TABLES = [
   "tickets",
   "users",
   "instance_settings",
+  "project",
 ];
 
 export function registerPurgeRoute(router: Router, db: Database.Database): void {

@@ -6,6 +6,14 @@ import { join } from "node:path";
 import { openDb } from "../db/connection.js";
 import { Router } from "../router.js";
 import { registerScanRoutes } from "./scans.js";
+import { createProject, markProjectReady } from "../db/project.js";
+
+const REPOS_DIR = "/data/repos";
+
+function connectReadyProject(db: ReturnType<typeof openDb>): void {
+  const project = createProject(db, { provider: "github", owner: "acme", repoSlug: "widgets", defaultBranch: "main" });
+  markProjectReady(db, project.id);
+}
 
 function mockReq(method: string, path: string, headers: Record<string, string> = {}, body?: string): any {
   const req: any = {
@@ -43,7 +51,7 @@ describe("scan routes", () => {
 
   it("GET /api/scans/latest returns null when no scan has run", async () => {
     const router = new Router(new Set(), 0);
-    registerScanRoutes(router, db, async () => {});
+    registerScanRoutes(router, db, async () => {}, REPOS_DIR);
     const res = mockRes();
     const req = mockReq("GET", "/api/scans/latest");
     await router.dispatch(req, res);
@@ -51,9 +59,9 @@ describe("scan routes", () => {
     assert.equal(res.body, "null");
   });
 
-  it("POST /api/scans/run returns 503 when no repoPath configured", async () => {
+  it("POST /api/scans/run returns 503 when no project configured", async () => {
     const router = new Router(new Set(), 0);
-    registerScanRoutes(router, db, async () => {});
+    registerScanRoutes(router, db, async () => {}, REPOS_DIR);
     const res = mockRes();
     const req = mockReq("POST", "/api/scans/run");
     await router.dispatch(req, res);
@@ -61,13 +69,12 @@ describe("scan routes", () => {
     assert.ok(JSON.parse(res.body).error.includes("project"));
   });
 
-  it("POST /api/scans/run returns scanId when repoPath is set", async () => {
-    // Set repo path
-    db.prepare("UPDATE instance_settings SET repo_path = ? WHERE id = 1").run("/test/repo");
+  it("POST /api/scans/run returns scanId when a project is ready", async () => {
+    connectReadyProject(db);
 
     const router = new Router(new Set(), 0);
     // Inject a no-op run function
-    registerScanRoutes(router, db, async () => {});
+    registerScanRoutes(router, db, async () => {}, REPOS_DIR);
     const res = mockRes();
     await router.dispatch(mockReq("POST", "/api/scans/run"), res);
     assert.equal(res.statusCode, 200);
@@ -79,12 +86,11 @@ describe("scan routes", () => {
   });
 
   it("POST /api/scans/run returns 409 when a scan is already in flight", async () => {
-    // Set repo path
-    db.prepare("UPDATE instance_settings SET repo_path = ? WHERE id = 1").run("/test/repo");
+    connectReadyProject(db);
 
     const router = new Router(new Set(), 0);
     // The runner never resolves, keeping inFlight non-empty
-    registerScanRoutes(router, db, () => new Promise(() => {}));
+    registerScanRoutes(router, db, () => new Promise(() => {}), REPOS_DIR);
 
     // First scan — should succeed
     const res1 = mockRes();
@@ -100,7 +106,7 @@ describe("scan routes", () => {
 
   it("POST /api/scans/abort returns 404 for unknown scan", async () => {
     const router = new Router(new Set(), 0);
-    registerScanRoutes(router, db, async () => {});
+    registerScanRoutes(router, db, async () => {}, REPOS_DIR);
     const res = mockRes();
     const req: any = {
       method: "POST", url: "/api/scans/abort", headers: { host: "127.0.0.1:0", "content-type": "application/json" },

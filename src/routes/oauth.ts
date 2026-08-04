@@ -1,5 +1,5 @@
 import type { Router } from "../router.js";
-import { startJiraAuth, startBitbucketAuth, handleJiraCallback, handleBitbucketCallback } from "../pipeline/oauth-integrations.js";
+import { startJiraAuth, startBitbucketAuth, startGithubAuth, handleJiraCallback, handleBitbucketCallback, handleGithubCallback } from "../pipeline/oauth-integrations.js";
 
 export function registerOAuthRoutes(router: Router): void {
   // ── Jira OAuth ──
@@ -60,6 +60,38 @@ export function registerOAuthRoutes(router: Router): void {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
     } else {
       redirect.searchParams.set("connected", "bitbucket");
+    }
+
+    res.writeHead(302, { Location: redirect.pathname + redirect.search });
+    res.end();
+  });
+
+  // ── GitHub OAuth ──
+  router.get("/api/integrations/github/authorize", (_req, res) => {
+    const returnTo = "/integrations";
+    const url = startGithubAuth(returnTo);
+    res.writeHead(302, { Location: url });
+    res.end();
+  });
+
+  router.get("/api/integrations/github/callback", async (req, res) => {
+    const url = new URL(req.url ?? "/", `http://localhost`);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+
+    if (!code || !state) {
+      res.writeHead(302, { Location: "/integrations?error=missing_code_or_state" });
+      res.end();
+      return;
+    }
+
+    const result = await handleGithubCallback(code, state);
+
+    const redirect = new URL(result.returnTo, `http://localhost`);
+    if (!result.ok) {
+      redirect.searchParams.set("error", result.error ?? "oauth_failed");
+    } else {
+      redirect.searchParams.set("connected", "github");
     }
 
     res.writeHead(302, { Location: redirect.pathname + redirect.search });

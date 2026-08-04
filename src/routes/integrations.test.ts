@@ -51,7 +51,7 @@ describe("integrations routes", () => {
 
   beforeEach(() => {
     // Clean up any stored credentials between tests
-    for (const providerId of ["opencode-go", "anthropic", "jira", "bitbucket"]) {
+    for (const providerId of ["opencode-go", "anthropic", "jira", "bitbucket", "oauth:github"]) {
       try {
         deleteCredential(db, providerId);
       } catch {}
@@ -202,6 +202,7 @@ describe("integrations routes", () => {
       assert.ok(providerIds.includes("openai-codex"), "should include openai-codex");
       assert.ok(providerIds.includes("jira"), "should include jira");
       assert.ok(providerIds.includes("bitbucket"), "should include bitbucket");
+      assert.ok(providerIds.includes("github"), "should include github");
       assert.ok(providerIds.includes("9router"), "should include 9router");
     });
   });

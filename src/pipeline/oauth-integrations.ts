@@ -18,6 +18,12 @@ function bitbucketClientId(): string {
 function bitbucketClientSecret(): string {
   return process.env.BITBUCKET_CLIENT_SECRET ?? "";
 }
+function githubClientId(): string {
+  return process.env.GITHUB_CLIENT_ID ?? "";
+}
+function githubClientSecret(): string {
+  return process.env.GITHUB_CLIENT_SECRET ?? "";
+}
 
 // ── Helpers
 function baseUrl(): string {
@@ -62,6 +68,19 @@ export function startBitbucketAuth(returnTo: string): string {
   });
   console.log(`Bitbucket OAuth authorize URL: https://bitbucket.org/site/oauth2/authorize?${params.toString()}`);
   return `https://bitbucket.org/site/oauth2/authorize?${params.toString()}`;
+}
+
+export function startGithubAuth(returnTo: string): string {
+  const state = `gh-${randomUUID()}`;
+  pendingStates.set(state, { provider: "github", returnTo });
+
+  const params = new URLSearchParams({
+    client_id: githubClientId(),
+    scope: "repo",
+    redirect_uri: `${baseUrl()}/api/integrations/github/callback`,
+    state,
+  });
+  return `https://github.com/login/oauth/authorize?${params.toString()}`;
 }
 
 // ── OAuth callback (step 2) — exchange code for token
@@ -165,6 +184,59 @@ export async function handleBitbucketCallback(code: string, state: string): Prom
         accessToken: data.access_token,
         refreshToken: data.refresh_token ?? null,
         expiresAt: Date.now() + 3600 * 1000,
+      }),
+    );
+
+    return { ok: true, returnTo: pending.returnTo };
+  } catch (err) {
+    return {
+      ok: false,
+      returnTo: pending.returnTo,
+      error: err instanceof Error ? err.message : "Token exchange failed",
+    };
+  }
+}
+
+export async function handleGithubCallback(code: string, state: string): Promise<TokenResult> {
+  const pending = pendingStates.get(state);
+  if (!pending || pending.provider !== "github") {
+    return { ok: false, returnTo: "/integrations", error: "Invalid OAuth state" };
+  }
+  pendingStates.delete(state);
+
+  try {
+    const res = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        client_id: githubClientId(),
+        client_secret: githubClientSecret(),
+        code,
+        redirect_uri: `${baseUrl()}/api/integrations/github/callback`,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      return { ok: false, returnTo: pending.returnTo, error: `Token exchange failed: ${err}` };
+    }
+
+    const data = (await res.json()) as { access_token?: string; error?: string };
+    if (!data.access_token) {
+      return { ok: false, returnTo: pending.returnTo, error: data.error ?? "No access token in response" };
+    }
+
+    // GitHub OAuth App tokens (unlike Jira/Bitbucket) don't expire and carry
+    // no refresh token — see docs/superpowers/specs/2026-08-04-project-selection-design.md
+    // "Known gaps" for why only Bitbucket needs refresh handling.
+    upsertCredential(
+      dbRef!,
+      credentialName("github"),
+      JSON.stringify({
+        type: "oauth",
+        accessToken: data.access_token,
+        refreshToken: null,
+        expiresAt: null,
       }),
     );
 

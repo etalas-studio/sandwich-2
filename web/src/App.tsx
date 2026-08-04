@@ -20,17 +20,17 @@ import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import { useIntegrations } from './hooks/useIntegrations'
 import ReadinessCard from './components/ReadinessCard'
-import { useProjectSettings } from './hooks/useProjectSettings'
+import { useProject } from './hooks/useProject'
 import { useScan } from './hooks/useScan'
 import { useTicketRun } from './hooks/useTicketRun'
 import { Plus } from 'lucide-react'
 
 function OverviewPage() {
-  const { repoPath } = useProjectSettings()
+  const { project } = useProject()
   const { latestScan, isRunning, isTriggering, isAborting, trigger, abort } = useScan()
   const { selectedModelId } = useModelContext()
 
-  const hasProject = !!repoPath
+  const hasProject = project?.cloneStatus === 'ready'
   const hasModel = !!selectedModelId
   const hasScan = latestScan && latestScan.status !== 'running'
 
@@ -72,7 +72,7 @@ function OverviewPage() {
               onClick={trigger}
               disabled={!hasProject || !hasModel || isTriggering}
               className="relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed"
-              title={!hasProject ? 'Set a project path in Settings first' : !hasModel ? 'Select a model from the dropdown' : undefined}
+              title={!hasProject ? 'Connect a project in Settings first' : !hasModel ? 'Select a model from the dropdown' : undefined}
             >
               <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
               <span
@@ -103,7 +103,7 @@ function OverviewPage() {
                 to="/settings"
                 className="text-xs text-white/60 hover:text-white transition-colors underline underline-offset-4"
               >
-                Set a repository path in Settings →
+                Connect a GitHub or Bitbucket repo in Settings →
               </Link>
             </div>
           </div>
