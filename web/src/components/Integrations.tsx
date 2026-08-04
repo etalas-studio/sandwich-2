@@ -49,6 +49,13 @@ const PROVIDERS = [
     description: 'Connect your Bitbucket workspace via OAuth 2.0.',
     docsUrl: 'https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/',
   },
+  {
+    id: 'github',
+    name: 'GitHub',
+    logo: 'simple-icons:github',
+    description: 'Connect your GitHub account to pick a repo and open PRs via OAuth 2.0.',
+    docsUrl: 'https://github.com/settings/developers',
+  },
 ] as const
 
 export default function Integrations() {
@@ -99,7 +106,9 @@ export default function Integrations() {
           const isOAuth = integration?.authType === 'oauth'
           const jiraProvider = provider.id === 'jira'
           const bbProvider = provider.id === 'bitbucket'
-          const isAtlassianOAuth = jiraProvider || bbProvider
+          const ghProvider = provider.id === 'github'
+          const isVcsOAuth = jiraProvider || bbProvider || ghProvider
+          const isAtlassianOAuth = isVcsOAuth
           const isEngine = ['opencode-go', 'anthropic', 'openai-codex', '9router'].includes(provider.id)
           const is9router = provider.id === '9router'
           const isAnthropic = provider.id === 'anthropic'
@@ -132,10 +141,10 @@ export default function Integrations() {
                       <h3 className="text-sm font-medium text-white ds-text-shadow truncate">{provider.name}</h3>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {isAtlassianOAuth && (
+                      {isVcsOAuth && (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-medium border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
                       )}
-                      {isOAuth && !isAtlassianOAuth && (
+                      {isOAuth && !isVcsOAuth && (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-medium border border-purple-500/20 bg-purple-500/[0.06] text-purple-400">OAuth</span>
                       )}
                       <span className={`w-2 h-2 rounded-full ${state === 'connected' ? 'bg-emerald-400 animate-pulse' : state === 'connecting' ? 'bg-amber-400 animate-pulse' : 'bg-white/20'}`} />
@@ -188,6 +197,27 @@ export default function Integrations() {
                     </>
                   )}
 
+                  {/* ── GitHub disconnected ── */}
+                  {ghProvider && state !== 'connected' && (
+                    <>
+                      <div className="mb-2 p-2 rounded border border-[#2684FF]/10 bg-[#2684FF]/[0.03]">
+                        <p className="text-xs text-[#2684FF]/60 font-light leading-relaxed">
+                          Scopes: <code className="px-1 py-0.5 bg-[#0a0a0a] rounded text-white/60 font-mono">repo</code>
+                        </p>
+                      </div>
+                      <div>
+                        <button type="button" onClick={() => { window.location.href = '/api/integrations/github/authorize' }} disabled={state === 'connecting'}
+                          className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
+                          <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
+                            style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="14" className="animate-spin" />Connecting…</> : 'Connect'}
+                          </span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+
                   {/* ── Engine disconnected ── */}
                   {isEngine && !isOAuth && state !== 'connected' && (
                     <div>
@@ -214,7 +244,7 @@ export default function Integrations() {
                   )}
 
                   {/* ── Engine connected disconnect ── */}
-                  {state === 'connected' && !jiraProvider && !bbProvider && (
+                  {state === 'connected' && !jiraProvider && !bbProvider && !ghProvider && (
                     <div className="pt-3 border-t border-white/[0.04]">
                       <button type="button" onClick={() => disconnect(provider.id)} disabled={connectingId === provider.id}
                         className="w-fit relative inline-flex group disabled:opacity-50">
@@ -259,8 +289,25 @@ export default function Integrations() {
                     </div>
                   )}
 
+                  {/* ── GitHub connected ── */}
+                  {ghProvider && state === 'connected' && (
+                    <div className="mt-auto">
+                      <div className="mb-2 p-2 rounded border border-emerald-500/10 bg-emerald-500/[0.03]">
+                        <p className="text-xs text-emerald-400/70 font-light">Connected. Pick a repo in Settings to get started.</p>
+                      </div>
+                      <div className="pt-3 border-t border-white/[0.04]">
+                        <button type="button" onClick={() => disconnect(provider.id)} disabled={connectingId === provider.id}
+                          className="w-fit relative inline-flex group disabled:opacity-50">
+                          <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/20 to-transparent opacity-60" />
+                          <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white/60 bg-gradient-to-b from-[#2a2a2a] to-[#161616]"
+                            style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.5)' }}>Disconnect</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* ── Engine connected models ── */}
-                  {state === 'connected' && !jiraProvider && !bbProvider && models.length > 0 && (
+                  {state === 'connected' && !jiraProvider && !bbProvider && !ghProvider && models.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/[0.04]">
                       <div className="flex items-center gap-1 overflow-hidden">
                         {models.slice(0, 3).map((m) => (
