@@ -18,6 +18,7 @@ Format: `- YYYY-MM-DD: [plan-name] | @githubusername - what it delivered`
 - 2026-08-04: [settings-screen] | @potensio - Added reusable Modal component for dialog boxes (web/src/components/Modal.tsx)
 - 2026-08-04: [url-based-navigation] | @potensio - Added URL-based routing with react-router-dom, replacing state-based navigation
 - 2026-08-04: [settings-screen] | @potensio - Updated Sidebar and App.tsx to support navigation between Overview and Settings
+- 2026-08-04: [project-selection-via-vcs] | @riaenriala - Replaced the manual local-path Project field with a GitHub/Bitbucket connect-and-pick-repo flow: new `project` DB table + GitHub OAuth + injectable VCS clients (`src/pipeline/vcs-github.ts`/`vcs-bitbucket.ts`) + `/api/projects/*` routes that clone the chosen repo server-side into a managed `REPOS_DIR`, replacing `instance_settings.repo_path` everywhere it was read; Settings' Project card now walks provider picker → org/repo search → cloning/connected states with no local filesystem path ever shown to the user.
 - 2026-08-04: [http-routing-layer] | @riaenriala - added internal Router class for node:http route dispatch (method+path registration with :param segments, Host/Origin guards, middleware, dispatch)
 - 2026-08-04: [http-routing-layer] | @riaenriala - extracted auth routes (me, register, login, logout) into src/routes/auth.ts route module
 - 2026-08-04: [http-routing-layer] | @riaenriala - wired web-server through Router + route modules, removing ~200 lines of monolithic handler
