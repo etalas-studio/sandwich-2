@@ -63,6 +63,7 @@ export function startBitbucketAuth(returnTo: string): string {
   const params = new URLSearchParams({
     client_id: bitbucketClientId(),
     response_type: "code",
+    scope: "account repository pullrequest",
     state,
     redirect_uri: callbackUrl,
   });

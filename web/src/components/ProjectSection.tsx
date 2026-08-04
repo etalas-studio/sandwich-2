@@ -89,6 +89,7 @@ function RepoPicker({
   isConnecting: boolean
 }) {
   const [org, setOrg] = useState<string | null>(null)
+  const [customOrg, setCustomOrg] = useState('')
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
   const [repos, setRepos] = useState<VcsRepo[]>([])
@@ -98,7 +99,8 @@ function RepoPicker({
     queryFn: () => fetchOrgs(provider),
   })
 
-  const selectedOrg = org ?? orgsQuery.data?.[0]?.slug ?? null
+  // Use customOrg if typed, otherwise first discovered org
+  const selectedOrg = customOrg || (org ?? orgsQuery.data?.[0]?.slug) || null
 
   const reposQuery = useQuery({
     queryKey: ['project-repos', provider, selectedOrg, page, q],
@@ -119,11 +121,20 @@ function RepoPicker({
     <div>
       <p className="text-xs text-white/50 font-light mb-4">Pick a repository to connect.</p>
 
+      {orgsQuery.isError && (
+        <div className="mb-3 p-2.5 rounded border border-[#ff8a8a]/20 bg-[#ff8a8a]/[0.04]">
+          <p className="text-xs text-[#ff8a8a] font-light">
+            Failed to load workspaces: {orgsQuery.error instanceof Error ? orgsQuery.error.message : 'Unknown error'}
+          </p>
+        </div>
+      )}
+
       {orgsQuery.data && orgsQuery.data.length > 0 && (
         <select
-          value={selectedOrg ?? ''}
+          value={customOrg || (org ?? '')}
           onChange={(e) => {
             setOrg(e.target.value)
+            setCustomOrg('')
             setPage(1)
             setRepos([])
           }}
@@ -136,6 +147,21 @@ function RepoPicker({
           ))}
         </select>
       )}
+
+      <div className="flex gap-2 mb-3">
+        <input
+          type="text"
+          placeholder="Or type a workspace slug…"
+          value={customOrg}
+          onChange={(e) => {
+            setCustomOrg(e.target.value)
+            setOrg(null)
+            setPage(1)
+            setRepos([])
+          }}
+          className="flex-1 bg-[#0a0a0a] border border-white/[0.05] rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/10 font-light"
+        />
+      </div>
 
       <input
         type="text"
@@ -161,6 +187,14 @@ function RepoPicker({
           </button>
         ))}
       </div>
+
+      {reposQuery.isError && (
+        <div className="mt-3 p-2.5 rounded border border-[#ff8a8a]/20 bg-[#ff8a8a]/[0.04]">
+          <p className="text-xs text-[#ff8a8a] font-light">
+            Failed to load repositories: {reposQuery.error instanceof Error ? reposQuery.error.message : 'Unknown error'}
+          </p>
+        </div>
+      )}
 
       {reposQuery.data?.nextPage && (
         <button

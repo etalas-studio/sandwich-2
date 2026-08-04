@@ -6,16 +6,17 @@ function fakeResponse(body: unknown, opts: { status?: number } = {}) {
     ok: (opts.status ?? 200) < 400,
     status: opts.status ?? 200,
     json: async () => body,
+    text: async () => JSON.stringify(body),
   } as unknown as Response;
 }
 
 async function testListOrgsReturnsWorkspaces(): Promise<void> {
   const fakeFetch = (async (url: string) => {
-    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/workspaces"));
+    assert.ok(url.startsWith("https://api.bitbucket.org/2.0/user/permissions/workspaces"));
     return fakeResponse({
       values: [
-        { slug: "acme", name: "Acme Inc" },
-        { slug: "jane", name: "Jane Doe" },
+        { workspace: { slug: "acme", name: "Acme Inc" } },
+        { workspace: { slug: "jane", name: "Jane Doe" } },
       ],
     });
   }) as typeof fetch;
@@ -28,6 +29,27 @@ async function testListOrgsReturnsWorkspaces(): Promise<void> {
     { slug: "jane", name: "Jane Doe", isPersonal: false },
   ]);
   console.log("PASS: testListOrgsReturnsWorkspaces");
+}
+
+async function testListOrgsFallsBackToUserEndpoint(): Promise<void> {
+  let callCount = 0;
+  const fakeFetch = (async (url: string) => {
+    callCount++;
+    if (url.includes("/user/permissions/workspaces")) return fakeResponse({ values: [] }, { status: 410 });
+    if (url.includes("/user/workspaces")) return fakeResponse({ values: [] }, { status: 410 });
+    if (url.includes("/user")) {
+      return fakeResponse({ username: "myuser", display_name: "My User" });
+    }
+    return fakeResponse({}, { status: 500 });
+  }) as typeof fetch;
+
+  const client = createBitbucketVcsClient(fakeFetch);
+  const orgs = await client.listOrgs("test-token");
+
+  assert.deepEqual(orgs, [
+    { slug: "myuser", name: "My User", isPersonal: true },
+  ]);
+  console.log("PASS: testListOrgsFallsBackToUserEndpoint");
 }
 
 async function testListReposForWorkspaceWithoutSearch(): Promise<void> {
@@ -81,6 +103,7 @@ async function testListReposWithSearchQueryFiltersByName(): Promise<void> {
 
 async function main(): Promise<void> {
   await testListOrgsReturnsWorkspaces();
+  await testListOrgsFallsBackToUserEndpoint();
   await testListReposForWorkspaceWithoutSearch();
   await testListReposHasNoNextPageWhenAbsent();
   await testListReposWithSearchQueryFiltersByName();

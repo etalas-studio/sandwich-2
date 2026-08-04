@@ -11,7 +11,7 @@ export function registerOAuthRoutes(router: Router): void {
   });
 
   router.get("/api/integrations/jira/callback", async (req, res) => {
-    const url = new URL(req.url ?? "/", `http://localhost`);
+    const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
@@ -23,7 +23,8 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleJiraCallback(code, state);
 
-    const redirect = new URL(result.returnTo, `http://localhost`);
+    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
     } else {
@@ -43,7 +44,7 @@ export function registerOAuthRoutes(router: Router): void {
   });
 
   router.get("/api/integrations/bitbucket/callback", async (req, res) => {
-    const url = new URL(req.url ?? "/", `http://localhost`);
+    const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
@@ -55,7 +56,8 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleBitbucketCallback(code, state);
 
-    const redirect = new URL(result.returnTo, `http://localhost`);
+    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
     } else {
@@ -75,7 +77,7 @@ export function registerOAuthRoutes(router: Router): void {
   });
 
   router.get("/api/integrations/github/callback", async (req, res) => {
-    const url = new URL(req.url ?? "/", `http://localhost`);
+    const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
@@ -87,7 +89,8 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleGithubCallback(code, state);
 
-    const redirect = new URL(result.returnTo, `http://localhost`);
+    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
     } else {
