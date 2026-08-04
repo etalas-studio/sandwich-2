@@ -38,7 +38,7 @@ const PROVIDERS = [
     id: 'bitbucket',
     name: 'Bitbucket',
     logo: 'simple-icons:bitbucket',
-    description: 'Connect your Bitbucket workspace via OAuth 2.0. Create an OAuth consumer in workspace settings with repository:read and pullrequest:read.',
+    description: 'Connect your Bitbucket workspace via OAuth 2.0. Create an OAuth consumer in workspace settings with repository and pullrequest.',
     docsUrl: 'https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/',
   },
 ] as const
@@ -78,9 +78,7 @@ export default function Integrations() {
 
       {error && (
         <div className="ds-card-outer mb-6">
-          <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]">
-            <p className="text-sm text-[#ff8a8a]">{error}</p>
-          </div>
+          <div className="ds-card-inner p-4 border-l-2 border-l-[#ff8a8a]"><p className="text-sm text-[#ff8a8a]">{error}</p></div>
         </div>
       )}
 
@@ -103,11 +101,9 @@ export default function Integrations() {
 
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
                         style={isAtlassianOAuth ? { background: 'linear-gradient(to bottom, #2684FF, #1a5dc4)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.4)' }
-                          : { background: 'linear-gradient(to bottom, #2a2a2a, #161616)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)' }}
-                      >
+                          : { background: 'linear-gradient(to bottom, #2a2a2a, #161616)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)' }}>
                         <iconify-icon icon={provider.logo} width="16"
                           className={isAtlassianOAuth ? 'text-white' : state === 'connected' ? 'text-emerald-400' : 'text-white/60'} />
                       </div>
@@ -163,7 +159,7 @@ export default function Integrations() {
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                           <span className="relative px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
                             style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Configure'}
+                            {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Connect'}
                           </span>
                         </button>
                       </div>

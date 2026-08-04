@@ -15,7 +15,7 @@ import type { CreateTicketData } from './components/CreateTicketModal'
 import EditTicketModal from './components/EditTicketModal'
 import ConfirmDeleteModal from './components/ConfirmDeleteModal'
 import type { UpdateTicketData } from './api/tickets'
-import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket } from './api/tickets'
+import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket, pullJiraTickets } from './api/tickets'
 import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import ReadinessCard from './components/ReadinessCard'
@@ -245,6 +245,25 @@ function TicketsPage() {
     setSearchParams({})
   }
 
+  const [isPulling, setIsPulling] = useState(false)
+
+  const handlePull = async () => {
+    setIsPulling(true)
+    try {
+      const result = await pullJiraTickets()
+      if (result.ok) {
+        toast.success(`Pulled ${result.imported} tickets${result.skipped > 0 ? ` (${result.skipped} skipped)` : ''}`)
+        await loadTickets()
+      } else {
+        toast.error(result.error ?? 'Pull failed')
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Pull failed')
+    } finally {
+      setIsPulling(false)
+    }
+  }
+
   const handleCreate = async (data: CreateTicketData) => {
     setCreateError(null)
     setIsCreating(true)
@@ -306,6 +325,28 @@ function TicketsPage() {
               {tickets.length} tickets
             </p>
           </div>
+          <div className="flex items-center gap-2">
+          <button
+            className="relative inline-flex group"
+            onClick={handlePull}
+            disabled={isPulling}
+          >
+            <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
+            <span
+              className="relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
+              style={{
+                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6), 0 4px 8px -2px rgba(0,0,0,0.6)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              {isPulling ? (
+                <iconify-icon icon="solar:refresh-linear" width="14" className="text-white/80 animate-spin" />
+              ) : (
+                <iconify-icon icon="simple-icons:jira" width="14" className="text-[#2684FF]" />
+              )}
+              {isPulling ? 'Pulling…' : 'Pull Tickets'}
+            </span>
+          </button>
           <button
             className="relative inline-flex group"
             onClick={() => { setCreateError(null); setShowCreateModal(true) }}
@@ -322,6 +363,7 @@ function TicketsPage() {
               Add Ticket
             </span>
           </button>
+          </div>
         </div>
 
         <StatsCards stats={computeStats(tickets as any)} />

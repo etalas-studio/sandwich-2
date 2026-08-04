@@ -12,6 +12,7 @@ interface Provider {
   name: string
   logo: string
   description: string
+  docsUrl: string
 }
 
 interface ConnectModalProps {
@@ -92,12 +93,12 @@ export default function ConnectModal({
             <DialogDescription className="!text-[11px] !text-white/50 !font-light !leading-relaxed">
               Enter your API key to connect. Get your key at{' '}
               <a
-                href="https://opencode.ai"
+                href={provider.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/60 underline underline-offset-2 hover:text-white/80 transition-colors"
               >
-                opencode.ai
+                {provider.docsUrl.replace('https://', '')}
               </a>
               .
             </DialogDescription>
@@ -119,7 +120,7 @@ export default function ConnectModal({
             </label>
             <input
               type="password"
-              placeholder="oc-..."
+              placeholder={provider.id === 'claude' ? 'sk-ant-...' : 'oc-...'}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               disabled={connecting}

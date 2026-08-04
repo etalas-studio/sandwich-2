@@ -106,3 +106,19 @@ export async function runTicket(key: string, modelId?: string): Promise<void> {
     throw new Error(body?.error ?? `HTTP ${res.status}`)
   }
 }
+
+export interface PullResult {
+  ok: boolean
+  imported: number
+  skipped: number
+  error?: string
+}
+
+export async function pullJiraTickets(): Promise<PullResult> {
+  const res = await fetch('/api/tickets/pull', { method: 'POST' })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as PullResult | null
+    return body ?? { ok: false, imported: 0, skipped: 0, error: `HTTP ${res.status}` }
+  }
+  return res.json() as Promise<PullResult>
+}

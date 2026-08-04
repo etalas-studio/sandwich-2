@@ -3,6 +3,7 @@ import type { Router } from "../router.js";
 import { createTicket, listTickets, updateTicket, deleteTicket } from "../db/tickets.js";
 import type { CreateTicketInput, UpdateTicketInput } from "../db/tickets.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import { pullJiraTickets } from "../pipeline/oauth-integrations.js";
 
 export function registerTicketRoutes(router: Router, db: Database.Database): void {
   router.post("/api/tickets", async (req, res) => {
@@ -80,5 +81,14 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
       return;
     }
     sendJson(res, 200, { deleted: true });
+  });
+
+  router.post("/api/tickets/pull", async (_req, res) => {
+    try {
+      const result = await pullJiraTickets("RR");
+      sendJson(res, result.ok ? 200 : 400, result);
+    } catch (err) {
+      sendCaughtError(res, err, "pull tickets");
+    }
   });
 }

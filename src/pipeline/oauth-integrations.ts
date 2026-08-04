@@ -204,3 +204,142 @@ export function disconnectOAuth(provider: string): void {
     deleteCredential(dbRef, credentialName(provider));
   }
 }
+
+// ── Get stored OAuth token
+export function getOAuthToken(provider: string): string | null {
+  if (!dbRef) return null;
+  try {
+    const cred = dbRef.prepare("SELECT value FROM credentials WHERE name = ?").get(credentialName(provider)) as { value: string } | undefined;
+    if (!cred) return null;
+    const data = JSON.parse(cred.value) as { type: string; accessToken: string };
+    return data.type === "oauth" ? data.accessToken : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── ADF → plain text
+export function adfToText(adf: unknown): string {
+  if (!adf || typeof adf !== "object") return "";
+  const doc = adf as Record<string, unknown>;
+  if (doc.type !== "doc") return "";
+  return extractText(doc);
+}
+
+function extractText(node: Record<string, unknown>): string {
+  if (node.type === "text") return String(node.text ?? "");
+  const content = node.content as Array<Record<string, unknown>> | undefined;
+  if (!content) return "";
+  return content.map(extractText).join(" ");
+}
+
+// ── Pull Jira issues and import as tickets
+export interface PullResult {
+  ok: boolean;
+  imported: number;
+  skipped: number;
+  error?: string;
+}
+
+export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
+  if (!dbRef) return { ok: false, imported: 0, skipped: 0, error: "DB not initialized" };
+
+  const token = getOAuthToken("jira");
+  if (!token) return { ok: false, imported: 0, skipped: 0, error: "Jira not connected" };
+
+  // Get cloudId
+  let cloudId: string;
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const sites = (await res.json()) as Array<{ id: string; url: string }> | null;
+    if (!sites || !sites.length) return { ok: false, imported: 0, skipped: 0, error: "No Jira sites accessible" };
+    cloudId = sites[0]!.id;
+  } catch {
+    return { ok: false, imported: 0, skipped: 0, error: "Failed to get cloudId" };
+  }
+
+  // Fetch issues
+  let issues: Array<Record<string, unknown>>;
+  try {
+    const res = await fetch(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search/jql?jql=project%3D${projectKey}+ORDER+BY+created+DESC&maxResults=50&fields=*all`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = (await res.json()) as { issues?: Array<Record<string, unknown>> };
+    issues = data.issues ?? [];
+  } catch (err) {
+    return { ok: false, imported: 0, skipped: 0, error: err instanceof Error ? err.message : "Search failed" };
+  }
+
+  const now = new Date().toISOString();
+  let imported = 0;
+  let skipped = 0;
+
+  const insert = dbRef.prepare(
+    `INSERT OR IGNORE INTO tickets (key, summary, description, url, status,
+      issue_type, priority, sprint, story_points, team, assignee, parent_key, attachments,
+      created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'backlog',
+      ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?)`,
+  );
+
+  for (const issue of issues) {
+    const fields = (issue.fields ?? {}) as Record<string, unknown>;
+    const key = String(issue.key ?? "");
+
+    // Check if already imported
+    const existing = dbRef.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
+    if (existing) { skipped++; continue; }
+
+    const description = adfToText(fields.description);
+    const summary = String(fields.summary ?? "");
+    const issueUrl = `https://runchise.atlassian.net/browse/${key}`;
+
+    const issueType = (fields.issuetype as Record<string, unknown> | null)?.name ?? null;
+    const priority = (fields.priority as Record<string, unknown> | null)?.name ?? null;
+    const labels = Array.isArray(fields.labels) ? JSON.stringify(fields.labels) : null;
+    const components = Array.isArray(fields.components)
+      ? JSON.stringify((fields.components as Array<Record<string, unknown>>).map((c) => c.name))
+      : null;
+
+    // Sprint
+    const sprints = fields.customfield_10020 as Array<Record<string, unknown>> | undefined;
+    const sprint = sprints?.length ? String(sprints[sprints.length - 1]!.name ?? "") : null;
+
+    // Story points
+    const storyPoints = fields.customfield_10016 != null ? Number(fields.customfield_10016) : null;
+
+    // Team
+    const team = (fields.customfield_10001 as Record<string, unknown> | null)?.name ?? null;
+
+    // Assignee
+    const assignee = (fields.assignee as Record<string, unknown> | null)?.displayName ?? null;
+
+    // Parent
+    const parent = (fields.parent as Record<string, unknown> | null)?.key ?? null;
+
+    // Attachments
+    const attachments = Array.isArray(fields.attachment)
+      ? JSON.stringify(
+          (fields.attachment as Array<Record<string, unknown>>).map((a) => ({
+            filename: a.filename,
+            mimeType: a.mimeType,
+            size: a.size,
+            url: a.content,
+          })),
+        )
+      : null;
+
+    insert.run(
+      key, summary || null, description, issueUrl,
+      issueType, priority || null, sprint, storyPoints, team, assignee, parent,
+      attachments, now, now,
+    );
+    imported++;
+  }
+
+  return { ok: true, imported, skipped };
+}
