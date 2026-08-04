@@ -9,21 +9,28 @@ const PROVIDERS = [
   {
     id: 'opencode-go',
     name: 'OpenCode Go',
-    logo: 'solar:bolt-circle-linear',
+    logo: '/logos/opencode-logo.png',
     description: 'Premium tier with DeepSeek V4, Kimi K3, Qwen3.7, MiniMax-M3, Grok 4.5, and more. Get your key at opencode.ai.',
     docsUrl: 'https://opencode.ai',
   },
   {
+    id: 'anthropic',
+    name: 'Claude (Anthropic)',
+    logo: '/logos/claude-logo.png',
+    description: 'Claude models direct from Anthropic — Opus, Sonnet, Haiku, and Fable series. Get your API key at console.anthropic.com.',
+    docsUrl: 'https://console.anthropic.com',
+  },
+  {
     id: 'openai-codex',
     name: 'OpenAI Codex',
-    logo: 'solar:stars-minimalistic-linear',
+    logo: '/logos/codex-logo.png',
     description: 'Requires ChatGPT Plus or Pro subscription. Login via Pi CLI to connect your Codex subscription for GPT-5.5.',
     docsUrl: 'https://github.com/openai/codex',
   },
   {
     id: '9router',
     name: '9Router',
-    logo: 'solar:globus-linear',
+    logo: '/logos/9router-logo.png',
     description: 'Intelligent AI request router — automatically selects the best model across providers based on cost, latency, and capability.',
     docsUrl: 'https://9router.com',
   },
@@ -47,6 +54,7 @@ export default function Integrations() {
   const { integrations, isLoading, error, connect, disconnect, connectingId } = useIntegrations()
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
 
   const handleConnect = async (providerId: string, key: string) => {
     await connect(providerId, key)
@@ -91,7 +99,11 @@ export default function Integrations() {
           const jiraProvider = provider.id === 'jira'
           const bbProvider = provider.id === 'bitbucket'
           const isAtlassianOAuth = jiraProvider || bbProvider
-          const isEngine = ['opencode-go', 'openai-codex', '9router'].includes(provider.id)
+          const isEngine = ['opencode-go', 'anthropic', 'openai-codex', '9router'].includes(provider.id)
+          const is9router = provider.id === '9router'
+          const isAnthropic = provider.id === 'anthropic'
+          const isOpencode = provider.id === 'opencode-go'
+          const isCodex = provider.id === 'openai-codex'
 
           return (
             <div key={provider.id} className="ds-card-outer">
@@ -103,9 +115,17 @@ export default function Integrations() {
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/[0.06] shrink-0"
                         style={isAtlassianOAuth ? { background: 'linear-gradient(to bottom, #2684FF, #1a5dc4)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.4)' }
+                          : is9router ? { background: '#ff4405', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
+                          : isAnthropic ? { background: '#d67660', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)' }
+                          : isOpencode ? { background: '#f0f0f0', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }
+                          : isCodex ? { background: '#fffefa', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.2)' }
                           : { background: 'linear-gradient(to bottom, #2a2a2a, #161616)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.6)' }}>
-                        <iconify-icon icon={provider.logo} width="16"
-                          className={isAtlassianOAuth ? 'text-white' : state === 'connected' ? 'text-emerald-400' : 'text-white/60'} />
+                        {provider.logo.startsWith('/') ? (
+                          <img src={provider.logo} alt={provider.name} width="20" height="20" className="object-contain" />
+                        ) : (
+                          <iconify-icon icon={provider.logo} width="16"
+                            className={isAtlassianOAuth ? 'text-white' : state === 'connected' ? 'text-emerald-400' : 'text-white/60'} />
+                        )}
                       </div>
                       <h3 className="text-xs font-normal text-white ds-text-shadow truncate">{provider.name}</h3>
                     </div>
@@ -169,12 +189,12 @@ export default function Integrations() {
                   {/* ── Engine disconnected ── */}
                   {isEngine && !isOAuth && state !== 'connected' && (
                     <div>
-                      <button type="button" onClick={() => setModalOpen(true)} disabled={state === 'connecting'}
+                      <button type="button" onClick={() => { setSelectedProviderId(provider.id); setModalOpen(true) }} disabled={state === 'connecting'}
                         className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                         <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                         <span className="relative px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1"
                           style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                          {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Connect'}
+                          {state === 'connecting' ? <><iconify-icon icon="solar:refresh-linear" width="12" className="animate-spin" />Connecting…</> : 'Add key'}
                         </span>
                       </button>
                     </div>
@@ -255,8 +275,8 @@ export default function Integrations() {
         })}
       </div>
 
-      <ConnectModal open={modalOpen} onOpenChange={setModalOpen} provider={PROVIDERS[0]}
-        connecting={connectingId === PROVIDERS[0].id} error={error} onConnect={(key) => handleConnect(PROVIDERS[0].id, key)} />
+      <ConnectModal open={modalOpen} onOpenChange={setModalOpen} provider={PROVIDERS.find(p => p.id === selectedProviderId) ?? PROVIDERS[0]}
+        connecting={connectingId === selectedProviderId} error={error} onConnect={(key) => handleConnect(selectedProviderId ?? PROVIDERS[0].id, key)} />
     </div>
   )
 }
