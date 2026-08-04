@@ -274,6 +274,10 @@ async function runImplement(
       timeout: 30_000,
     });
 
+    // Configure git identity in the worktree so the agent can commit
+    execSync(`git -C "${worktreePath}" config user.name "Runchise Agent"`, { encoding: "utf-8" });
+    execSync(`git -C "${worktreePath}" config user.email "agent@runchise.local"`, { encoding: "utf-8" });
+
     updateTicket(db, ticket.key, { worktreePath, branchName });
   } catch (err) {
     return {
@@ -314,6 +318,20 @@ async function runImplement(
         reason: `Implementation failed: ${result.outcome}`,
         category: "agent_error",
       };
+    }
+
+    // Commit any uncommitted changes the agent left behind
+    try {
+      const status = execSync(`git -C "${worktreePath}" status --porcelain`, { encoding: "utf-8" });
+      if (status.trim()) {
+        execSync(`git -C "${worktreePath}" add -A`, { encoding: "utf-8", timeout: 10_000 });
+        execSync(`git -C "${worktreePath}" commit -m "${ticket.key}: ${ticket.summary ?? ticket.description.slice(0, 60)}"`, {
+          encoding: "utf-8",
+          timeout: 10_000,
+        });
+      }
+    } catch {
+      // Non-fatal — the verify stage will catch missing changes
     }
 
     return { ok: true };
