@@ -1,8 +1,8 @@
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { execSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join, extname, resolve } from "node:path";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
@@ -12,6 +12,67 @@ import { buildCloneUrl } from "./project-clone.js";
 import { createGithubVcsClient } from "./vcs-github.js";
 import { createBitbucketVcsClient } from "./vcs-bitbucket.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
+
+/**
+ * Downloads ticket attachments from Jira into a local directory.
+ * If token is null or attachmentsJson is empty/nil, does nothing.
+ * Individual download failures are logged and skipped — the pipeline
+ * should not block because one screenshot URL is broken.
+ */
+export async function downloadAttachments(
+  attachmentsJson: string | null,
+  destDir: string,
+  token: string | null,
+  fetchFn: typeof fetch = fetch,
+): Promise<void> {
+  if (!token || !attachmentsJson) return;
+
+  let attachments: Array<{ filename: string; mimeType: string; size: number; url: string }>;
+  try {
+    attachments = JSON.parse(attachmentsJson);
+  } catch {
+    return;
+  }
+
+  if (!Array.isArray(attachments) || attachments.length === 0) return;
+
+  mkdirSync(destDir, { recursive: true });
+
+  const usedNames = new Set<string>();
+
+  for (const att of attachments) {
+    if (!att.url || !att.filename) continue;
+
+    // Deduplicate filenames
+    let filename = att.filename;
+    if (usedNames.has(filename)) {
+      const ext = extname(filename);
+      const base = filename.slice(0, filename.length - ext.length);
+      let counter = 2;
+      while (usedNames.has(`${base}-${counter}${ext}`)) {
+        counter++;
+      }
+      filename = `${base}-${counter}${ext}`;
+    }
+    usedNames.add(filename);
+
+    const dest = join(destDir, filename);
+    try {
+      const res = await fetchFn(att.url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        console.error(`Attachment download failed (${res.status}): ${att.filename} from ${att.url}`);
+        continue;
+      }
+      const buf = Buffer.from(await res.arrayBuffer());
+      writeFileSync(dest, buf);
+    } catch (err) {
+      console.error(`Attachment download error: ${att.filename} — ${err instanceof Error ? err.message : "unknown"}`);
+      // Continue to next attachment
+    }
+  }
+}
 
 export type StageName = "judge" | "implement" | "verify" | "open_pr";
 
