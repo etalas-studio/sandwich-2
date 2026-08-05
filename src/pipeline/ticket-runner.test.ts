@@ -6,8 +6,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "../db/connection.js";
 import { createProject, markProjectReady } from "../db/project.js";
-import { createTicket, getTicket } from "../db/tickets.js";
-import { runTicketPipeline, buildPrPrompt, parsePrResponse } from "./ticket-runner.js";
+import { createTicket, getTicket, updateTicket } from "../db/tickets.js";
+import { runTicketPipeline, buildPrPrompt, parsePrResponse, generatePrContent, executePr } from "./ticket-runner.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 
 /**
@@ -433,6 +433,148 @@ describe("open_pr AI-generated content", () => {
         `prSummary should reflect AI content: ${ticket.prSummary}`,
       );
     }
+
+    db2.close();
+    rmSync(tmpDir2, { recursive: true, force: true });
+    repo.cleanup();
+  });
+});
+
+describe("generatePrContent (refactored from runOpenPr)", () => {
+  it("returns mechanical fallback title and description when no modelId", async () => {
+    const repo = setupRepo();
+    const tmpDir2 = mkdtempSync(join(tmpdir(), "gen-pr-content-"));
+    const db2 = openDb(join(tmpDir2, "db.sqlite"));
+
+    createTicket(db2, {
+      id: "T-MECH-1",
+      description: "Users cannot reset their password via email link.",
+      url: "https://jira.example.com/browse/PROJ-88",
+    });
+
+    // Need a project to exist
+    const project = createProject(db2, {
+      provider: "github",
+      owner: "test",
+      repoSlug: "test-repo",
+      defaultBranch: "main",
+    });
+    markProjectReady(db2, project.id);
+
+    // Create a worktree path (doesn't need to be real for content generation)
+    updateTicket(db2, "T-MECH-1", { worktreePath: repo.repoPath, branchName: "fix/T-MECH-1" });
+
+    const ticket = getTicket(db2, "T-MECH-1")!;
+    const result = await generatePrContent(
+      db2,
+      ticket,
+      null, // no modelId → mechanical fallback
+    );
+
+    assert.equal(typeof result, "object");
+    assert.equal(typeof result.title, "string");
+    assert.equal(typeof result.description, "string");
+    assert.ok(result.title.includes("Fix:"), `title should start with Fix:: ${result.title}`);
+    assert.ok(result.description.includes("Automated by Runchise pipeline"),
+      `description should include footer: ${result.description}`);
+    assert.ok(result.description.includes("PROJ-88"),
+      `description should include ticket key: ${result.description}`);
+
+    db2.close();
+    rmSync(tmpDir2, { recursive: true, force: true });
+    repo.cleanup();
+  });
+
+  it("uses AI-generated content when modelId is provided", async () => {
+    const repo = setupRepo();
+    const tmpDir2 = mkdtempSync(join(tmpdir(), "gen-pr-ai-"));
+    const db2 = openDb(join(tmpDir2, "db.sqlite"));
+
+    createTicket(db2, {
+      id: "T-AI-1",
+      description: "Add rate limiting to API endpoints.",
+      url: "https://jira.example.com/browse/PROJ-77",
+    });
+
+    const project = createProject(db2, {
+      provider: "github",
+      owner: "test",
+      repoSlug: "test-repo",
+      defaultBranch: "main",
+    });
+    markProjectReady(db2, project.id);
+
+    updateTicket(db2, "T-AI-1", { worktreePath: repo.repoPath, branchName: "fix/T-AI-1" });
+
+    const ticket = getTicket(db2, "T-AI-1")!;
+
+    const aiInvoker: InvokerFactory = (_modelId) => ({
+      async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        return {
+          outcome: "ok" as const,
+          finalText: JSON.stringify({
+            title: "feat: add rate limiting middleware",
+            description: "## What Changed\nAdded rate limiting to all API endpoints.\n\n## How Tested\nUnit tests pass.",
+          }),
+        };
+      },
+    });
+
+    const result = await generatePrContent(
+      db2,
+      ticket,
+      "test/model",
+      aiInvoker,
+    );
+
+    assert.equal(result.title, "feat: add rate limiting middleware");
+    assert.ok(result.description.includes("rate limiting"),
+      `description should include AI content: ${result.description}`);
+
+    db2.close();
+    rmSync(tmpDir2, { recursive: true, force: true });
+    repo.cleanup();
+  });
+
+  it("falls back to mechanical when AI parsing fails", async () => {
+    const repo = setupRepo();
+    const tmpDir2 = mkdtempSync(join(tmpdir(), "gen-pr-fallback-"));
+    const db2 = openDb(join(tmpDir2, "db.sqlite"));
+
+    createTicket(db2, {
+      id: "T-FALLBACK-1",
+      description: "Fix memory leak in image processing.",
+      url: null,
+    });
+
+    const project = createProject(db2, {
+      provider: "github",
+      owner: "test",
+      repoSlug: "test-repo",
+      defaultBranch: "main",
+    });
+    markProjectReady(db2, project.id);
+
+    updateTicket(db2, "T-FALLBACK-1", { worktreePath: repo.repoPath, branchName: "fix/T-FALLBACK-1" });
+
+    const ticket = getTicket(db2, "T-FALLBACK-1")!;
+
+    const badAiInvoker: InvokerFactory = (_modelId) => ({
+      async run(_opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        return { outcome: "ok" as const, finalText: "not valid json at all" };
+      },
+    });
+
+    const result = await generatePrContent(
+      db2,
+      ticket,
+      "test/model",
+      badAiInvoker,
+    );
+
+    assert.ok(result.title.startsWith("Fix:"), "should fall back to mechanical title");
+    assert.ok(result.description.includes("Automated by Runchise pipeline"),
+      "should fall back to mechanical description");
 
     db2.close();
     rmSync(tmpDir2, { recursive: true, force: true });

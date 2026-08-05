@@ -633,73 +633,49 @@ export function parsePrResponse(text: string): { title: string; description: str
 
 // ── Stage: Open PR ──
 
-async function runOpenPr(
+/**
+ * Mechanical fallback PR title from ticket info.
+ */
+function mechanicalPrTitle(ticket: Ticket): string {
+  return ticket.summary ? `Fix: ${ticket.summary}` : `Fix: ${ticket.key}`;
+}
+
+/**
+ * Mechanical fallback PR description from ticket info.
+ */
+function mechanicalPrDescription(ticket: Ticket): string {
+  return [
+    ticket.description,
+    ticket.url ? `\nSource: ${ticket.url}` : "",
+    `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+  ].filter(Boolean).join("\n");
+}
+
+export interface PrContent {
+  title: string;
+  description: string;
+}
+
+/**
+ * Generate PR title and description. Uses AI when modelId is provided,
+ * falls back to a mechanical template otherwise.
+ */
+export async function generatePrContent(
   db: Database.Database,
   ticket: Ticket,
-  repoPath: string,
-  createInvoker: InvokerFactory,
   modelId: string | null,
-  emit: (event: TicketRunEvent) => void,
-  signal: AbortSignal,
-): Promise<StageResult> {
+  createInvoker?: InvokerFactory,
+): Promise<PrContent> {
   const fresh = getTicket(db, ticket.key);
-  const worktreePath = fresh?.worktreePath;
-  const branchName = fresh?.branchName;
-
   const project = getCurrentProject(db);
-  if (!project || project.cloneStatus !== "ready") {
-    return { ok: false, reason: "No project configured", category: "agent_error" };
-  }
 
-  const token = await getValidOAuthToken(project.provider);
-  if (!token) {
-    return {
-      ok: false,
-      reason: `${project.provider} is not connected or its token expired — reconnect it`,
-      category: "credential_missing",
-    };
-  }
-
-  if (!branchName) {
-    return {
-      ok: false,
-      reason: "No branch name — implement stage may have failed",
-      category: "agent_error",
-    };
-  }
-
-  // Push using a fresh authenticated URL rather than the `origin` remote, whose
-  // embedded token was baked in at clone time and may since have expired/rotated.
-  const pushUrl = buildCloneUrl(project.provider, project.owner, project.repoSlug, token);
-  try {
-    execSync(`git -C "${repoPath}" push "${pushUrl}" "${branchName}"`, {
-      encoding: "utf-8",
-      timeout: 30_000,
-    });
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `Failed to push branch: ${redactToken(err instanceof Error ? err.message : "unknown", token)}`,
-      category: "agent_error",
-    };
-  }
-
-  // Create the PR via the appropriate VCS client
-  const vcsClient =
-    project.provider === "github" ? createGithubVcsClient(fetch) : createBitbucketVcsClient(fetch);
-
-  // Generate PR title and description — use AI if available, fall back to mechanical
-  let title: string;
-  let description: string;
-
-  if (modelId && fresh?.worktreePath) {
+  if (modelId && createInvoker && fresh?.worktreePath && project) {
     try {
-      // Gather diff and verify info
       const diffStat = execSync(
         `git -C "${fresh.worktreePath}" diff --stat "origin/${project.defaultBranch}"..HEAD`,
         { encoding: "utf-8" },
       );
-      const verifyNote = ticket.needsHumanReason ?? "";
+      const verifyNote = fresh.needsHumanReason ?? "";
       const warnings = verifyNote.startsWith("[WARNINGS]")
         ? verifyNote.slice(10).split("; ").map((s) => s.trim())
         : [];
@@ -727,55 +703,66 @@ async function runOpenPr(
       if (result.outcome === "ok") {
         const parsed = parsePrResponse(result.finalText);
         if (parsed) {
-          title = parsed.title;
-          description = parsed.description;
-        } else {
-          // AI response couldn't be parsed — fall back
-          title = ticket.summary
-            ? `Fix: ${ticket.summary}`
-            : `Fix: ${ticket.key}`;
-          description = [
-            ticket.description,
-            ticket.url ? `\nSource: ${ticket.url}` : "",
-            `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-          ].filter(Boolean).join("\n");
+          return { title: parsed.title, description: parsed.description };
         }
-      } else {
-        // AI call failed — fall back
-        title = ticket.summary
-          ? `Fix: ${ticket.summary}`
-          : `Fix: ${ticket.key}`;
-        description = [
-          ticket.description,
-          ticket.url ? `\nSource: ${ticket.url}` : "",
-          `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-        ].filter(Boolean).join("\n");
       }
     } catch {
-      // AI generation threw — fall back
-      title = ticket.summary
-        ? `Fix: ${ticket.summary}`
-        : `Fix: ${ticket.key}`;
-      description = [
-        ticket.description,
-        ticket.url ? `\nSource: ${ticket.url}` : "",
-        `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-      ].filter(Boolean).join("\n");
+      // AI generation failed — fall through to mechanical
     }
-  } else {
-    // No model — mechanical fallback
-    title = ticket.summary
-      ? `Fix: ${ticket.summary}`
-      : `Fix: ${ticket.key}`;
-    description = [
-      ticket.description,
-      ticket.url ? `\nSource: ${ticket.url}` : "",
-      `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-    ].filter(Boolean).join("\n");
   }
 
-  // If a PR for this branch already exists (e.g. a previous run crashed after
-  // creating it but before recording prUrl), reuse it instead of creating a duplicate.
+  return {
+    title: mechanicalPrTitle(ticket),
+    description: mechanicalPrDescription(ticket),
+  };
+}
+
+/**
+ * Execute the mechanical parts of opening a PR: git push, create PR via
+ * VCS API, cleanup worktree and branch.
+ */
+export async function executePr(
+  db: Database.Database,
+  ticketKey: string,
+  repoPath: string,
+  title: string,
+  description: string,
+): Promise<string> {
+  const fresh = getTicket(db, ticketKey);
+  const branchName = fresh?.branchName;
+  const worktreePath = fresh?.worktreePath;
+
+  const project = getCurrentProject(db);
+  if (!project || project.cloneStatus !== "ready") {
+    throw new Error("No project configured");
+  }
+
+  const token = await getValidOAuthToken(project.provider);
+  if (!token) {
+    throw new Error(`${project.provider} is not connected or its token expired — reconnect it`);
+  }
+
+  if (!branchName) {
+    throw new Error("No branch name — implement stage may have failed");
+  }
+
+  // Push branch
+  const pushUrl = buildCloneUrl(project.provider, project.owner, project.repoSlug, token);
+  try {
+    execSync(`git -C "${repoPath}" push "${pushUrl}" "${branchName}"`, {
+      encoding: "utf-8",
+      timeout: 30_000,
+    });
+  } catch (err) {
+    throw new Error(
+      `Failed to push branch: ${redactToken(err instanceof Error ? err.message : "unknown", token)}`,
+    );
+  }
+
+  // Create PR via VCS
+  const vcsClient =
+    project.provider === "github" ? createGithubVcsClient(fetch) : createBitbucketVcsClient(fetch);
+
   let prUrl: string;
   try {
     const existingPr = await vcsClient.findPullRequest({
@@ -807,11 +794,7 @@ async function runOpenPr(
     } catch {
       /* ignore */
     }
-    return {
-      ok: false,
-      reason: `PR creation failed: ${err instanceof Error ? err.message : "unknown"}`,
-      category: "agent_error",
-    };
+    throw new Error(`PR creation failed: ${err instanceof Error ? err.message : "unknown"}`);
   }
 
   // Cleanup worktree
@@ -829,14 +812,14 @@ async function runOpenPr(
     }
   }
 
-  // Delete local branch (main repo never checks it out, so no checkout needed first)
+  // Delete local branch
   try {
     execSync(`git -C "${repoPath}" branch -D "${branchName}"`, { timeout: 10_000 });
   } catch {
     /* ignore */
   }
 
-  updateTicket(db, ticket.key, {
+  updateTicket(db, ticketKey, {
     status: "done",
     stage: "open_pr",
     prUrl,
@@ -846,5 +829,31 @@ async function runOpenPr(
     branchName: null,
   });
 
-  return { ok: true };
+  return prUrl;
+}
+
+async function runOpenPr(
+  db: Database.Database,
+  ticket: Ticket,
+  repoPath: string,
+  createInvoker: InvokerFactory,
+  modelId: string | null,
+  emit: (event: TicketRunEvent) => void,
+  signal: AbortSignal,
+): Promise<StageResult> {
+  try {
+    const content = await generatePrContent(db, ticket, modelId, createInvoker);
+    const prUrl = await executePr(db, ticket.key, repoPath, content.title, content.description);
+
+    emit({ type: "stage_end", stage: "open_pr", ticket: getTicket(db, ticket.key)! });
+    emit({ type: "done", ticket: getTicket(db, ticket.key)! });
+
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      reason: err instanceof Error ? err.message : "open_pr failed",
+      category: "agent_error",
+    };
+  }
 }
