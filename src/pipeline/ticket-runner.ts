@@ -204,7 +204,9 @@ export async function runTicketPipeline(
 
   // All stages complete
 
-  // Cleanup attachment cache
+  // Cleanup attachment cache.
+  // NOTE: this only runs on full pipeline success — early returns from failed
+  // stages leave the cache dir intact so a re-run reuses cached attachments.
   const attachmentCacheDir = `data/attachments/${ticketKey}`;
   if (existsSync(attachmentCacheDir)) {
     try {
@@ -292,7 +294,7 @@ async function runJudge(
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
     ticket.url ? `Ticket URL: ${ticket.url}` : "",
-    ...(ticket.attachments
+    ...(jiraToken && existsSync(attachmentsDir)
       ? [
           "",
           `Attachments are available at ${attachmentsDir}/ — read them for visual context (screenshots, diagrams, log files, etc.).`,

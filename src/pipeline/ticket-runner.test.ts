@@ -8,6 +8,7 @@ import { openDb } from "../db/connection.js";
 import { createProject, markProjectReady, setAutoOpenPr } from "../db/project.js";
 import { createTicket, getTicket, updateTicket } from "../db/tickets.js";
 import { runTicketPipeline, buildPrPrompt, parsePrResponse, downloadAttachments, generatePrContent, executePr } from "./ticket-runner.js";
+import { initOAuth } from "./oauth-integrations.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 
 /**
@@ -82,6 +83,9 @@ describe("ticket-runner pipeline", () => {
       defaultBranch: "main",
     });
     markProjectReady(db, project.id);
+
+    // Wire the OAuth DB so getOAuthToken() works in pipeline stages
+    initOAuth(db);
   });
 
   after(() => {
@@ -183,6 +187,22 @@ describe("ticket-runner pipeline", () => {
       ]),
     });
 
+    // Store a fake Jira OAuth token so getOAuthToken("jira") returns non-null
+    db.prepare(
+      "INSERT OR REPLACE INTO credentials (name, value, created_at, updated_at) VALUES (?, ?, ?, ?)",
+    ).run(
+      "oauth:jira",
+      JSON.stringify({ type: "oauth", accessToken: "fake-jira-token" }),
+      new Date().toISOString(),
+      new Date().toISOString(),
+    );
+
+    // Pre-populate the attachments cache dir so existsSync passes (the fake
+    // invoker doesn't actually download files, and the Jira token is fake too).
+    const cacheDir = "data/attachments/T-att-judge-1";
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(join(cacheDir, "mockup.png"), "fake image bytes");
+
     let judgePrompt = "";
 
     const judgeFactory: InvokerFactory = (_modelId) => ({
@@ -213,10 +233,12 @@ describe("ticket-runner pipeline", () => {
       `judge prompt should mention attachments, got: ${judgePrompt.slice(0, 200)}`,
     );
 
-    // Verify cache dir was created (relative to process CWD, which is the project root)
-    const cacheDir = "data/attachments/T-att-judge-1";
-    // Note: download will fail without real Jira token, so dir may be empty
-    // The test verifies the prompt change, not the actual download (tested in Task 1)
+    // Clean up the cache dir
+    try {
+      rmSync(cacheDir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
   });
 
   it("blocks ticket when agent outcome is not ok", async () => {
