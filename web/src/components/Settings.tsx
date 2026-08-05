@@ -39,7 +39,7 @@ function Toggle({
       >
         <span
           className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
-            checked ? 'translate-x-4.5' : 'translate-x-0.5'
+            checked ? 'translate-x-[1.125rem]' : 'translate-x-0.5'
           }`}
           style={{
             boxShadow: checked
