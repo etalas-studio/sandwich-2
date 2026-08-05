@@ -11,6 +11,8 @@ export interface Ticket {
   needsHumanReason: string | null
   prUrl: string | null
   prSummary: string | null
+  prTitle?: string | null
+  prDescription?: string | null
   startedAt: string | null
   finishedAt: string | null
   quickWinChoices: string | null
@@ -122,4 +124,18 @@ export async function pullJiraTickets(): Promise<PullResult> {
     return body ?? { ok: false, imported: 0, skipped: 0, error: `HTTP ${res.status}` }
   }
   return res.json() as Promise<PullResult>
+}
+
+export interface OpenPrResult {
+  prUrl: string
+  ticket?: Ticket
+}
+
+export async function openPr(ticketKey: string): Promise<OpenPrResult> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(ticketKey)}/open-pr`, { method: 'POST' })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `HTTP ${res.status}`)
+  }
+  return res.json() as Promise<OpenPrResult>
 }

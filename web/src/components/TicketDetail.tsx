@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { marked } from 'marked'
 import { XIcon } from 'lucide-react'
 import type { Ticket, QuickWinChoice } from '../api/tickets'
+import { openPr } from '../api/tickets'
 import type { PipelineStage, NeedsHumanCategory } from '../types'
 
 type TicketSource = 'jira' | 'linear' | 'github' | 'internal'
@@ -239,6 +240,10 @@ const STAGE_STYLES: Record<'done' | 'active' | 'blocked' | 'pending', { border: 
 }
 
 export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResolve }: TicketDetailProps) {
+  const [openingPr, setOpeningPr] = useState(false)
+  const [openPrError, setOpenPrError] = useState<string | null>(null)
+  const [localPrUrl, setLocalPrUrl] = useState<string | null>(null)
+
   // Close on ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -247,6 +252,21 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  const handleOpenPr = async () => {
+    setOpeningPr(true)
+    setOpenPrError(null)
+    try {
+      const result = await openPr(ticket.key)
+      setLocalPrUrl(result.prUrl)
+    } catch (err) {
+      setOpenPrError(err instanceof Error ? err.message : 'Failed to open PR')
+    } finally {
+      setOpeningPr(false)
+    }
+  }
+
+  const displayPrUrl = localPrUrl || ticket.prUrl
 
   return (
     <>
@@ -389,7 +409,7 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
           )}
 
           {/* Done state */}
-          {ticket.status === 'done' && ticket.prUrl && (
+          {ticket.status === 'done' && displayPrUrl && (
             <div className="ds-card-outer mb-6" style={{ height: 'auto' }}>
               <div className="ds-card-inner p-4 border-l-2 border-l-[#8affb1]" style={{ height: 'auto' }}>
                 <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">PR Opened</h4>
@@ -397,13 +417,36 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
                   <p className="text-xs text-white/50 font-light mb-2">{ticket.prSummary}</p>
                 )}
                 <a
-                  href={ticket.prUrl}
+                  href={displayPrUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs text-[#8affb1] hover:underline break-all"
                 >
-                  {ticket.prUrl}
+                  {displayPrUrl}
                 </a>
+              </div>
+            </div>
+          )}
+
+          {/* Done state — PR content ready, not yet opened */}
+          {ticket.status === 'done' && !displayPrUrl && ticket.prTitle && (
+            <div className="ds-card-outer mb-6" style={{ height: 'auto' }}>
+              <div className="ds-card-inner p-4 border-l-2 border-l-[#f59e0b]" style={{ height: 'auto' }}>
+                <h4 className="text-sm font-normal text-white ds-text-shadow mb-1">PR Ready</h4>
+                {ticket.prSummary && (
+                  <p className="text-xs text-white/50 font-light mb-3">{ticket.prSummary}</p>
+                )}
+                {openPrError && (
+                  <p className="text-xs text-[#ff8a8a] font-light mb-2">{openPrError}</p>
+                )}
+                <button
+                  onClick={handleOpenPr}
+                  disabled={openingPr}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] text-xs font-normal hover:bg-[#f59e0b]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <iconify-icon icon={openingPr ? 'solar:clock-circle-linear' : 'solar:link-circle-linear'} width="14" className={openingPr ? 'animate-spin' : ''} />
+                  {openingPr ? 'Opening PR...' : 'Open PR'}
+                </button>
               </div>
             </div>
           )}
