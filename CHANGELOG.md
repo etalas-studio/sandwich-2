@@ -1,5 +1,8 @@
 # Changelog
 
+- 2026-08-06: attachment-pipeline-feed | @riaenriala - feed attachments to implement stage via worktree (.attachments/ directory + prompt mention)
+- 2026-08-06: pull tickets server-side filter + Load More | @potensio - replaced frontend-only filtering with server-side JQL: text search, status/type/priority dropdowns, assignee/sprint inputs; debounced fetch, AbortController; Load More pagination; selection preserved across page loads; backend previewJiraTickets now builds dynamic JQL with startAt/maxResults/total; 14 tests
+- 2026-08-06: pull tickets modal with checkbox selection | @potensio - replaced direct Pull Tickets button with full modal: preview Jira To Do tickets, frontend search/filter, checkbox selection, select all, import selected only; backend preview + filtered import endpoints; 12 tests
 - 2026-08-06: ticket list view | @potensio - added list/table view mode for tickets with Board/List toggle, columns: key, summary, status, stage, priority, actions (run/delete); 9 tests covering all states
 - 2026-08-04: restore UI cards | @potensio - restored agentic readiness, recommendations, and area signals cards on overview page; restored stats cards (agent success rate, avg duration, autonomy rate) on tickets page wired to live ticket data; added fix button to scan-driven recommendations
 - 2026-08-04: ticket pipeline | @potensio - 4-stage ticket pipeline (judge → implement → verify → open_pr) with Pi SDK engine, isolated git worktrees, blocklist check, SSE real-time progress, resume support, Run button on ticket cards and detail panel
