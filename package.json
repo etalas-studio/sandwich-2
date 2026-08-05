@@ -31,9 +31,6 @@
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.83.0",
     "better-sqlite3": "^13.0.2",
-    "dotenv": "^17.4.2",
-    "ghostty-opentui": "^1.5.0",
-    "node-pty": "^1.1.0",
-    "pty-state-capture": "^0.2.1"
+    "dotenv": "^17.4.2"
   }
 }
