@@ -7,7 +7,7 @@ import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
 import { getCurrentProject } from "../db/project.js";
-import { getValidOAuthToken } from "./oauth-integrations.js";
+import { getValidOAuthToken, getOAuthToken } from "./oauth-integrations.js";
 import { buildCloneUrl } from "./project-clone.js";
 import { createGithubVcsClient } from "./vcs-github.js";
 import { createBitbucketVcsClient } from "./vcs-bitbucket.js";
@@ -246,6 +246,11 @@ async function runJudge(
     }
   }
 
+  // Download ticket attachments so the judge agent can inspect screenshots/logs
+  const attachmentsDir = `data/attachments/${ticket.key}`;
+  const jiraToken = getOAuthToken("jira");
+  await downloadAttachments(ticket.attachments, attachmentsDir, jiraToken);
+
   // 2. AI relevance check
   if (!modelId) {
     return { ok: true };
@@ -276,6 +281,12 @@ async function runJudge(
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
     ticket.url ? `Ticket URL: ${ticket.url}` : "",
+    ...(ticket.attachments
+      ? [
+          "",
+          `Attachments are available at ${attachmentsDir}/ — read them for visual context (screenshots, diagrams, log files, etc.).`,
+        ]
+      : []),
   ]
     .filter(Boolean)
     .join("\n");

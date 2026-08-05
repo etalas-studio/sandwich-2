@@ -173,6 +173,52 @@ describe("ticket-runner pipeline", () => {
     );
   });
 
+  it("judge stage downloads attachments and includes them in prompt", async () => {
+    createTicket(db, {
+      id: "T-att-judge-1",
+      description: "Fix the login button color",
+      url: null,
+      attachments: JSON.stringify([
+        { filename: "mockup.png", mimeType: "image/png", size: 100, url: "https://example.com/mockup.png" },
+      ]),
+    });
+
+    let judgePrompt = "";
+
+    const judgeFactory: InvokerFactory = (_modelId) => ({
+      async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        // Capture only the judge prompt
+        if (opts.prompt.includes("You are judging")) {
+          judgePrompt = opts.prompt;
+        }
+        // Return agentReady
+        return { outcome: "ok" as const, finalText: '{"agentReady": true, "reason": "clear enough"}' };
+      },
+    });
+
+    const controller = new AbortController();
+    await runTicketPipeline(
+      db,
+      judgeFactory,
+      "T-att-judge-1",
+      repoPath,
+      "test/fake-model",
+      () => {},
+      controller.signal,
+    );
+
+    // The judge prompt should mention attachments
+    assert.ok(
+      judgePrompt.includes("Attachments are available") || judgePrompt.includes("data/attachments"),
+      `judge prompt should mention attachments, got: ${judgePrompt.slice(0, 200)}`,
+    );
+
+    // Verify cache dir was created (relative to process CWD, which is the project root)
+    const cacheDir = "data/attachments/T-att-judge-1";
+    // Note: download will fail without real Jira token, so dir may be empty
+    // The test verifies the prompt change, not the actual download (tested in Task 1)
+  });
+
   it("blocks ticket when agent outcome is not ok", async () => {
     createTicket(db, {
       id: "T-crash-1",
