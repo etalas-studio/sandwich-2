@@ -10,6 +10,7 @@ import { migration0009DropRepoPath } from "./0009_drop_repo_path.js";
 import { migration0010TicketBranch } from "./0010_ticket_branch.js";
 import { migration0011JiraStatus } from "./0011_jira_status.js";
 import { migration0012AutoOpenPr } from "./0012_auto_open_pr.js";
+import { migration0013AddPrContentColumns } from "./0013_add_pr_content_columns.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
@@ -23,4 +24,5 @@ export const MIGRATIONS: Migration[] = [
   migration0010TicketBranch,
   migration0011JiraStatus,
   migration0012AutoOpenPr,
+  migration0013AddPrContentColumns,
 ];

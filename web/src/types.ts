@@ -28,6 +28,8 @@ export interface Ticket {
   needsHumanReason: string | null
   prUrl: string | null
   prSummary: string | null
+  prTitle?: string | null
+  prDescription?: string | null
   startedAt: string | null
   finishedAt: string | null
 }

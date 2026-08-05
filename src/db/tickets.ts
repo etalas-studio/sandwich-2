@@ -12,6 +12,8 @@ export interface Ticket {
   needsHumanReason: string | null;
   prUrl: string | null;
   prSummary: string | null;
+  prTitle: string | null;
+  prDescription: string | null;
   startedAt: string | null;
   finishedAt: string | null;
   worktreePath: string | null;
@@ -67,6 +69,8 @@ function normaliseTicket(row: Record<string, unknown>): Ticket {
     needsHumanReason: nullish(row.needs_human_reason),
     prUrl: nullish(row.pr_url),
     prSummary: nullish(row.pr_summary),
+    prTitle: nullish(row.pr_title),
+    prDescription: nullish(row.pr_description),
     startedAt: nullish(row.started_at),
     finishedAt: nullish(row.finished_at),
     worktreePath: nullish(row.worktree_path),
@@ -142,6 +146,8 @@ export interface UpdateTicketInput {
   finishedAt?: string | null;
   prUrl?: string | null;
   prSummary?: string | null;
+  prTitle?: string | null;
+  prDescription?: string | null;
   needsHumanCategory?: string | null;
   needsHumanReason?: string | null;
   quickWinChoices?: string | null;
@@ -234,6 +240,20 @@ export function updateTicket(
   if (input.prSummary !== undefined) {
     db.prepare("UPDATE tickets SET pr_summary = ?, updated_at = ? WHERE key = ?").run(
       input.prSummary,
+      now,
+      key,
+    );
+  }
+  if (input.prTitle !== undefined) {
+    db.prepare("UPDATE tickets SET pr_title = ?, updated_at = ? WHERE key = ?").run(
+      input.prTitle,
+      now,
+      key,
+    );
+  }
+  if (input.prDescription !== undefined) {
+    db.prepare("UPDATE tickets SET pr_description = ?, updated_at = ? WHERE key = ?").run(
+      input.prDescription,
       now,
       key,
     );

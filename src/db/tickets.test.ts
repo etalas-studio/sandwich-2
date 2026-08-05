@@ -6,6 +6,10 @@ import { join } from "node:path";
 import { openDb } from "./connection.js";
 import { createTicket, listTickets, updateTicket, deleteTicket, getTicket } from "./tickets.js";
 
+// Verify migration 0013 columns exist
+const PR_TITLE = "Fix: Login redirect loop";
+const PR_DESCRIPTION = "This PR resolves the redirect loop in SSO flow.\n\nSource: https://example.com\n\n---\nAutomated by Runchise pipeline • Ticket RR-1234";
+
 describe("tickets repository", () => {
   let db: ReturnType<typeof openDb>;
   let tmpDir: string;
@@ -18,6 +22,26 @@ describe("tickets repository", () => {
   after(() => {
     db.close();
     rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("stores and retrieves prTitle and prDescription", () => {
+    const ticket = createTicket(db, {
+      id: "RR-PRCONTENT",
+      description: "Store PR content for later manual open.",
+      url: null,
+    });
+
+    updateTicket(db, ticket.key, {
+      prTitle: PR_TITLE,
+      prDescription: PR_DESCRIPTION,
+    });
+
+    const updated = getTicket(db, ticket.key);
+    assert.equal(updated?.prTitle, PR_TITLE);
+    assert.equal(updated?.prDescription, PR_DESCRIPTION);
+    // Columns should be null for a fresh ticket
+    assert.equal(ticket.prTitle, null);
+    assert.equal(ticket.prDescription, null);
   });
 
   it("creates a ticket with explicit id and reads it back", () => {
