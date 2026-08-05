@@ -95,10 +95,13 @@ export async function runTicketPipeline(
           // Check if auto-open-PR is disabled in settings
           const project = getCurrentProject(db);
           if (project && !project.autoOpenPr) {
+            const content = await generatePrContent(db, ticket, modelId, createInvoker);
             updateTicket(db, ticketKey, {
               status: "done",
               stage: "open_pr",
-              prSummary: "Auto PR disabled — human should create PR manually.",
+              prTitle: content.title,
+              prDescription: content.description,
+              prSummary: "PR content ready — click Open PR to create.",
               finishedAt: new Date().toISOString(),
             });
             emit({ type: "stage_end", stage: "open_pr", ticket: getTicket(db, ticketKey)! });

@@ -1,9 +1,11 @@
 import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
-import { createTicket, listTickets, updateTicket, deleteTicket } from "../db/tickets.js";
+import { createTicket, listTickets, updateTicket, deleteTicket, getTicket } from "../db/tickets.js";
 import type { CreateTicketInput, UpdateTicketInput } from "../db/tickets.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { pullJiraTickets } from "../pipeline/oauth-integrations.js";
+import { executePr } from "../pipeline/ticket-runner.js";
+import { getProjectRepoPath } from "../db/project.js";
 
 export function registerTicketRoutes(router: Router, db: Database.Database): void {
   router.post("/api/tickets", async (req, res) => {
@@ -96,6 +98,38 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
       sendJson(res, result.ok ? 200 : 400, result);
     } catch (err) {
       sendCaughtError(res, err, "pull tickets");
+    }
+  });
+
+  router.post("/api/tickets/:key/open-pr", async (req, res, params) => {
+    const ticketKey = params.key!;
+    const ticket = getTicket(db, ticketKey);
+    if (!ticket) {
+      sendJson(res, 404, { error: "ticket not found" });
+      return;
+    }
+    if (ticket.status !== "done") {
+      sendJson(res, 400, { error: "ticket must be in done status to open a PR" });
+      return;
+    }
+    if (!ticket.prTitle || !ticket.prDescription) {
+      sendJson(res, 400, { error: "PR content not available — re-run the ticket with auto-PR enabled" });
+      return;
+    }
+
+    const reposDir = process.env.REPOS_DIR || "/tmp/runchise-repos";
+    const repoPath = getProjectRepoPath(db, reposDir);
+    if (!repoPath) {
+      sendJson(res, 400, { error: "No project configured or clone not ready" });
+      return;
+    }
+
+    try {
+      const prUrl = await executePr(db, ticketKey, repoPath, ticket.prTitle, ticket.prDescription);
+      const updated = getTicket(db, ticketKey);
+      sendJson(res, 200, { prUrl, ticket: updated });
+    } catch (err) {
+      sendCaughtError(res, err, "open-pr");
     }
   });
 }

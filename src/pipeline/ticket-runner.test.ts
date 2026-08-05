@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "../db/connection.js";
-import { createProject, markProjectReady } from "../db/project.js";
+import { createProject, markProjectReady, setAutoOpenPr } from "../db/project.js";
 import { createTicket, getTicket, updateTicket } from "../db/tickets.js";
 import { runTicketPipeline, buildPrPrompt, parsePrResponse, generatePrContent, executePr } from "./ticket-runner.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
@@ -575,6 +575,77 @@ describe("generatePrContent (refactored from runOpenPr)", () => {
     assert.ok(result.title.startsWith("Fix:"), "should fall back to mechanical title");
     assert.ok(result.description.includes("Automated by Runchise pipeline"),
       "should fall back to mechanical description");
+
+    db2.close();
+    rmSync(tmpDir2, { recursive: true, force: true });
+    repo.cleanup();
+  });
+});
+
+describe("auto-PR OFF pipeline behavior", () => {
+  it("generates PR content and stores it without creating PR when autoOpenPr is false", async () => {
+    const repo = setupRepo();
+    const tmpDir2 = mkdtempSync(join(tmpdir(), "autopr-off-"));
+    const db2 = openDb(join(tmpDir2, "db.sqlite"));
+
+    const project = createProject(db2, {
+      provider: "github",
+      owner: "test",
+      repoSlug: "test-repo",
+      defaultBranch: "main",
+    });
+    markProjectReady(db2, project.id);
+    setAutoOpenPr(db2, false);
+
+    createTicket(db2, {
+      id: "T-AUTOPR-OFF",
+      description: "Disable auto PR and store content.",
+      url: "https://jira.example.com/browse/PROJ-55",
+    });
+
+    // Multi-stage invoker: implement + verify + pr content
+    const fullInvoker: InvokerFactory = (_modelId) => ({
+      async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        // Verify stage: return valid JSON
+        if (opts.prompt.includes('"ok": true/false')) {
+          return { outcome: "ok" as const, finalText: '{"ok": true, "summary": "all good"}' };
+        }
+        // PR content generation (generatePrContent): return valid JSON
+        if (opts.prompt.includes("pull request description")) {
+          return {
+            outcome: "ok" as const,
+            finalText: '{"title": "feat: stored PR title", "description": "Stored PR description for manual open."}',
+          };
+        }
+        // Implement stage: create a commit
+        writeFileSync(join(opts.cwd, "AGENTS.md"), "# Agent instructions\n");
+        execSync(`git -C "${opts.cwd}" add -A`, { stdio: "pipe" });
+        execSync(`git -C "${opts.cwd}" commit -m "feat: add AGENTS.md"`, { stdio: "pipe" });
+        return { outcome: "ok" as const, finalText: "Created AGENTS.md." };
+      },
+    });
+
+    const controller = new AbortController();
+    await runTicketPipeline(
+      db2,
+      fullInvoker,
+      "T-AUTOPR-OFF",
+      repo.repoPath,
+      "test/fake-model",
+      () => {},
+      controller.signal,
+    );
+
+    const ticket = getTicket(db2, "T-AUTOPR-OFF")!;
+
+    assert.equal(ticket.status, "done", `expected status done, got ${ticket.status}`);
+    assert.equal(ticket.prUrl, null, "prUrl should be null when auto-PR is off");
+    assert.ok(ticket.prTitle, "prTitle should be stored");
+    assert.ok(ticket.prDescription, "prDescription should be stored");
+    assert.ok(
+      ticket.prSummary?.includes("PR content ready") || ticket.prSummary?.includes("click Open PR"),
+      `prSummary should indicate content ready: ${ticket.prSummary}`,
+    );
 
     db2.close();
     rmSync(tmpDir2, { recursive: true, force: true });
