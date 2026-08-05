@@ -370,6 +370,11 @@ async function runImplement(
   const worktreesDir = join(repoPath, ".worktrees");
   const worktreePath = join(worktreesDir, branchName);
 
+  // Check for cached attachments before worktree creation so the flag is available
+  // for the prompt guard even if worktree creation fails (early return).
+  const attachmentsCacheDir = `data/attachments/${ticket.key}`;
+  const hasAttachments = existsSync(attachmentsCacheDir);
+
   try {
     execSync(`mkdir -p "${worktreesDir}"`, { encoding: "utf-8" });
     // Refresh the default branch so new tickets branch off latest remote, not a stale local HEAD
@@ -393,16 +398,18 @@ async function runImplement(
     updateTicket(db, ticket.key, { worktreePath, branchName });
 
     // Copy cached attachments into the worktree so the agent can read them
-    const attachmentsCacheDir = `data/attachments/${ticket.key}`;
-    if (existsSync(attachmentsCacheDir)) {
+    // (hasAttachments computed above, outside the try)
+    if (hasAttachments) {
       const worktreeAttachmentsDir = join(worktreePath, ".attachments");
       try {
         execSync(`mkdir -p "${worktreeAttachmentsDir}"`, { encoding: "utf-8" });
         execSync(`cp -R "${attachmentsCacheDir}"/. "${worktreeAttachmentsDir}"/`, {
           encoding: "utf-8",
         });
-      } catch {
-        // Copy failed — not fatal, agent just won't see attachments
+      } catch (err) {
+        console.warn(
+          `Attachment copy to worktree failed: ${err instanceof Error ? err.message : "unknown"}`
+        );
       }
     }
   } catch (err) {
@@ -428,7 +435,7 @@ async function runImplement(
     `Ticket: ${ticket.key}`,
     `Description: ${ticket.description}`,
     ticket.url ? `Source: ${ticket.url}` : "",
-    ...(ticket.attachments
+    ...(hasAttachments
       ? [
           "",
           "Ticket attachments (screenshots, logs, documents) are in the .attachments/ directory — read them for visual context.",
