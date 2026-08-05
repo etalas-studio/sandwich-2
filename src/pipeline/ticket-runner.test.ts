@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it, before, after } from "node:test";
 import { execSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "../db/connection.js";
@@ -202,6 +202,80 @@ describe("ticket-runner pipeline", () => {
     assert.equal(ticket.status, "blocked");
     assert.equal(ticket.needsHumanCategory, "agent_error");
     assert.ok(ticket.needsHumanReason?.includes("timeout"));
+  });
+
+  it("implement stage copies attachments into worktree and mentions them in prompt", async () => {
+    // Create a ticket with attachments
+    createTicket(db, {
+      id: "T-att-impl-1",
+      description: "Add AGENTS.md with project conventions",
+      url: null,
+      attachments: JSON.stringify([
+        { filename: "spec.pdf", mimeType: "application/pdf", size: 42, url: "https://example.com/spec.pdf" },
+      ]),
+    });
+
+    // Pre-populate the attachments cache dir so the copy succeeds
+    const attachmentsCacheDir = join("data", "attachments", "T-att-impl-1");
+    mkdirSync(attachmentsCacheDir, { recursive: true });
+    writeFileSync(join(attachmentsCacheDir, "spec.pdf"), "fake pdf content");
+
+    let implementPrompt = "";
+    let worktreeDir = "";
+
+    const factory: InvokerFactory = (_modelId) => ({
+      async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        if (opts.prompt.includes("You are implementing")) {
+          // Implement stage
+          implementPrompt = opts.prompt;
+          worktreeDir = opts.cwd;
+          writeFileSync(join(opts.cwd, "AGENTS.md"), "# Agent instructions\n");
+          execSync(`git -C "${opts.cwd}" add -A`, { stdio: "pipe" });
+          execSync(`git -C "${opts.cwd}" commit -m "feat: add AGENTS.md"`, { stdio: "pipe" });
+          return { outcome: "ok" as const, finalText: "Done." };
+        }
+        // Judge
+        return { outcome: "ok" as const, finalText: '{"agentReady": true, "reason": "clear"}' };
+      },
+    });
+
+    const controller = new AbortController();
+
+    await runTicketPipeline(
+      db,
+      factory,
+      "T-att-impl-1",
+      repoPath,
+      "test/fake-model",
+      () => {},
+      controller.signal,
+    );
+
+    // The implement prompt should mention .attachments/
+    assert.ok(
+      implementPrompt.includes(".attachments/") || implementPrompt.includes("attachments"),
+      `implement prompt should mention attachments, got: ${implementPrompt.slice(0, 200)}`,
+    );
+
+    // Verify the .attachments directory was created in the worktree
+    const worktreeAttachmentsDir = join(worktreeDir, ".attachments");
+    assert.ok(
+      existsSync(worktreeAttachmentsDir),
+      `.attachments/ directory should exist in worktree at ${worktreeAttachmentsDir}`,
+    );
+
+    // Verify the attachment file was copied
+    assert.ok(
+      existsSync(join(worktreeAttachmentsDir, "spec.pdf")),
+      "spec.pdf should be copied into worktree .attachments/",
+    );
+
+    // Clean up the cache dir
+    try {
+      rmSync(attachmentsCacheDir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
   });
 });
 

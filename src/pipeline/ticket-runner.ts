@@ -316,6 +316,20 @@ async function runImplement(
     });
 
     updateTicket(db, ticket.key, { worktreePath, branchName });
+
+    // Copy cached attachments into the worktree so the agent can read them
+    const attachmentsCacheDir = `data/attachments/${ticket.key}`;
+    if (existsSync(attachmentsCacheDir)) {
+      const worktreeAttachmentsDir = join(worktreePath, ".attachments");
+      try {
+        execSync(`mkdir -p "${worktreeAttachmentsDir}"`, { encoding: "utf-8" });
+        execSync(`cp -R "${attachmentsCacheDir}"/. "${worktreeAttachmentsDir}"/`, {
+          encoding: "utf-8",
+        });
+      } catch {
+        // Copy failed — not fatal, agent just won't see attachments
+      }
+    }
   } catch (err) {
     return {
       ok: false,
@@ -339,6 +353,12 @@ async function runImplement(
     `Ticket: ${ticket.key}`,
     `Description: ${ticket.description}`,
     ticket.url ? `Source: ${ticket.url}` : "",
+    ...(ticket.attachments
+      ? [
+          "",
+          "Ticket attachments (screenshots, logs, documents) are in the .attachments/ directory — read them for visual context.",
+        ]
+      : []),
     "",
     "When done, your final message should summarize what you changed.",
   ]
