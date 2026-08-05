@@ -14,7 +14,7 @@ export default function Sidebar({ username, onLogout }: SidebarProps) {
   return (
     <aside className="relative z-20 w-56 shrink-0 border-r border-white/[0.04] bg-[#0a0a0a]/30 backdrop-blur-md flex flex-col h-full">
       <div className="flex items-center gap-3 p-4 border-b border-white/[0.04]">
-        <iconify-icon icon="solar:hand-shake-linear" width="22" className="text-white/60" />
+        <iconify-icon icon="solar:hand-shake-bold" width="22" className="text-white/60" />
         <span className="text-white text-sm font-normal tracking-tight ds-text-shadow">Runchise</span>
       </div>
 

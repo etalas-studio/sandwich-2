@@ -24,7 +24,7 @@ export default function SetupForm({ onSubmit, error, isPending }: SetupFormProps
       <div className="w-full max-w-sm mx-4 relative z-10 text-center">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <iconify-icon icon="solar:hand-shake-linear" width="40" className="text-white/70" />
+          <iconify-icon icon="solar:hand-shake-bold" width="40" className="text-white/70" />
         </div>
 
         <h1 className="text-xl font-normal tracking-tight ds-text-shadow mb-1">Create your account</h1>
