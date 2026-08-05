@@ -1,9 +1,9 @@
 import { useIntegrations } from '../hooks/useIntegrations'
 import { useModelContext } from '../contexts/ModelContext'
 
-export default function ModelSelector() {
+export default function ModelSelector({ scope }: { scope: string }) {
   const { integrations, isLoading } = useIntegrations()
-  const { selectedModelId, setSelectedModelId } = useModelContext()
+  const { selectedModelId, setSelectedModelId } = useModelContext(scope)
 
   // Collect models only from connected providers
   const connectedModels = integrations

@@ -9,7 +9,7 @@ export function useScan() {
   const queryClient = useQueryClient();
   const [inFlightId, setInFlightId] = useState<string | null>(null);
   const prevStatusRef = useRef<string | undefined>(undefined);
-  const { selectedModelId } = useModelContext();
+  const { selectedModelId } = useModelContext('scan');
 
   const {
     data: latestScan,

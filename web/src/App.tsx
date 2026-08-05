@@ -5,6 +5,7 @@ import type { Ticket } from './api/tickets'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
 import KanbanBoard from './components/KanbanBoard'
+import TicketList from './components/TicketList'
 import TicketDetail from './components/TicketDetail'
 import Settings from './components/Settings'
 import Integrations from './components/Integrations'
@@ -25,10 +26,51 @@ import { useScan } from './hooks/useScan'
 import { useTicketRun } from './hooks/useTicketRun'
 import { Plus } from 'lucide-react'
 
+function formatScanForClipboard(scan: import('./api/scans').ScanResult): string {
+  const lines: string[] = []
+  if (scan.projectName) {
+    lines.push(scan.projectName)
+    lines.push('='.repeat(scan.projectName.length))
+    lines.push('')
+  }
+  if (scan.description) {
+    lines.push(scan.description)
+    lines.push('')
+  }
+  if (scan.techStack) {
+    lines.push(`Tech Stack: ${scan.techStack}`)
+    lines.push('')
+  }
+  if (scan.testCommand) {
+    lines.push(`Test Command: ${scan.testCommand}`)
+    lines.push('')
+  }
+  if (scan.areaSignals && scan.areaSignals.length > 0) {
+    lines.push('Area Signals')
+    lines.push('-'.repeat(13))
+    for (const area of scan.areaSignals) {
+      const pct = Math.round(area.testToCodeRatio * 100)
+      lines.push(`  ${area.area} — ${area.files} file(s), ${pct}% tested, churn ${Math.round(area.churnScore * 100)}%`)
+      if (area.note) lines.push(`    ${area.note}`)
+    }
+    lines.push('')
+  }
+  if (scan.recommendations && scan.recommendations.length > 0) {
+    lines.push('Recommendations')
+    lines.push('-'.repeat(15))
+    for (const rec of scan.recommendations) {
+      lines.push(`  • ${rec.title}`)
+      lines.push(`    ${rec.description}`)
+    }
+    lines.push('')
+  }
+  return lines.join('\n')
+}
+
 function OverviewPage() {
   const { project } = useProject()
   const { latestScan, isRunning, isTriggering, isAborting, trigger, abort } = useScan()
-  const { selectedModelId } = useModelContext()
+  const { selectedModelId } = useModelContext('scan')
 
   const hasProject = project?.cloneStatus === 'ready'
   const hasModel = !!selectedModelId
@@ -55,7 +97,23 @@ function OverviewPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <ModelSelector />
+          <ModelSelector scope="scan" />
+          {hasScan && latestScan?.status === 'completed' && (
+            <button
+              type="button"
+              onClick={() => {
+                const text = formatScanForClipboard(latestScan!)
+                navigator.clipboard.writeText(text).then(
+                  () => toast.success('Copied to clipboard'),
+                  () => toast.error('Failed to copy')
+                )
+              }}
+              className="px-3 py-1.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg border border-white/[0.06] transition-colors font-light flex items-center gap-1.5"
+            >
+              <iconify-icon icon="solar:copy-linear" width="14" />
+              Copy
+            </button>
+          )}
           {isRunning ? (
             <button
               type="button"
@@ -193,7 +251,7 @@ function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const { selectedModelId } = useModelContext()
+  const { selectedModelId } = useModelContext('ticket')
 
   // Create state
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -207,6 +265,7 @@ function TicketsPage() {
 
   // Delete state
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
 
   const loadTickets = useCallback(async () => {
     try {
@@ -330,6 +389,7 @@ function TicketsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+          <ModelSelector scope="ticket" />
           <button
             className="relative inline-flex group"
             onClick={handlePull}
@@ -367,6 +427,30 @@ function TicketsPage() {
               Add Ticket
             </span>
           </button>
+
+          {/* View toggle */}
+          <div className="flex items-center rounded-lg bg-white/[0.04] border border-white/[0.08] p-0.5">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-1 rounded-md text-[11px] font-light transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-white/[0.1] text-white/80'
+                  : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              Board
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 rounded-md text-[11px] font-light transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white/[0.1] text-white/80'
+                  : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              List
+            </button>
+          </div>
           </div>
         </div>
 
@@ -378,16 +462,29 @@ function TicketsPage() {
           <p className="text-sm text-[#ff8a8a]">{loadError}</p>
         ) : (
           <>
-            <KanbanBoard
-              tickets={tickets}
-              onOpenTicket={handleOpenTicket}
-              onDeleteTicket={(ticket) => setDeletingKey(ticket.key)}
-              onRunTicket={(ticket) => {
-                runTicket(ticket.key, selectedModelId ?? undefined)
-                  .then(() => loadTickets())
-                  .catch((err) => toast.error(err.message))
-              }}
-            />
+            {viewMode === 'kanban' ? (
+              <KanbanBoard
+                tickets={tickets}
+                onOpenTicket={handleOpenTicket}
+                onDeleteTicket={(ticket) => setDeletingKey(ticket.key)}
+                onRunTicket={(ticket) => {
+                  runTicket(ticket.key, selectedModelId ?? undefined)
+                    .then(() => loadTickets())
+                    .catch((err) => toast.error(err.message))
+                }}
+              />
+            ) : (
+              <TicketList
+                tickets={tickets}
+                onOpenTicket={handleOpenTicket}
+                onDeleteTicket={(ticket) => setDeletingKey(ticket.key)}
+                onRunTicket={(ticket) => {
+                  runTicket(ticket.key, selectedModelId ?? undefined)
+                    .then(() => loadTickets())
+                    .catch((err) => toast.error(err.message))
+                }}
+              />
+            )}
           </>
         )}
       </div>

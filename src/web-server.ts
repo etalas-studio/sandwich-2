@@ -17,6 +17,7 @@ import { registerOAuthRoutes } from "./routes/oauth.js";
 import { registerPurgeRoute } from "./routes/purge.js";
 import { registerTicketRoutes } from "./routes/tickets.js";
 import { registerTicketRunRoutes } from "./routes/ticket-run.js";
+import { registerSettingsRoutes } from "./routes/settings.js";
 import { createScanRunner } from "./scanner/run-scan.js";
 import { createPiInvokerFactory } from "./scanner/pi-invoker.js";
 import { getOAuthToken } from "./pipeline/oauth-integrations.js";
@@ -88,6 +89,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerIntegrationRoutes(router);
   registerTicketRoutes(router, db);
   registerPurgeRoute(router, db);
+  registerSettingsRoutes(router, db);
 
   // Scan runner: uses Pi SDK createAgentSession when a model is selected
   const piInvokerFactory = createPiInvokerFactory(getModelRuntime());

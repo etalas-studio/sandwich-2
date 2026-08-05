@@ -13,6 +13,7 @@ const readyProject: Project = {
   defaultBranch: 'main',
   cloneStatus: 'ready',
   cloneError: null,
+  autoOpenPr: true,
   connectedAt: '2026-08-04T00:00:00.000Z',
 }
 

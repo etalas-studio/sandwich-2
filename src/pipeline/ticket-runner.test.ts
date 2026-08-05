@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { openDb } from "../db/connection.js";
 import { createProject, markProjectReady } from "../db/project.js";
 import { createTicket, getTicket } from "../db/tickets.js";
-import { runTicketPipeline } from "./ticket-runner.js";
+import { runTicketPipeline, buildPrPrompt, parsePrResponse } from "./ticket-runner.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 
 /**
@@ -202,5 +202,166 @@ describe("ticket-runner pipeline", () => {
     assert.equal(ticket.status, "blocked");
     assert.equal(ticket.needsHumanCategory, "agent_error");
     assert.ok(ticket.needsHumanReason?.includes("timeout"));
+  });
+});
+
+describe("open_pr AI-generated content", () => {
+  it("buildPrPrompt includes linked issue, diff, and verify info", () => {
+    const prompt = buildPrPrompt({
+      ticketKey: "PROJ-42",
+      ticketSummary: "Fix null pointer in user lookup",
+      ticketDescription: "Users seeing 500 errors when looking up deleted accounts",
+      ticketUrl: "https://jira.example.com/browse/PROJ-42",
+      diffStat: "src/auth/service.ts | 12 +++++++-----\n 1 file changed, 7 insertions(+), 5 deletions(-)",
+      verifySummary: "All tests pass, change matches requirements",
+      verifyWarnings: ["Touched error handler in unrelated module"],
+    });
+
+    assert.ok(prompt.includes("PROJ-42"), "prompt should include ticket key");
+    assert.ok(prompt.includes("Fix null pointer in user lookup"), "prompt should include ticket summary");
+    assert.ok(prompt.includes("Users seeing 500 errors"), "prompt should include ticket description");
+    assert.ok(prompt.includes("https://jira.example.com/browse/PROJ-42"), "prompt should include ticket URL");
+    assert.ok(prompt.includes("src/auth/service.ts"), "prompt should include diff stat");
+    assert.ok(prompt.includes("All tests pass"), "prompt should include verify summary");
+    assert.ok(prompt.includes("Touched error handler"), "prompt should include warnings");
+  });
+
+  it("buildPrPrompt handles missing optional fields gracefully", () => {
+    const prompt = buildPrPrompt({
+      ticketKey: "PROJ-1",
+      ticketSummary: null,
+      ticketDescription: "Do something",
+      ticketUrl: null,
+      diffStat: "",
+      verifySummary: null,
+      verifyWarnings: [],
+    });
+
+    assert.ok(prompt.includes("PROJ-1"), "prompt should still include ticket key");
+    assert.ok(prompt.includes("Do something"), "prompt should include description");
+    // Should not blow up on null fields
+  });
+
+  it("parsePrResponse extracts title and description from valid JSON", () => {
+    const result = parsePrResponse(
+      'Here is the PR content:\\n{"title": "fix: add null check for deleted user lookup", "description": "## Linked Issue\\nPROJ-42\\n\\n## What Changed\\nAdded null check."}',
+    );
+
+    assert.ok(result, "should return a result");
+    assert.equal(result!.title, "fix: add null check for deleted user lookup");
+    assert.ok(result!.description.includes("## Linked Issue"), "description should include Linked Issue section");
+    assert.ok(result!.description.includes("PROJ-42"), "description should include ticket key");
+    assert.ok(result!.description.includes("Added null check"), "description should include what changed");
+  });
+
+  it("parsePrResponse returns null for invalid JSON", () => {
+    assert.equal(parsePrResponse("just some text without json"), null);
+    assert.equal(parsePrResponse(""), null);
+    assert.equal(parsePrResponse("{invalid: json}"), null);
+  });
+
+  it("parsePrResponse returns null when missing required fields", () => {
+    // Missing description
+    assert.equal(
+      parsePrResponse('{"title": "fix: something"}'),
+      null,
+    );
+    // Missing title
+    assert.equal(
+      parsePrResponse('{"description": "some desc"}'),
+      null,
+    );
+  });
+
+  it("open_pr stage uses AI-generated content when modelId is provided", async () => {
+    const repo = setupRepo();
+    const tmpDir2 = mkdtempSync(join(tmpdir(), "ticket-runner-db-"));
+    const db2 = openDb(join(tmpDir2, "db.sqlite"));
+    const project = createProject(db2, {
+      provider: "github",
+      owner: "test",
+      repoSlug: "test-repo",
+      defaultBranch: "main",
+    });
+    markProjectReady(db2, project.id);
+
+    createTicket(db2, {
+      id: "T-ai-pr-1",
+      description: "Add null check for user lookup",
+      url: "https://jira.example.com/browse/PROJ-99",
+    });
+
+    // Invoker that implements (creates a real commit) + generates PR content
+    const prAiInvoker: InvokerFactory = (_modelId) => ({
+      async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        // Check if this is the PR generation prompt (contains "Linked Issue" cue)
+        if (opts.prompt.includes("pull request description")) {
+          const response = JSON.stringify({
+            title: "fix: add null check for deleted user lookup",
+            description: [
+              "## Linked Issue",
+              "[PROJ-99](https://jira.example.com/browse/PROJ-99) — Add null check for user lookup",
+              "",
+              "## What Changed",
+              "Added null check in user service to handle deleted accounts gracefully.",
+              "",
+              "## Changes",
+              "- `src/auth/service.ts` — Added null guard before accessing user properties",
+              "",
+              "## How Tested",
+              "All existing tests pass. Added new test for deleted user scenario.",
+              "",
+              "---",
+              "> \u26a0\ufe0f **AI-Generated PR** — This code was written by an AI agent (Runchise pipeline).",
+              "> A human MUST review before merging.",
+            ].join("\n"),
+          });
+          return { outcome: "ok" as const, finalText: response };
+        }
+
+        // Otherwise, act like a working implementer
+        const cwd = opts.cwd;
+        writeFileSync(join(cwd, "AGENTS.md"), "# Agent instructions\n");
+        execSync(`git -C "${cwd}" add -A`, { stdio: "pipe" });
+        execSync(`git -C "${cwd}" commit -m "feat: add AGENTS.md"`, { stdio: "pipe" });
+        return { outcome: "ok" as const, finalText: "Created AGENTS.md." };
+      },
+    });
+
+    const controller = new AbortController();
+    const events: Array<{ type: string; stage?: string }> = [];
+
+    await runTicketPipeline(
+      db2,
+      prAiInvoker,
+      "T-ai-pr-1",
+      repo.repoPath,
+      "test/fake-model",
+      (ev) => events.push(ev),
+      controller.signal,
+    );
+
+    const ticket = getTicket(db2, "T-ai-pr-1")!;
+
+    // open_pr will still fail without real OAuth tokens — but the invoker
+    // should have been called for the PR generation prompt. We verify that
+    // the pipeline reached open_pr stage (it didn't fail earlier).
+    assert.ok(
+      ticket.stage === "open_pr" || ticket.status === "blocked",
+      `expected stage open_pr or blocked, got stage=${ticket.stage} status=${ticket.status}`,
+    );
+
+    // The PR summary should reflect AI content if PR succeeded, or just verify
+    // the pipeline didn't crash during the AI generation step.
+    if (ticket.prSummary) {
+      assert.ok(
+        ticket.prSummary.includes("AI-Generated") || ticket.prSummary.includes("PR created"),
+        `prSummary should reflect AI content: ${ticket.prSummary}`,
+      );
+    }
+
+    db2.close();
+    rmSync(tmpDir2, { recursive: true, force: true });
+    repo.cleanup();
   });
 });

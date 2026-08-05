@@ -10,6 +10,7 @@ export interface Project {
   cloneStatus: CloneStatus
   cloneError: string | null
   connectedAt: string
+  autoOpenPr: boolean
 }
 
 export interface VcsOrg {
@@ -103,4 +104,24 @@ export async function syncProject(): Promise<SyncProjectResult> {
   const body = (await res.json().catch(() => null)) as { ok?: boolean; output?: string; error?: string } | null
   if (!res.ok) return { ok: false, error: body?.error ?? `HTTP ${res.status}` }
   return { ok: true, output: body?.output }
+}
+
+export interface SettingsResponse {
+  autoOpenPr: boolean
+}
+
+export async function fetchSettings(): Promise<SettingsResponse> {
+  const res = await fetch('/api/settings')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<SettingsResponse>
+}
+
+export async function updateAutoOpenPr(enabled: boolean): Promise<SettingsResponse> {
+  const res = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ autoOpenPr: enabled }),
+  })
+  if (!res.ok) throw new Error(await errorMessage(res))
+  return res.json() as Promise<SettingsResponse>
 }

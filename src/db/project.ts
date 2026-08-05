@@ -14,6 +14,7 @@ export interface Project {
   cloneStatus: CloneStatus;
   cloneError: string | null;
   connectedAt: string;
+  autoOpenPr: boolean;
 }
 
 export interface CreateProjectInput {
@@ -69,6 +70,13 @@ export function markProjectFailed(db: Database.Database, id: string, error: stri
 /** Deletes every project row. Callers are responsible for removing the
  * clone directory and cascading ticket/blocklist/scan deletes separately
  * (see src/routes/projects.ts). */
+export function setAutoOpenPr(db: Database.Database, value: boolean): Project | null {
+  const project = getCurrentProject(db);
+  if (!project) return null;
+  db.prepare("UPDATE project SET auto_open_pr = ? WHERE id = ?").run(value ? 1 : 0, project.id);
+  return getById(db, project.id);
+}
+
 export function clearProject(db: Database.Database): void {
   db.prepare("DELETE FROM project").run();
 }
@@ -97,6 +105,7 @@ interface RawRow {
   clone_status: string;
   clone_error: string | null;
   connected_at: string;
+  auto_open_pr: number;
 }
 
 function getById(db: Database.Database, id: string): Project | null {
@@ -114,5 +123,6 @@ function toProject(row: RawRow): Project {
     cloneStatus: row.clone_status as CloneStatus,
     cloneError: row.clone_error,
     connectedAt: row.connected_at,
+    autoOpenPr: row.auto_open_pr !== 0,
   };
 }

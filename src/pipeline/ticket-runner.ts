@@ -91,9 +91,23 @@ export async function runTicketPipeline(
         case "verify":
           result = await runVerify(db, createInvoker, ticket, repoPath, modelId, emit, signal);
           break;
-        case "open_pr":
-          result = await runOpenPr(db, ticket, repoPath, emit, signal);
+        case "open_pr": {
+          // Check if auto-open-PR is disabled in settings
+          const project = getCurrentProject(db);
+          if (project && !project.autoOpenPr) {
+            updateTicket(db, ticketKey, {
+              status: "done",
+              stage: "open_pr",
+              prSummary: "Auto PR disabled — human should create PR manually.",
+              finishedAt: new Date().toISOString(),
+            });
+            emit({ type: "stage_end", stage: "open_pr", ticket: getTicket(db, ticketKey)! });
+            emit({ type: "done", ticket: getTicket(db, ticketKey)! });
+            return;
+          }
+          result = await runOpenPr(db, ticket, repoPath, createInvoker, modelId, emit, signal);
           break;
+        }
         default:
           result = { ok: false, reason: "unknown stage" };
       }
@@ -512,12 +526,99 @@ async function runVerify(
   }
 }
 
+// ── AI PR Content Generation ──
+
+interface PrPromptInput {
+  ticketKey: string;
+  ticketSummary: string | null;
+  ticketDescription: string;
+  ticketUrl: string | null;
+  diffStat: string;
+  verifySummary: string | null;
+  verifyWarnings: string[];
+}
+
+export function buildPrPrompt(input: PrPromptInput): string {
+  const parts = [
+    "You are writing a pull request description for a code change you implemented.",
+    "",
+    "First, review the diff and commit messages to understand what changed.",
+    "",
+    `Ticket: ${input.ticketKey}`,
+    input.ticketSummary ? `Title: ${input.ticketSummary}` : "",
+    `Description: ${input.ticketDescription}`,
+    input.ticketUrl ? `URL: ${input.ticketUrl}` : "",
+    "",
+    "Diff summary:",
+    input.diffStat || "(no diff available)",
+    "",
+    input.verifySummary ? `Verification result: ${input.verifySummary}` : "",
+    input.verifyWarnings.length > 0
+      ? `Warnings: ${input.verifyWarnings.join("; ")}`
+      : "",
+    "",
+    "Generate a PR title and description. The description MUST use this markdown format:",
+    "",
+    "## Linked Issue",
+    "[<ticket key>](<ticket url>) — <ticket summary or description>",
+    "",
+    "## What Changed",
+    "<2-4 sentence summary of what was changed and why>",
+    "",
+    "## Changes",
+    "- `<file>` — <brief explanation>",
+    "...",
+    "",
+    "## How Tested",
+    "<test results from verification>",
+    "",
+    "## Verification Notes",
+    "<warnings if any, otherwise omit this section>",
+    "",
+    "---",
+    "> \u26a0\ufe0f **AI-Generated PR** — This code was written by an AI agent (Runchise pipeline).",
+    "> A human MUST review before merging.",
+    "",
+    "Title should follow conventional commit format: type: short description (max 72 chars).",
+    "",
+    "Answer ONLY with a JSON object:",
+    '{"title": "type: concise description", "description": "full markdown description as above"}',
+  ];
+
+  return parts.filter((p) => p !== "").join("\n");
+}
+
+export function parsePrResponse(text: string): { title: string; description: string } | null {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      title?: string;
+      description?: string;
+    };
+    if (
+      typeof parsed.title === "string" &&
+      parsed.title.length > 0 &&
+      typeof parsed.description === "string" &&
+      parsed.description.length > 0
+    ) {
+      return { title: parsed.title, description: parsed.description };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Stage: Open PR ──
 
 async function runOpenPr(
   db: Database.Database,
   ticket: Ticket,
   repoPath: string,
+  createInvoker: InvokerFactory,
+  modelId: string | null,
   emit: (event: TicketRunEvent) => void,
   signal: AbortSignal,
 ): Promise<StageResult> {
@@ -567,14 +668,91 @@ async function runOpenPr(
   const vcsClient =
     project.provider === "github" ? createGithubVcsClient(fetch) : createBitbucketVcsClient(fetch);
 
-  const title = ticket.summary ? `Fix: ${ticket.summary}` : `Fix: ${ticket.key}`;
-  const description = [
-    ticket.description,
-    ticket.url ? `\nSource: ${ticket.url}` : "",
-    `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  // Generate PR title and description — use AI if available, fall back to mechanical
+  let title: string;
+  let description: string;
+
+  if (modelId && fresh?.worktreePath) {
+    try {
+      // Gather diff and verify info
+      const diffStat = execSync(
+        `git -C "${fresh.worktreePath}" diff --stat "origin/${project.defaultBranch}"..HEAD`,
+        { encoding: "utf-8" },
+      );
+      const verifyNote = ticket.needsHumanReason ?? "";
+      const warnings = verifyNote.startsWith("[WARNINGS]")
+        ? verifyNote.slice(10).split("; ").map((s) => s.trim())
+        : [];
+      const verifySummary = verifyNote && !verifyNote.startsWith("[WARNINGS]")
+        ? verifyNote
+        : null;
+
+      const invoker = createInvoker(modelId);
+      const prompt = buildPrPrompt({
+        ticketKey: ticket.key,
+        ticketSummary: ticket.summary,
+        ticketDescription: ticket.description,
+        ticketUrl: ticket.url,
+        diffStat: diffStat.trim() || "(no diff available)",
+        verifySummary,
+        verifyWarnings: warnings,
+      });
+
+      const result = await invoker.run({
+        prompt,
+        cwd: fresh.worktreePath,
+        timeoutMs: 60_000,
+      });
+
+      if (result.outcome === "ok") {
+        const parsed = parsePrResponse(result.finalText);
+        if (parsed) {
+          title = parsed.title;
+          description = parsed.description;
+        } else {
+          // AI response couldn't be parsed — fall back
+          title = ticket.summary
+            ? `Fix: ${ticket.summary}`
+            : `Fix: ${ticket.key}`;
+          description = [
+            ticket.description,
+            ticket.url ? `\nSource: ${ticket.url}` : "",
+            `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+          ].filter(Boolean).join("\n");
+        }
+      } else {
+        // AI call failed — fall back
+        title = ticket.summary
+          ? `Fix: ${ticket.summary}`
+          : `Fix: ${ticket.key}`;
+        description = [
+          ticket.description,
+          ticket.url ? `\nSource: ${ticket.url}` : "",
+          `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+        ].filter(Boolean).join("\n");
+      }
+    } catch {
+      // AI generation threw — fall back
+      title = ticket.summary
+        ? `Fix: ${ticket.summary}`
+        : `Fix: ${ticket.key}`;
+      description = [
+        ticket.description,
+        ticket.url ? `\nSource: ${ticket.url}` : "",
+        `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+      ].filter(Boolean).join("\n");
+    }
+  } else {
+    // No model — mechanical fallback
+    title = ticket.summary
+      ? `Fix: ${ticket.summary}`
+      : `Fix: ${ticket.key}`;
+    description = [
+      ticket.description,
+      ticket.url ? `\nSource: ${ticket.url}` : "",
+      `\n---\nAutomated by Runchise pipeline • Ticket ${ticket.key}`,
+    ].filter(Boolean).join("\n");
+  }
 
   // If a PR for this branch already exists (e.g. a previous run crashed after
   // creating it but before recording prUrl), reuse it instead of creating a duplicate.
