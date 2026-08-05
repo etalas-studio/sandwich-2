@@ -203,6 +203,17 @@ export async function runTicketPipeline(
   }
 
   // All stages complete
+
+  // Cleanup attachment cache
+  const attachmentCacheDir = `data/attachments/${ticketKey}`;
+  if (existsSync(attachmentCacheDir)) {
+    try {
+      rmSync(attachmentCacheDir, { recursive: true, force: true });
+    } catch {
+      // Not fatal — stale cache dirs don't hurt anything
+    }
+  }
+
   emit({ type: "done", ticket: getTicket(db, ticketKey)! });
 }
 
