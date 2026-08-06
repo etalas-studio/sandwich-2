@@ -560,13 +560,109 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="py-10 text-white bg-black border-t border-zinc-800">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-medium text-white/40">© 2026 SANDWICH by Etalas</p>
-          <div className="flex items-center gap-6">
-            <a href="https://github.com/etalas-studio/sandwich-2" target="_blank" rel="noreferrer" className="text-xs font-medium text-white/70 hover:text-white transition-colors">GitHub</a>
-            <a href="https://etalas.com" target="_blank" rel="noreferrer" className="text-xs font-medium text-white/70 hover:text-white transition-colors">Etalas</a>
-            <a href="https://twitter.com/etalasworks" target="_blank" rel="noreferrer" className="text-xs font-medium text-white/70 hover:text-white transition-colors">Twitter</a>
+      <footer className="bg-black border-t border-zinc-800 pt-16 pb-10 text-white">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Top row */}
+          <div className="flex flex-col md:flex-row gap-12 md:gap-20 pb-12 border-b border-zinc-800">
+            {/* Brand */}
+            <div className="flex-1 max-w-xs">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
+                  <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
+                </div>
+                <span className="text-base font-bold tracking-tight" style={{ fontFamily: bowlby }}>SANDWICH</span>
+              </div>
+              <p className="text-sm text-zinc-400 leading-relaxed font-medium">
+                Dari brief berantakan jadi spek siap eksekusi. Dibangun di Etalas untuk tim yang kerja bareng AI.
+              </p>
+              <div className="flex items-center gap-3 mt-5">
+                {[
+                  { icon: 'solar:github-linear', href: 'https://github.com/etalas-studio/sandwich-2', label: 'GitHub' },
+                  { icon: 'solar:twitter-linear', href: 'https://twitter.com/etalasworks', label: 'Twitter' },
+                ].map(({ icon, href, label }) => (
+                  <a key={label} href={href} target="_blank" rel="noreferrer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+                    style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
+                    aria-label={label}
+                  >
+                    <iconify-icon icon={icon} width="15" style={{strokeWidth: 1.5}}></iconify-icon>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-col sm:flex-row gap-10 flex-1 justify-end">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Produk</p>
+                <ul className="flex flex-col gap-3">
+                  {[
+                    { label: 'How It Works', id: 'harnesses' },
+                    { label: 'Pipeline', id: 'pipeline' },
+                    { label: 'Pricing', id: 'pricing' },
+                    { label: 'FAQ', id: 'faq' },
+                  ].map(({ label, id }) => (
+                    <li key={id}>
+                      <a
+                        href={`#${id}`}
+                        onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }}
+                        className="text-sm text-zinc-400 hover:text-white transition-colors font-medium"
+                      >
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Gunakan</p>
+                <ul className="flex flex-col gap-3">
+                  {[
+                    { label: 'Pi', href: 'https://pi.ai' },
+                    { label: 'Claude Code', href: 'https://claude.ai' },
+                    { label: 'Codex', href: 'https://openai.com/codex' },
+                    { label: 'Superpowers', href: 'https://superpowers.obra.studio' },
+                  ].map(({ label, href }) => (
+                    <li key={label}>
+                      <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Etalas</p>
+                <ul className="flex flex-col gap-3">
+                  {[
+                    { label: 'Website', href: 'https://etalas.com' },
+                    { label: 'GitHub', href: 'https://github.com/etalas-studio' },
+                    { label: 'Twitter', href: 'https://twitter.com/etalasworks' },
+                  ].map(({ label, href }) => (
+                    <li key={label}>
+                      <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-8">
+            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH — dibuat dengan ❤️ di Etalas, Indonesia.</p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onGoToApp}
+                className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold transition-all hover:opacity-80"
+                style={{ backgroundColor: '#f91814', color: '#ffffff' }}
+              >
+                Mulai Gratis
+                <iconify-icon icon="solar:arrow-right-linear" width="12" style={{strokeWidth: 1.5}}></iconify-icon>
+              </button>
+            </div>
           </div>
         </div>
       </footer>
