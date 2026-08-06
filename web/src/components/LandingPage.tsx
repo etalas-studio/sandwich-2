@@ -316,19 +316,19 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
 
           <div className="flex flex-row items-center justify-center gap-10 mt-8">
-            {/* Left */}
+            {/* Left — output types */}
             <div className="flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-10deg)' }}>
-                <iconify-icon icon="solar:microphone-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Voice Note</span>
+                <iconify-icon icon="solar:document-text-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>PRD</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-5deg)' }}>
-                <iconify-icon icon="solar:camera-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Screenshot</span>
+                <iconify-icon icon="solar:notes-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>MOM</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(4deg)' }}>
-                <iconify-icon icon="solar:document-text-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Notion Dump</span>
+                <iconify-icon icon="solar:widget-2-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>Prototype</span>
               </div>
             </div>
 
@@ -355,19 +355,19 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               ))}
             </div>
 
-            {/* Right */}
+            {/* Right — output types */}
             <div className="flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(10deg)' }}>
-                <iconify-icon icon="solar:chat-line-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Slack Thread</span>
+                <iconify-icon icon="solar:pen-new-square-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>Write Spec</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(5deg)' }}>
-                <iconify-icon icon="solar:letter-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Email Chain</span>
+                <iconify-icon icon="solar:list-check-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>Structure the Brief</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-4deg)' }}>
-                <iconify-icon icon="solar:phone-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Call Recording</span>
+                <iconify-icon icon="solar:money-bag-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
+                <span>Quotation</span>
               </div>
             </div>
           </div>
@@ -439,7 +439,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       {/* ── PRICING ── */}
       <section id="pricing" className="py-24 md:py-32 bg-[#F9CD25]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="md:w-1/3 mb-12">
+          <div className="mb-12 text-center">
             <p
               className="text-2xl uppercase tracking-tight mb-4 text-white"
               style={{ fontFamily: mousememoirs }}
@@ -452,7 +452,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             >
               HARGA SIMPEL.<br />TANPA KEJUTAN.
             </h2>
-            <p className="text-sm font-semibold leading-relaxed max-w-sm text-white">
+            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white">
               Pilihan jelas untuk kebutuhan berbeda. Mulai gratis, upgrade kapan saja.
             </p>
           </div>
