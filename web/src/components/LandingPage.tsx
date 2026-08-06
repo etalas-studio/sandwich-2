@@ -457,7 +457,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
             {PLANS.map((plan) => (
               <div
                 key={plan.name}
