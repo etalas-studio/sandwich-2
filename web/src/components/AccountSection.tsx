@@ -12,12 +12,6 @@ interface AccountSectionProps {
   onPurge?: () => void
 }
 
-// Mock data for UI development
-export const mockAccount: Account = {
-  username: 'jane_doe',
-  email: 'jane@example.com',
-}
-
 export default function AccountSection({ account, onChangePassword, onPurge }: AccountSectionProps) {
   const [showModal, setShowModal] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')

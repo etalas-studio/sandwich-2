@@ -6,6 +6,8 @@ import {
   connectProject,
   clearProject,
   syncProject,
+  fetchAccount,
+  changePassword,
 } from './projects'
 import type { Project } from './projects'
 
@@ -170,5 +172,61 @@ describe('syncProject', () => {
     const result = await syncProject()
 
     expect(result).toEqual({ ok: false, error: 'network error' })
+  })
+})
+
+describe('fetchAccount', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('fetches account info', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ username: 'testuser', email: 'test@example.com' }),
+    } as Response)
+
+    const result = await fetchAccount()
+
+    expect(result).toEqual({ username: 'testuser', email: 'test@example.com' })
+    expect(fetch).toHaveBeenCalledWith('/api/account')
+  })
+
+  it('throws with server error on failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: 'unauthorized' }),
+    } as Response)
+
+    await expect(fetchAccount()).rejects.toThrow('unauthorized')
+  })
+})
+
+describe('changePassword', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('sends currentPassword and newPassword to the password endpoint', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ ok: true }),
+    } as Response)
+
+    const result = await changePassword('oldpass', 'newpass')
+
+    expect(result).toEqual({ ok: true })
+    expect(fetch).toHaveBeenCalledWith('/api/account/password', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ currentPassword: 'oldpass', newPassword: 'newpass' }),
+    })
+  })
+
+  it('throws with server error on failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: 'current password is incorrect' }),
+    } as Response)
+
+    await expect(changePassword('wrong', 'newpass')).rejects.toThrow('current password is incorrect')
   })
 })

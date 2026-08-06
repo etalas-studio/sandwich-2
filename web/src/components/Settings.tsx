@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import ProjectSection from './ProjectSection'
-import AccountSection, { mockAccount } from './AccountSection'
-import { fetchSettings, updateAutoOpenPr } from '../api/projects'
+import AccountSection from './AccountSection'
+import type { Account } from './AccountSection'
+import { fetchSettings, updateAutoOpenPr, fetchAccount, changePassword } from '../api/projects'
 
 interface SettingsProps {
   onPurge?: () => void
@@ -56,12 +57,21 @@ export default function Settings({ onPurge }: SettingsProps) {
   const [autoOpenPr, setAutoOpenPr] = useState(true)
   const [loadingSetting, setLoadingSetting] = useState(true)
   const [toggling, setToggling] = useState(false)
+  const [account, setAccount] = useState<Account | null>(null)
+  const [accountLoading, setAccountLoading] = useState(true)
 
   useEffect(() => {
     fetchSettings()
       .then((s) => setAutoOpenPr(s.autoOpenPr))
       .catch(() => { /* use default */ })
       .finally(() => setLoadingSetting(false))
+  }, [])
+
+  useEffect(() => {
+    fetchAccount()
+      .then((a) => setAccount(a))
+      .catch(() => { /* leave null */ })
+      .finally(() => setAccountLoading(false))
   }, [])
 
   const handleToggle = async (enabled: boolean) => {
@@ -76,9 +86,8 @@ export default function Settings({ onPurge }: SettingsProps) {
     }
   }
 
-  const handleChangePassword = (_currentPassword: string, _newPassword: string) => {
-    // In real implementation, this would call the backend API
-    console.log('Password change requested')
+  const handleChangePassword = async (currentPassword: string, newPassword: string) => {
+    await changePassword(currentPassword, newPassword)
   }
 
   return (
@@ -128,11 +137,20 @@ export default function Settings({ onPurge }: SettingsProps) {
           </div>
         </div>
 
-        <AccountSection
-          account={mockAccount}
-          onChangePassword={handleChangePassword}
-          onPurge={onPurge}
-        />
+        {accountLoading ? (
+          <div className="ds-card-outer ds-shadow-elevated">
+            <div className="ds-card-inner p-6">
+              <div className="absolute inset-0 ds-noise pointer-events-none" />
+              <div className="relative z-10 h-32 animate-pulse bg-white/[0.02] rounded-lg" />
+            </div>
+          </div>
+        ) : account ? (
+          <AccountSection
+            account={account}
+            onChangePassword={handleChangePassword}
+            onPurge={onPurge}
+          />
+        ) : null}
       </div>
     </div>
   )

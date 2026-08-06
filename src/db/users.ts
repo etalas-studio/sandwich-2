@@ -56,6 +56,16 @@ interface RawRow {
   created_at: string;
 }
 
+export function updatePassword(db: Database.Database, userId: string, newPasswordHash: string): void {
+  const result = db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
+    newPasswordHash,
+    userId,
+  );
+  if (result.changes === 0) {
+    throw new Error("user not found");
+  }
+}
+
 function mapRow(row: RawRow): User {
   return {
     id: row.id,

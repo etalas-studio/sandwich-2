@@ -125,3 +125,31 @@ export async function updateAutoOpenPr(enabled: boolean): Promise<SettingsRespon
   if (!res.ok) throw new Error(await errorMessage(res))
   return res.json() as Promise<SettingsResponse>
 }
+
+export interface AccountResponse {
+  username: string
+  email: string
+}
+
+export async function fetchAccount(): Promise<AccountResponse> {
+  const res = await fetch('/api/account')
+  if (!res.ok) throw new Error(await errorMessage(res))
+  return res.json() as Promise<AccountResponse>
+}
+
+export interface ChangePasswordResult {
+  ok: true
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<ChangePasswordResult> {
+  const res = await fetch('/api/account/password', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  if (!res.ok) throw new Error(await errorMessage(res))
+  return res.json() as Promise<ChangePasswordResult>
+}
