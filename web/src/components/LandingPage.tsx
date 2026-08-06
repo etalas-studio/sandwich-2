@@ -188,7 +188,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
   return (
     <div
       className="min-h-screen flex flex-col overflow-x-hidden selection:bg-[#f91814] selection:text-white"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", backgroundColor: '#ffffff' }}
+      style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}
     >
       <style>{KEYFRAMES}</style>
 
@@ -196,13 +196,11 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
         <nav
           ref={navRef}
-          className="flex items-center gap-1 px-2 py-1.5 rounded-full border"
+          className="flex items-center gap-1 px-3 py-2 rounded-full border"
           style={{
-            backgroundColor: 'rgba(255,255,255,0.82)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            borderColor: 'rgba(0,0,0,0.08)',
-            boxShadow: '0 2px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95)',
+            backgroundColor: '#F4EBE1',
+            borderColor: 'rgba(0,0,0,0.1)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           }}
         >
           <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
@@ -479,21 +477,21 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       </section>
 
       {/* ── SECTION 2: HOW IT WORKS ── */}
-      <section id="harnesses" className="py-24" style={{ backgroundColor: '#f8f9fa' }}>
+      <section id="harnesses" className="py-24" style={{ backgroundColor: '#f91814' }}>
         <div className="max-w-6xl mx-auto px-8">
           {/* Header row */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-sm mb-4" style={{ color: '#4a90e2' }}>
+              <div className="inline-flex items-center gap-1.5 text-sm mb-4" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 <iconify-icon icon="solar:shield-check-linear" width="14" />
                 Core Service
               </div>
-              <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#111827', letterSpacing: '-0.02em', maxWidth: '520px' }}>
+              <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#ffffff', letterSpacing: '-0.02em', maxWidth: '520px' }}>
                 Dari Brief Berantakan<br />
-                <span style={{ color: '#9ca3af' }}>Jadi Spec Siap Eksekusi</span>
+                <span style={{ color: 'rgba(255,255,255,0.6)' }}>Jadi Spec Siap Eksekusi</span>
               </h2>
             </div>
-            <p className="text-base leading-relaxed md:max-w-xs" style={{ color: '#6b7280' }}>
+            <p className="text-base leading-relaxed md:max-w-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>
               Tiga langkah sederhana — dari input kasar klien sampai spec yang langsung bisa dijalankan AI agent lo.
             </p>
           </div>
@@ -529,7 +527,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               <div
                 key={card.title}
                 className="flex flex-col rounded-2xl p-5 border"
-                style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
+                style={{ backgroundColor: 'rgba(0,0,0,0.15)', borderColor: 'rgba(255,255,255,0.1)' }}
               >
                 {/* icon — large, top-left, square rounded */}
                 <div
@@ -538,8 +536,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 >
                   <iconify-icon icon={card.icon} width="24" style={{ color: '#ffffff' }} />
                 </div>
-                <h3 className="font-bold text-base mb-2" style={{ color: '#111827' }}>{card.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#6b7280' }}>{card.desc}</p>
+                <h3 className="font-bold text-base mb-2" style={{ color: '#ffffff' }}>{card.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{card.desc}</p>
               </div>
             ))}
           </div>
@@ -549,7 +547,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
 
       {/* ── SECTION 4: PIPELINE — split: feature list left + UI preview right ── */}
-      <section id="pipeline" className="py-28" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
+      <section id="pipeline" className="py-28" style={{ backgroundColor: '#000000' }}>
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
@@ -560,11 +558,11 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               </p>
               <h2
                 className="font-medium leading-[0.95] tracking-tight mb-6"
-                style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', color: '#0a0a0a' }}
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', color: '#ffffff' }}
               >
                 Feed Your<br />Pipeline.
               </h2>
-              <p className="text-base leading-relaxed mb-10" style={{ color: '#6b7280', maxWidth: '420px' }}>
+              <p className="text-base leading-relaxed mb-10" style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '420px' }}>
                 SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute. The spec closes that gap.
               </p>
 
@@ -695,7 +693,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
 
       {/* ── SECTION 8: FAQ ── */}
-      <section id="faq" className="py-24" style={{ backgroundColor: '#ffffff' }}>
+      <section id="faq" className="py-24" style={{ backgroundColor: '#000000' }}>
         <div className="max-w-5xl mx-auto px-8">
           <div className="text-center mb-14">
             <div className="inline-block px-4 py-2 rounded-full text-sm mb-6" style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb' }}>
@@ -748,16 +746,14 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
         </div>
       </section>
       {/* ── SECTION 7: PRICING ── */}
-      <section id="pricing" className="py-24" style={{ backgroundColor: '#f5f5f5' }}>
+      <section id="pricing" className="py-24" style={{ backgroundColor: '#F4EBE1' }}>
         <div className="max-w-5xl mx-auto px-8">
           <div className="text-center mb-12">
-            <div className="inline-block px-4 py-1.5 rounded-full text-sm mb-5" style={{ backgroundColor: '#e5e7eb', color: '#6b7280' }}>
-              Plans &amp; Pricing
-            </div>
-            <h2 className="font-bold leading-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#111827', letterSpacing: '-0.02em' }}>
-              Harga Simpel,<br />Tanpa Kejutan.
+            <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: '#f91814', fontFamily: "'Bowlby One', system-ui" }}>Pricing</p>
+            <h2 className="font-black leading-none mb-4" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', color: '#000000', letterSpacing: '-0.02em', fontFamily: "'Bowlby One', system-ui" }}>
+              HARGA SIMPEL.<br />TANPA KEJUTAN.
             </h2>
-            <p className="text-base" style={{ color: '#9ca3af' }}>
+            <p className="text-base" style={{ color: '#27272a' }}>
               Pilihan jelas untuk kebutuhan berbeda.
             </p>
           </div>
@@ -774,7 +770,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                   <div
                     className="relative px-5 pt-5 pb-6"
                     style={{
-                      background: 'linear-gradient(160deg, #2d2d2d 0%, #111111 50%, #1a1a1a 100%)',
+                      background: '#000000',
                       minHeight: '160px',
                     }}
                   >
