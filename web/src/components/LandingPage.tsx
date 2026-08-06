@@ -217,7 +217,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
               <div
                 className="relative rounded-xl overflow-hidden shadow-lg"
-                style={{ backgroundColor: '#000000' }}
+                style={{ backgroundColor: '#111113' }}
               >
                 {/* chips */}
                 <div className="flex flex-wrap gap-2 px-5 pt-5 pb-2">
@@ -232,7 +232,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                       key={chip.label}
                       onClick={() => setPrompt(chip.prompt)}
                       className="px-3.5 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-70"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
                     >
                       {chip.label}
                     </button>
@@ -268,13 +268,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
                 <div className="flex items-center justify-between px-4 pb-4 pt-1">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => imageInputRef.current?.click()} title="Attach image" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <button onClick={() => imageInputRef.current?.click()} title="Attach image" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       <iconify-icon icon="solar:gallery-linear" width="16" />
                     </button>
-                    <button onClick={() => fileInputRef.current?.click()} title="Attach file" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <button onClick={() => fileInputRef.current?.click()} title="Attach file" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       <iconify-icon icon="solar:paperclip-linear" width="16" />
                     </button>
-                    <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.2)' }}>⌘↵ to send</span>
+                    <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.5)' }}>⌘↵ to send</span>
                   </div>
                   <button
                     onClick={() => void handleSubmit()}
