@@ -718,6 +718,9 @@ describe("auto-PR OFF pipeline behavior", () => {
     db2.close();
     rmSync(tmpDir2, { recursive: true, force: true });
     repo.cleanup();
+  });
+});
+
 describe("downloadAttachments", () => {
   let tmpDir: string;
 
