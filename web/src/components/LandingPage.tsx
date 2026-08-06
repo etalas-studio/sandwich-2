@@ -574,7 +574,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 <span className="text-base font-bold tracking-tight" style={{ fontFamily: bowlby }}>SANDWICH</span>
               </div>
               <p className="text-sm text-zinc-400 leading-relaxed font-medium">
-                Dari brief berantakan jadi spek siap eksekusi. Dibangun di Etalas untuk tim yang kerja bareng AI.
+                Dari brief berantakan jadi spek siap eksekusi. Untuk tim yang kerja bareng AI.
               </p>
               <div className="flex items-center gap-3 mt-5">
                 {[
