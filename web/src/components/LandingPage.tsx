@@ -179,14 +179,14 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
         </div>
 
         <h1
-          className="text-5xl md:text-7xl leading-none text-white tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
+          className="text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
           style={{ fontFamily: bowlby }}
         >
           SANDWICH
         </h1>
 
         <p
-          className="text-2xl md:text-4xl tracking-tight mt-6 text-white/80"
+          className="text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
           style={{ fontFamily: mousememoirs }}
         >
           Dari brief berantakan jadi spek siap eksekusi
@@ -217,7 +217,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
               <div
                 className="relative rounded-xl overflow-hidden shadow-lg"
-                style={{ backgroundColor: '#18181b' }}
+                style={{ backgroundColor: '#000000' }}
               >
                 {/* chips */}
                 <div className="flex flex-wrap gap-2 px-5 pt-5 pb-2">
