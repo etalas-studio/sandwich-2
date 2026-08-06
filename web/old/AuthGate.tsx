@@ -1,9 +1,7 @@
-import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import SetupForm from './SetupForm'
 import LoginForm from './LoginForm'
 import App from '../App'
-import LandingPage from './LandingPage'
 
 export default function AuthGate() {
   const {
@@ -18,22 +16,8 @@ export default function AuthGate() {
     logout,
   } = useAuth()
 
-  const location = useLocation()
-  const navigate = useNavigate()
-  const isAuthenticated = state.status === 'authenticated'
-
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
-  }
-
-  // Landing page at root — always accessible
-  if (location.pathname === '/') {
-    return (
-      <LandingPage
-        isAuthenticated={isAuthenticated}
-        onGoToApp={() => navigate('/old/tickets')}
-      />
-    )
   }
 
   if (state.status === 'setup_required') {
@@ -56,6 +40,8 @@ export default function AuthGate() {
     )
   }
 
+  // TypeScript can't narrow state to 'authenticated' here even though we
+  // already handled isLoading and the other statuses above.
   const username = state.status === 'authenticated' ? state.username : ''
   return <App username={username} onLogout={logout} />
 }

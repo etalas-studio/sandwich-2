@@ -580,11 +580,11 @@ function AppLayout({ username, onLogout }: AppProps) {
 
           <main className="relative z-10 flex-1 h-full overflow-hidden">
             <Routes>
-              <Route path="/old/overview" element={<OverviewPage />} />
-              <Route path="/old/tickets" element={<TicketsPage />} />
-              <Route path="/old/settings" element={<Settings onPurge={async () => { await fetch('/api/purge', { method: 'POST' }); onLogout(); }} />} />
-              <Route path="/old/integrations" element={<Integrations />} />
-              <Route path="/old" element={<Navigate to="/old/tickets" replace />} />
+              <Route path="/overview" element={<OverviewPage />} />
+              <Route path="/tickets" element={<TicketsPage />} />
+              <Route path="/settings" element={<Settings onPurge={async () => { await fetch('/api/purge', { method: 'POST' }); onLogout(); }} />} />
+              <Route path="/integrations" element={<Integrations />} />
+              <Route path="/" element={<Navigate to="/tickets" replace />} />
             </Routes>
           </main>
         </div>
