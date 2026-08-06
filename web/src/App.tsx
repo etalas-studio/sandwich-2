@@ -15,8 +15,9 @@ import CreateTicketModal from './components/CreateTicketModal'
 import type { CreateTicketData } from './components/CreateTicketModal'
 import EditTicketModal from './components/EditTicketModal'
 import ConfirmDeleteModal from './components/ConfirmDeleteModal'
+import PullTicketsModal from './components/PullTicketsModal'
+import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket } from './api/tickets'
 import type { UpdateTicketData } from './api/tickets'
-import { createTicket as apiCreateTicket, fetchTickets, updateTicket as apiUpdateTicket, deleteTicket as apiDeleteTicket, runTicket, resolveTicket, pullJiraTickets } from './api/tickets'
 import { computeStats } from './types'
 import { ModelProvider, useModelContext } from './contexts/ModelContext'
 import { useIntegrations } from './hooks/useIntegrations'
@@ -265,7 +266,7 @@ function TicketsPage() {
 
   // Delete state
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('list')
 
   const loadTickets = useCallback(async () => {
     try {
@@ -309,19 +310,25 @@ function TicketsPage() {
   const { integrations } = useIntegrations()
   const jiraConnected = integrations.some((i) => i.id === 'jira' && i.connected)
   const [isPulling, setIsPulling] = useState(false)
+  const [showPullModal, setShowPullModal] = useState(false)
 
-  const handlePull = async () => {
+  const handleImportTickets = async (selected: Array<{ key: string }>) => {
     setIsPulling(true)
     try {
-      const result = await pullJiraTickets()
+      const res = await fetch('/api/tickets/pull', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ keys: selected.map((t) => t.key) }),
+      })
+      const result = await res.json() as { ok: boolean; imported: number; skipped: number; error?: string }
       if (result.ok) {
-        toast.success(`Pulled ${result.imported} tickets${result.skipped > 0 ? ` (${result.skipped} skipped)` : ''}`)
+        toast.success(`Imported ${result.imported} tickets${result.skipped > 0 ? ` (${result.skipped} skipped)` : ''}`)
         await loadTickets()
       } else {
-        toast.error(result.error ?? 'Pull failed')
+        toast.error(result.error ?? 'Import failed')
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Pull failed')
+      toast.error(err instanceof Error ? err.message : 'Import failed')
     } finally {
       setIsPulling(false)
     }
@@ -392,8 +399,8 @@ function TicketsPage() {
           <ModelSelector scope="ticket" />
           <button
             className="relative inline-flex group"
-            onClick={handlePull}
-            disabled={isPulling || !jiraConnected}
+            onClick={() => setShowPullModal(true)}
+            disabled={!jiraConnected}
           >
             <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
             <span
@@ -534,6 +541,12 @@ function TicketsPage() {
           onCancel={() => setDeletingKey(null)}
         />
       )}
+
+      <PullTicketsModal
+        open={showPullModal}
+        onClose={() => setShowPullModal(false)}
+        onImport={handleImportTickets}
+      />
     </>
   )
 }

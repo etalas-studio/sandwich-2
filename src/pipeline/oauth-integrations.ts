@@ -523,3 +523,228 @@ export async function pullJiraTickets(projectKey: string): Promise<PullResult> {
 
   return { ok: true, imported, skipped };
 }
+
+export interface JiraIssuePreview {
+  key: string
+  summary: string
+  description: string
+  status: string
+  issueType: string
+  priority: string | null
+  sprint: string | null
+  assignee: string | null
+}
+
+export interface PreviewParams {
+  projectKey: string
+  search?: string
+  status?: string
+  issueType?: string
+  priority?: string
+  assignee?: string
+  sprint?: string
+  startAt?: number
+  maxResults?: number
+}
+
+export async function previewJiraTickets(params: PreviewParams): Promise<{ ok: boolean; issues: JiraIssuePreview[]; total: number; startAt: number; error?: string }> {
+  const token = getOAuthToken("jira");
+  if (!token) return { ok: false, issues: [], total: 0, startAt: 0, error: "Jira not connected" };
+
+  let cloudId: string;
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const sites = (await res.json()) as Array<{ id: string; url: string }> | null;
+    if (!sites || !sites.length)
+      return { ok: false, issues: [], total: 0, startAt: 0, error: "No Jira sites accessible" };
+    cloudId = sites[0]!.id;
+  } catch {
+    return { ok: false, issues: [], total: 0, startAt: 0, error: "Failed to get cloudId" };
+  }
+
+  let issues: Array<Record<string, unknown>>;
+  let total = 0;
+  const startAt = params.startAt ?? 0;
+  const maxResults = params.maxResults ?? 50;
+
+  try {
+    const jqlParts: string[] = [`project=${params.projectKey}`];
+    
+    if (params.status) {
+      jqlParts.push(`status="${params.status.replace(/"/g, '\\"')}"`);
+    }
+    if (params.issueType) {
+      jqlParts.push(`issuetype="${params.issueType.replace(/"/g, '\\"')}"`);
+    }
+    if (params.priority) {
+      jqlParts.push(`priority="${params.priority.replace(/"/g, '\\"')}"`);
+    }
+    if (params.assignee) {
+      jqlParts.push(`assignee="${params.assignee.replace(/"/g, '\\"')}"`);
+    }
+    if (params.sprint) {
+      jqlParts.push(`sprint="${params.sprint.replace(/"/g, '\\"')}"`);
+    }
+    if (params.search) {
+      const escaped = params.search.replace(/"/g, '\\"');
+      jqlParts.push(`text ~ "${escaped}"`);
+    }
+
+    const jql = jqlParts.join(' AND ') + ' ORDER BY created DESC';
+    const res = await fetch(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=*all`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = (await res.json()) as { issues?: Array<Record<string, unknown>>; total?: number };
+    issues = data.issues ?? [];
+    total = data.total ?? issues.length;
+  } catch (err) {
+    return {
+      ok: false,
+      issues: [],
+      total: 0,
+      startAt,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
+  }
+
+  const previews: JiraIssuePreview[] = issues.map((issue) => {
+    const fields = (issue.fields ?? {}) as Record<string, unknown>;
+    return {
+      key: String(issue.key ?? ""),
+      summary: String(fields.summary ?? ""),
+      description: adfToText(fields.description),
+      status: ((fields.status as Record<string, unknown> | null)?.name ?? "To Do") as string,
+      issueType: ((fields.issuetype as Record<string, unknown> | null)?.name ?? "") as string,
+      priority: (fields.priority as Record<string, unknown> | null)?.name as string | null ?? null,
+      sprint: null,
+      assignee: (fields.assignee as Record<string, unknown> | null)?.displayName as string | null ?? null,
+    }
+  })
+
+  // Extract sprint names
+  issues.forEach((issue, i) => {
+    const fields = (issue.fields ?? {}) as Record<string, unknown>
+    const sprints = fields.customfield_10020 as Array<Record<string, unknown>> | undefined
+    if (sprints?.length) {
+      previews[i]!.sprint = String(sprints[sprints.length - 1]!.name ?? "")
+    }
+  })
+
+  return { ok: true, issues: previews, total, startAt };
+}
+
+export async function pullJiraTicketsFiltered(projectKey: string, keys: string[]): Promise<PullResult> {
+  if (!dbRef) return { ok: false, imported: 0, skipped: 0, error: "DB not initialized" };
+  if (keys.length === 0) return { ok: true, imported: 0, skipped: 0 };
+
+  const token = getOAuthToken("jira");
+  if (!token) return { ok: false, imported: 0, skipped: 0, error: "Jira not connected" };
+
+  let cloudId: string;
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const sites = (await res.json()) as Array<{ id: string; url: string }> | null;
+    if (!sites || !sites.length)
+      return { ok: false, imported: 0, skipped: 0, error: "No Jira sites accessible" };
+    cloudId = sites[0]!.id;
+  } catch {
+    return { ok: false, imported: 0, skipped: 0, error: "Failed to get cloudId" };
+  }
+
+  const keyList = keys.map((k) => `"${k}"`).join(",");
+  let issues: Array<Record<string, unknown>>;
+  try {
+    const jql = `project=${projectKey} AND key IN (${keyList}) ORDER BY created DESC`;
+    const res = await fetch(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=50&fields=*all`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = (await res.json()) as { issues?: Array<Record<string, unknown>> };
+    issues = data.issues ?? [];
+  } catch (err) {
+    return {
+      ok: false,
+      imported: 0,
+      skipped: 0,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
+  }
+
+  const now = new Date().toISOString();
+  let imported = 0;
+  let skipped = 0;
+
+  const insert = dbRef.prepare(
+    `INSERT OR IGNORE INTO tickets (key, summary, description, url, status,
+      issue_type, priority, sprint, story_points, team, assignee, parent_key, attachments,
+      jira_status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'backlog',
+      ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?)`,
+  );
+
+  for (const issue of issues) {
+    const fields = (issue.fields ?? {}) as Record<string, unknown>;
+    const key = String(issue.key ?? "");
+
+    const existing = dbRef.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
+    if (existing) {
+      skipped++;
+      continue;
+    }
+
+    const description = adfToText(fields.description);
+    const summary = String(fields.summary ?? "");
+    const issueUrl = `https://runchise.atlassian.net/browse/${key}`;
+
+    const issueType = (fields.issuetype as Record<string, unknown> | null)?.name ?? null;
+    const priority = (fields.priority as Record<string, unknown> | null)?.name ?? null;
+
+    const sprints = fields.customfield_10020 as Array<Record<string, unknown>> | undefined;
+    const sprint = sprints?.length ? String(sprints[sprints.length - 1]!.name ?? "") : null;
+
+    const storyPoints = fields.customfield_10016 != null ? Number(fields.customfield_10016) : null;
+    const team = (fields.customfield_10001 as Record<string, unknown> | null)?.name ?? null;
+    const assignee = (fields.assignee as Record<string, unknown> | null)?.displayName ?? null;
+    const parent = (fields.parent as Record<string, unknown> | null)?.key ?? null;
+
+    const attachments = Array.isArray(fields.attachment)
+      ? JSON.stringify(
+          (fields.attachment as Array<Record<string, unknown>>).map((a) => ({
+            filename: a.filename,
+            mimeType: a.mimeType,
+            size: a.size,
+            url: a.content,
+          })),
+        )
+      : null;
+
+    const jiraStatus = (fields.status as Record<string, unknown> | null)?.name ?? null;
+
+    insert.run(
+      key,
+      summary || null,
+      description,
+      issueUrl,
+      issueType,
+      priority || null,
+      sprint,
+      storyPoints,
+      team,
+      assignee,
+      parent,
+      attachments,
+      jiraStatus,
+      now,
+      now,
+    );
+    imported++;
+  }
+
+  return { ok: true, imported, skipped };
+}

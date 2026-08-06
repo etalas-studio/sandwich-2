@@ -154,7 +154,7 @@ function MetadataBlock({ ticket }: { ticket: Ticket }) {
   )
 }
 
-function AttachmentsSection({ attachments }: { attachments: AttachmentMeta[] }) {
+function AttachmentsSection({ attachments, ticketKey }: { attachments: AttachmentMeta[]; ticketKey: string }) {
   return (
     <div className="mb-6">
       <div className="section-label mb-2">Attachments ({attachments.length})</div>
@@ -167,7 +167,7 @@ function AttachmentsSection({ attachments }: { attachments: AttachmentMeta[] }) 
           {attachments.map((att, i) => (
             <a
               key={i}
-              href={att.url}
+              href={`/api/tickets/${encodeURIComponent(ticketKey)}/attachments/${i}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors group"
@@ -328,7 +328,7 @@ export default function TicketDetail({ ticket, onClose, onDelete, onRun, onResol
           <MetadataBlock ticket={ticket} />
 
           {/* Attachments */}
-          <AttachmentsSection attachments={parseAttachments(ticket.attachments)} />
+          <AttachmentsSection attachments={parseAttachments(ticket.attachments)} ticketKey={ticket.key} />
 
           {/* Description */}
           <div className="mb-8">
