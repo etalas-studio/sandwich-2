@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createTicket } from '../api/tickets'
+import { saveTicket } from '../lib/localTickets'
 
 interface LandingPageProps {
-  isAuthenticated: boolean
   onGoToApp: () => void
 }
 
@@ -15,7 +14,7 @@ const NAV_SECTIONS = [
   { id: 'features', label: 'Features' },
   { id: 'pipeline', label: 'Pipeline' },
   { id: 'stack', label: 'Stack' },
-  { id: 'testimonials', label: 'Reviews' },
+
   { id: 'pricing', label: 'Pricing' },
   { id: 'faq', label: 'FAQ' },
 ]
@@ -48,87 +47,37 @@ const FAQS = [
 ]
 
 
-
-const FEATURES = [
-  {
-    icon: 'solar:document-add-linear',
-    title: 'Structured briefs in seconds',
-    body: 'Drop anything — a voice note, a Slack thread, a rambling email. SANDWICH extracts the intent and outputs a clean spec your agent can run with.',
-  },
-  {
-    icon: 'solar:chart-linear',
-    title: 'Impact scoring built in',
-    body: 'Every spec gets a priority score based on effort, risk, and business value. No more guessing which ticket to tackle first.',
-  },
-  {
-    icon: 'solar:shield-check-linear',
-    title: 'Confidence validation',
-    body: 'Before your agent touches a line of code, SANDWICH checks the spec for completeness, contradiction, and ambiguity. Catch gaps early.',
-  },
-  {
-    icon: 'solar:refresh-circle-linear',
-    title: 'Repeatable pipeline',
-    body: 'Order → Prep → Recipe is the same every time. Consistent inputs mean consistent outputs — your agent stops hallucinating requirements.',
-  },
-  {
-    icon: 'solar:users-group-rounded-linear',
-    title: 'Built for teams',
-    body: 'Shared ticket queue, role-based access, and audit trail. Everyone sees the same source of truth, from PM to agent.',
-  },
-  {
-    icon: 'solar:plug-circle-linear',
-    title: 'Connects your whole stack',
-    body: 'Native GitHub, Jira, and Bitbucket integrations. Pull tickets in, push PRs out — without leaving the pipeline.',
-  },
-]
-
-const TESTIMONIALS = [
-  {
-    quote: 'We cut our ticket-to-PR time by 60%. The spec quality alone was worth switching.',
-    name: 'Marcus T.',
-    role: 'Engineering Lead, Series A startup',
-  },
-  {
-    quote: "Our client calls used to end with 3 pages of vague notes. Now they end with a SANDWICH spec that actually runs.",
-    name: 'Priya S.',
-    role: 'Freelance AI developer',
-  },
-  {
-    quote: 'I gave it a Loom recording and a Notion link. It came back with a five-point spec that my agent shipped in one pass.',
-    name: 'Dave L.',
-    role: 'Solo founder',
-  },
-]
-
 const PLANS = [
   {
-    name: 'STARTER',
+    name: 'Starter',
     price: 'Rp 50k',
-    sub: '/ bulan',
+    priceNote: '/ bulan',
     desc: 'Buat yang mulai serius.',
     features: [
       'Premium AI model',
       '5 PRD / bulan',
-      'Chat AI: planning PRD, fitur, task (100× / bln)',
+      'Chat dengan AI mengenai planning PRD, fitur, task (100×/bln)',
       'Download Markdown',
       'Generate specs untuk fitur dan task',
     ],
-    cta: 'Mulai sekarang',
+    cta: 'Mulai Sekarang',
     highlight: false,
+    badge: null,
+    oldPrice: null,
   },
   {
-    name: 'PRO',
+    name: 'Pro',
     price: 'Rp 100k',
-    sub: '/ bulan',
+    priceNote: '/ bulan',
     oldPrice: 'Rp 250k',
     desc: 'Unlimited, semua akses.',
     features: [
       'Premium AI model',
       'Unlimited PRD',
-      'Chat AI: planning PRD, fitur, task (unlimited)',
+      'Chat dengan AI mengenai planning PRD, fitur, task (unlimited)',
       'Download Markdown',
-      'Generate specs untuk fitur dan task',
       'Chat langsung dengan Raf Dev untuk bantuan',
+      'Generate specs untuk fitur dan task',
     ],
     cta: 'Upgrade ke Pro',
     highlight: true,
@@ -136,15 +85,42 @@ const PLANS = [
   },
 ]
 
-export default function LandingPage({ isAuthenticated, onGoToApp }: LandingPageProps) {
+interface AttachedFile {
+  name: string
+  type: string
+  dataUrl: string
+}
+
+// Keyframes from axisflow-saas DNA — animationIn + marquee-scroll
+const KEYFRAMES = `
+  @keyframes animationIn {
+    0% { opacity: 0; transform: translateY(24px); filter: blur(6px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+  }
+  @keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .anim-in { animation: animationIn 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+  .anim-in-d1 { animation-delay: 0.06s; }
+  .anim-in-d2 { animation-delay: 0.14s; }
+  .anim-in-d3 { animation-delay: 0.22s; }
+  .anim-in-d4 { animation-delay: 0.32s; }
+  .marquee-track { animation: marquee-scroll 28s linear infinite; }
+`
+
+export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const [prompt, setPrompt] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [attachments, setAttachments] = useState<AttachedFile[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [activeSection, setActiveSection] = useState('hero')
   const navRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
@@ -161,7 +137,6 @@ export default function LandingPage({ isAuthenticated, onGoToApp }: LandingPageP
     return () => observers.forEach((o) => o.disconnect())
   }, [])
 
-  // scroll active nav item into center
   useEffect(() => {
     const nav = navRef.current
     if (!nav) return
@@ -172,19 +147,33 @@ export default function LandingPage({ isAuthenticated, onGoToApp }: LandingPageP
     nav.scrollTo({ left: nav.scrollLeft + itemCenter - navCenter, behavior: 'smooth' })
   }, [activeSection])
 
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    files.forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setAttachments((prev) => [...prev, { name: file.name, type: file.type, dataUrl: reader.result as string }])
+      }
+      reader.readAsDataURL(file)
+    })
+    e.target.value = ''
+  }, [])
+
+  const removeAttachment = (idx: number) => setAttachments((prev) => prev.filter((_, i) => i !== idx))
+
   const handleSubmit = async () => {
     if (!prompt.trim()) return
-    if (!isAuthenticated) {
-      navigate('/login', { state: { pendingPrompt: prompt } })
-      return
-    }
     setIsSubmitting(true)
     setError(null)
     try {
-      const ticket = await createTicket({ id: '', summary: prompt.trim(), description: '', url: '' })
-      navigate(`/old/tickets?selected=${ticket.key}`)
+      const desc = attachments.length
+        ? attachments.map((a) => `[attachment: ${a.name}]`).join('\n')
+        : ''
+      const ticket = await createTicket({ id: '', summary: prompt.trim(), description: desc, url: '' })
+      saveTicket({ id: ticket.key, summary: ticket.summary ?? prompt.trim(), description: desc, createdAt: ticket.createdAt, type: 'general', status: 'processing' })
+      setSubmitted(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create ticket')
+      setError(err instanceof Error ? err.message : 'Gagal mengirim')
       setIsSubmitting(false)
     }
   }
@@ -199,453 +188,800 @@ export default function LandingPage({ isAuthenticated, onGoToApp }: LandingPageP
   return (
     <div
       className="min-h-screen flex flex-col overflow-x-hidden selection:bg-[#f91814] selection:text-white"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", backgroundColor: '#ffffff' }}
     >
+      <style>{KEYFRAMES}</style>
 
-      {/* ── NAV ── */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50 border-b border-black/5 flex items-center px-8 py-3 gap-6"
-        style={{ backgroundColor: '#F4EBE1' }}
-      >
-        {/* Logo */}
-        <span style={{ fontFamily: bowlby, fontSize: '1.1rem', color: '#1a1a1a', letterSpacing: '-0.01em', flexShrink: 0 }}>
-          SANDWICH
-        </span>
-
-        {/* Section nav — centered */}
-        <div
+      {/* ── NAV — glass light, axisflow-style backdrop blur ── */}
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+        <nav
           ref={navRef}
-          className="flex items-center gap-1 flex-1 justify-center overflow-x-auto hide-scrollbar"
-          style={{ scrollbarWidth: 'none' }}
+          className="flex items-center gap-1 px-2 py-1.5 rounded-full border"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            borderColor: 'rgba(0,0,0,0.08)',
+            boxShadow: '0 2px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95)',
+          }}
         >
-          {NAV_SECTIONS.map(({ id, label }) => {
-            const isActive = activeSection === id
-            return (
-              <a
-                key={id}
-                href={`#${id}`}
-                data-active={isActive}
-                onClick={(e) => {
-                  e.preventDefault()
-                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                style={{
-                  backgroundColor: isActive ? '#f91814' : 'transparent',
-                  color: isActive ? '#ffffff' : '#9ca3af',
-                }}
-              >
-                {label}
-              </a>
-            )
-          })}
-        </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
+            <span className="text-white font-black text-[10px]" style={{ fontFamily: bowlby }}>S</span>
+          </div>
 
-        {/* Auth */}
-        <div className="flex items-center gap-4 shrink-0">
-          {isAuthenticated ? (
-            <button onClick={onGoToApp} className="text-sm font-medium transition-opacity hover:opacity-70" style={{ color: '#f91814' }}>
-              Open app →
-            </button>
-          ) : (
-            <>
-              <button onClick={() => navigate('/login')} className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">
-                Sign in
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="text-sm px-4 py-1.5 rounded-full font-medium text-white hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: '#f91814' }}
-              >
-                Get started free
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
+          {[
+            { id: 'features', label: 'Features' },
+            { id: 'harnesses', label: 'How It Works' },
+            { id: 'pricing', label: 'Pricing' },
+            { id: 'faq', label: 'FAQ' },
+          ].map(({ id, label }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              data-active={activeSection === id}
+              onClick={(e) => {
+                e.preventDefault()
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-black"
+              style={{ color: activeSection === id ? '#0a0a0a' : '#6b7280' }}
+            >
+              {label}
+            </a>
+          ))}
 
-      {/* ── SECTION 1: HERO ── cream */}
+          <button
+            onClick={onGoToApp}
+            className="ml-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+            style={{
+              backgroundColor: '#0a0a0a',
+              color: '#ffffff',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.18)',
+            }}
+          >
+            Get Started
+          </button>
+        </nav>
+      </div>
+
+      {/* ── SECTION 1: HERO ── */}
       <section
         id="hero"
-        className="relative pt-52 pb-24 flex flex-col items-center text-center px-6 overflow-hidden"
-        style={{ backgroundColor: '#F4EBE1' }}
+        className="relative flex flex-col items-center text-center px-6 overflow-hidden"
+        style={{ backgroundColor: '#fafafa', minHeight: '100vh', paddingTop: '120px', paddingBottom: '120px' }}
       >
-        <div className="relative z-10 flex flex-col items-center">
-          <h1 style={{ fontFamily: bowlby, fontSize: 'clamp(4rem, 12vw, 8rem)', color: '#f91814', lineHeight: 1, letterSpacing: '-0.02em' }}>
-            SANDWICH
-          </h1>
-          <p className="mt-8 mb-10" style={{ fontFamily: bowlby, fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', color: '#F4A804', letterSpacing: '-0.01em' }}>
-            Transform messy client input into development-ready specs
-          </p>
+        {/* floating document cards — softer shadows */}
+        <div className="absolute hidden lg:block" style={{ top: '110px', left: '5%', transform: 'rotate(-2deg)' }}>
+          <div className="w-44 rounded-xl border p-3 text-left" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#f91814' }} />
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: '#f91814' }}>PRD</span>
+            </div>
+            <div className="h-1.5 rounded mb-1.5 w-full" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="h-1.5 rounded mb-1.5 w-4/5" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="h-1.5 rounded mb-2 w-3/4" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="text-[8px] font-medium" style={{ color: '#9ca3af' }}>User stories · Acceptance criteria</div>
+          </div>
+        </div>
 
-          {/* Sandwich image */}
-          <div className="relative w-72 h-72 flex items-center justify-center">
-            <svg className="absolute top-4 right-8 w-8 h-8" viewBox="0 0 32 32" fill="none">
-              <path d="M16 2L17.5 14L16 26M2 16L14 17.5L26 16" stroke="#f91814" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-            <svg className="absolute top-6 right-2 w-5 h-5" viewBox="0 0 32 32" fill="none">
-              <path d="M16 4L17 14L16 24M4 16L14 17L24 16" stroke="#f91814" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <svg className="absolute bottom-8 left-4 w-10 h-6" viewBox="0 0 40 24" fill="none">
-              <path d="M4 20 Q10 4 20 8 Q30 12 36 4" stroke="#f91814" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-            <svg className="absolute bottom-12 right-4 w-8 h-5" viewBox="0 0 32 20" fill="none">
-              <path d="M28 16 Q22 2 14 6 Q8 10 4 4" stroke="#f91814" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-            <img
-              src="https://etalasaccounts.github.io/sandwich/public/sandwich.webp"
-              alt="Sandwich"
-              className="w-60 h-60 object-contain drop-shadow-xl"
-            />
+        <div className="absolute hidden lg:block" style={{ top: '120px', right: '5%', transform: 'rotate(2deg)' }}>
+          <div className="w-44 rounded-xl border p-3 text-left" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#f97316' }} />
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: '#f97316' }}>Quotation</span>
+            </div>
+            <div className="flex justify-between mb-1">
+              <div className="h-1.5 rounded w-2/5" style={{ backgroundColor: '#f3f4f6' }} />
+              <div className="h-1.5 rounded w-1/4" style={{ backgroundColor: '#fef3c7' }} />
+            </div>
+            <div className="flex justify-between mb-2">
+              <div className="h-1.5 rounded w-3/5" style={{ backgroundColor: '#f3f4f6' }} />
+              <div className="h-1.5 rounded w-1/4" style={{ backgroundColor: '#fef3c7' }} />
+            </div>
+            <div className="text-[8px] font-medium" style={{ color: '#9ca3af' }}>Total · Rp 24,500,000</div>
+          </div>
+        </div>
+
+        <div className="absolute hidden lg:block" style={{ top: '42%', left: '3%' }}>
+          <div className="w-40 rounded-xl border p-3 text-left" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#16a34a' }} />
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: '#16a34a' }}>MOM</span>
+            </div>
+            <div className="h-1.5 rounded mb-1 w-full" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="h-1.5 rounded mb-1 w-3/4" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="text-[8px] font-medium mt-1" style={{ color: '#9ca3af' }}>Action items · 4 tasks</div>
+          </div>
+        </div>
+
+        <div className="absolute hidden lg:block" style={{ top: '42%', right: '3%' }}>
+          <div className="w-40 rounded-xl border p-3 text-left" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#6366f1' }} />
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: '#6366f1' }}>Brief Klien</span>
+            </div>
+            <div className="h-1.5 rounded mb-1 w-full" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="h-1.5 rounded mb-1 w-4/5" style={{ backgroundColor: '#f3f4f6' }} />
+            <div className="text-[8px] font-medium mt-1" style={{ color: '#9ca3af' }}>Scope · Timeline · Budget</div>
+          </div>
+        </div>
+
+        {/* center-top logo mark */}
+        <div className="absolute hidden lg:block" style={{ top: '88px', left: '50%', transform: 'translateX(-50%)' }}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#f91814', boxShadow: '0 4px 16px rgba(249,24,20,0.22)' }}>
+            <span className="text-white font-black text-lg" style={{ fontFamily: bowlby }}>S</span>
+          </div>
+        </div>
+
+        {/* dashed SVG connectors — lighter */}
+        <svg className="absolute inset-0 w-full h-full hidden lg:block pointer-events-none" style={{ zIndex: 0 }}>
+          <line x1="50%" y1="136" x2="22%" y2="55%" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5 5" />
+          <line x1="50%" y1="136" x2="78%" y2="55%" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5 5" />
+          <line x1="50%" y1="136" x2="10%" y2="42%" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5 5" />
+          <line x1="50%" y1="136" x2="90%" y2="42%" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5 5" />
+          <circle cx="22%" cy="55%" r="3" fill="#e5e7eb" />
+          <circle cx="78%" cy="55%" r="3" fill="#e5e7eb" />
+          <circle cx="10%" cy="42%" r="3" fill="#e5e7eb" />
+          <circle cx="90%" cy="42%" r="3" fill="#e5e7eb" />
+        </svg>
+
+        <div className="relative z-10 flex flex-col items-center w-full mt-16">
+          {/* badge — animationIn delay 0 */}
+          <div
+            className="anim-in anim-in-d1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-8 text-sm"
+            style={{ borderColor: '#e5e7eb', color: '#6b7280', backgroundColor: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#f91814' }} />
+            Dipakai oleh tim produk di Indonesia
           </div>
 
-          <div className="w-full max-w-xl mt-10">
-            <div className="rounded-xl overflow-hidden shadow-xl" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe what you need built…"
-                rows={3}
-                className="w-full resize-none bg-transparent text-zinc-800 text-sm outline-none px-5 pt-4 pb-2 leading-relaxed placeholder:text-zinc-300 font-mono"
-              />
-              <div className="flex items-center justify-between px-4 pb-4 pt-1">
-                <span className="text-xs text-zinc-300 font-mono">⌘↵ to send</span>
+          {/* headline — lifted to clamp(3.5rem, 7vw, 6rem) — meets text-5xl+ floor */}
+          <h1
+            className="anim-in anim-in-d2 font-medium leading-[0.95] tracking-tight mb-6"
+            style={{ fontSize: 'clamp(2.8rem, 5.5vw, 4.5rem)', color: '#0a0a0a', maxWidth: '700px' }}
+          >
+            Dari brief berantakan<br />jadi spek siap eksekusi
+          </h1>
+
+          <p className="anim-in anim-in-d3 mb-10 text-lg leading-relaxed" style={{ color: '#6b7280', maxWidth: '520px' }}>
+            Sandwich AI mengubah input klien kasar menjadi{' '}
+            <span className="font-medium" style={{ color: '#f91814' }}>PRD</span>,{' '}
+            <span className="font-medium" style={{ color: '#ea580c' }}>prototype brief</span>,{' '}
+            <span className="font-medium" style={{ color: '#16a34a' }}>MOM</span>{' '}
+            — langsung siap dikerjakan tim.
+          </p>
+
+          <div className="anim-in anim-in-d4 w-full max-w-xl mt-4">
+            {submitted ? (
+              <div className="rounded-2xl p-8 text-center border" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f91814' }}>
+                  <iconify-icon icon="solar:check-circle-bold" width="24" style={{ color: '#ffffff' }} />
+                </div>
+                <p className="font-semibold text-zinc-900 mb-1">Ticket dibuat!</p>
+                <p className="text-sm text-zinc-400 mb-5">Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.</p>
                 <button
-                  onClick={() => void handleSubmit()}
-                  disabled={!prompt.trim() || isSubmitting}
-                  className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium text-white transition-all disabled:opacity-30 hover:opacity-80"
-                  style={{ backgroundColor: '#f91814' }}
+                  onClick={onGoToApp}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white mx-auto hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: '#0a0a0a' }}
                 >
-                  {isSubmitting
-                    ? <iconify-icon icon="solar:refresh-linear" width="13" className="animate-spin" />
-                    : <iconify-icon icon="solar:arrow-right-linear" width="13" />
-                  }
-                  {isSubmitting ? 'Creating…' : 'Send to pipeline'}
+                  Lihat hasil
+                  <iconify-icon icon="solar:arrow-right-linear" width="14" />
                 </button>
               </div>
-            </div>
-            {error && <p className="mt-2 text-xs text-center" style={{ color: '#f91814' }}>{error}</p>}
-          </div>
-        </div>
-      </section>
+            ) : (
+              <>
+                <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+                <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
 
-
-      {/* ── SECTION 2: MESSY INPUT. CLEAN SPEC. ── red */}
-      <section id="harnesses" className="py-28 relative overflow-hidden" style={{ backgroundColor: '#f91814' }}>
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest text-white/60 mb-4 uppercase" style={{ fontFamily: bowlby }}>
-              The Harnesses
-            </p>
-            <h2 className="text-white leading-none mb-6" style={{ fontFamily: bowlby, fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', letterSpacing: '-0.02em' }}>
-              MESSY INPUT. CLEAN OUTPUT.
-            </h2>
-            <p className="text-white/80 text-base max-w-lg mx-auto leading-relaxed">
-              Ceritain project lo, kasih brief kasar, atau paste format dari klien — SANDWICH ubah semuanya
-              jadi PRD lengkap, prototype, MOM, sampai quotation yang siap kirim.
-            </p>
-          </div>
-
-          <div className="flex flex-row items-center justify-center gap-10 mt-4">
-            <div className="flex flex-col gap-6 items-start text-xs uppercase tracking-widest font-semibold text-white">
-              {[
-                { label: 'PRD Lengkap', icon: 'solar:document-add-linear' },
-                { label: 'Prototype Brief', icon: 'solar:widget-linear' },
-                { label: 'MOM / Notulen', icon: 'solar:notes-linear' },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <iconify-icon icon={item.icon} width="16" />
-                  {item.label}
-                </div>
-              ))}
-            </div>
-            <div className="w-56 h-56 flex items-center justify-center shrink-0">
-              <img src="https://etalasaccounts.github.io/sandwich/public/spec-illustration.webp" alt="Spec" className="w-full h-full object-contain drop-shadow-2xl" />
-            </div>
-            <div className="flex flex-col gap-6 items-start text-xs uppercase tracking-widest font-semibold text-white">
-              {[
-                { label: 'Quotation Klien', icon: 'solar:dollar-minimalistic-linear' },
-                { label: 'Format Brief Klien', icon: 'solar:letter-linear' },
-                { label: 'Specs Fitur & Task', icon: 'solar:checklist-linear' },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <iconify-icon icon={item.icon} width="16" />
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 3: FEATURES ── cream */}
-      <section id="features" className="py-28" style={{ backgroundColor: '#F4EBE1' }}>
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
-              Why it works
-            </p>
-            <h2 className="text-black leading-none" style={{ fontFamily: bowlby, fontSize: 'clamp(2.5rem, 6vw, 4rem)', letterSpacing: '-0.02em' }}>
-              BUILT FOR THE<br />WAY AGENTS WORK
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="flex flex-col gap-4 p-6 rounded-2xl bg-white shadow-sm border border-black/5 hover:-translate-y-1 transition-transform duration-200">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#f91814' }}>
-                  <iconify-icon icon={f.icon} width="20" style={{ color: '#ffffff' }} />
-                </div>
-                <p className="font-semibold text-zinc-900 text-sm">{f.title}</p>
-                <p className="text-sm text-zinc-500 leading-relaxed">{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 4: FEED YOUR PIPELINE ── black */}
-      <section id="pipeline" className="py-28" style={{ backgroundColor: '#000000' }}>
-        <div className="max-w-3xl mx-auto px-8">
-          <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
-            Got a Spec?
-          </p>
-          <h2 className="text-white leading-none mb-8" style={{ fontFamily: bowlby, fontSize: 'clamp(3rem, 9vw, 6rem)', letterSpacing: '-0.02em' }}>
-            FEED YOUR<br />PIPELINE.
-          </h2>
-          <p className="text-white/60 text-base leading-relaxed max-w-xl mb-10">
-            SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute.
-            The spec closes that gap. What you do with it next depends on your stack — but if you're looking for a starting point,
-            we recommend{' '}
-            <a href="https://superpowers.obra.studio" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-white/90 transition-colors">
-              Superpowers by Obra
-            </a>. It's what we reach for.
-          </p>
-          <div className="flex items-center gap-4 text-sm font-semibold tracking-widest">
-            <span className="text-white">SANDWICH</span>
-            <span className="text-white/30">→</span>
-            <span className="text-white/40">SUPERPOWERS</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 5: WHAT'S IN THE STACK ── cream */}
-      <section id="stack" className="py-28" style={{ backgroundColor: '#F4EBE1' }}>
-        <div className="max-w-6xl mx-auto px-8 flex flex-col items-center text-center">
-          <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
-            Ingredients
-          </p>
-          <h2 className="text-black leading-none mb-4" style={{ fontFamily: bowlby, fontSize: 'clamp(2.5rem, 7vw, 5rem)', letterSpacing: '-0.02em' }}>
-            WHAT'S IN THE STACK
-          </h2>
-          <p className="text-zinc-500 text-base max-w-md mb-20 leading-relaxed">
-            Four layers, each with a job. Together they take raw client chaos and hand your agent a spec it can actually execute.
-          </p>
-          <div className="flex flex-row justify-center items-start gap-16 md:gap-24">
-            {[
-              { img: 'https://www.cravburgers.shop/img-webp/tomato.webp', label: '/ ORDER', desc: 'Structures the brief', offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/cheese.webp', label: '/ PREP', desc: 'Scores impact', offset: true },
-              { img: 'https://www.cravburgers.shop/img-webp/meat.webp', label: '/ RECIPE', desc: 'Writes the spec', offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/lettuce.webp', label: '/ VALIDATE', desc: 'Checks confidence', offset: true },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center text-center w-36" style={{ transform: item.offset ? 'translateY(2rem)' : 'none' }}>
-                <img src={item.img} alt={item.label} className="w-28 h-28 object-contain mb-6 drop-shadow-lg" />
-                <p className="text-sm font-bold text-black tracking-tight mb-1">{item.label}</p>
-                <p className="text-xs text-zinc-500">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 6: TESTIMONIALS ── yellow */}
-      <section id="testimonials" className="py-28" style={{ backgroundColor: '#F9CD25' }}>
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ fontFamily: bowlby, color: 'rgba(0,0,0,0.4)' }}>
-              What they say
-            </p>
-            <h2 className="text-black leading-none" style={{ fontFamily: bowlby, fontSize: 'clamp(2.5rem, 6vw, 4rem)', letterSpacing: '-0.02em' }}>
-              TEAMS THAT SHIP FASTER
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="flex flex-col gap-4 p-7 rounded-2xl bg-white shadow-sm">
-                <iconify-icon icon="solar:quote-up-bold" width="24" style={{ color: '#f91814' }} />
-                <p className="text-sm text-zinc-700 leading-relaxed flex-1">"{t.quote}"</p>
-                <div>
-                  <p className="text-sm font-semibold text-zinc-900">{t.name}</p>
-                  <p className="text-xs text-zinc-400">{t.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 7: PRICING ── black */}
-      <section id="pricing" className="py-28" style={{ backgroundColor: '#000000' }}>
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
-              Pricing
-            </p>
-            <h2 className="text-white leading-none mb-4" style={{ fontFamily: bowlby, fontSize: 'clamp(2.5rem, 7vw, 5rem)', letterSpacing: '-0.02em' }}>
-              SIMPLE PRICING.<br />NO SURPRISES.
-            </h2>
-            <p className="text-white/50 text-base">Start free. Scale when you're ready.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className="relative flex flex-col rounded-2xl p-8 border transition-transform duration-200 hover:-translate-y-1"
-                style={{
-                  backgroundColor: plan.highlight ? '#f91814' : '#111111',
-                  borderColor: plan.highlight ? '#f91814' : 'rgba(255,255,255,0.08)',
-                }}
-              >
-                {plan.badge && (
-                  <span
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap"
-                    style={{ backgroundColor: '#F9CD25', color: '#000000' }}
-                  >
-                    {plan.badge}
-                  </span>
-                )}
-
-                <p className="text-xs font-semibold tracking-widest mb-1" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#f91814', fontFamily: bowlby }}>
-                  {plan.name}
-                </p>
-                <div className="mb-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-white whitespace-nowrap" style={{ fontFamily: bowlby, fontSize: '2.8rem', lineHeight: 1 }}>{plan.price}</span>
-                    <span className="text-sm whitespace-nowrap" style={{ color: plan.highlight ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.4)' }}>{plan.sub}</span>
-                  </div>
-                  {'oldPrice' in plan && plan.oldPrice && (
-                    <span className="line-through" style={{ fontSize: '1.1rem', color: plan.highlight ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.25)' }}>{plan.oldPrice}</span>
-                  )}
-                </div>
-                <p className="text-sm mb-8" style={{ color: plan.highlight ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)' }}>
-                  {plan.desc}
-                </p>
-
-                <ul className="flex flex-col gap-3 mb-10 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.highlight ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.65)' }}>
-                      <iconify-icon
-                        icon="solar:check-circle-linear"
-                        width="16"
-                        style={{ color: plan.highlight ? '#ffffff' : '#f91814', marginTop: '1px', flexShrink: 0 }}
-                      />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => navigate('/login')}
-                  className="w-full py-3 rounded-xl text-sm font-semibold tracking-wide transition-opacity hover:opacity-90"
+                {/* SANDWICH AI tag — stacks behind from top */}
+                <div
+                  className="flex items-center gap-3 px-5 py-3 rounded-2xl relative z-0 -mb-8"
                   style={{
-                    backgroundColor: plan.highlight ? '#ffffff' : '#f91814',
-                    color: plan.highlight ? '#f91814' : '#ffffff',
+                    background: 'linear-gradient(135deg, rgba(245,243,255,0.9) 0%, rgba(240,248,255,0.9) 100%)',
+                    border: '1px solid rgba(200,195,255,0.4)',
                   }}
                 >
-                  {plan.cta}
-                </button>
-              </div>
-            ))}
-          </div>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #6c63ff, #4a90d9)' }}>
+                    <iconify-icon icon="solar:magic-stick-3-bold" width="14" style={{ color: '#ffffff' }} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold tracking-wide" style={{ color: '#111827' }}>SANDWICH AI</p>
+                    <p className="text-[11px]" style={{ color: '#6b7280' }}>Powered by Claude & GPT</p>
+                  </div>
+                </div>
 
-          {/* Enterprise row */}
-          <div
-            className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6 p-10 rounded-2xl"
-            style={{ backgroundColor: '#F4EBE1' }}
-          >
-            <div>
-              <p className="font-bold text-lg mb-1" style={{ color: '#1a1a1a', fontFamily: bowlby, letterSpacing: '-0.01em' }}>ENTERPRISE</p>
-              <p className="text-sm text-zinc-500">Custom seats, SLA, SSO, dedicated support, on-prem option. Let's talk.</p>
-            </div>
-            <a
-              href="mailto:hello@etalas.studio"
-              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#f91814' }}
-            >
-              Contact sales
-              <iconify-icon icon="solar:arrow-right-linear" width="14" />
-            </a>
+                {/* prompt card */}
+                <div
+                  className="rounded-2xl overflow-hidden relative z-10"
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  {/* chips row — top of card */}
+                  <div className="flex flex-wrap gap-2 px-5 pt-5 pb-2">
+                    {[
+                      { label: 'PRD', prompt: 'Buatkan PRD lengkap untuk fitur ' },
+                      { label: 'MOM', prompt: 'Buatkan notulen rapat dari transcript berikut: ' },
+                      { label: 'Quotation', prompt: 'Buatkan quotation untuk project ' },
+                      { label: 'Prototype', prompt: 'Buatkan prototype brief untuk ' },
+                      { label: 'Specs', prompt: 'Breakdown specs dan task untuk fitur ' },
+                    ].map((chip) => (
+                      <button
+                        key={chip.label}
+                        onClick={() => setPrompt(chip.prompt)}
+                        className="px-3.5 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-70"
+                        style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb' }}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* textarea */}
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ceritain project atau brief kamu di sini…"
+                    rows={4}
+                    className="w-full resize-none bg-transparent text-zinc-800 text-sm outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-zinc-300"
+                  />
+
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 px-5 pb-3">
+                      {attachments.map((a, i) => (
+                        <div key={i} className="relative group flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: '#f4f4f5', color: '#3f3f46' }}>
+                          {a.type.startsWith('image/') ? (
+                            <img src={a.dataUrl} className="w-5 h-5 rounded object-cover" />
+                          ) : (
+                            <iconify-icon icon="solar:document-linear" width="14" />
+                          )}
+                          <span className="max-w-[120px] truncate">{a.name}</span>
+                          <button onClick={() => removeAttachment(i)} className="ml-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                            <iconify-icon icon="solar:close-circle-bold" width="13" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* bottom bar */}
+                  <div className="flex items-center justify-between px-4 pb-4 pt-1">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => imageInputRef.current?.click()} title="Attach image" className="p-1.5 rounded-lg transition-colors hover:bg-zinc-100" style={{ color: '#9ca3af' }}>
+                        <iconify-icon icon="solar:gallery-linear" width="16" />
+                      </button>
+                      <button onClick={() => fileInputRef.current?.click()} title="Attach file" className="p-1.5 rounded-lg transition-colors hover:bg-zinc-100" style={{ color: '#9ca3af' }}>
+                        <iconify-icon icon="solar:paperclip-linear" width="16" />
+                      </button>
+                      <span className="text-xs ml-1" style={{ color: '#d4d4d8' }}>⌘↵ to send</span>
+                    </div>
+                    <button
+                      onClick={() => void handleSubmit()}
+                      disabled={isSubmitting}
+                      className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, #6c63ff, #4a90d9)' }}
+                    >
+                      {isSubmitting
+                        ? <iconify-icon icon="solar:refresh-linear" width="15" style={{ color: '#ffffff' }} className="animate-spin" />
+                        : <iconify-icon icon="solar:arrow-up-linear" width="15" style={{ color: '#ffffff' }} />}
+                    </button>
+                  </div>
+                </div>
+
+{error && <p className="mt-2 text-xs text-center" style={{ color: '#f91814' }}>{error}</p>}
+              </>
+            )}
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 8: GOT QUESTIONS ── black */}
-      <section id="faq" className="py-20" style={{ backgroundColor: '#000000', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="max-w-3xl mx-auto px-8">
-          <div className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
-              Shout Out
+      {/* ── SECTION 2: HOW IT WORKS ── */}
+      <section id="harnesses" className="py-24" style={{ backgroundColor: '#f8f9fa' }}>
+        <div className="max-w-6xl mx-auto px-8">
+          {/* Header row */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-sm mb-4" style={{ color: '#4a90e2' }}>
+                <iconify-icon icon="solar:shield-check-linear" width="14" />
+                Core Service
+              </div>
+              <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#111827', letterSpacing: '-0.02em', maxWidth: '520px' }}>
+                Dari Brief Berantakan<br />
+                <span style={{ color: '#9ca3af' }}>Jadi Spec Siap Eksekusi</span>
+              </h2>
+            </div>
+            <p className="text-base leading-relaxed md:max-w-xs" style={{ color: '#6b7280' }}>
+              Tiga langkah sederhana — dari input kasar klien sampai spec yang langsung bisa dijalankan AI agent lo.
             </p>
-            <h2 className="text-white leading-none" style={{ fontFamily: bowlby, fontSize: 'clamp(3rem, 9vw, 6rem)', letterSpacing: '-0.02em' }}>
-              GOT QUESTIONS?
-            </h2>
           </div>
 
-          <div className="flex flex-col divide-y divide-zinc-800">
+          {/* 4-col cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                icon: 'solar:inbox-in-linear',
+                bg: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                title: 'Kasih Brief',
+                desc: 'Ceritain project dalam bahasa apapun — kasar, campur, atau copy-paste dari klien langsung.',
+              },
+              {
+                icon: 'solar:magic-stick-3-linear',
+                bg: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
+                title: 'SANDWICH Proses',
+                desc: 'AI parse brief lo, identifikasi kebutuhan, dan strukturkan jadi format spec yang konsisten.',
+              },
+              {
+                icon: 'solar:document-text-linear',
+                bg: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+                title: 'Dapat Dokumen',
+                desc: 'PRD, prototype brief, MOM, atau quotation — siap pakai tanpa editing ulang.',
+              },
+              {
+                icon: 'solar:rocket-linear',
+                bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                title: 'AI Agent Eksekusi',
+                desc: 'Spec langsung bisa dijalankan Claude Code, Pi, atau Codex — no guessing, pure execution.',
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="flex flex-col rounded-2xl p-5 border"
+                style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
+              >
+                {/* icon — large, top-left, square rounded */}
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-10"
+                  style={{ background: card.bg }}
+                >
+                  <iconify-icon icon={card.icon} width="24" style={{ color: '#ffffff' }} />
+                </div>
+                <h3 className="font-bold text-base mb-2" style={{ color: '#111827' }}>{card.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: '#6b7280' }}>{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* ── SECTION 4: PIPELINE — split: feature list left + UI preview right ── */}
+      <section id="pipeline" className="py-28" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            {/* LEFT — feature list */}
+            <div>
+              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#f91814', fontFamily: bowlby }}>
+                Got a Spec?
+              </p>
+              <h2
+                className="font-medium leading-[0.95] tracking-tight mb-6"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', color: '#0a0a0a' }}
+              >
+                Feed Your<br />Pipeline.
+              </h2>
+              <p className="text-base leading-relaxed mb-10" style={{ color: '#6b7280', maxWidth: '420px' }}>
+                SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute. The spec closes that gap.
+              </p>
+
+              <div className="flex flex-col gap-5">
+                {[
+                  {
+                    icon: 'solar:chart-2-linear',
+                    color: '#f97316',
+                    title: 'Drive Revenue With Confidence',
+                    desc: 'Get real-time insights on your pipeline operations. Track delivery rates, spec quality scores, and agent performance to make confident decisions.',
+                  },
+                  {
+                    icon: 'solar:layers-linear',
+                    color: '#6366f1',
+                    title: 'All-In-One, Yet Exceptionally Simple',
+                    desc: 'From brief intake to validated spec in one flow. No config, no toolchain — paste a brief and get output your agent can act on immediately.',
+                  },
+                  {
+                    icon: 'solar:shield-check-linear',
+                    color: '#16a34a',
+                    title: 'Reliable, Secure, And Future-Ready',
+                    desc: 'Built on a deterministic pipeline that checks its own confidence. If a spec is weak, SANDWICH flags it before your agent wastes a cycle.',
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="flex items-start gap-4">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${item.color}18`, border: `1.5px solid ${item.color}28` }}
+                    >
+                      <iconify-icon icon={item.icon} width="18" style={{ color: item.color }} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm mb-1" style={{ color: '#0a0a0a' }}>{item.title}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: '#6b7280' }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — mock dashboard UI */}
+            <div className="relative flex items-center justify-center">
+              {/* green ambient glow */}
+              <div style={{ position: 'absolute', inset: '-20px', background: 'radial-gradient(ellipse 80% 70% at 55% 45%, rgba(134,239,172,0.12) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
+
+              <div
+                className="relative w-full rounded-3xl overflow-hidden"
+                style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', boxShadow: '0 24px 64px rgba(0,0,0,0.07)', maxWidth: '460px', zIndex: 1 }}
+              >
+                {/* titlebar */}
+                <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#16a34a' }} />
+                  <div className="flex-1 mx-3 h-5 rounded-md" style={{ backgroundColor: '#f3f4f6' }} />
+                </div>
+
+                <div className="p-5 flex flex-col gap-4">
+                  {/* gauge card */}
+                  <div className="rounded-2xl p-5 bg-white border" style={{ borderColor: '#e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold" style={{ color: '#0a0a0a' }}>Spec Quality Rate</p>
+                      <iconify-icon icon="solar:menu-dots-bold" width="16" style={{ color: '#9ca3af' }} />
+                    </div>
+                    <div className="flex justify-center">
+                      <svg width="160" height="92" viewBox="0 0 160 92">
+                        <path d="M 16 86 A 64 64 0 0 1 144 86" fill="none" stroke="#f3f4f6" strokeWidth="12" strokeLinecap="round" />
+                        <path d="M 16 86 A 64 64 0 0 1 133 40" fill="none" stroke="#16a34a" strokeWidth="12" strokeLinecap="round" />
+                        <text x="80" y="78" textAnchor="middle" fontSize="22" fontWeight="700" fill="#0a0a0a">87%</text>
+                        <text x="80" y="90" textAnchor="middle" fontSize="8" fill="#9ca3af">Confidence Score</text>
+                      </svg>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}>+4.2%</span>
+                      <span className="text-xs" style={{ color: '#9ca3af' }}>vs last week</span>
+                    </div>
+                  </div>
+
+                  {/* stats row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl p-4 bg-white border" style={{ borderColor: '#e5e7eb' }}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs" style={{ color: '#9ca3af' }}>Specs Generated</p>
+                        <iconify-icon icon="solar:graph-up-linear" width="13" style={{ color: '#16a34a' }} />
+                      </div>
+                      <p className="text-xl font-bold mb-1" style={{ color: '#0a0a0a' }}>2,543</p>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}>+4.2%</span>
+                    </div>
+                    <div className="rounded-xl p-4 bg-white border" style={{ borderColor: '#e5e7eb' }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs" style={{ color: '#9ca3af' }}>Total Value</p>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f91814' }}>
+                          <iconify-icon icon="solar:dollar-minimalistic-linear" width="10" style={{ color: '#fff' }} />
+                        </div>
+                      </div>
+                      <p className="text-lg font-bold leading-tight mb-1" style={{ color: '#0a0a0a' }}>Rp 68,8jt</p>
+                      <span className="text-[9px]" style={{ color: '#16a34a' }}>+2.0% vs Last Week</span>
+                    </div>
+                  </div>
+
+                  {/* pipeline progress bars */}
+                  <div className="rounded-xl p-4 bg-white border" style={{ borderColor: '#e5e7eb' }}>
+                    <p className="text-xs font-semibold mb-3" style={{ color: '#6b7280' }}>Active Pipeline</p>
+                    <div className="flex gap-2">
+                      {[
+                        { label: 'ORDER', color: '#f91814', pct: '100%' },
+                        { label: 'PREP', color: '#f97316', pct: '87%' },
+                        { label: 'RECIPE', color: '#16a34a', pct: '72%' },
+                        { label: 'VALIDATE', color: '#6366f1', pct: '65%' },
+                      ].map((s) => (
+                        <div key={s.label} className="flex-1 flex flex-col items-center gap-1.5">
+                          <div className="w-full rounded-full overflow-hidden" style={{ height: '4px', backgroundColor: '#f3f4f6' }}>
+                            <div className="h-full rounded-full" style={{ width: s.pct, backgroundColor: s.color }} />
+                          </div>
+                          <span className="text-[8px] font-semibold tracking-wider" style={{ color: '#9ca3af' }}>{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* ── SECTION 8: FAQ ── */}
+      <section id="faq" className="py-24" style={{ backgroundColor: '#ffffff' }}>
+        <div className="max-w-5xl mx-auto px-8">
+          <div className="text-center mb-14">
+            <div className="inline-block px-4 py-2 rounded-full text-sm mb-6" style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb' }}>
+              Frequently Asked Questions
+            </div>
+            <h2 className="font-extrabold leading-tight mb-4" style={{ color: '#0f172a', fontSize: 'clamp(2.2rem, 4.5vw, 3.2rem)', letterSpacing: '-0.03em' }}>
+              Semua yang Kamu<br />Mungkin Tanyakan.
+            </h2>
+            <p className="text-base max-w-md mx-auto" style={{ color: '#64748b' }}>
+              Jawaban jelas untuk pertanyaan umum, supaya kamu bisa fokus pada hasil.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
             {FAQS.map((faq, i) => (
-              <div key={i}>
+              <div key={i} className="rounded-2xl border overflow-hidden" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
                 <button
-                  className="w-full flex items-center justify-between py-5 text-left"
+                  className="w-full flex items-center justify-between px-6 py-5 text-left"
+                  style={{ backgroundColor: '#ffffff' }}
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
-                  <span className="text-white text-base">{faq.q}</span>
+                  <span className="font-medium pr-4" style={{ color: '#111827', fontSize: '1rem' }}>{faq.q}</span>
                   <iconify-icon
-                    icon="solar:alt-arrow-down-linear"
+                    icon={openFaq === i ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
                     width="18"
-                    style={{ color: '#f91814', transform: openFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', flexShrink: 0 }}
+                    style={{ color: '#9ca3af', flexShrink: 0 }}
                   />
                 </button>
                 {openFaq === i && (
-                  <p className="pb-5 text-sm text-white/50 leading-relaxed">{faq.a}</p>
+                  <p className="px-6 pb-5 text-sm leading-relaxed" style={{ color: '#6b7280' }}>{faq.a}</p>
                 )}
               </div>
             ))}
           </div>
-
-          <div className="flex justify-center mt-16">
+          <div className="rounded-2xl border flex items-center justify-between px-7 py-6 mt-4" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
+            <div>
+              <p className="font-bold text-lg mb-1" style={{ color: '#111827' }}>Masih ada pertanyaan?</p>
+              <p className="text-sm" style={{ color: '#6b7280' }}>Kalau belum ketemu jawabannya, tim kami siap bantu.</p>
+            </div>
             <a
               href="https://www.etalas.com/"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 px-8 py-4 rounded-full text-sm font-semibold text-white tracking-widest uppercase hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#f91814' }}
+              className="flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold text-white whitespace-nowrap hover:opacity-90 transition-opacity ml-6"
+              style={{ backgroundColor: '#0a0a0a' }}
             >
-              Product by Etalas
-              <iconify-icon icon="solar:arrow-right-up-linear" width="16" />
+              <iconify-icon icon="solar:phone-linear" width="15" />
+              Hubungi Kami
             </a>
+          </div>
+        </div>
+      </section>
+      {/* ── SECTION 7: PRICING ── */}
+      <section id="pricing" className="py-24" style={{ backgroundColor: '#f5f5f5' }}>
+        <div className="max-w-5xl mx-auto px-8">
+          {/* header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', color: '#374151' }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e', display: 'inline-block' }} />
+              Pricing Plans
+            </div>
+            <h2 className="font-semibold tracking-tight mb-3" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', color: '#0a0a0a', lineHeight: 1.15 }}>
+              Harga simpel,<br />tanpa biaya tersembunyi
+            </h2>
+            <p className="text-sm max-w-sm mx-auto leading-relaxed" style={{ color: '#6b7280' }}>
+              Pilihan jelas untuk kebutuhan berbeda, tanpa kompleksitas tersembunyi.
+            </p>
+          </div>
+
+          {/* cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Starter */}
+            <div className="flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <div className="px-6 pt-6 pb-4">
+                <p className="text-sm font-semibold text-zinc-900">{PLANS[0].name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{PLANS[0].desc}</p>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="text-3xl font-bold text-zinc-900">{PLANS[0].price}</span>
+                  <span className="text-xs text-zinc-400">{PLANS[0].priceNote}</span>
+                </div>
+              </div>
+              <div className="px-5 pb-4">
+                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-[0.97]" style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}>
+                  {PLANS[0].cta}
+                </button>
+              </div>
+              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 border-t border-gray-100 pt-4">
+                {PLANS[0].features.map((feat) => (
+                  <li key={feat} className="flex items-start gap-2 text-xs text-zinc-600">
+                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Pro — dark highlight */}
+            <div className="flex flex-col rounded-2xl overflow-hidden" style={{ backgroundColor: '#111111', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+              <div className="px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-semibold text-white">{PLANS[1].name}</p>
+                  {PLANS[1].badge && (
+                    <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(249,24,20,0.15)', color: '#f91814' }}>
+                      {PLANS[1].badge}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{PLANS[1].desc}</p>
+                <div className="flex items-baseline gap-1 mt-4">
+                  {PLANS[1].oldPrice && <span className="text-xs line-through" style={{ color: 'rgba(255,255,255,0.55)' }}>{PLANS[1].oldPrice}</span>}
+                  <span className="text-3xl font-bold text-white">{PLANS[1].price}</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{PLANS[1].priceNote}</span>
+                </div>
+              </div>
+              <div className="px-5 pb-4">
+                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.97]" style={{ backgroundColor: '#d4f54a', color: '#0a0a0a' }}>
+                  {PLANS[1].cta}
+                </button>
+              </div>
+              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                {PLANS[1].features.map((feat) => (
+                  <li key={feat} className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Enterprise */}
+            <div className="flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <div className="px-6 pt-6 pb-4">
+                <p className="text-sm font-semibold text-zinc-900">Enterprise</p>
+                <p className="text-xs text-zinc-400 mt-0.5">Untuk tim yang lebih besar.</p>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="text-3xl font-bold text-zinc-900">Custom</span>
+                </div>
+              </div>
+              <div className="px-5 pb-4">
+                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-[0.97]" style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}>
+                  Hubungi Kami
+                </button>
+              </div>
+              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 border-t border-gray-100 pt-4">
+                {['Semua fitur Pro', 'Custom AI model', 'Dedicated support', 'SLA & onboarding', 'API access penuh', 'Custom integrasi'].map((feat) => (
+                  <li key={feat} className="flex items-start gap-2 text-xs text-zinc-600">
+                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* custom banner */}
+          <div className="mt-6 flex items-center justify-between px-6 py-5 rounded-2xl" style={{ backgroundColor: '#0a0a0a' }}>
+            <div>
+              <p className="text-sm font-semibold text-white">Butuh solusi custom?</p>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Kami sesuaikan pipeline dengan kebutuhan tim dan skala bisnis kamu.</p>
+            </div>
+            <button onClick={onGoToApp} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold bg-white text-zinc-900 hover:bg-zinc-100 transition-colors">
+              Hubungi Kami
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-16 px-6" style={{ backgroundColor: '#f8f9fa' }}>
+        <div
+          className="max-w-5xl mx-auto rounded-3xl overflow-hidden relative text-center py-28 px-8"
+          style={{
+            background: 'linear-gradient(180deg, #7ba7d4 0%, #a8c4e0 40%, #c8dced 75%, #dde9f3 100%)',
+            minHeight: '400px',
+          }}
+        >
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 140% 60% at 50% 130%, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'radial-gradient(ellipse 80% 100% at 20% 120%, rgba(255,255,255,0.5) 0%, transparent 60%), radial-gradient(ellipse 80% 100% at 80% 120%, rgba(255,255,255,0.5) 0%, transparent 60%)', pointerEvents: 'none' }} />
+          <div className="relative z-10">
+            <div
+              className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium mb-8"
+              style={{ backgroundColor: 'rgba(255,255,255,0.35)', color: '#1e3a5f', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.5)' }}
+            >
+              Siap Mulai?
+            </div>
+            <h2 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: 'clamp(2.2rem, 5vw, 3.6rem)', letterSpacing: '-0.03em', textShadow: '0 1px 20px rgba(0,0,0,0.12)' }}>
+              Spec Siap Eksekusi<br />dalam Hitungan Menit
+            </h2>
+            <p className="mb-10 text-base leading-relaxed max-w-md mx-auto" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              Kasih brief kasar dari klien — SANDWICH ubah jadi spec yang langsung bisa dijalankan AI agent lo.
+            </p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <button
+                onClick={onGoToApp}
+                className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-full transition-all hover:opacity-90"
+                style={{ backgroundColor: '#ffffff', color: '#111827', fontSize: '0.95rem' }}
+              >
+                <iconify-icon icon="solar:play-circle-linear" width="18" />
+                Coba Gratis
+              </button>
+              <button
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-full transition-all hover:bg-white/20"
+                style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff', fontSize: '0.95rem', border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(8px)' }}
+              >
+                <iconify-icon icon="solar:compass-linear" width="18" />
+                Lihat Fitur
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer
-        className="flex items-center justify-between px-8 py-5 border-t border-white/5"
-        style={{ backgroundColor: '#000000' }}
-      >
-        <span className="text-xs text-white/25">© 2026 SANDWICH by Etalas</span>
-        <div className="flex items-center gap-5">
-          <a href="https://github.com/etalas-studio/sandwich-2" target="_blank" rel="noreferrer" className="text-xs text-white/30 hover:text-white/60 transition-colors flex items-center gap-1.5">
-            <iconify-icon icon="simple-icons:github" width="12" />
-            GitHub
-          </a>
-          <a href="https://www.etalas.com/" target="_blank" rel="noreferrer" className="text-xs text-white/30 hover:text-white/60 transition-colors">
-            Etalas
-          </a>
-          <a href="https://twitter.com/etalas_studio" target="_blank" rel="noreferrer" className="text-xs text-white/30 hover:text-white/60 transition-colors flex items-center gap-1.5">
-            <iconify-icon icon="simple-icons:x" width="11" />
-            Twitter
-          </a>
+      <footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
+        <div className="max-w-6xl mx-auto px-8 py-16" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '3rem' }}>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f91814' }}>
+                <span className="text-white text-[9px] font-black" style={{ fontFamily: bowlby }}>S</span>
+              </div>
+              <span className="font-bold text-sm" style={{ fontFamily: bowlby, color: '#0a0a0a', letterSpacing: '0.04em' }}>SANDWICH</span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: '#6b7280', maxWidth: '220px' }}>
+              Dari brief berantakan jadi spek yang siap dieksekusi.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-5" style={{ color: '#9ca3af' }}>Platform</p>
+            {['How it works', 'Features', 'Pipeline', 'Pricing', 'FAQ'].map((item) => (
+              <a
+                key={item}
+                href="#"
+                className="block text-sm mb-3 transition-colors hover:text-gray-900"
+                style={{ color: '#6b7280' }}
+                onClick={(e) => {
+                  e.preventDefault()
+                  const id = NAV_SECTIONS.find(s => s.label === item)?.id
+                  if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                {item}
+              </a>
+            ))}
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-5" style={{ color: '#9ca3af' }}>Company</p>
+            {[
+              { label: 'About Etalas', href: 'https://www.etalas.com/' },
+              { label: 'GitHub', href: 'https://github.com/etalas-studio/sandwich-2' },
+              { label: 'Contact', href: 'https://www.etalas.com/' },
+            ].map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="block text-sm mb-3 transition-colors hover:text-gray-900" style={{ color: '#6b7280' }}>
+                {item.label}
+              </a>
+            ))}
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-5" style={{ color: '#9ca3af' }}>Social</p>
+            {[
+              { label: 'Twitter / X', href: 'https://twitter.com/etalas_studio' },
+              { label: 'Instagram', href: 'https://www.etalas.com/' },
+              { label: 'LinkedIn', href: 'https://www.etalas.com/' },
+            ].map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="block text-sm mb-3 transition-colors hover:text-gray-900" style={{ color: '#6b7280' }}>
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t px-8 py-5 flex items-center justify-between" style={{ borderColor: '#f3f4f6' }}>
+          <span className="text-xs" style={{ color: '#9ca3af' }}>© 2026 SANDWICH by Etalas</span>
+          <div className="flex items-center gap-4 text-xs" style={{ color: '#9ca3af' }}>
+            <a href="#" className="hover:text-gray-600 transition-colors">Terms of service</a>
+            <span>·</span>
+            <a href="#" className="hover:text-gray-600 transition-colors">Privacy policy</a>
+          </div>
+        </div>
+
+        <div className="overflow-hidden px-8 pb-4 select-none pointer-events-none text-center" style={{ lineHeight: 1 }}>
+          <p className="font-black" style={{ fontFamily: bowlby, fontSize: 'clamp(4rem, 14vw, 11rem)', color: '#f3f4f6', letterSpacing: '-0.02em' }}>
+            SANDWICH
+          </p>
         </div>
       </footer>
     </div>

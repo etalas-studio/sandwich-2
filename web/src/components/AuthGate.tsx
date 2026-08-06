@@ -20,7 +20,6 @@ export default function AuthGate() {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const isAuthenticated = state.status === 'authenticated'
 
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
@@ -28,12 +27,13 @@ export default function AuthGate() {
 
   // Landing page at root — always accessible
   if (location.pathname === '/') {
-    return (
-      <LandingPage
-        isAuthenticated={isAuthenticated}
-        onGoToApp={() => navigate('/old/tickets')}
-      />
-    )
+    return <LandingPage onGoToApp={() => navigate('/dashboard')} />
+  }
+
+  // Dashboard — skip auth entirely
+  if (location.pathname.startsWith('/dashboard')) {
+    const username = state.status === 'authenticated' ? state.username : 'guest'
+    return <App username={username} onLogout={() => navigate('/')} />
   }
 
   if (state.status === 'setup_required') {

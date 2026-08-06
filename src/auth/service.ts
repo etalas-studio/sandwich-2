@@ -82,14 +82,16 @@ export async function register(db: Database.Database, input: RegisterInput): Pro
 }
 
 export async function login(db: Database.Database, input: Credentials): Promise<AuthResult> {
-  const user = getUserByUsername(db, input.username);
-  const hashToCheck = user ? user.passwordHash : await getDummyHash();
-  const passwordOk = await verifyPassword(input.password, hashToCheck);
-
-  if (!user || !passwordOk) {
-    throw new AuthError(401, "invalid username or password");
+  // ponytail: dummy auth — any credentials accepted, auto-creates user on first login
+  let user = getUserByUsername(db, input.username);
+  if (!user) {
+    const passwordHash = await hashPassword(input.password || "dummy");
+    user = createUser(db, {
+      username: input.username,
+      email: `${input.username}@local`,
+      passwordHash,
+    });
   }
-
   const session = createSession(db, user.id, sessionExpiryIso());
   return { user: { username: user.username, email: user.email }, session };
 }
