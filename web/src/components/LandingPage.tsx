@@ -56,7 +56,7 @@ const PLANS = [
     features: [
       'Premium AI model',
       '5 PRD / bulan',
-      'Chat dengan AI mengenai planning PRD, fitur, task (100×/bln)',
+      'Chat dengan AI mengenai planning PRD, fitur, task (100x/bln)',
       'Download Markdown',
       'Generate specs untuk fitur dan task',
     ],
@@ -750,114 +750,92 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       {/* ── SECTION 7: PRICING ── */}
       <section id="pricing" className="py-24" style={{ backgroundColor: '#f5f5f5' }}>
         <div className="max-w-5xl mx-auto px-8">
-          {/* header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', color: '#374151' }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e', display: 'inline-block' }} />
-              Pricing Plans
+            <div className="inline-block px-4 py-1.5 rounded-full text-sm mb-5" style={{ backgroundColor: '#e5e7eb', color: '#6b7280' }}>
+              Plans &amp; Pricing
             </div>
-            <h2 className="font-semibold tracking-tight mb-3" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', color: '#0a0a0a', lineHeight: 1.15 }}>
-              Harga simpel,<br />tanpa biaya tersembunyi
+            <h2 className="font-bold leading-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#111827', letterSpacing: '-0.02em' }}>
+              Harga Simpel,<br />Tanpa Kejutan.
             </h2>
-            <p className="text-sm max-w-sm mx-auto leading-relaxed" style={{ color: '#6b7280' }}>
-              Pilihan jelas untuk kebutuhan berbeda, tanpa kompleksitas tersembunyi.
+            <p className="text-base" style={{ color: '#9ca3af' }}>
+              Pilihan jelas untuk kebutuhan berbeda.
             </p>
           </div>
 
-          {/* cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Starter */}
-            <div className="flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <div className="px-6 pt-6 pb-4">
-                <p className="text-sm font-semibold text-zinc-900">{PLANS[0].name}</p>
-                <p className="text-xs text-zinc-400 mt-0.5">{PLANS[0].desc}</p>
-                <div className="flex items-baseline gap-1 mt-4">
-                  <span className="text-3xl font-bold text-zinc-900">{PLANS[0].price}</span>
-                  <span className="text-xs text-zinc-400">{PLANS[0].priceNote}</span>
-                </div>
-              </div>
-              <div className="px-5 pb-4">
-                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-[0.97]" style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}>
-                  {PLANS[0].cta}
-                </button>
-              </div>
-              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 border-t border-gray-100 pt-4">
-                {PLANS[0].features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-xs text-zinc-600">
-                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch max-w-3xl mx-auto">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className="flex flex-col rounded-2xl border overflow-hidden"
+                style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
+              >
+                {/* Top header */}
+                {plan.highlight ? (
+                  <div
+                    className="relative px-5 pt-5 pb-6"
+                    style={{
+                      background: 'linear-gradient(160deg, #2d2d2d 0%, #111111 50%, #1a1a1a 100%)',
+                      minHeight: '160px',
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-6">
+                      <span className="text-lg font-semibold" style={{ color: '#ffffff' }}>{plan.name}</span>
+                      {plan.badge && (
+                        <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.85)', color: '#374151' }}>
+                          Paling populer
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1 flex-wrap">
+                      <span className="font-bold" style={{ fontSize: '2.8rem', lineHeight: 1, color: '#ffffff' }}>{plan.price}</span>
+                      <span className="text-sm ml-1" style={{ color: 'rgba(255,255,255,0.8)' }}>{plan.priceNote}</span>
+                      {plan.oldPrice && <span className="text-sm line-through ml-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{plan.oldPrice}</span>}
+                    </div>
+                    <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>{plan.desc}</p>
+                  </div>
+                ) : (
+                  <div className="px-5 pt-5 pb-6" style={{ backgroundColor: '#f9fafb', minHeight: '160px' }}>
+                    <span className="text-lg font-semibold block mb-5" style={{ color: '#111827' }}>{plan.name}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-bold" style={{ fontSize: '2.8rem', lineHeight: 1, color: '#9ca3af' }}>{plan.price}</span>
+                      <span className="text-sm ml-1" style={{ color: '#9ca3af' }}>{plan.priceNote}</span>
+                      {plan.oldPrice && <span className="text-sm line-through ml-2" style={{ color: '#d1d5db' }}>{plan.oldPrice}</span>}
+                    </div>
+                    <p className="text-sm mt-1" style={{ color: '#6b7280' }}>{plan.desc}</p>
+                  </div>
+                )}
 
-            {/* Pro — dark highlight */}
-            <div className="flex flex-col rounded-2xl overflow-hidden" style={{ backgroundColor: '#111111', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-              <div className="px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold text-white">{PLANS[1].name}</p>
-                  {PLANS[1].badge && (
-                    <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(249,24,20,0.15)', color: '#f91814' }}>
-                      {PLANS[1].badge}
-                    </span>
-                  )}
+                {/* CTA */}
+                <div className="px-5 py-4 border-t" style={{ borderColor: '#f3f4f6' }}>
+                  <button
+                    onClick={onGoToApp}
+                    className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={plan.highlight
+                      ? { backgroundColor: '#111827', color: '#ffffff' }
+                      : { backgroundColor: '#ffffff', color: '#111827', border: '1px solid #e5e7eb' }
+                    }
+                  >
+                    {plan.cta}
+                  </button>
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{PLANS[1].desc}</p>
-                <div className="flex items-baseline gap-1 mt-4">
-                  {PLANS[1].oldPrice && <span className="text-xs line-through" style={{ color: 'rgba(255,255,255,0.55)' }}>{PLANS[1].oldPrice}</span>}
-                  <span className="text-3xl font-bold text-white">{PLANS[1].price}</span>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{PLANS[1].priceNote}</span>
-                </div>
-              </div>
-              <div className="px-5 pb-4">
-                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.97]" style={{ backgroundColor: '#d4f54a', color: '#0a0a0a' }}>
-                  {PLANS[1].cta}
-                </button>
-              </div>
-              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                {PLANS[1].features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
 
-            {/* Enterprise */}
-            <div className="flex flex-col rounded-2xl bg-white border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <div className="px-6 pt-6 pb-4">
-                <p className="text-sm font-semibold text-zinc-900">Enterprise</p>
-                <p className="text-xs text-zinc-400 mt-0.5">Untuk tim yang lebih besar.</p>
-                <div className="flex items-baseline gap-1 mt-4">
-                  <span className="text-3xl font-bold text-zinc-900">Custom</span>
-                </div>
+                {/* Features */}
+                <ul className="flex flex-col gap-3 px-5 py-5 flex-1 border-t" style={{ borderColor: '#f3f4f6' }}>
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm" style={{ color: '#374151' }}>
+                      {plan.highlight ? (
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#111827' }}>
+                          <iconify-icon icon="solar:check-linear" width="11" style={{ color: '#ffffff' }} />
+                        </span>
+                      ) : (
+                        <iconify-icon icon="solar:check-linear" width="14" style={{ color: '#9ca3af', flexShrink: 0 }} />
+                      )}
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="px-5 pb-4">
-                <button onClick={onGoToApp} className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-[0.97]" style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}>
-                  Hubungi Kami
-                </button>
-              </div>
-              <ul className="px-5 pb-6 flex flex-col gap-2.5 flex-1 border-t border-gray-100 pt-4">
-                {['Semua fitur Pro', 'Custom AI model', 'Dedicated support', 'SLA & onboarding', 'API access penuh', 'Custom integrasi'].map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-xs text-zinc-600">
-                    <iconify-icon icon="solar:check-circle-bold" width="14" style={{ color: '#22c55e', flexShrink: 0, marginTop: '1px' }} />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* custom banner */}
-          <div className="mt-6 flex items-center justify-between px-6 py-5 rounded-2xl" style={{ backgroundColor: '#0a0a0a' }}>
-            <div>
-              <p className="text-sm font-semibold text-white">Butuh solusi custom?</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Kami sesuaikan pipeline dengan kebutuhan tim dan skala bisnis kamu.</p>
-            </div>
-            <button onClick={onGoToApp} className="shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold bg-white text-zinc-900 hover:bg-zinc-100 transition-colors">
-              Hubungi Kami
-            </button>
+            ))}
           </div>
         </div>
       </section>
