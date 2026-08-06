@@ -1,13 +1,14 @@
 import { strict as assert } from "node:assert";
 import { describe, it, before, after } from "node:test";
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDb } from "../db/connection.js";
 import { createProject, markProjectReady, setAutoOpenPr } from "../db/project.js";
 import { createTicket, getTicket, updateTicket } from "../db/tickets.js";
-import { runTicketPipeline, buildPrPrompt, parsePrResponse, generatePrContent, executePr } from "./ticket-runner.js";
+import { runTicketPipeline, buildPrPrompt, parsePrResponse, downloadAttachments, generatePrContent, executePr } from "./ticket-runner.js";
+import { initOAuth } from "./oauth-integrations.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 
 /**
@@ -82,6 +83,9 @@ describe("ticket-runner pipeline", () => {
       defaultBranch: "main",
     });
     markProjectReady(db, project.id);
+
+    // Wire the OAuth DB so getOAuthToken() works in pipeline stages
+    initOAuth(db);
   });
 
   after(() => {
@@ -171,6 +175,70 @@ describe("ticket-runner pipeline", () => {
       ticket.stage === "open_pr" || ticket.status === "blocked",
       `expected stage open_pr or blocked, got stage=${ticket.stage} status=${ticket.status}`,
     );
+  });
+
+  it("judge stage downloads attachments and includes them in prompt", async () => {
+    createTicket(db, {
+      id: "T-att-judge-1",
+      description: "Fix the login button color",
+      url: null,
+      attachments: JSON.stringify([
+        { filename: "mockup.png", mimeType: "image/png", size: 100, url: "https://example.com/mockup.png" },
+      ]),
+    });
+
+    // Store a fake Jira OAuth token so getOAuthToken("jira") returns non-null
+    db.prepare(
+      "INSERT OR REPLACE INTO credentials (name, value, created_at, updated_at) VALUES (?, ?, ?, ?)",
+    ).run(
+      "oauth:jira",
+      JSON.stringify({ type: "oauth", accessToken: "fake-jira-token" }),
+      new Date().toISOString(),
+      new Date().toISOString(),
+    );
+
+    // Pre-populate the attachments cache dir so existsSync passes (the fake
+    // invoker doesn't actually download files, and the Jira token is fake too).
+    const cacheDir = "data/attachments/T-att-judge-1";
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(join(cacheDir, "mockup.png"), "fake image bytes");
+
+    let judgePrompt = "";
+
+    const judgeFactory: InvokerFactory = (_modelId) => ({
+      async run(opts: { prompt: string; cwd: string; timeoutMs: number }) {
+        // Capture only the judge prompt
+        if (opts.prompt.includes("You are judging")) {
+          judgePrompt = opts.prompt;
+        }
+        // Return agentReady
+        return { outcome: "ok" as const, finalText: '{"agentReady": true, "reason": "clear enough"}' };
+      },
+    });
+
+    const controller = new AbortController();
+    await runTicketPipeline(
+      db,
+      judgeFactory,
+      "T-att-judge-1",
+      repoPath,
+      "test/fake-model",
+      () => {},
+      controller.signal,
+    );
+
+    // The judge prompt should mention attachments
+    assert.ok(
+      judgePrompt.includes("Attachments are available") || judgePrompt.includes("data/attachments"),
+      `judge prompt should mention attachments, got: ${judgePrompt.slice(0, 200)}`,
+    );
+
+    // Clean up the cache dir
+    try {
+      rmSync(cacheDir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
   });
 
   it("blocks ticket when agent outcome is not ok", async () => {
@@ -650,5 +718,106 @@ describe("auto-PR OFF pipeline behavior", () => {
     db2.close();
     rmSync(tmpDir2, { recursive: true, force: true });
     repo.cleanup();
+  });
+});
+
+describe("downloadAttachments", () => {
+  let tmpDir: string;
+
+  before(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "attachments-test-"));
+  });
+
+  after(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("downloads attachments to the target directory", async () => {
+    const destDir = join(tmpDir, "out");
+    const attachmentsJson = JSON.stringify([
+      { filename: "error.log", mimeType: "text/plain", size: 14, url: "https://example.com/log" },
+      { filename: "screenshot.png", mimeType: "image/png", size: 100, url: "https://example.com/img" },
+    ]);
+
+    // Mock fetch that returns fixed content per URL
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockFetch = async (input: any, _opts?: RequestInit): Promise<Response> => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.includes("/log")) {
+        return new Response("some log data\n", { headers: { "content-type": "text/plain" } });
+      }
+      if (url.includes("/img")) {
+        return new Response(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), { headers: { "content-type": "image/png" } });
+      }
+      return new Response("not found", { status: 404 });
+    };
+
+    await downloadAttachments(attachmentsJson, destDir, "fake-token", mockFetch);
+
+    assert.ok(existsSync(join(destDir, "error.log")), "error.log should exist");
+    assert.ok(existsSync(join(destDir, "screenshot.png")), "screenshot.png should exist");
+    assert.equal(readFileSync(join(destDir, "error.log"), "utf-8"), "some log data\n");
+  });
+
+  it("skips all when token is null", async () => {
+    const destDir = join(tmpDir, "no-token");
+    const attachmentsJson = JSON.stringify([
+      { filename: "file.txt", mimeType: "text/plain", size: 10, url: "https://example.com/f" },
+    ]);
+
+    await downloadAttachments(attachmentsJson, destDir, null);
+
+    assert.equal(existsSync(destDir), false, "destDir should not be created when token is null");
+  });
+
+  it("skips all when attachmentsJson is null or empty", async () => {
+    const destDir = join(tmpDir, "empty");
+    await downloadAttachments(null, destDir, "token");
+    assert.equal(existsSync(destDir), false);
+
+    await downloadAttachments("[]", destDir, "token");
+    assert.equal(existsSync(destDir), false);
+  });
+
+  it("continues after individual download failure", async () => {
+    const destDir = join(tmpDir, "partial");
+    const attachmentsJson = JSON.stringify([
+      { filename: "ok.txt", mimeType: "text/plain", size: 4, url: "https://example.com/ok" },
+      { filename: "fail.txt", mimeType: "text/plain", size: 10, url: "https://example.com/fail" },
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockFetch = async (input: any, _opts?: RequestInit): Promise<Response> => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.includes("/ok")) return new Response("good");
+      throw new Error("network error");
+    };
+
+    await downloadAttachments(attachmentsJson, destDir, "token", mockFetch);
+
+    assert.ok(existsSync(join(destDir, "ok.txt")), "ok.txt should exist despite the failure");
+    assert.equal(existsSync(join(destDir, "fail.txt")), false, "fail.txt should not exist");
+  });
+
+  it("handles duplicate filenames by appending -2, -3", async () => {
+    const destDir = join(tmpDir, "dupes");
+    const attachmentsJson = JSON.stringify([
+      { filename: "readme.md", mimeType: "text/markdown", size: 5, url: "https://example.com/r1" },
+      { filename: "readme.md", mimeType: "text/markdown", size: 5, url: "https://example.com/r2" },
+      { filename: "readme.md", mimeType: "text/markdown", size: 5, url: "https://example.com/r3" },
+    ]);
+
+    let callCount = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockFetch = async (_input: any, _opts?: RequestInit): Promise<Response> => {
+      callCount++;
+      return new Response(`content-${callCount}`);
+    };
+
+    await downloadAttachments(attachmentsJson, destDir, "token", mockFetch);
+
+    assert.ok(existsSync(join(destDir, "readme.md")), "first readme.md should exist");
+    assert.ok(existsSync(join(destDir, "readme-2.md")), "second readme-2.md should exist");
+    assert.ok(existsSync(join(destDir, "readme-3.md")), "third readme-3.md should exist");
   });
 });

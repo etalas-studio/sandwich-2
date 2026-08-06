@@ -1,17 +1,78 @@
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { execSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join, extname, resolve } from "node:path";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import type { Ticket } from "../db/tickets.js";
 import { getBlocklistEntries } from "../db/blocklist.js";
 import { getCurrentProject } from "../db/project.js";
-import { getValidOAuthToken } from "./oauth-integrations.js";
+import { getValidOAuthToken, getOAuthToken } from "./oauth-integrations.js";
 import { buildCloneUrl } from "./project-clone.js";
 import { createGithubVcsClient } from "./vcs-github.js";
 import { createBitbucketVcsClient } from "./vcs-bitbucket.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
+
+/**
+ * Downloads ticket attachments from Jira into a local directory.
+ * If token is null or attachmentsJson is empty/nil, does nothing.
+ * Individual download failures are logged and skipped — the pipeline
+ * should not block because one screenshot URL is broken.
+ */
+export async function downloadAttachments(
+  attachmentsJson: string | null,
+  destDir: string,
+  token: string | null,
+  fetchFn: typeof fetch = fetch,
+): Promise<void> {
+  if (!token || !attachmentsJson) return;
+
+  let attachments: Array<{ filename: string; mimeType: string; size: number; url: string }>;
+  try {
+    attachments = JSON.parse(attachmentsJson);
+  } catch {
+    return;
+  }
+
+  if (!Array.isArray(attachments) || attachments.length === 0) return;
+
+  mkdirSync(destDir, { recursive: true });
+
+  const usedNames = new Set<string>();
+
+  for (const att of attachments) {
+    if (!att.url || !att.filename) continue;
+
+    // Deduplicate filenames
+    let filename = att.filename;
+    if (usedNames.has(filename)) {
+      const ext = extname(filename);
+      const base = filename.slice(0, filename.length - ext.length);
+      let counter = 2;
+      while (usedNames.has(`${base}-${counter}${ext}`)) {
+        counter++;
+      }
+      filename = `${base}-${counter}${ext}`;
+    }
+    usedNames.add(filename);
+
+    const dest = join(destDir, filename);
+    try {
+      const res = await fetchFn(att.url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        console.error(`Attachment download failed (${res.status}): ${att.filename} from ${att.url}`);
+        continue;
+      }
+      const buf = Buffer.from(await res.arrayBuffer());
+      writeFileSync(dest, buf);
+    } catch (err) {
+      console.error(`Attachment download error: ${att.filename} — ${err instanceof Error ? err.message : "unknown"}`);
+      // Continue to next attachment
+    }
+  }
+}
 
 export type StageName = "judge" | "implement" | "verify" | "open_pr";
 
@@ -142,6 +203,19 @@ export async function runTicketPipeline(
   }
 
   // All stages complete
+
+  // Cleanup attachment cache.
+  // NOTE: this only runs on full pipeline success — early returns from failed
+  // stages leave the cache dir intact so a re-run reuses cached attachments.
+  const attachmentCacheDir = `data/attachments/${ticketKey}`;
+  if (existsSync(attachmentCacheDir)) {
+    try {
+      rmSync(attachmentCacheDir, { recursive: true, force: true });
+    } catch {
+      // Not fatal — stale cache dirs don't hurt anything
+    }
+  }
+
   emit({ type: "done", ticket: getTicket(db, ticketKey)! });
 }
 
@@ -185,6 +259,11 @@ async function runJudge(
     }
   }
 
+  // Download ticket attachments so the judge agent can inspect screenshots/logs
+  const attachmentsDir = `data/attachments/${ticket.key}`;
+  const jiraToken = getOAuthToken("jira");
+  await downloadAttachments(ticket.attachments, attachmentsDir, jiraToken);
+
   // 2. AI relevance check
   if (!modelId) {
     return { ok: true };
@@ -215,6 +294,12 @@ async function runJudge(
     `Ticket key: ${ticket.key}`,
     `Ticket description: ${ticket.description}`,
     ticket.url ? `Ticket URL: ${ticket.url}` : "",
+    ...(jiraToken && existsSync(attachmentsDir)
+      ? [
+          "",
+          `Attachments are available at ${attachmentsDir}/ — read them for visual context (screenshots, diagrams, log files, etc.).`,
+        ]
+      : []),
   ]
     .filter(Boolean)
     .join("\n");
@@ -298,6 +383,11 @@ async function runImplement(
   const worktreesDir = join(repoPath, ".worktrees");
   const worktreePath = join(worktreesDir, branchName);
 
+  // Check for cached attachments before worktree creation so the flag is available
+  // for the prompt guard even if worktree creation fails (early return).
+  const attachmentsCacheDir = `data/attachments/${ticket.key}`;
+  const hasAttachments = existsSync(attachmentsCacheDir);
+
   try {
     execSync(`mkdir -p "${worktreesDir}"`, { encoding: "utf-8" });
     // Refresh the default branch so new tickets branch off latest remote, not a stale local HEAD
@@ -321,16 +411,18 @@ async function runImplement(
     updateTicket(db, ticket.key, { worktreePath, branchName });
 
     // Copy cached attachments into the worktree so the agent can read them
-    const attachmentsCacheDir = `data/attachments/${ticket.key}`;
-    if (existsSync(attachmentsCacheDir)) {
+    // (hasAttachments computed above, outside the try)
+    if (hasAttachments) {
       const worktreeAttachmentsDir = join(worktreePath, ".attachments");
       try {
         execSync(`mkdir -p "${worktreeAttachmentsDir}"`, { encoding: "utf-8" });
         execSync(`cp -R "${attachmentsCacheDir}"/. "${worktreeAttachmentsDir}"/`, {
           encoding: "utf-8",
         });
-      } catch {
-        // Copy failed — not fatal, agent just won't see attachments
+      } catch (err) {
+        console.warn(
+          `Attachment copy to worktree failed: ${err instanceof Error ? err.message : "unknown"}`
+        );
       }
     }
   } catch (err) {
@@ -356,7 +448,7 @@ async function runImplement(
     `Ticket: ${ticket.key}`,
     `Description: ${ticket.description}`,
     ticket.url ? `Source: ${ticket.url}` : "",
-    ...(ticket.attachments
+    ...(hasAttachments
       ? [
           "",
           "Ticket attachments (screenshots, logs, documents) are in the .attachments/ directory — read them for visual context.",
