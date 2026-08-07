@@ -460,7 +460,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
             </h1>
 
             {/* Input box — dark like landing page */}
-            <div className="w-full max-w-2xl rounded-2xl overflow-hidden mb-8 shadow-sm" style={{ backgroundColor: '#111113' }}>
+            <div className="w-full max-w-2xl rounded-2xl mb-8 shadow-sm" style={{ backgroundColor: '#111113' }}>
               {/* chips */}
               <div className="flex items-center gap-2 px-4 pt-4 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                 {CHIPS.map(c => (
