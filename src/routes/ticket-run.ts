@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type Database from "better-sqlite3";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
@@ -85,6 +88,86 @@ export function registerTicketRunRoutes(
               /* ignore */
             }
           }
+          sseClients.delete(ticketKey);
+        }
+      });
+
+    sendJson(res, 200, { ticketKey, started: true });
+  });
+
+  // Generate document without a repo — for PRD/MOM/Quotation/Specs
+  router.post("/api/tickets/:key/generate", async (req, res, params) => {
+    const ticketKey = params.key!;
+    const ticket = getTicket(db, ticketKey);
+    if (!ticket) {
+      sendJson(res, 404, { error: "Ticket not found" });
+      return;
+    }
+    if (inFlight.has(ticketKey)) {
+      sendJson(res, 409, { error: "Already running" });
+      return;
+    }
+
+    let modelId: string | null = null;
+    try {
+      const body = await readJson(req);
+      if (body && typeof (body as Record<string, unknown>).modelId === "string") {
+        modelId = (body as Record<string, unknown>).modelId as string;
+      }
+    } catch { /* optional body */ }
+
+    // Pick first available model if none specified
+    if (!modelId) {
+      modelId = "opencode-go/deepseek-v4-pro";
+    }
+
+    const controller = new AbortController();
+    inFlight.set(ticketKey, controller);
+
+    const broadcast = (event: TicketRunEvent) => {
+      const clients = sseClients.get(ticketKey);
+      if (!clients) return;
+      const data = `data: ${JSON.stringify(event)}\n\n`;
+      for (const client of clients) {
+        try { client.write(data); } catch { clients.delete(client); }
+      }
+    };
+
+    const cwd = mkdtempSync(join(tmpdir(), "sandwich-gen-"));
+
+    broadcast({ type: "stage_start", stage: "implement", ticket: getTicket(db, ticketKey)! });
+    updateTicket(db, ticketKey, { status: "in_progress", stage: "implement" });
+
+    const invoker = createInvoker(modelId);
+    invoker.run({
+      cwd,
+      timeoutMs: 5 * 60 * 1000,
+      prompt: [
+        `You are an expert product consultant. Generate a comprehensive document.`,
+        ``,
+        `Document type: ${ticket.summary ?? "document"}`,
+        `Brief: ${ticket.description}`,
+        ``,
+        `Output the full document in Indonesian using markdown formatting. Be thorough and professional.`,
+        `Return ONLY the document content, no meta-commentary.`,
+      ].join("\n"),
+    })
+      .then((result) => {
+        const output = result.finalText ?? "";
+        // Store generated doc in prDescription (free-text field, no migration needed)
+        updateTicket(db, ticketKey, { status: "done", stage: null, prDescription: output });
+        broadcast({ type: "done", ticket: getTicket(db, ticketKey)! });
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "generation failed";
+        updateTicket(db, ticketKey, { status: "backlog", stage: null });
+        broadcast({ type: "error", ticket: getTicket(db, ticketKey)!, text: msg });
+      })
+      .finally(() => {
+        inFlight.delete(ticketKey);
+        const clients = sseClients.get(ticketKey);
+        if (clients) {
+          for (const client of clients) { try { client.end(); } catch { /* ignore */ } }
           sseClients.delete(ticketKey);
         }
       });

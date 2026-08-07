@@ -80,16 +80,21 @@ function usePipelineStream(ticketKey: string | null, onDone?: (output: string) =
     if (!ticketKey) return
     setStreaming(true)
 
-    // First trigger the run
-    fetch(`/api/tickets/${ticketKey}/run`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-    }).catch(() => {})
-
-    // Then stream SSE
+    // Open SSE stream first, then trigger generate — avoids race where stream
+    // sees inFlight empty and closes immediately
     const ctrl = new AbortController()
-    fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })
+    const streamPromise = fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })
+
+    // Small delay so stream connection is registered before generate fires
+    setTimeout(() => {
+      fetch(`/api/tickets/${ticketKey}/generate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+      }).catch(() => {})
+    }, 200)
+
+    streamPromise
       .then(async res => {
         const reader = res.body!.getReader()
         const dec = new TextDecoder()
@@ -104,16 +109,14 @@ function usePipelineStream(ticketKey: string | null, onDone?: (output: string) =
             const line = part.replace(/^data: /, '').trim()
             if (!line) continue
             try {
-              const ev = JSON.parse(line) as { type: string; stage?: string; ticket?: { status?: string; content?: string } }
+              const ev = JSON.parse(line) as { type: string; stage?: string; ticket?: { prDescription?: string } }
               if (ev.type === 'stage_start' && ev.stage) {
                 setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
-              } else if (ev.type === 'done' || ev.type === 'stage_end') {
-                if (ev.type === 'done') {
-                  const output = ev.ticket?.content ?? ''
-                  setMessages(m => [...m, { role: 'ai', isDone: true, output }])
-                  setStreaming(false)
-                  onDone?.(output)
-                }
+              } else if (ev.type === 'done') {
+                const output = ev.ticket?.prDescription ?? ''
+                setMessages(m => [...m, { role: 'ai', isDone: true, output }])
+                setStreaming(false)
+                onDone?.(output)
               } else if (ev.type === 'error') {
                 setMessages(m => [...m, { role: 'ai', isError: true, text: 'Terjadi error saat memproses brief.' }])
                 setStreaming(false)
@@ -637,7 +640,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
             <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>MY BRIEFS</h1>
             <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{tickets.length} dokumen tersimpan</p>
           </div>
-          <TicketList tickets={tickets} onOpen={setSelected} onNew={() => setActiveNav('home')} />
+          <TicketList tickets={tickets} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })} onNew={() => setActiveNav('home')} />
         </div>
       </div>
     )
@@ -687,7 +690,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
           <PromptBox defaultType={pp.type} onSuccess={handleSuccess} compact={true} />
 
           {/* List */}
-          <TicketList tickets={filtered} onOpen={setSelected} onNew={() => {}} />
+          <TicketList tickets={filtered} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })} onNew={() => {}} />
         </div>
       </div>
     )
@@ -843,7 +846,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
                   <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>OVERVIEW</h1>
                   <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>Ringkasan semua brief kamu</p>
                 </div>
-                <OverviewTab tickets={tickets} onOpen={setSelected} />
+                <OverviewTab tickets={tickets} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })} />
               </div>
             ) : (
               <>
@@ -877,7 +880,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
                       </div>
                       <button onClick={() => setActiveNav('briefs')} className="text-xs" style={{ color: '#9ca3af' }}>Lihat semua →</button>
                     </div>
-                    <TicketList tickets={tickets.slice(0, 5)} onOpen={setSelected} onNew={() => {}} />
+                    <TicketList tickets={tickets.slice(0, 5)} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })} onNew={() => {}} />
                   </div>
                 )}
               </>
