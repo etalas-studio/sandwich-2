@@ -453,7 +453,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
         {isHomePage ? (
           <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 py-12">
             <h1
-              className="text-4xl md:text-5xl text-center mb-10 tracking-tighter"
+              className="text-2xl md:text-3xl text-center mb-10 tracking-tighter"
               style={{ color: '#111827', fontFamily: bowlby, maxWidth: '560px' }}
             >
               BRIEF APA YANG MAU DIKERJAKAN?
