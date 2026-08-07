@@ -54,6 +54,200 @@ const TYPE_META: Record<string, { label: string; color: string; ic: string; icon
   general:   { label: 'Brief',     color: 'rgba(255,255,255,0.1)', ic: 'rgba(255,255,255,0.5)', icon: 'solar:notes-linear' },
 }
 
+const STAGE_LABELS: Record<string, string> = {
+  judge:      'Menganalisis brief...',
+  implement:  'Membuat dokumen...',
+  verify:     'Memverifikasi hasil...',
+  open_pr:    'Membuka PR...',
+}
+
+// ── Chat View ─────────────────────────────────────────────────────────────────
+interface ChatMessage {
+  role: 'user' | 'ai'
+  text?: string
+  stage?: string        // for stage_start events
+  isDone?: boolean
+  isError?: boolean
+  output?: string
+  ticketId?: string
+}
+
+function usePipelineStream(ticketKey: string | null, onDone?: (output: string) => void) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [streaming, setStreaming] = useState(false)
+
+  useEffect(() => {
+    if (!ticketKey) return
+    setStreaming(true)
+
+    // First trigger the run
+    fetch(`/api/tickets/${ticketKey}/run`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+    }).catch(() => {})
+
+    // Then stream SSE
+    const ctrl = new AbortController()
+    fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })
+      .then(async res => {
+        const reader = res.body!.getReader()
+        const dec = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buf += dec.decode(value, { stream: true })
+          const parts = buf.split('\n\n')
+          buf = parts.pop() ?? ''
+          for (const part of parts) {
+            const line = part.replace(/^data: /, '').trim()
+            if (!line) continue
+            try {
+              const ev = JSON.parse(line) as { type: string; stage?: string; ticket?: { status?: string; content?: string } }
+              if (ev.type === 'stage_start' && ev.stage) {
+                setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
+              } else if (ev.type === 'done' || ev.type === 'stage_end') {
+                if (ev.type === 'done') {
+                  const output = ev.ticket?.content ?? ''
+                  setMessages(m => [...m, { role: 'ai', isDone: true, output }])
+                  setStreaming(false)
+                  onDone?.(output)
+                }
+              } else if (ev.type === 'error') {
+                setMessages(m => [...m, { role: 'ai', isError: true, text: 'Terjadi error saat memproses brief.' }])
+                setStreaming(false)
+              }
+            } catch { /* skip bad JSON */ }
+          }
+        }
+      })
+      .catch(() => setStreaming(false))
+
+    return () => ctrl.abort()
+  }, [ticketKey])
+
+  return { messages, streaming }
+}
+
+function ChatView({
+  initialPrompt,
+  ticketKey,
+  onNewPrompt,
+  onBack,
+}: {
+  initialPrompt: string
+  ticketKey: string
+  onNewPrompt: (prompt: string) => void
+  onBack: () => void
+}) {
+  const { messages, streaming } = usePipelineStream(ticketKey, () => {})
+  const [followUp, setFollowUp] = useState('')
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, streaming])
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Back bar */}
+      <div className="flex items-center gap-2 px-6 py-3 border-b shrink-0" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(244,235,225,0.7)' }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm transition-colors hover:opacity-60" style={{ color: 'rgba(0,0,0,0.4)' }}>
+          <iconify-icon icon="solar:arrow-left-linear" width="14" />
+          Kembali
+        </button>
+      </div>
+
+      {/* Thread */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-4">
+        {/* User bubble */}
+        <div className="flex justify-end">
+          <div className="max-w-xl px-4 py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed" style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: inter }}>
+            {initialPrompt}
+          </div>
+        </div>
+
+        {/* AI messages */}
+        {messages.map((m, i) => {
+          if (m.stage) return (
+            <div key={i} className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
+                <span className="text-white text-[10px] font-black" style={{ fontFamily: bowlby }}>S</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.08)', color: '#374151' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#f91814' }} />
+                {STAGE_LABELS[m.stage] ?? m.stage}
+              </div>
+            </div>
+          )
+          if (m.isDone && m.output) return (
+            <div key={i} className="flex gap-2.5">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
+                <span className="text-white text-[10px] font-black" style={{ fontFamily: bowlby }}>S</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="px-4 py-3 rounded-2xl rounded-tl-sm text-sm leading-relaxed whitespace-pre-wrap" style={{ backgroundColor: 'rgba(255,255,255,0.85)', border: '1px solid rgba(0,0,0,0.08)', color: '#1a1a1a', fontFamily: inter }}>
+                  {m.output}
+                </div>
+              </div>
+            </div>
+          )
+          if (m.isError) return (
+            <div key={i} className="flex gap-2.5">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
+                <span className="text-white text-[10px] font-black" style={{ fontFamily: bowlby }}>S</span>
+              </div>
+              <div className="px-4 py-3 rounded-2xl rounded-tl-sm text-sm" style={{ backgroundColor: '#fee2e2', color: '#ef4444' }}>
+                {m.text}
+              </div>
+            </div>
+          )
+          return null
+        })}
+
+        {/* Typing indicator */}
+        {streaming && messages.every(m => !m.stage && !m.isDone && !m.isError) && (
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
+              <span className="text-white text-[10px] font-black" style={{ fontFamily: bowlby }}>S</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#9ca3af', animationDelay: '0ms' }} />
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#9ca3af', animationDelay: '150ms' }} />
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#9ca3af', animationDelay: '300ms' }} />
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Prompt follow-up box */}
+      {!streaming && (
+        <div className="shrink-0 px-6 py-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(244,235,225,0.7)' }}>
+          <div className="max-w-2xl mx-auto flex items-end gap-3">
+            <textarea
+              value={followUp}
+              onChange={e => setFollowUp(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && followUp.trim()) { onNewPrompt(followUp.trim()); setFollowUp('') } }}
+              placeholder="Lanjut tanya atau buat brief baru..."
+              rows={1}
+              className="flex-1 resize-none rounded-xl px-4 py-3 text-sm outline-none"
+              style={{ backgroundColor: '#111113', color: '#ffffff', border: '1px solid rgba(255,255,255,0.1)', minHeight: '44px', maxHeight: '120px', fontFamily: inter }}
+            />
+            <button
+              onClick={() => { if (followUp.trim()) { onNewPrompt(followUp.trim()); setFollowUp('') } }}
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all"
+              style={{ backgroundColor: '#f91814' }}
+            >
+              <iconify-icon icon="solar:arrow-up-linear" width="15" style={{ color: '#ffffff' }} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Auto-login with guest credentials so API session works
 async function ensureSession(): Promise<void> {
   try {
@@ -414,12 +608,13 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<LocalTicket | null>(null)
   const [activeNav, setActiveNav] = useState('home')
   const [activeTab, setActiveTab] = useState<'chat' | 'overview'>('chat')
+  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string } | null>(null)
 
   const refresh = () => setTickets(getTickets())
 
   const handleSuccess = (t: LocalTicket) => {
     refresh()
-    setSelected(t)
+    setChatState({ prompt: t.summary, ticketKey: t.id })
   }
 
   const handleDelete = (id: string) => {
@@ -623,7 +818,23 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
         )}
 
         {/* Content */}
-        {isHomePage ? (
+        {chatState ? (
+          <div className="flex-1 min-h-0">
+            <ChatView
+              initialPrompt={chatState.prompt}
+              ticketKey={chatState.ticketKey}
+              onBack={() => setChatState(null)}
+              onNewPrompt={(p) => {
+                setChatState(null)
+                // small delay so PromptBox re-mounts with fresh state
+                setTimeout(() => {
+                  const ev = new CustomEvent('sandwich:inject-prompt', { detail: p })
+                  window.dispatchEvent(ev)
+                }, 50)
+              }}
+            />
+          </div>
+        ) : isHomePage ? (
           <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 py-10">
             {activeTab === 'overview' ? (
               <div className="w-full max-w-2xl">
@@ -673,6 +884,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
           </div>
         ) : renderPage()}
       </main>
+
 
       {selected && <Drawer ticket={selected} onClose={() => setSelected(null)} onDelete={handleDelete} />}
     </div>
