@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { getTickets, saveTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
 import { createTicket } from '../api/tickets'
+import Settings from './Settings'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
 
@@ -56,10 +57,11 @@ const TYPE_META: Record<string, { label: string; color: string; ic: string; icon
 // Auto-login with guest credentials so API session works
 async function ensureSession(): Promise<void> {
   try {
-    const check = await fetch('/api/auth/me')
+    const check = await fetch('/api/auth/me', { credentials: 'include' })
     if (check.ok) return
     await fetch('/api/auth/login', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ username: 'sandwich', password: 'sandwich' }),
     })
@@ -430,6 +432,8 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
   const isHomePage = activeNav === 'home'
 
   const renderPage = () => {
+    if (activeNav === 'settings') return <Settings />
+
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="max-w-3xl mx-auto">
@@ -553,9 +557,12 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
             <iconify-icon icon="solar:question-circle-linear" width="15" />
             Help &amp; Docs
           </button>
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-2 transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}
+          <button
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-2 transition-colors"
+            style={{ color: activeNav === 'settings' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', backgroundColor: activeNav === 'settings' ? 'rgba(255,255,255,0.08)' : '' }}
+            onClick={() => setActiveNav('settings')}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = activeNav === 'settings' ? 'rgba(255,255,255,0.08)' : '')}>
             <iconify-icon icon="solar:settings-linear" width="15" />
             Settings
           </button>

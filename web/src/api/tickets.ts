@@ -34,6 +34,7 @@ export interface Ticket {
 export async function createTicket(data: CreateTicketData): Promise<Ticket> {
   const res = await fetch('/api/tickets', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ id: data.id, summary: data.summary, description: data.description, url: data.url || null }),
   })
