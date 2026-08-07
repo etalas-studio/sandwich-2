@@ -4,6 +4,9 @@ import { createTicket } from '../api/tickets'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
 
+const bowlby = "'Bowlby One', system-ui"
+const inter = "'Inter', sans-serif"
+
 const NAV = [
   { label: 'Home', icon: 'solar:home-2-linear', id: 'home' },
   { section: 'BRIEF' },
@@ -17,20 +20,20 @@ const NAV = [
 ]
 
 const CHIPS = [
-  { label: 'PRD Lengkap',    type: 'prd'       as TicketType, icon: 'solar:document-add-linear',      prompt: 'Buatkan PRD lengkap untuk ' },
-  { label: 'Prototype Brief',type: 'prototype'  as TicketType, icon: 'solar:widget-linear',            prompt: 'Buatkan prototype brief untuk ' },
-  { label: 'MOM',            type: 'mom'        as TicketType, icon: 'solar:calendar-linear',          prompt: 'Buatkan MOM (minutes of meeting) untuk ' },
-  { label: 'Quotation',      type: 'quotation'  as TicketType, icon: 'solar:dollar-minimalistic-linear',prompt: 'Buatkan quotation untuk ' },
-  { label: 'Specs & Task',   type: 'specs'      as TicketType, icon: 'solar:checklist-linear',         prompt: 'Buatkan specs dan task untuk ' },
+  { label: 'PRD Lengkap',     type: 'prd'       as TicketType, icon: 'solar:document-add-linear',       prompt: 'Buatkan PRD lengkap untuk ' },
+  { label: 'Prototype Brief', type: 'prototype'  as TicketType, icon: 'solar:widget-linear',             prompt: 'Buatkan prototype brief untuk ' },
+  { label: 'MOM',             type: 'mom'        as TicketType, icon: 'solar:calendar-linear',           prompt: 'Buatkan MOM (minutes of meeting) untuk ' },
+  { label: 'Quotation',       type: 'quotation'  as TicketType, icon: 'solar:dollar-minimalistic-linear', prompt: 'Buatkan quotation untuk ' },
+  { label: 'Specs & Task',    type: 'specs'      as TicketType, icon: 'solar:checklist-linear',          prompt: 'Buatkan specs dan task untuk ' },
 ]
 
 const QUICK_TYPES = [
-  { label: 'PRD Lengkap',        type: 'prd'       as TicketType, icon: 'solar:document-add-linear',       color: '#fef3c7', iconColor: '#f97316', prompt: 'Buatkan PRD lengkap untuk ' },
-  { label: 'Prototype Brief',    type: 'prototype'  as TicketType, icon: 'solar:widget-linear',             color: '#ede9fe', iconColor: '#7c3aed', prompt: 'Buatkan prototype brief untuk ' },
-  { label: 'Workflow Automations',type:'workflow'    as TicketType, icon: 'solar:settings-minimalistic-linear',color:'#dbeafe',iconColor:'#2563eb',  prompt: 'Buatkan workflow automation untuk ' },
-  { label: 'MOM Meeting',        type: 'mom'        as TicketType, icon: 'solar:calendar-linear',           color: '#dcfce7', iconColor: '#16a34a', prompt: 'Buatkan MOM (minutes of meeting) untuk ' },
-  { label: 'Quotation Brief',    type: 'quotation'  as TicketType, icon: 'solar:dollar-minimalistic-linear',color: '#fce7f3', iconColor: '#db2777', prompt: 'Buatkan quotation untuk ' },
-  { label: 'Specs & Task',       type: 'specs'      as TicketType, icon: 'solar:checklist-linear',          color: '#f0fdf4', iconColor: '#15803d', prompt: 'Buatkan specs dan task untuk ' },
+  { label: 'PRD Lengkap',         type: 'prd'       as TicketType, icon: 'solar:document-add-linear',        color: '#fef3c7', iconColor: '#f97316', prompt: 'Buatkan PRD lengkap untuk ' },
+  { label: 'Prototype Brief',     type: 'prototype'  as TicketType, icon: 'solar:widget-linear',              color: '#ede9fe', iconColor: '#7c3aed', prompt: 'Buatkan prototype brief untuk ' },
+  { label: 'Workflow Automations', type: 'workflow'   as TicketType, icon: 'solar:settings-minimalistic-linear', color: '#dbeafe', iconColor: '#2563eb', prompt: 'Buatkan workflow automation untuk ' },
+  { label: 'MOM Meeting',         type: 'mom'        as TicketType, icon: 'solar:calendar-linear',            color: '#dcfce7', iconColor: '#16a34a', prompt: 'Buatkan MOM (minutes of meeting) untuk ' },
+  { label: 'Quotation Brief',     type: 'quotation'  as TicketType, icon: 'solar:dollar-minimalistic-linear', color: '#fce7f3', iconColor: '#db2777', prompt: 'Buatkan quotation untuk ' },
+  { label: 'Specs & Task',        type: 'specs'      as TicketType, icon: 'solar:checklist-linear',           color: '#f0fdf4', iconColor: '#15803d', prompt: 'Buatkan specs dan task untuk ' },
 ]
 
 const TYPE_META: Record<string, { label: string; color: string; ic: string; icon: string }> = {
@@ -40,7 +43,7 @@ const TYPE_META: Record<string, { label: string; color: string; ic: string; icon
   specs:     { label: 'Specs',     color: '#fce7f3', ic: '#db2777', icon: 'solar:checklist-linear' },
   prototype: { label: 'Prototype', color: '#ede9fe', ic: '#7c3aed', icon: 'solar:widget-linear' },
   workflow:  { label: 'Workflow',  color: '#dbeafe', ic: '#2563eb', icon: 'solar:settings-minimalistic-linear' },
-  general:   { label: 'Brief',     color: '#f3f4f6', ic: '#6b7280', icon: 'solar:notes-linear' },
+  general:   { label: 'Brief',     color: 'rgba(255,255,255,0.1)', ic: 'rgba(255,255,255,0.5)', icon: 'solar:notes-linear' },
 }
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
@@ -53,7 +56,7 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
       <div className="flex-1" />
       <div
         className="w-full max-w-lg h-full overflow-y-auto flex flex-col shadow-2xl border-l"
-        style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+        style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', fontFamily: inter }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: '#e5e7eb' }}>
@@ -129,13 +132,13 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
 function TicketList({ tickets, onOpen, onNew }: { tickets: LocalTicket[]; onOpen: (t: LocalTicket) => void; onNew: () => void }) {
   if (tickets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: '#f3f4f6' }}>
-          <iconify-icon icon="solar:notes-linear" width="22" style={{ color: '#9ca3af' }} />
+      <div className="flex flex-col items-center justify-center py-24 text-center rounded-2xl border" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
+          <iconify-icon icon="solar:notes-linear" width="22" style={{ color: 'rgba(0,0,0,0.3)' }} />
         </div>
         <p className="text-sm font-medium" style={{ color: '#374151' }}>Belum ada dokumen</p>
         <p className="text-xs mt-1 mb-5" style={{ color: '#9ca3af' }}>Buat yang pertama dari halaman Home</p>
-        <button onClick={onNew} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
+        <button onClick={onNew} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium" style={{ backgroundColor: '#f91814', color: '#ffffff' }}>
           <iconify-icon icon="solar:add-linear" width="14" />
           New Brief
         </button>
@@ -144,14 +147,14 @@ function TicketList({ tickets, onOpen, onNew }: { tickets: LocalTicket[]; onOpen
   }
 
   return (
-    <div className="rounded-xl border overflow-hidden" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
       {tickets.map(t => {
         const meta = TYPE_META[t.type] ?? TYPE_META.general
         return (
           <button key={t.id} onClick={() => onOpen(t)}
             className="w-full flex items-center justify-between px-5 py-4 text-left border-b last:border-b-0 transition-colors"
-            style={{ borderColor: '#f3f4f6' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f9fafb')}
+            style={{ borderColor: 'rgba(0,0,0,0.05)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.8)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: meta.color }}>
@@ -251,10 +254,10 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-bold" style={{ color: '#111827' }}>My Briefs</h1>
-              <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{tickets.length} dokumen tersimpan</p>
+              <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>MY BRIEFS</h1>
+              <p className="text-sm mt-0.5" style={{ color: '#9ca3af', fontFamily: inter }}>{tickets.length} dokumen tersimpan</p>
             </div>
-            <button onClick={() => goNewBrief()} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: '#111827', color: '#ffffff' }}>
+            <button onClick={() => goNewBrief()} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium" style={{ backgroundColor: '#f91814', color: '#ffffff', fontFamily: inter }}>
               <iconify-icon icon="solar:add-linear" width="14" />
               New Brief
             </button>
@@ -268,16 +271,16 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
-            <h1 className="text-xl font-bold" style={{ color: '#111827' }}>Templates</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>Pilih template, langsung buat brief</p>
+            <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>TEMPLATES</h1>
+            <p className="text-sm mt-0.5" style={{ color: '#9ca3af', fontFamily: inter }}>Pilih template, langsung buat brief</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {QUICK_TYPES.map(t => (
               <button key={t.label} onClick={() => goNewBrief(t.type, t.prompt)}
-                className="flex items-start gap-4 p-5 rounded-xl border text-left transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = '#d1d5db')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}>
+                className="flex items-start gap-4 p-5 rounded-2xl border text-left transition-all hover:-translate-y-0.5"
+                style={{ backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(0,0,0,0.08)', fontFamily: inter }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.95)')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.7)')}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: t.color }}>
                   <iconify-icon icon={t.icon} width="18" style={{ color: t.iconColor }} />
                 </div>
@@ -293,10 +296,10 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
     )
 
     const pipelineMap: Record<string, { type: TicketType; title: string; desc: string; prompt: string }> = {
-      prd:       { type: 'prd',       title: 'PRD',           desc: 'Product Requirements Documents',   prompt: 'Buatkan PRD lengkap untuk ' },
-      mom:       { type: 'mom',       title: 'MOM / Notulen', desc: 'Minutes of Meeting dan notulensi', prompt: 'Buatkan notulen meeting untuk ' },
-      quotation: { type: 'quotation', title: 'Quotation',     desc: 'Estimasi dan kalkulasi proyek',    prompt: 'Buatkan quotation untuk ' },
-      specs:     { type: 'specs',     title: 'Specs & Task',  desc: 'Technical specs dan task breakdown',prompt: 'Buatkan specs dan task untuk ' },
+      prd:       { type: 'prd',       title: 'PRD',           desc: 'Product Requirements Documents',    prompt: 'Buatkan PRD lengkap untuk ' },
+      mom:       { type: 'mom',       title: 'MOM / Notulen', desc: 'Minutes of Meeting dan notulensi',  prompt: 'Buatkan notulen meeting untuk ' },
+      quotation: { type: 'quotation', title: 'Quotation',     desc: 'Estimasi dan kalkulasi proyek',     prompt: 'Buatkan quotation untuk ' },
+      specs:     { type: 'specs',     title: 'Specs & Task',  desc: 'Technical specs dan task breakdown', prompt: 'Buatkan specs dan task untuk ' },
     }
     const pp = pipelineMap[activeNav]
     if (!pp) return null
@@ -307,12 +310,12 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-bold" style={{ color: '#111827' }}>{pp.title}</h1>
-              <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{pp.desc} · {filtered.length} dokumen</p>
+              <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>{pp.title.toUpperCase()}</h1>
+              <p className="text-sm mt-0.5" style={{ color: '#9ca3af', fontFamily: inter }}>{pp.desc} · {filtered.length} dokumen</p>
             </div>
             <button onClick={() => goNewBrief(pp.type, pp.prompt)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium"
-              style={{ backgroundColor: '#111827', color: '#ffffff' }}>
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium"
+              style={{ backgroundColor: '#f91814', color: '#ffffff', fontFamily: inter }}>
               <iconify-icon icon="solar:add-linear" width="14" />
               Buat {pp.title}
             </button>
@@ -324,34 +327,34 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f9fafb', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F4EBE1', fontFamily: inter }}>
 
       {/* ── Sidebar ── */}
-      <aside className="flex flex-col w-56 shrink-0 border-r" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+      <aside className="flex flex-col w-56 shrink-0" style={{ backgroundColor: '#0a0a0a' }}>
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
-              <span className="text-white font-black text-xs" style={{ fontFamily: "'Bowlby One', sans-serif" }}>S</span>
+              <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
             </div>
-            <span className="font-bold text-sm tracking-wide" style={{ color: '#111827', fontFamily: "'Bowlby One', sans-serif" }}>SANDWICH</span>
+            <span className="font-bold text-sm tracking-wide text-white" style={{ fontFamily: bowlby }}>SANDWICH</span>
           </div>
-          <button className="p-1 rounded hover:bg-gray-100 transition-colors">
-            <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: '#9ca3af' }} />
+          <button className="p-1 rounded transition-colors hover:bg-white/10">
+            <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: 'rgba(255,255,255,0.4)' }} />
           </button>
         </div>
 
         <div className="px-3 pb-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: '#f3f4f6' }}>
-            <iconify-icon icon="solar:magnifer-linear" width="13" style={{ color: '#9ca3af' }} />
-            <span className="text-xs flex-1" style={{ color: '#9ca3af' }}>Search...</span>
-            <span className="text-[10px] font-mono px-1 rounded" style={{ color: '#9ca3af', backgroundColor: '#e5e7eb' }}>⌘K</span>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+            <iconify-icon icon="solar:magnifer-linear" width="13" style={{ color: 'rgba(255,255,255,0.3)' }} />
+            <span className="text-xs flex-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Search...</span>
+            <span className="text-[10px] font-mono px-1 rounded" style={{ color: 'rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.06)' }}>⌘K</span>
           </div>
         </div>
 
         <nav className="flex-1 px-2 overflow-y-auto">
           {NAV.map((item, i) => {
             if ('section' in item) return (
-              <p key={i} className="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-widest uppercase" style={{ color: '#9ca3af' }}>{item.section}</p>
+              <p key={i} className="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>{item.section}</p>
             )
             const isActive = activeNav === item.id
             const typeMap: Record<string, TicketType> = { prd: 'prd', mom: 'mom', quotation: 'quotation', specs: 'specs' }
@@ -359,41 +362,44 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
             return (
               <button key={item.id} onClick={() => setActiveNav(item.id!)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
-                style={isActive ? { backgroundColor: '#f3f4f6', color: '#111827', fontWeight: 500 } : { color: '#6b7280' }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = '#f9fafb' }}
+                style={isActive
+                  ? { backgroundColor: '#f91814', color: '#ffffff', fontWeight: 500 }
+                  : { color: 'rgba(255,255,255,0.5)' }
+                }
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = '' }}
               >
                 <iconify-icon icon={item.icon} width="15" />
                 {item.label}
                 {count > 0 && (
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f3f4f6', color: '#6b7280' }}>{count}</span>
+                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>{count}</span>
                 )}
               </button>
             )
           })}
         </nav>
 
-        <div className="border-t px-2 py-3" style={{ borderColor: '#e5e7eb' }}>
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-0.5 transition-colors" style={{ color: '#6b7280' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f9fafb')}
+        <div className="border-t px-2 py-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-0.5 transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:question-circle-linear" width="15" />
             Help &amp; Docs
           </button>
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-2 transition-colors" style={{ color: '#6b7280' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f9fafb')}
+          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-2 transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:settings-linear" width="15" />
             Settings
           </button>
           <button onClick={onBack} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: '#f3f4f6' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e5e7eb')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}>
+            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.14)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}>
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#f91814' }}>S</div>
             <div className="text-left min-w-0">
-              <p className="text-xs font-medium truncate" style={{ color: '#111827' }}>Sandwich</p>
-              <p className="text-[10px] truncate" style={{ color: '#9ca3af' }}>← Kembali</p>
+              <p className="text-xs font-medium truncate text-white">Sandwich</p>
+              <p className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>← Kembali</p>
             </div>
           </button>
         </div>
@@ -402,10 +408,10 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
       {/* ── Main ── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b shrink-0" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+        <div className="flex items-center justify-between px-6 py-3 border-b shrink-0" style={{ backgroundColor: 'rgba(244,235,225,0.8)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
           <button onClick={() => goNewBrief()}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-            style={{ borderColor: '#e5e7eb', color: '#374151' }}>
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-sm font-medium transition-colors hover:bg-black/5"
+            style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#374151' }}>
             <iconify-icon icon="solar:add-linear" width="14" />
             New Brief
           </button>
@@ -414,29 +420,29 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
               <iconify-icon icon="solar:lightning-bold" width="12" />
               Upgrade ke PRO
             </button>
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <iconify-icon icon="solar:bell-linear" width="16" style={{ color: '#6b7280' }} />
+            <button className="p-2 rounded-lg hover:bg-black/5 transition-colors">
+              <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
             </button>
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <iconify-icon icon="solar:upload-linear" width="16" style={{ color: '#6b7280' }} />
+            <button className="p-2 rounded-lg hover:bg-black/5 transition-colors">
+              <iconify-icon icon="solar:upload-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
             </button>
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <iconify-icon icon="solar:menu-dots-bold" width="16" style={{ color: '#6b7280' }} />
+            <button className="p-2 rounded-lg hover:bg-black/5 transition-colors">
+              <iconify-icon icon="solar:menu-dots-bold" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
             </button>
           </div>
         </div>
 
         {/* Tab bar */}
         {isHomePage && (
-          <div className="flex items-center gap-1 px-6 py-3 border-b shrink-0" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+          <div className="flex items-center gap-1 px-6 py-3 border-b shrink-0" style={{ backgroundColor: 'rgba(244,235,225,0.6)', borderColor: 'rgba(0,0,0,0.08)' }}>
             <button onClick={() => setActiveTab('chat')}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
-              style={activeTab === 'chat' ? { backgroundColor: '#111827', color: '#ffffff' } : { color: '#6b7280' }}>
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+              style={activeTab === 'chat' ? { backgroundColor: '#0a0a0a', color: '#ffffff' } : { color: 'rgba(0,0,0,0.4)' }}>
               Brief Mode
             </button>
             <button onClick={() => setActiveTab('overview')}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
-              style={activeTab === 'overview' ? { backgroundColor: '#111827', color: '#ffffff' } : { color: '#6b7280' }}>
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+              style={activeTab === 'overview' ? { backgroundColor: '#0a0a0a', color: '#ffffff' } : { color: 'rgba(0,0,0,0.4)' }}>
               Overview
             </button>
             {tickets.length > 0 && (
@@ -451,22 +457,25 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
         {/* Page content */}
         {isHomePage ? (
           <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 py-12">
-            <h1 className="text-4xl font-bold text-center mb-10" style={{ color: '#111827', letterSpacing: '-0.02em', maxWidth: '560px' }}>
-              Brief Apa yang Mau Dikerjakan?
+            <h1
+              className="text-4xl md:text-5xl text-center mb-10 tracking-tighter"
+              style={{ color: '#111827', fontFamily: bowlby, maxWidth: '560px' }}
+            >
+              BRIEF APA YANG MAU DIKERJAKAN?
             </h1>
 
-            {/* Input box */}
-            <div className="w-full max-w-2xl rounded-2xl border mb-8" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff', overflow: 'clip' }}>
-              <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b overflow-x-auto" style={{ borderColor: '#f3f4f6', scrollbarWidth: 'none' }}>
+            {/* Input box — dark like landing page */}
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden mb-8 shadow-sm" style={{ backgroundColor: '#111113' }}>
+              {/* chips */}
+              <div className="flex items-center gap-2 px-4 pt-4 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                 {CHIPS.map(c => (
                   <button key={c.label}
                     onClick={() => { setActiveType(c.type); setPrompt(p => p || c.prompt) }}
-                    className="flex shrink-0 items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap"
-                    style={{
-                      borderColor: activeType === c.type ? '#111827' : '#e5e7eb',
-                      color: activeType === c.type ? '#111827' : '#6b7280',
-                      backgroundColor: activeType === c.type ? '#f3f4f6' : 'transparent',
-                    }}>
+                    className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                    style={activeType === c.type
+                      ? { backgroundColor: '#f91814', color: '#ffffff', border: '1px solid #f91814' }
+                      : { backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }
+                    }>
                     <iconify-icon icon={c.icon} width="12" />
                     {c.label}
                   </button>
@@ -479,14 +488,13 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
                 onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleSubmit() } }}
                 placeholder="Ceritain brief lo di sini..."
                 rows={4}
-                className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed"
-                style={{ color: '#111827' }}
+                className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed text-white placeholder:text-white/30"
               />
 
               {attachments.length > 0 && (
                 <div className="flex flex-wrap gap-2 px-4 pb-2">
                   {attachments.map((a, i) => (
-                    <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
+                    <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
                       {a.type.startsWith('image/') ? <img src={a.dataUrl} className="w-4 h-4 rounded object-cover" alt="" /> : <iconify-icon icon="solar:document-linear" width="12" />}
                       <span className="max-w-[100px] truncate">{a.name}</span>
                       <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100">
@@ -497,23 +505,24 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
                 </div>
               )}
 
-              <div className="flex items-center justify-between px-4 py-2.5 border-t" style={{ borderColor: '#f3f4f6' }}>
+              <div className="flex items-center justify-between px-4 pb-4 pt-1">
                 <div className="flex items-center gap-1">
                   <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
-                  <button onClick={() => fileInputRef.current?.click()} className="px-2.5 py-1.5 rounded-lg text-xs hover:bg-gray-100 transition-colors" style={{ color: '#6b7280' }}>
-                    <iconify-icon icon="solar:paperclip-linear" width="14" />
+                  <button onClick={() => fileInputRef.current?.click()} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <iconify-icon icon="solar:paperclip-linear" width="15" />
                   </button>
-                  <button className="px-2.5 py-1.5 rounded-lg text-xs hover:bg-gray-100 transition-colors" style={{ color: '#6b7280' }}>
-                    <iconify-icon icon="solar:microphone-linear" width="14" />
+                  <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <iconify-icon icon="solar:microphone-linear" width="15" />
                   </button>
+                  <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
                 </div>
                 <button
                   onClick={() => void handleSubmit()}
                   disabled={isSubmitting || !prompt.trim()}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-40"
-                  style={{ backgroundColor: prompt.trim() ? '#111827' : '#e5e7eb' }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-40 active:scale-95"
+                  style={{ backgroundColor: '#f91814' }}
                 >
-                  <iconify-icon icon="solar:plain-2-linear" width="16" style={{ color: prompt.trim() ? '#ffffff' : '#9ca3af' }} />
+                  <iconify-icon icon={isSubmitting ? 'solar:refresh-linear' : 'solar:arrow-up-linear'} width="15" style={{ color: '#ffffff' }} />
                 </button>
               </div>
             </div>
@@ -524,10 +533,10 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
             <div className="w-full max-w-2xl grid grid-cols-3 gap-3 mb-10">
               {QUICK_TYPES.map(qt => (
                 <button key={qt.label} onClick={() => goNewBrief(qt.type, qt.prompt)}
-                  className="flex flex-col items-start p-4 rounded-xl border text-left transition-all hover:-translate-y-0.5"
-                  style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#d1d5db')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}>
+                  className="flex flex-col items-start p-4 rounded-2xl border text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(0,0,0,0.08)' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.6)')}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: qt.color }}>
                     <iconify-icon icon={qt.icon} width="18" style={{ color: qt.iconColor }} />
                   </div>
@@ -542,10 +551,10 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
               <div className="w-full max-w-2xl">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <iconify-icon icon="solar:history-linear" width="14" style={{ color: '#9ca3af' }} />
+                    <iconify-icon icon="solar:history-linear" width="14" style={{ color: 'rgba(0,0,0,0.3)' }} />
                     <p className="text-sm font-semibold" style={{ color: '#374151' }}>Brief Terbaru</p>
                   </div>
-                  <button onClick={() => setActiveNav('briefs')} className="text-xs" style={{ color: '#6b7280' }}>Lihat semua →</button>
+                  <button onClick={() => setActiveNav('briefs')} className="text-xs" style={{ color: '#9ca3af' }}>Lihat semua →</button>
                 </div>
                 <TicketList tickets={tickets.slice(0, 5)} onOpen={setSelected} onNew={() => goNewBrief()} />
               </div>
