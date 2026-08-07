@@ -487,8 +487,9 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
                 onChange={e => setPrompt(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleSubmit() } }}
                 placeholder="Ceritain brief lo di sini..."
-                rows={4}
+                rows={3}
                 className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed text-white placeholder:text-white/30"
+                style={{ minHeight: '72px', maxHeight: '200px' }}
               />
 
               {attachments.length > 0 && (
