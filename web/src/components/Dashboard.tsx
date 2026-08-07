@@ -252,7 +252,8 @@ function ChatView({
 async function ensureSession(): Promise<void> {
   try {
     const check = await fetch('/api/auth/me', { credentials: 'include' })
-    if (check.ok) return
+    const body = await check.json() as { state?: string }
+    if (body.state === 'authenticated') return
     await fetch('/api/auth/login', {
       method: 'POST',
       credentials: 'include',
