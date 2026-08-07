@@ -652,18 +652,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
 
           {/* Bottom row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-8">
-            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH — dibuat dengan ❤️ di Etalas, Indonesia.</p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={onGoToApp}
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold transition-all hover:opacity-80"
-                style={{ backgroundColor: '#f91814', color: '#ffffff' }}
-              >
-                Mulai Gratis
-                <iconify-icon icon="solar:arrow-right-linear" width="12" style={{strokeWidth: 1.5}}></iconify-icon>
-              </button>
-            </div>
+          <div className="flex items-center pt-8">
+            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH</p>
           </div>
         </div>
       </footer>
