@@ -193,6 +193,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [activeTab, setActiveTab] = useState<'chat' | 'overview'>('chat')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const refresh = () => setTickets(getTickets())
 
@@ -406,7 +407,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
       </aside>
 
       {/* ── Main ── */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 border-b shrink-0" style={{ backgroundColor: 'rgba(244,235,225,0.8)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
           <div />
@@ -504,11 +505,12 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
               <div className="flex items-center justify-between px-4 pb-4 pt-1">
                 <div className="flex items-center gap-1">
                   <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+                  <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
+                  <button onClick={() => imageInputRef.current?.click()} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <iconify-icon icon="solar:gallery-linear" width="15" />
+                  </button>
                   <button onClick={() => fileInputRef.current?.click()} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     <iconify-icon icon="solar:paperclip-linear" width="15" />
-                  </button>
-                  <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    <iconify-icon icon="solar:microphone-linear" width="15" />
                   </button>
                   <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
                 </div>
