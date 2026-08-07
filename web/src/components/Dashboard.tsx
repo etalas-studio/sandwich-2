@@ -409,12 +409,7 @@ export default function Dashboard({ onBack }: { onBack: () => void }) {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 border-b shrink-0" style={{ backgroundColor: 'rgba(244,235,225,0.8)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
-          <button onClick={() => goNewBrief()}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-sm font-medium transition-colors hover:bg-black/5"
-            style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#374151' }}>
-            <iconify-icon icon="solar:add-linear" width="14" />
-            New Brief
-          </button>
+          <div />
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
               <iconify-icon icon="solar:lightning-bold" width="12" />
