@@ -75,19 +75,20 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
     setMessages([])
     setStreaming(true)
 
-    // Open SSE stream first, then trigger generate — avoids race where stream
-    // sees inFlight empty and closes immediately
     const ctrl = new AbortController()
-    const streamPromise = fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })
 
-    // Small delay so stream connection is registered before generate fires
-    setTimeout(() => {
-      fetch(`/api/tickets/${ticketKey}/generate`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-      }).catch(() => {})
-    }, 200)
+    // Trigger generate FIRST so inFlight is set before stream connects.
+    // Stream checks inFlight on connect — if empty it closes immediately.
+    fetch(`/api/tickets/${ticketKey}/generate`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+    }).catch(() => {})
+
+    // Small delay so inFlight is registered before stream opens
+    const streamPromise = new Promise<Response>(resolve =>
+      setTimeout(() => resolve(fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })), 100)
+    )
 
     streamPromise
       .then(async res => {
@@ -104,7 +105,7 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
             const line = part.replace(/^data: /, '').trim()
             if (!line) continue
             try {
-              const ev = JSON.parse(line) as { type: string; stage?: string; ticket?: { prDescription?: string } }
+              const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; ticket?: { prDescription?: string } }
               if (ev.type === 'stage_start' && ev.stage) {
                 setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
               } else if (ev.type === 'done') {
@@ -113,7 +114,8 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
                 setStreaming(false)
                 onDone?.(output)
               } else if (ev.type === 'error') {
-                setMessages(m => [...m, { role: 'ai', isError: true, text: tr('pipeline_error') }])
+                const errText = ev.text ?? tr('pipeline_error')
+                setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
                 setStreaming(false)
               }
             } catch { /* skip bad JSON */ }
@@ -281,7 +283,10 @@ function ChatView({
   const [turns, setTurns] = useState<{ user: string; aiMessages: ChatMessage[] }[]>([
     { user: initialPrompt, aiMessages: [] }
   ])
-  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, () => {})
+  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, (output) => {
+    // persist output to localStorage so reload can restore it
+    updateTicket(ticketKey, { content: output })
+  })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [editingPrompt, setEditingPrompt] = useState(false)
@@ -304,11 +309,19 @@ function ChatView({
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
   useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
-  // Load saved prDescription when opening an existing ticket (no auto-run)
+  // Load saved output when opening an existing ticket (no auto-run)
   useEffect(() => {
     if (!ticketKey || autoRun) return
+    // Try localStorage first (instant, reliable)
+    const local = getTickets().find(t => t.id === ticketKey)
+    if (local?.content) {
+      setTurns([{ user: initialPrompt, aiMessages: [{ role: 'ai', isDone: true, output: local.content }] }])
+      return
+    }
+    // Fallback: fetch from server
     fetchTicket(ticketKey).then(ticket => {
       if (ticket.prDescription) {
+        updateTicket(ticketKey, { content: ticket.prDescription })
         setTurns([{ user: initialPrompt, aiMessages: [{ role: 'ai', isDone: true, output: ticket.prDescription! }] }])
       }
     }).catch(() => {})
