@@ -23,6 +23,10 @@ export default function AuthGate() {
   const navigate = useNavigate()
   const [forceView, setForceView] = React.useState<'login' | 'register' | null>(null)
 
+  React.useEffect(() => {
+    if (state.status === 'authenticated') setForceView(null)
+  }, [state.status])
+
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
   }
