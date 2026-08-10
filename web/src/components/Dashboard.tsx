@@ -358,7 +358,7 @@ function ChatView({
               </div>
             )
             if (m.isDone && m.output) return (
-              <div key={i} className="text-sm whitespace-pre-wrap break-words" style={{ color: 'rgba(255,255,255,0.88)', lineHeight: '1.85' }}>
+              <div key={i} className="text-sm whitespace-pre-wrap break-words" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
                 {m.output}
               </div>
             )
