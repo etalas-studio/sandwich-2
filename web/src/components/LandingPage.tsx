@@ -396,7 +396,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               <img
                 src="/spec-illustration.png"
                 alt="SPEC"
-                className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
+                className="w-full h-auto hover:scale-[1.02] transition-transform duration-700 object-contain"
               />
             </div>
 
