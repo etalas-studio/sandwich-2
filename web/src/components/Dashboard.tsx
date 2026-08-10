@@ -316,6 +316,7 @@ function ChatView({
 
   const handleRefreshResponse = () => {
     if (streaming) return
+    setTurns([{ user: initialPrompt, aiMessages: [] }])
     setRegenNonce(n => n + 1)
   }
 
@@ -532,16 +533,20 @@ function ChatView({
 
 
 // ── Plan limit helper ─────────────────────────────────────────────────────────
+const USAGE_KEY = () => {
+  const now = new Date()
+  return `sandwich_usage_${now.getFullYear()}_${now.getMonth()}`
+}
+export function incrementUsage() {
+  const key = USAGE_KEY()
+  const cur = parseInt(localStorage.getItem(key) ?? '0', 10)
+  localStorage.setItem(key, String(cur + 1))
+}
 function getPlanInfo() {
   const plan = localStorage.getItem('sandwich_paid_plan') ?? 'starter'
   const isPro = plan === 'pro'
   const limit = isPro ? Infinity : 5
-  const now = new Date()
-  const thisMonth = `${now.getFullYear()}-${now.getMonth()}`
-  const used = getTickets().filter(t => {
-    const d = new Date(t.createdAt)
-    return `${d.getFullYear()}-${d.getMonth()}` === thisMonth
-  }).length
+  const used = parseInt(localStorage.getItem(USAGE_KEY()) ?? '0', 10)
   return { isPro, limit, used, remaining: Math.max(0, limit - used) }
 }
 
@@ -592,6 +597,7 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
         status: 'processing',
       }
       saveTicket(local)
+      incrementUsage()
       setPrompt('')
       setAttachments([])
       setPlanInfo(getPlanInfo())
@@ -928,6 +934,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
   const handleDelete = (id: string) => {
     deleteTicket(id)
+    if (chatState?.ticketKey === id) setChatState(null)
     refresh()
     setSelected(null)
   }
