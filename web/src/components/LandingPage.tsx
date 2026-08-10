@@ -219,28 +219,37 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       {/* ── HERO ── */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 flex flex-col items-center text-center px-6 overflow-hidden">
         {/* watermark */}
-        <div className="absolute inset-0 flex items-center justify-center -z-10 opacity-5 pointer-events-none select-none">
+        <div className="absolute inset-0 flex items-center justify-center z-0 opacity-5 pointer-events-none select-none">
           <span className="text-[25vw] leading-none text-[#F4A804]" style={{ fontFamily: bowlby }}>
             SANDWICH
           </span>
         </div>
 
         <h1
-          className="text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
+          className="relative z-10 text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
           style={{ fontFamily: bowlby }}
         >
           SANDWICH
         </h1>
 
         <p
-          className="text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
+          className="relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
           style={{ fontFamily: mousememoirs }}
         >
           {t('hero_tagline')}
         </p>
 
+        {/* sandwich image */}
+        <div className="relative w-full max-w-xs mt-12 mb-8 z-10">
+          <img
+            src="/sandwich.webp"
+            alt="sandwich"
+            className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
+          />
+        </div>
+
         {/* prompt box */}
-        <div className="w-full max-w-xl mx-auto mt-12 z-10">
+        <div className="w-full max-w-xl mx-auto mt-0 z-10">
           {submitted ? (
             <div className="rounded-2xl p-8 text-center border" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
               <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f91814' }}>
@@ -341,6 +350,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </>
           )}
         </div>
+
       </section>
 
       {/* ── HARNESSES / HOW IT WORKS ── */}
