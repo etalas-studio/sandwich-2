@@ -1,9 +1,15 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { createTicket } from '../api/tickets'
 import { saveTicket } from '../lib/localTickets'
+import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
+import { ensureSession } from '../lib/session'
+import { CHIPS } from '../lib/promptChips'
+import type { TicketType } from '../lib/localTickets'
+import { useLanguage } from '../lib/i18n'
+import ModelSelector from './ModelSelector'
 
 interface LandingPageProps {
-  onGoToApp: () => void
+  onGoToApp: (plan?: string) => void
 }
 
 const bowlby = "'Bowlby One', system-ui"
@@ -11,12 +17,20 @@ const mousememoirs = "'Mouse Memoirs', sans-serif"
 
 const FAQS = [
   {
-    q: 'Who built this?',
-    a: 'SANDWICH was built at Etalas, an Indonesian software house working with enterprise clients. These skills were forged from actual agency battles — messy inputs, unpredictable AI, and the need for reliable delivery.',
+    q: 'What can SANDWICH actually produce?',
+    a: 'From a single client brief: a clickable prototype, a complete PRD, user flows, technical notes, and a client-ready quotation — all generated through one pipeline, not five separate tools.',
   },
   {
-    q: 'Why does this exist?',
-    a: "Client briefs are chaotic by nature. SANDWICH gives you a repeatable pipeline — from raw client input to validated, machine-checkable specs — so your AI agent doesn't guess, it executes.",
+    q: 'Can it turn a messy brief into a PRD?',
+    a: "Yes — that's the core job. SANDWICH takes raw, chaotic client input and structures it into a validated, machine-checkable PRD your AI agent can execute against, no guessing required.",
+  },
+  {
+    q: 'Does it build prototypes too, or just docs?',
+    a: 'Both. The same pipeline that produces your PRD also drives prototype generation, so what you show the client matches what gets built — no drift between spec and demo.',
+  },
+  {
+    q: 'How does the quotation get generated?',
+    a: 'Once scope is defined in the PRD, SANDWICH breaks it into priced, dependency-aware line items — so your quotation is grounded in the actual feature queue, not a guess.',
   },
   {
     q: 'Is it free?',
@@ -28,43 +42,7 @@ const FAQS = [
   },
   {
     q: 'Do I need to configure anything?',
-    a: "Just install via your agent's skill manager. The Order → Prep → Recipe pipeline works out of the box.",
-  },
-]
-
-const PLANS = [
-  {
-    name: 'Starter',
-    price: 'Rp 50k',
-    priceNote: '/ bulan',
-    desc: 'Buat yang mulai serius.',
-    features: [
-      'Premium AI model',
-      '5 PRD / bulan',
-      'Chat dengan AI mengenai planning PRD, fitur, task (100x/bln)',
-      'Download Markdown',
-      'Generate specs untuk fitur dan task',
-    ],
-    cta: 'Mulai Sekarang',
-    highlight: false,
-    oldPrice: null as string | null,
-  },
-  {
-    name: 'Pro',
-    price: 'Rp 100k',
-    priceNote: '/ bulan',
-    oldPrice: 'Rp 250k',
-    desc: 'Unlimited, semua akses.',
-    features: [
-      'Premium AI model',
-      'Unlimited PRD',
-      'Chat dengan AI mengenai planning PRD, fitur, task (unlimited)',
-      'Download Markdown',
-      'Chat langsung dengan Raf Dev untuk bantuan',
-      'Generate specs untuk fitur dan task',
-    ],
-    cta: 'Upgrade ke Pro',
-    highlight: true,
+    a: "Just install via your agent's skill manager. The Order → Prep → Recipe pipeline — brief to prototype to PRD to quotation — works out of the box.",
   },
 ]
 
@@ -75,14 +53,68 @@ interface AttachedFile {
 }
 
 export default function LandingPage({ onGoToApp }: LandingPageProps) {
+  const { lang, setLang, t } = useLanguage()
+  const PLANS = [
+    {
+      slug: 'starter',
+      name: 'Starter',
+      price: 'Rp 50k',
+      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+      desc: t('plan_starter_desc'),
+      features: [t('plan_starter_f1'), t('plan_starter_f2'), t('plan_starter_f3'), t('plan_starter_f4'), t('plan_starter_f5')],
+      cta: t('plan_starter_cta'),
+      highlight: false,
+      oldPrice: null as string | null,
+    },
+    {
+      slug: 'pro',
+      name: 'Pro',
+      price: 'Rp 100k',
+      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+      oldPrice: 'Rp 250k',
+      desc: t('plan_pro_desc'),
+      features: [t('plan_pro_f1'), t('plan_pro_f2'), t('plan_pro_f3'), t('plan_pro_f4'), t('plan_pro_f5'), t('plan_pro_f6')],
+      cta: t('plan_pro_cta'),
+      highlight: true,
+    },
+  ]
   const [prompt, setPrompt] = useState('')
+  const [activeType, setActiveType] = useState<TicketType>('general')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const activeSectionRef = useRef<string>('')
+  const [activeSectionState, setActiveSectionState] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (window.location.hash === '#pricing') {
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [])
+
+  useEffect(() => {
+    const ids = ['harnesses', 'pipeline', 'pricing', 'faq']
+    const observers = ids.map((id) => {
+      const el = document.getElementById(id)
+      if (!el) return null
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            activeSectionRef.current = id
+            setActiveSectionState(id)
+          }
+        },
+        { threshold: 0.3 }
+      )
+      obs.observe(el)
+      return obs
+    })
+    return () => observers.forEach((obs) => obs?.disconnect())
+  }, [])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
@@ -103,14 +135,17 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     setIsSubmitting(true)
     setError(null)
     try {
+      await ensureSession()
       const desc = attachments.length
         ? attachments.map((a) => `[attachment: ${a.name}]`).join('\n')
-        : ''
+        : prompt.trim()
       const ticket = await createTicket({ id: '', summary: prompt.trim(), description: desc, url: '' })
-      saveTicket({ id: ticket.key, summary: ticket.summary ?? prompt.trim(), description: desc, createdAt: ticket.createdAt, type: 'general', status: 'processing' })
+      saveTicket({ id: ticket.key, summary: ticket.summary ?? prompt.trim(), description: desc, createdAt: ticket.createdAt, type: activeType, status: 'processing' })
+      setPrompt('')
+      setAttachments([])
       setSubmitted(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal mengirim')
+      setError(err instanceof Error ? err.message : t('hero_error_generic'))
       setIsSubmitting(false)
     }
   }
@@ -130,7 +165,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       {/* ── NAV ── */}
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
         <nav
-          className="flex items-center gap-1 px-3 py-2 rounded-full border"
+          className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full border max-w-full"
           style={{
             backgroundColor: '#F4EBE1',
             borderColor: 'rgba(0,0,0,0.1)',
@@ -140,31 +175,43 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
             <span className="text-white font-black text-[10px]" style={{ fontFamily: bowlby }}>S</span>
           </div>
-          {[
-            { id: 'harnesses', label: 'How It Works' },
-            { id: 'pipeline', label: 'Pipeline' },
-            { id: 'faq', label: 'FAQ' },
-            { id: 'pricing', label: 'Pricing' },
-          ].map(({ id, label }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              onClick={(e) => {
-                e.preventDefault()
-                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-black"
-              style={{ color: '#6b7280' }}
-            >
-              {label}
-            </a>
-          ))}
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { id: 'harnesses', label: t('nav_how') },
+              { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'pricing', label: t('nav_pricing') },
+              { id: 'faq', label: t('nav_faq') },
+            ].map(({ id, label }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  activeSectionRef.current = id
+                  setActiveSectionState(id)
+                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors"
+                style={{ color: activeSectionState === id ? '#0a0a0a' : '#6b7280', fontWeight: activeSectionState === id ? 600 : 500 }}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
           <button
-            onClick={onGoToApp}
-            className="ml-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+            onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+            className="shrink-0 ml-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+            style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
+            title="Switch language"
+          >
+            {lang === 'en' ? 'EN' : 'ID'}
+          </button>
+          <button
+            onClick={() => onGoToApp()}
+            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
           >
-            Get Started
+            {t('nav_get_started')}
           </button>
         </nav>
       </div>
@@ -189,7 +236,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           className="text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
           style={{ fontFamily: mousememoirs }}
         >
-          Dari brief berantakan jadi spek siap eksekusi
+          {t('hero_tagline')}
         </p>
 
         {/* prompt box */}
@@ -199,14 +246,14 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:check-circle-bold" width="24" style={{ color: '#ffffff' }} />
               </div>
-              <p className="font-semibold text-zinc-900 mb-1">Ticket dibuat!</p>
-              <p className="text-sm text-zinc-400 mb-5">Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.</p>
+              <p className="font-semibold text-zinc-900 mb-1">{t('hero_ticket_created')}</p>
+              <p className="text-sm text-zinc-400 mb-5">{t('hero_ticket_processing')}</p>
               <button
-                onClick={onGoToApp}
+                onClick={() => onGoToApp()}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium text-white mx-auto hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: '#f91814' }}
               >
-                Lihat hasil
+                {t('hero_see_result')}
                 <iconify-icon icon="solar:arrow-right-linear" width="14" />
               </button>
             </div>
@@ -221,20 +268,18 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               >
                 {/* chips */}
                 <div className="flex flex-wrap gap-2 px-5 pt-5 pb-2">
-                  {[
-                    { label: 'PRD', prompt: 'Buatkan PRD lengkap untuk fitur ' },
-                    { label: 'MOM', prompt: 'Buatkan notulen rapat dari transcript berikut: ' },
-                    { label: 'Quotation', prompt: 'Buatkan quotation untuk project ' },
-                    { label: 'Prototype', prompt: 'Buatkan prototype brief untuk ' },
-                    { label: 'Specs', prompt: 'Breakdown specs dan task untuk fitur ' },
-                  ].map((chip) => (
+                  {CHIPS.map((chip) => (
                     <button
-                      key={chip.label}
-                      onClick={() => setPrompt(chip.prompt)}
-                      className="px-3.5 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-70"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
+                      key={chip.labelKey}
+                      onClick={() => { setActiveType(chip.type); setPrompt(randomPrompt(chip.type as PromptChipType)) }}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-70"
+                      style={activeType === chip.type
+                        ? { backgroundColor: '#f91814', color: '#ffffff', border: '1px solid #f91814' }
+                        : { backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }
+                      }
                     >
-                      {chip.label}
+                      <iconify-icon icon={chip.icon} width="12" />
+                      {t(chip.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -243,7 +288,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ceritain project atau brief kamu di sini…"
+                  placeholder={t('hero_prompt_placeholder')}
                   rows={4}
                   className="w-full resize-none bg-transparent text-white text-sm outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-white/30"
                 />
@@ -274,18 +319,21 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                     <button onClick={() => fileInputRef.current?.click()} title="Attach file" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       <iconify-icon icon="solar:paperclip-linear" width="16" />
                     </button>
-                    <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.5)' }}>⌘↵ to send</span>
+                    <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
                   </div>
-                  <button
-                    onClick={() => void handleSubmit()}
-                    disabled={isSubmitting}
-                    className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
-                    style={{ backgroundColor: '#f91814' }}
-                  >
-                    {isSubmitting
-                      ? <iconify-icon icon="solar:refresh-linear" width="15" style={{ color: '#ffffff' }} className="animate-spin" />
-                      : <iconify-icon icon="solar:arrow-up-linear" width="15" style={{ color: '#ffffff' }} />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <ModelSelector scope="landing" />
+                    <button
+                      onClick={() => void handleSubmit()}
+                      disabled={isSubmitting || !prompt.trim()}
+                      className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
+                      style={{ backgroundColor: '#f91814' }}
+                    >
+                      {isSubmitting
+                        ? <iconify-icon icon="solar:refresh-linear" width="15" style={{ color: '#ffffff' }} className="animate-spin" />
+                        : <iconify-icon icon="solar:arrow-up-linear" width="15" style={{ color: '#ffffff' }} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -303,22 +351,22 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               className="text-xl md:text-2xl tracking-tight mb-4 uppercase text-white"
               style={{ fontFamily: mousememoirs }}
             >
-              The Harnesses
+              {t('harnesses_kicker')}
             </p>
             <h2
               className="text-4xl md:text-5xl tracking-tighter leading-tight text-white mb-6"
               style={{ fontFamily: bowlby }}
             >
-              MESSY INPUT. CLEAN SPEC.
+              {t('harnesses_title')}
             </h2>
             <p className="max-w-lg mx-auto text-white/80 text-sm font-medium tracking-tight leading-relaxed">
-              Klien kirim voice note, screenshot, Notion dump. SANDWICH ubah semua itu jadi structured, machine-readable specs — tervalidasi dan siap dieksekusi agent kamu.
+              {t('harnesses_desc')}
             </p>
           </div>
 
-          <div className="flex flex-row items-center justify-center gap-10 mt-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-10 mt-8">
             {/* Left — output types */}
-            <div className="flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
+            <div className="hidden md:flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-10deg)' }}>
                 <iconify-icon icon="solar:document-text-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
                 <span>PRD</span>
@@ -334,12 +382,12 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </div>
 
             {/* Center — steps illustration */}
-            <div className="flex flex-col items-center gap-3 w-72 md:w-96 shrink-0">
+            <div className="flex flex-col items-center gap-3 w-full max-w-72 md:w-96 shrink-0">
               {[
-                { step: '01', label: 'Kasih Brief', desc: 'Input kasar, bahasa apapun' },
-                { step: '02', label: 'AI Proses', desc: 'Order → Prep → Recipe' },
-                { step: '03', label: 'Dapat Spec', desc: 'PRD, MOM, Quotation' },
-                { step: '04', label: 'Agent Eksekusi', desc: 'Claude, Pi, atau Codex' },
+                { step: '01', label: t('step_1_label'), desc: t('step_1_desc') },
+                { step: '02', label: t('step_2_label'), desc: t('step_2_desc') },
+                { step: '03', label: t('step_3_label'), desc: t('step_3_desc') },
+                { step: '04', label: t('step_4_label'), desc: t('step_4_desc') },
               ].map((s) => (
                 <div
                   key={s.step}
@@ -357,18 +405,18 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </div>
 
             {/* Right — output types */}
-            <div className="flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
+            <div className="hidden md:flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(10deg)' }}>
                 <iconify-icon icon="solar:pen-new-square-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Write Spec</span>
+                <span>{t('right_write_spec')}</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(5deg)' }}>
                 <iconify-icon icon="solar:list-check-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Structure the Brief</span>
+                <span>{t('right_structure_brief')}</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-4deg)' }}>
                 <iconify-icon icon="solar:money-bag-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Quotation</span>
+                <span>{t('right_quotation')}</span>
               </div>
             </div>
           </div>
@@ -378,14 +426,14 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       {/* ── PIPELINE ── */}
       <section id="pipeline" className="py-24 md:py-32 bg-black">
         <div className="max-w-3xl mx-auto px-6">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>Got a Spec?</p>
+          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('pipeline_kicker')}</p>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white mb-8" style={{ fontFamily: bowlby }}>
-            FEED YOUR<br />PIPELINE.
+            {t('pipeline_title_l1')}<br />{t('pipeline_title_l2')}
           </h2>
           <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight max-w-lg">
-            SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute. The spec closes that gap. What you do with it next depends on your stack — but if you're looking for a starting point, we recommend{' '}
+            {t('pipeline_desc_1')}{' '}
             <a href="https://superpowers.obra.studio" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4 hover:text-[#f91814] transition-colors">Superpowers by Obra</a>.
-            {' '}It's what we reach for.
+            {' '}{t('pipeline_desc_2')}
           </p>
           <div className="flex items-center gap-4 mt-12">
             <span className="text-sm font-bold uppercase tracking-widest text-white">SANDWICH</span>
@@ -394,10 +442,10 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
           <div className="mt-12">
             <button
-              onClick={onGoToApp}
+              onClick={() => onGoToApp()}
               className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
-              Coba Sekarang
+              {t('pipeline_cta')}
               <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
             </button>
           </div>
@@ -408,26 +456,26 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       <section id="about" className="py-24 md:py-32 bg-[#F4EBE1]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
           <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>
-            Ingredients
+            {t('stack_kicker')}
           </p>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-6 text-black" style={{ fontFamily: bowlby }}>
-            WHAT'S IN THE STACK
+            {t('stack_title')}
           </h2>
           <p className="max-w-lg mx-auto text-black/50 mb-16 text-sm font-medium tracking-tight leading-relaxed">
-            Empat layer, masing-masing punya tugas. Bersama-sama mengubah chaos klien jadi spec yang bisa langsung dieksekusi agent kamu.
+            {t('stack_desc')}
           </p>
-          <div className="flex flex-row justify-center items-start gap-16 md:gap-24">
+          <div className="grid grid-cols-2 md:flex md:flex-row justify-center items-start gap-x-6 gap-y-10 md:gap-24">
             {[
-              { img: 'https://www.cravburgers.shop/img-webp/tomato.webp', name: '/ Order', desc: 'Structures the brief', offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/cheese.webp', name: '/ Prep', desc: 'Scores impact', offset: true },
-              { img: 'https://www.cravburgers.shop/img-webp/meat.webp', name: '/ Recipe', desc: 'Writes the spec', offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/lettuce.webp', name: '/ Validate', desc: 'Checks confidence', offset: true },
+              { img: 'https://www.cravburgers.shop/img-webp/tomato.webp', name: '/ Order', desc: t('stack_order_desc'), offset: false },
+              { img: 'https://www.cravburgers.shop/img-webp/cheese.webp', name: '/ Prep', desc: t('stack_prep_desc'), offset: true },
+              { img: 'https://www.cravburgers.shop/img-webp/meat.webp', name: '/ Recipe', desc: t('stack_recipe_desc'), offset: false },
+              { img: 'https://www.cravburgers.shop/img-webp/lettuce.webp', name: '/ Validate', desc: t('stack_validate_desc'), offset: true },
             ].map((item) => (
-              <div key={item.name} className={`flex flex-col items-center text-center w-36 md:w-40 ${item.offset ? 'translate-y-8' : ''}`}>
+              <div key={item.name} className={`flex flex-col items-center text-center w-full md:w-40 ${item.offset ? 'md:translate-y-8' : ''}`}>
                 <img
                   src={item.img}
                   alt={item.name}
-                  className="w-36 h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
+                  className="w-20 h-20 sm:w-36 sm:h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
                 />
                 <h4 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h4>
                 <p className="text-xs text-black/50 mt-1 font-medium">{item.desc}</p>
@@ -445,16 +493,16 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               className="text-2xl uppercase tracking-tight mb-4 text-white"
               style={{ fontFamily: mousememoirs }}
             >
-              Pricing
+              {t('pricing_kicker')}
             </p>
             <h2
               className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-white"
               style={{ fontFamily: bowlby }}
             >
-              HARGA SIMPEL.<br />TANPA KEJUTAN.
+              {t('pricing_title_l1')}<br />{t('pricing_title_l2')}
             </h2>
             <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white">
-              Pilihan jelas untuk kebutuhan berbeda. Mulai gratis, upgrade kapan saja.
+              {t('pricing_desc')}
             </p>
           </div>
 
@@ -470,7 +518,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                     <span className="text-lg font-semibold" style={{ color: plan.highlight ? '#ffffff' : '#111827' }}>{plan.name}</span>
                     {plan.highlight && (
                       <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' }}>
-                        Paling worth it
+                        {t('pricing_best_value')}
                       </span>
                     )}
                   </div>
@@ -484,7 +532,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
                 <div className="px-6 pb-5">
                   <button
-                    onClick={onGoToApp}
+                    onClick={() => onGoToApp(plan.slug)}
                     className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
                     style={plan.highlight
                       ? { backgroundColor: '#f91814', color: '#ffffff' }
@@ -521,13 +569,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               className="text-xl md:text-2xl tracking-tight mb-4 uppercase text-[#f91814]"
               style={{ fontFamily: mousememoirs }}
             >
-              Shout Out
+              {t('faq_kicker')}
             </p>
             <h2
               className="text-4xl md:text-6xl tracking-tighter leading-tight text-white"
               style={{ fontFamily: bowlby }}
             >
-              GOT QUESTIONS?
+              {t('faq_title')}
             </h2>
           </div>
 
@@ -550,10 +598,10 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
           <div className="mt-14 text-center">
             <button
-              onClick={onGoToApp}
+              onClick={() => onGoToApp()}
               className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
-              Mulai Sekarang
+              {t('faq_cta')}
               <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
             </button>
           </div>
@@ -574,7 +622,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 <span className="text-base font-bold tracking-tight" style={{ fontFamily: bowlby }}>SANDWICH</span>
               </div>
               <p className="text-sm text-zinc-400 leading-relaxed font-medium">
-                Dari brief berantakan jadi spek siap eksekusi. Untuk tim yang kerja bareng AI.
+                {t('footer_desc')}
               </p>
               <div className="flex items-center gap-3 mt-5">
                 {[
@@ -595,13 +643,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             {/* Links */}
             <div className="flex flex-col sm:flex-row gap-10 flex-1 justify-end">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Produk</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">{t('footer_product')}</p>
                 <ul className="flex flex-col gap-3">
                   {[
-                    { label: 'How It Works', id: 'harnesses' },
-                    { label: 'Pipeline', id: 'pipeline' },
-                    { label: 'Pricing', id: 'pricing' },
-                    { label: 'FAQ', id: 'faq' },
+                    { label: t('nav_how'), id: 'harnesses' },
+                    { label: t('nav_pipeline'), id: 'pipeline' },
+                    { label: t('nav_pricing'), id: 'pricing' },
+                    { label: t('nav_faq'), id: 'faq' },
                   ].map(({ label, id }) => (
                     <li key={id}>
                       <a
@@ -616,24 +664,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 </ul>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Gunakan</p>
-                <ul className="flex flex-col gap-3">
-                  {[
-                    { label: 'Pi', href: 'https://pi.ai' },
-                    { label: 'Claude Code', href: 'https://claude.ai' },
-                    { label: 'Codex', href: 'https://openai.com/codex' },
-                    { label: 'Superpowers', href: 'https://superpowers.obra.studio' },
-                  ].map(({ label, href }) => (
-                    <li key={label}>
-                      <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Etalas</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Sandwich</p>
                 <ul className="flex flex-col gap-3">
                   {[
                     { label: 'Website', href: 'https://etalas.com' },
@@ -652,8 +683,17 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
 
           {/* Bottom row */}
-          <div className="flex items-center pt-8">
-            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH</p>
+          <div className="flex flex-col sm:grid sm:grid-cols-3 items-center gap-4 pt-8">
+            <p className="text-xs text-zinc-600 font-medium order-2 sm:order-1">© 2026 SANDWICH</p>
+            <a
+              href="https://www.etalas.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors order-1 sm:order-2"
+            >
+              <span className="text-sm">{t('footer_product_by')}</span>
+              <img src="/logos/etalas-logo.png" alt="Etalas" className="h-4 w-auto brightness-0 invert" />
+            </a>
           </div>
         </div>
       </footer>

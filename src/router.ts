@@ -37,15 +37,19 @@ function isTrustedHost(
   return false;
 }
 
-function originMatchesHost(originHeader: string, hostHeader: string | undefined): boolean {
+function originMatchesHost(
+  originHeader: string,
+  hostHeader: string | undefined,
+  trusted: Set<string>,
+): boolean {
   if (!hostHeader) return false;
   let originHost: string;
   try {
-    originHost = new URL(originHeader).host;
+    originHost = new URL(originHeader).host.toLowerCase();
   } catch {
     return false;
   }
-  return originHost.toLowerCase() === hostHeader.toLowerCase();
+  return originHost === hostHeader.toLowerCase() || trusted.has(originHost);
 }
 
 export class Router {
@@ -98,7 +102,7 @@ export class Router {
       const isSafe = method === "GET" || method === "HEAD";
       if (!isSafe) {
         const origin = req.headers.origin;
-        if (origin !== undefined && !originMatchesHost(origin, req.headers.host)) {
+        if (origin !== undefined && !originMatchesHost(origin, req.headers.host, this.trustedHosts)) {
           sendJson(res, 403, { error: "forbidden" });
           return;
         }

@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useLanguage } from '../lib/i18n'
+
+const bowlby = "'Bowlby One', system-ui"
 
 interface LoginFormProps {
   onSubmit: (username: string, password: string) => Promise<void>
   error: string | null
   isPending: boolean
+  onBack: () => void
+  onSwitchToRegister?: () => void
 }
 
-export default function LoginForm({ onSubmit, error, isPending }: LoginFormProps) {
+export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitchToRegister }: LoginFormProps) {
+  const { t: tr } = useLanguage()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -17,45 +24,61 @@ export default function LoginForm({ onSubmit, error, isPending }: LoginFormProps
     void onSubmit(username, password)
   }
 
+  const handleDemoLogin = () => {
+    if (isPending) return
+    setUsername('demo')
+    setPassword('demo')
+    void onSubmit('demo', 'demo')
+  }
+
   return (
-    <div className="ds-bg min-h-screen flex items-center justify-center text-white antialiased relative">
-      <div className="ds-noise" />
-      <div className="w-full max-w-sm mx-4 relative z-10 text-center">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <iconify-icon icon="solar:hand-shake-bold" width="40" className="text-white/70" />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10 relative"
+      style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}
+    >
+      <div className="w-full max-w-sm rounded-3xl p-8" style={{ backgroundColor: '#ffffff', boxShadow: '0 20px 50px rgba(0,0,0,0.08)' }}>
+        <div className="flex justify-center mb-6">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#f91814' }}>
+            <iconify-icon icon="solar:login-3-bold" width="24" className="text-white" />
+          </div>
         </div>
 
-        <h1 className="text-xl font-normal tracking-tight ds-text-shadow mb-1">Welcome back</h1>
-        <p className="text-sm text-white/40 font-light mb-8">Log in to continue to Runchise</p>
+        <h1 className="text-2xl text-center tracking-tight mb-1.5" style={{ fontFamily: bowlby, color: '#111827' }}>{tr('login_title')}</h1>
+        <p className="text-sm text-zinc-500 text-center mb-7">{tr('login_subtitle')}</p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
-          <label className="flex flex-col gap-1.5 text-xs text-white/50 font-light">
-            Username
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#F4EBE1' }}>
+            <iconify-icon icon="solar:user-linear" width="18" style={{ color: 'rgba(0,0,0,0.35)', display: 'block' }} />
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
-              placeholder="Enter your username"
-              className="px-4 py-2.5 rounded-lg bg-[#0a0a0a] border border-white/[0.06] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-white/15 transition-colors"
+              aria-label="Username"
+              placeholder="Username"
+              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
-          </label>
-          <label className="flex flex-col gap-1.5 text-xs text-white/50 font-light">
-            Password
+          </div>
+
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#F4EBE1' }}>
+            <iconify-icon icon="solar:lock-password-linear" width="18" style={{ color: 'rgba(0,0,0,0.35)', display: 'block' }} />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Enter your password"
-              className="px-4 py-2.5 rounded-lg bg-[#0a0a0a] border border-white/[0.06] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-white/15 transition-colors"
+              aria-label="Password"
+              placeholder="Password"
+              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
-          </label>
+            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }}>
+              <iconify-icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width="18" />
+            </button>
+          </div>
 
           {error && (
-            <p className="text-xs text-[#ff8a8a] bg-[#ff8a8a]/5 border border-[#ff8a8a]/10 rounded-lg px-3 py-2">
+            <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>
               {error}
             </p>
           )}
@@ -63,20 +86,45 @@ export default function LoginForm({ onSubmit, error, isPending }: LoginFormProps
           <button
             type="submit"
             disabled={isPending}
-            className="relative inline-flex group disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            style={{ backgroundColor: '#0a0a0a' }}
           >
-            <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-            <span
-              className="relative flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg text-sm font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
-              style={{
-                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6), 0 4px 8px -2px rgba(0,0,0,0.6)',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-              }}
-            >
-              {isPending ? 'Logging in…' : 'Log in'}
-            </span>
+            {isPending ? tr('login_pending') : tr('login_cta')}
           </button>
         </form>
+
+        <div className="flex items-center gap-2 my-5">
+          <div className="flex-1 h-px" style={{ backgroundColor: '#e5e7eb' }} />
+          <span className="text-[11px] text-zinc-400 font-medium">{tr('auth_or')}</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: '#e5e7eb' }} />
+        </div>
+
+        <button
+          onClick={handleDemoLogin}
+          disabled={isPending}
+          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: '#F4EBE1', color: '#111827' }}
+        >
+          {tr('login_demo')}
+        </button>
+
+        <button
+          onClick={onBack}
+          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
+          style={{ border: '1.5px solid #0a0a0a', color: '#0a0a0a', backgroundColor: 'transparent' }}
+        >
+          <iconify-icon icon="solar:arrow-left-linear" width="16" />
+          {tr('auth_back')}
+        </button>
+
+        {onSwitchToRegister && (
+          <p className="text-center text-xs text-zinc-400 mt-4">
+            {tr('auth_no_account')}{' '}
+            <button type="button" onClick={onSwitchToRegister} className="font-semibold underline" style={{ color: '#f91814' }}>
+              {tr('auth_register_link')}
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )

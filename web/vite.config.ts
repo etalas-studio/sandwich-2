@@ -11,6 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4319',
+        changeOrigin: true,
+        headers: { origin: 'http://localhost:4319' },
+      },
+    },
   },
   test: {
     environment: 'jsdom',

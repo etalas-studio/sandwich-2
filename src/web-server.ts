@@ -32,12 +32,17 @@ export interface WebServerOptions {
 }
 
 function parseTrustedHosts(): Set<string> {
-  return new Set(
+  const hosts = new Set(
     (process.env.TRUSTED_HOSTS ?? "")
       .split(",")
       .map((h) => h.trim().toLowerCase())
       .filter(Boolean),
   );
+  // Allow Vite dev server origin in development
+  if (process.env.NODE_ENV !== "production") {
+    hosts.add("localhost:3000");
+  }
+  return hosts;
 }
 
 const PUBLIC_API_PATHS = new Set([

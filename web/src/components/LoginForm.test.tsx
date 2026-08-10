@@ -6,7 +6,7 @@ import LoginForm from './LoginForm'
 describe('LoginForm', () => {
   it('renders username and password inputs and a submit button', () => {
     render(
-      <LoginForm onSubmit={vi.fn()} error={null} isPending={false} />,
+      <LoginForm onSubmit={vi.fn()} error={null} isPending={false} onBack={vi.fn()} />,
     )
 
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
@@ -19,7 +19,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup()
 
     render(
-      <LoginForm onSubmit={onSubmit} error={null} isPending={false} />,
+      <LoginForm onSubmit={onSubmit} error={null} isPending={false} onBack={vi.fn()} />,
     )
 
     await user.type(screen.getByLabelText('Username'), 'alice')
@@ -34,7 +34,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup()
 
     render(
-      <LoginForm onSubmit={onSubmit} error={null} isPending={true} />,
+      <LoginForm onSubmit={onSubmit} error={null} isPending={true} onBack={vi.fn()} />,
     )
 
     await user.type(screen.getByLabelText('Username'), 'alice')
@@ -46,7 +46,7 @@ describe('LoginForm', () => {
 
   it('shows the submit button in pending state when isPending is true', () => {
     render(
-      <LoginForm onSubmit={vi.fn()} error={null} isPending={true} />,
+      <LoginForm onSubmit={vi.fn()} error={null} isPending={true} onBack={vi.fn()} />,
     )
 
     expect(screen.getByRole('button', { name: 'Logging in…' })).toBeDisabled()
@@ -58,6 +58,7 @@ describe('LoginForm', () => {
         onSubmit={vi.fn()}
         error="invalid credentials"
         isPending={false}
+        onBack={vi.fn()}
       />,
     )
 
@@ -66,7 +67,7 @@ describe('LoginForm', () => {
 
   it('does not display error when error prop is null', () => {
     render(
-      <LoginForm onSubmit={vi.fn()} error={null} isPending={false} />,
+      <LoginForm onSubmit={vi.fn()} error={null} isPending={false} onBack={vi.fn()} />,
     )
 
     expect(screen.queryByText(/invalid/)).not.toBeInTheDocument()

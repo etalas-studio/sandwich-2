@@ -1,11 +1,12 @@
 interface ConfirmDeleteModalProps {
   open: boolean
   itemName: string
+  title?: string
   onConfirm: () => void
   onCancel: () => void
 }
 
-export default function ConfirmDeleteModal({ open, itemName, onConfirm, onCancel }: ConfirmDeleteModalProps) {
+export default function ConfirmDeleteModal({ open, itemName, title = 'Delete Ticket', onConfirm, onCancel }: ConfirmDeleteModalProps) {
   if (!open) return null
 
   return (
@@ -14,7 +15,7 @@ export default function ConfirmDeleteModal({ open, itemName, onConfirm, onCancel
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="ds-card-outer ds-shadow-elevated w-full max-w-sm" style={{ height: 'auto' }}>
           <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
-            <h3 className="text-base font-normal tracking-tight text-white ds-text-shadow mb-2">Delete Ticket</h3>
+            <h3 className="text-base font-normal tracking-tight text-white ds-text-shadow mb-2">{title}</h3>
             <p className="text-sm text-white/50 font-light mb-6">
               Are you sure you want to delete <span className="text-white/70 font-mono">{itemName}</span>? This cannot be undone.
             </p>
@@ -27,7 +28,8 @@ export default function ConfirmDeleteModal({ open, itemName, onConfirm, onCancel
               </button>
               <button
                 onClick={onConfirm}
-                className="flex-1 px-4 py-2 rounded-lg bg-[#ff8a8a]/20 border border-[#ff8a8a]/30 text-[#ff8a8a] text-sm"
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                style={{ backgroundColor: '#f91814' }}
               >
                 Delete
               </button>

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
+import CheckoutPage from './components/CheckoutPage'
 import { useNavigate } from 'react-router-dom'
 
 interface AppProps {
@@ -16,6 +17,7 @@ export default function App(_props: AppProps) {
   return (
     <Routes>
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

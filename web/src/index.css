@@ -111,6 +111,10 @@ body {
   scrollbar-width: none;
 }
 
+.settings-page .ds-shadow-elevated {
+  box-shadow: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    PULSE ANIMATION (for ambient blobs)
    ═══════════════════════════════════════════════════════════════ */

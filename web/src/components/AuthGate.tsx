@@ -1,3 +1,4 @@
+import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import SetupForm from './SetupForm'
@@ -20,6 +21,7 @@ export default function AuthGate() {
 
   const location = useLocation()
   const navigate = useNavigate()
+  const [forceView, setForceView] = React.useState<'login' | 'register' | null>(null)
 
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
@@ -27,31 +29,53 @@ export default function AuthGate() {
 
   // Landing page at root — always accessible
   if (location.pathname === '/') {
-    return <LandingPage onGoToApp={() => navigate('/dashboard')} />
+    return (
+      <LandingPage
+        onGoToApp={(plan) => navigate(plan ? `/checkout?plan=${plan}` : '/checkout')}
+      />
+    )
   }
 
-  // Dashboard — skip auth entirely
+  const showRegister =
+    forceView === 'register' ||
+    (forceView === null && state.status === 'setup_required')
+
+  // Dashboard — requires login, then a completed checkout
   if (location.pathname.startsWith('/dashboard')) {
-    const username = state.status === 'authenticated' ? state.username : 'guest'
-    return <App username={username} onLogout={() => navigate('/')} />
+    if (showRegister) {
+      return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
+    }
+    if (state.status === 'setup_required' || state.status === 'unauthenticated') {
+      return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView('register')} />
+    }
+    if (!localStorage.getItem('sandwich_paid_plan')) {
+      navigate('/checkout', { replace: true })
+      return null
+    }
+    const username = state.status === 'authenticated' ? state.username : ''
+    return <App username={username} onLogout={() => { void logout(); navigate('/') }} />
   }
 
-  if (state.status === 'setup_required') {
+  if (showRegister) {
     return (
       <SetupForm
         onSubmit={register}
         error={registerError}
         isPending={registerPending}
+        onBack={() => navigate('/')}
+        onSwitchToLogin={() => setForceView('login')}
       />
     )
   }
 
-  if (state.status === 'unauthenticated') {
+  if (state.status === 'setup_required' || state.status === 'unauthenticated') {
     return (
       <LoginForm
         onSubmit={login}
         error={loginError}
         isPending={loginPending}
+        onBack={() => navigate('/')}
+        onSwitchToRegister={() => setForceView('register')}
       />
     )
   }

@@ -8,6 +8,8 @@ export interface LocalTicket {
   type: TicketType
   content?: string  // AI-generated output stored here
   status: 'draft' | 'processing' | 'done'
+  pinned?: boolean
+  unread?: boolean
 }
 
 const KEY = 'sandwich_tickets'

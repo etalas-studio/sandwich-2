@@ -94,33 +94,67 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
           return;
         }
         // Fallback: turn_end carries the full assistant message
-        if (event.type === "turn_end" && !responseText) {
-          const content = event.message?.content;
-          if (Array.isArray(content)) {
-            for (const block of content) {
-              if (block?.type === "text" && block.text) {
-                responseText += block.text;
+        if (event.type === "turn_end") {
+          console.log("[invoker:turn_end] raw:", JSON.stringify(event).slice(0, 2000));
+          if (!responseText) {
+            const content = event.message?.content;
+            if (Array.isArray(content)) {
+              for (const block of content) {
+                if (block?.type === "text" && block.text) {
+                  responseText += block.text;
+                }
+              }
+            }
+            // Pi SDK may use different shape: event.message?.parts or event.message?.text
+            if (!responseText && event.message?.text) {
+              responseText = event.message.text;
+            }
+          }
+          return;
+        }
+        // message_end may carry full content
+        if (event.type === "message_end") {
+          console.log("[invoker:message_end] raw:", JSON.stringify(event).slice(0, 2000));
+          if (!responseText) {
+            const msg = event.message;
+            if (msg?.role === "assistant" || !msg?.role) {
+              const content = msg?.content;
+              if (Array.isArray(content)) {
+                for (const block of content) {
+                  if (block?.type === "text" && block.text) responseText += block.text;
+                }
+              } else if (typeof content === "string") {
+                responseText = content;
+              } else if (typeof msg?.text === "string") {
+                responseText = msg.text;
               }
             }
           }
           return;
         }
         // Last resort: agent_end has all messages from the session
-        if (event.type === "agent_end" && !responseText) {
-          const messages = event.messages;
-          if (Array.isArray(messages)) {
-            for (let i = messages.length - 1; i >= 0; i--) {
-              const msg = messages[i];
-              if (msg?.role === "assistant") {
-                const content = msg.content;
-                if (Array.isArray(content)) {
-                  for (const block of content) {
-                    if (block?.type === "text" && block.text) {
-                      responseText += block.text;
+        if (event.type === "agent_end") {
+          console.log("[invoker:agent_end] raw:", JSON.stringify(event).slice(0, 2000));
+          if (!responseText) {
+            const messages = event.messages;
+            if (Array.isArray(messages)) {
+              for (let i = messages.length - 1; i >= 0; i--) {
+                const msg = messages[i];
+                if (msg?.role === "assistant" || msg?.type === "assistant") {
+                  const content = msg.content;
+                  if (Array.isArray(content)) {
+                    for (const block of content) {
+                      if (block?.type === "text" && block.text) {
+                        responseText += block.text;
+                      }
                     }
+                  } else if (typeof content === "string") {
+                    responseText = content;
+                  } else if (typeof msg.text === "string") {
+                    responseText = msg.text;
                   }
+                  if (responseText) break;
                 }
-                if (responseText) break;
               }
             }
           }
