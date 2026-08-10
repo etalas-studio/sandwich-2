@@ -64,13 +64,15 @@ interface ChatMessage {
   ticketId?: string
 }
 
-function usePipelineStream(ticketKey: string | null, regenNonce: number, onDone?: (output: string) => void) {
+function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun: boolean, onDone?: (output: string) => void) {
   const { t: tr } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
 
   useEffect(() => {
     if (!ticketKey) return
+    // Don't auto-generate when opening existing ticket from history (regenNonce=0 and autoRun=false)
+    if (!autoRun && regenNonce === 0) return
     setMessages([])
     setStreaming(true)
 
@@ -95,7 +97,7 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, onDone?
         let buf = ''
         while (true) {
           const { value, done } = await reader.read()
-          if (done) break
+          if (done) { setStreaming(false); break }
           buf += dec.decode(value, { stream: true })
           const parts = buf.split('\n\n')
           buf = parts.pop() ?? ''
@@ -221,18 +223,18 @@ function ChatView({
   initialPrompt,
   ticketKey,
   createdAt,
+  autoRun,
   onPromptUpdate,
-  onNewPrompt,
 }: {
   initialPrompt: string
   ticketKey: string
   createdAt: string
+  autoRun: boolean
   onPromptUpdate: (text: string) => void
-  onNewPrompt: (prompt: string) => void
 }) {
   const { t: tr } = useLanguage()
   const [regenNonce, setRegenNonce] = useState(0)
-  const { messages, streaming } = usePipelineStream(ticketKey, regenNonce, () => {})
+  const { messages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, () => {})
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [editingPrompt, setEditingPrompt] = useState(false)
@@ -281,12 +283,15 @@ function ChatView({
   }
 
   const handleSend = () => {
-    if (!followUp.trim()) return
+    if (!followUp.trim() || streaming) return
     const attachmentTags = attachments.map(a => `[attachment: ${a.name}]`).join('\n')
-    onNewPrompt(attachmentTags ? `${followUp.trim()}\n${attachmentTags}` : followUp.trim())
+    const text = attachmentTags ? `${followUp.trim()}\n${attachmentTags}` : followUp.trim()
     setFollowUp('')
     setAttachments([])
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    onPromptUpdate(text)
+    updateTicketApi(ticketKey, { summary: text, description: text }).catch(() => {})
+    setRegenNonce(n => n + 1)
   }
 
   return (
@@ -805,7 +810,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<LocalTicket | null>(null)
   const [activeNav, setActiveNav] = useState('home')
 
-  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string } | null>(null)
+  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string; autoRun: boolean } | null>(null)
   const [creatingNew, setCreatingNew] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showChatMenu, setShowChatMenu] = useState(false)
@@ -826,7 +831,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
   const handleSuccess = (t: LocalTicket) => {
     refresh()
-    setChatState({ prompt: t.summary, ticketKey: t.id })
+    setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: true })
     setCreatingNew(false)
   }
 
@@ -903,7 +908,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setShowNotifMenu(false)
     updateTicket(t.id, { unread: false })
     refresh()
-    setChatState({ prompt: t.summary, ticketKey: t.id })
+    setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
     setActiveNav('home')
   }
 
@@ -951,7 +956,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>MY BRIEFS</h1>
             <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{tickets.length} {tr('dash_docs_saved')}</p>
           </div>
-          <TicketList tickets={tickets} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })} onNew={() => setActiveNav('home')} />
+          <TicketList tickets={tickets} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })} onNew={() => setActiveNav('home')} />
         </div>
       </div>
     )
@@ -995,7 +1000,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <ArtifactGrid
           title={pp.title}
           items={items}
-          onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id })}
+          onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })}
           onNew={() => setCreatingNew(true)}
         />
       )
@@ -1097,7 +1102,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 return (
                   <button key={t.id}
                     onClick={() => {
-                      setChatState({ prompt: t.summary, ticketKey: t.id })
+                      setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
                       if (t.unread) updateTicket(t.id, { unread: false })
                       refresh()
                     }}
@@ -1348,15 +1353,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               initialPrompt={chatState.prompt}
               ticketKey={chatState.ticketKey}
               createdAt={currentTicket?.createdAt ?? new Date().toISOString()}
+              autoRun={chatState.autoRun}
               onPromptUpdate={handleChatPromptUpdate}
-              onNewPrompt={(p) => {
-                setChatState(null)
-                setActiveNav('home')
-                setTimeout(() => {
-                  const ev = new CustomEvent('sandwich:inject-prompt', { detail: p })
-                  window.dispatchEvent(ev)
-                }, 50)
-              }}
             />
           </div>
         ) : isHomePage ? (
