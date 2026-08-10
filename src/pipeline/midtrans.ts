@@ -24,7 +24,8 @@ export interface SnapTransactionResult {
 export async function createSnapTransaction(
   input: SnapTransactionInput,
 ): Promise<SnapTransactionResult> {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY ?? "";
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  if (!serverKey) throw new Error("MIDTRANS_SERVER_KEY is not set");
   const auth = Buffer.from(`${serverKey}:`).toString("base64");
 
   const res = await fetch(`${snapBaseUrl()}/snap/v1/transactions`, {
@@ -59,7 +60,8 @@ export function verifyNotificationSignature(notification: {
   gross_amount: string;
   signature_key: string;
 }): boolean {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY ?? "";
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  if (!serverKey) throw new Error("MIDTRANS_SERVER_KEY is not set");
   const expected = createHash("sha512")
     .update(notification.order_id + notification.status_code + notification.gross_amount + serverKey)
     .digest("hex");

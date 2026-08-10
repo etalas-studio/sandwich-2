@@ -1,9 +1,15 @@
+import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import { authenticateRequest } from "../auth/middleware.js";
 import { createSnapTransaction, verifyNotificationSignature } from "../pipeline/midtrans.js";
 
-export function registerMidtransRoutes(router: Router): void {
+export function registerMidtransRoutes(router: Router, db: Database.Database): void {
   router.post("/api/midtrans/transaction", async (req, res) => {
+    if (!authenticateRequest(db, req)) {
+      sendJson(res, 401, { error: "unauthenticated" });
+      return;
+    }
     const body = (await readJsonBody(req)) as Partial<{
       orderId: string;
       grossAmount: number;

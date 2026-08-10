@@ -97,7 +97,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerTicketRoutes(router, db);
   registerPurgeRoute(router, db);
   registerSettingsRoutes(router, db);
-  registerMidtransRoutes(router);
+  registerMidtransRoutes(router, db);
 
   // Scan runner: uses Pi SDK createAgentSession when a model is selected
   const piInvokerFactory = createPiInvokerFactory(getModelRuntime());
