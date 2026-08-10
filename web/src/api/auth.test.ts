@@ -21,17 +21,6 @@ describe('fetchMe', () => {
     expect(fetch).toHaveBeenCalledWith('/api/auth/me')
   })
 
-  it('returns setup_required state when server responds with setup_required', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ state: 'setup_required' }),
-    } as Response)
-
-    const result = await fetchMe()
-
-    expect(result).toEqual<AuthState>({ status: 'setup_required' })
-  })
-
   it('returns unauthenticated state when server responds with unauthenticated', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,

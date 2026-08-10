@@ -1,13 +1,6 @@
 import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
-import {
-  AuthError,
-  type AuthResult,
-  login,
-  logout,
-  register,
-  setupRequired,
-} from "../auth/service.js";
+import { AuthError, type AuthResult, login, logout, register } from "../auth/service.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getUserById } from "../db/users.js";
 import {
@@ -42,10 +35,6 @@ export function registerAuthRoutes(
   publicPaths: Set<string>,
 ): void {
   router.get("/api/auth/me", (_req, res) => {
-    if (setupRequired(db)) {
-      sendJson(res, 200, { state: "setup_required" });
-      return;
-    }
     const auth = authenticateRequest(db, _req);
     if (!auth) {
       sendJson(res, 200, { state: "unauthenticated" });

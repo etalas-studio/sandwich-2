@@ -1,11 +1,10 @@
 export type AuthState =
   | { status: 'loading' }
-  | { status: 'setup_required' }
   | { status: 'unauthenticated' }
   | { status: 'authenticated'; username: string }
 
 interface MeResponse {
-  state: 'setup_required' | 'unauthenticated' | 'authenticated'
+  state: 'unauthenticated' | 'authenticated'
   user?: { username: string }
 }
 
@@ -17,8 +16,6 @@ export async function fetchMe(): Promise<AuthState> {
   switch (data.state) {
     case 'authenticated':
       return { status: 'authenticated', username: data.user?.username ?? '' }
-    case 'setup_required':
-      return { status: 'setup_required' }
     case 'unauthenticated':
       return { status: 'unauthenticated' }
   }

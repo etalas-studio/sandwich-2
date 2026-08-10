@@ -153,13 +153,9 @@ async function testLoginWithWrongPasswordFails(): Promise<void> {
   console.log("PASS: testLoginWithWrongPasswordFails");
 }
 
-async function testAuthMeReflectsAllThreeStates(): Promise<void> {
+async function testAuthMeReflectsBothStates(): Promise<void> {
   const { server, baseUrl } = await startTestServer();
   try {
-    const beforeSetupRes = await fetch(`${baseUrl}/api/auth/me`);
-    assert.equal(beforeSetupRes.status, 200);
-    assert.deepEqual(await beforeSetupRes.json(), { state: "setup_required" });
-
     const registerRes = await fetch(`${baseUrl}/api/auth/register`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -185,7 +181,7 @@ async function testAuthMeReflectsAllThreeStates(): Promise<void> {
   } finally {
     server.close();
   }
-  console.log("PASS: testAuthMeReflectsAllThreeStates");
+  console.log("PASS: testAuthMeReflectsBothStates");
 }
 
 async function testLoginSucceedsAndCookieAuthorizes(): Promise<void> {
@@ -231,10 +227,6 @@ async function testCrossOriginRegisterIsRejected(): Promise<void> {
     });
     assert.equal(res.status, 403);
     assert.deepEqual(await res.json(), { error: "forbidden" });
-
-    // …and the account must still be claimable by the real operator.
-    const meRes = await fetch(`${baseUrl}/api/auth/me`);
-    assert.deepEqual(await meRes.json(), { state: "setup_required" });
   } finally {
     server.close();
   }
@@ -427,7 +419,7 @@ async function main(): Promise<void> {
   await testTicketsRequiresSession();
   await testRegisterLoginLogoutFlow();
   await testLoginWithWrongPasswordFails();
-  await testAuthMeReflectsAllThreeStates();
+  await testAuthMeReflectsBothStates();
   await testLoginSucceedsAndCookieAuthorizes();
   await testCrossOriginRegisterIsRejected();
   await testMatchingOriginIsAllowed();

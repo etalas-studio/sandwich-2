@@ -60,18 +60,6 @@ describe('useAuth', () => {
     expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', username: 'alice' })
   })
 
-  it('returns setup_required state when /me responds with setup_required', async () => {
-    mockFetchMeResponse({ status: 'setup_required' })
-
-    const { result } = renderHook(() => useAuth(), { wrapper })
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.state).toEqual<AuthState>({ status: 'setup_required' })
-  })
-
   it('returns unauthenticated state when /me responds with unauthenticated', async () => {
     mockFetchMeResponse({ status: 'unauthenticated' })
 
@@ -162,7 +150,7 @@ describe('useAuth', () => {
   // ── register ──
 
   it('register calls postRegister and refreshes auth state on success', async () => {
-    mockFetchMeResponse({ status: 'setup_required' })
+    mockFetchMeResponse({ status: 'unauthenticated' })
     let registered = false
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
@@ -173,7 +161,7 @@ describe('useAuth', () => {
           json: async () =>
             registered
               ? { state: 'authenticated', user: { username: 'bob' } }
-              : { state: 'setup_required' },
+              : { state: 'unauthenticated' },
         } as Response
       }
       if (url === '/api/auth/register') {
@@ -199,7 +187,7 @@ describe('useAuth', () => {
   })
 
   it('register sets registerError on failure', async () => {
-    mockFetchMeResponse({ status: 'setup_required' })
+    mockFetchMeResponse({ status: 'unauthenticated' })
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = typeof input === 'string' ? input : String(input)
@@ -207,7 +195,7 @@ describe('useAuth', () => {
         return { ok: false, status: 409, json: async () => ({ error: 'username taken' }) } as Response
       }
       if (url === '/api/auth/me') {
-        return { ok: true, json: async () => ({ state: 'setup_required' }) } as Response
+        return { ok: true, json: async () => ({ state: 'unauthenticated' }) } as Response
       }
       return { ok: true, json: async () => ({}) } as Response
     })

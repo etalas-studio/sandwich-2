@@ -43,55 +43,38 @@ function getDummyHash(): Promise<string> {
   return dummyHashPromise;
 }
 
-function anyUserExists(db: Database.Database): boolean {
-  return db.prepare("SELECT 1 FROM users LIMIT 1").get() !== undefined;
-}
-
-export function setupRequired(db: Database.Database): boolean {
-  return !anyUserExists(db);
-}
-
 export async function register(db: Database.Database, input: RegisterInput): Promise<AuthResult> {
-  // Hash BEFORE the "has anyone registered yet?" check, not after.
-  //
-  // This ordering is load-bearing. `anyUserExists` + `createUser` are both
-  // synchronous better-sqlite3 calls, so as long as no `await` sits between
-  // them, Node's single-threaded run-to-completion semantics make the
-  // check-then-insert pair atomic with respect to other register() calls:
-  // no second request can be dispatched mid-sequence. Putting the (now async)
-  // hash between them would yield to the event loop right in that gap and
-  // reintroduce a real double-registration race, where two concurrent
-  // requests both observe an empty users table and both try to insert.
-  //
-  // Wrapping in db.transaction() is not the fix here — better-sqlite3
-  // transactions wrap a *synchronous* callback and cannot contain an await.
   const passwordHash = await hashPassword(input.password);
 
-  // No `await` from here to the insert.
-  if (anyUserExists(db)) {
-    throw new AuthError(409, "setup already completed");
+  let user: User;
+  try {
+    user = createUser(db, {
+      username: input.username,
+      email: input.email,
+      passwordHash,
+    });
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      throw new AuthError(409, "username or email already taken");
+    }
+    throw err;
   }
-
-  const user = createUser(db, {
-    username: input.username,
-    email: input.email,
-    passwordHash,
-  });
   const session = createSession(db, user.id, sessionExpiryIso());
   return { user: { username: user.username, email: user.email }, session };
 }
 
 export async function login(db: Database.Database, input: Credentials): Promise<AuthResult> {
-  // ponytail: dummy auth — any credentials accepted, auto-creates user on first login
-  let user = getUserByUsername(db, input.username);
+  const user = getUserByUsername(db, input.username);
   if (!user) {
-    const passwordHash = await hashPassword(input.password || "dummy");
-    user = createUser(db, {
-      username: input.username,
-      email: `${input.username}@local`,
-      passwordHash,
-    });
+    await getDummyHash().then((hash) => verifyPassword(input.password, hash));
+    throw new AuthError(401, "invalid username or password");
   }
+
+  const valid = await verifyPassword(input.password, user.passwordHash);
+  if (!valid) {
+    throw new AuthError(401, "invalid username or password");
+  }
+
   const session = createSession(db, user.id, sessionExpiryIso());
   return { user: { username: user.username, email: user.email }, session };
 }

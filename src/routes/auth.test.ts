@@ -51,14 +51,14 @@ describe("auth routes", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("GET /api/auth/me returns setup_required when empty", async () => {
+  it("GET /api/auth/me returns unauthenticated when no session", async () => {
     const router = new Router(new Set(), 0);
     registerAuthRoutes(router, db, PUBLIC);
     const res = mockRes();
     await router.dispatch(mockReq("GET", "/api/auth/me"), res);
     await res.ended;
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(JSON.parse(res.body), { state: "setup_required" });
+    assert.deepEqual(JSON.parse(res.body), { state: "unauthenticated" });
   });
 
   it("POST /api/auth/register rejects empty body", async () => {
