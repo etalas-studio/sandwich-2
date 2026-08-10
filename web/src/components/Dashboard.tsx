@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
-import { createTicket, updateTicket as updateTicketApi } from '../api/tickets'
+import { createTicket, updateTicket as updateTicketApi, fetchTicket } from '../api/tickets'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
@@ -126,6 +126,50 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
   }, [ticketKey, regenNonce])
 
   return { messages, streaming }
+}
+
+function AiMessageActions({ output, ticketKey, onRegenerate }: { output: string; ticketKey: string; onRegenerate: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null)
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(output).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  const sendFeedback = (value: 'like' | 'dislike') => {
+    const next = feedback === value ? null : value
+    setFeedback(next)
+    fetch(`/api/tickets/${ticketKey}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ feedback: next }),
+    }).catch(() => {})
+  }
+
+  const btnClass = "p-1.5 rounded-md transition-colors hover:bg-black/5"
+  const iconColor = 'rgba(0,0,0,0.35)'
+  const activeColor = '#f91814'
+
+  return (
+    <div className="flex items-center gap-0.5">
+      <button onClick={handleCopy} className={btnClass} title="Copy">
+        <iconify-icon icon={copied ? 'solar:check-circle-linear' : 'solar:copy-linear'} width="14" style={{ color: copied ? activeColor : iconColor }} />
+      </button>
+      <button onClick={() => sendFeedback('like')} className={btnClass} title="Like">
+        <iconify-icon icon="solar:like-linear" width="14" style={{ color: feedback === 'like' ? activeColor : iconColor }} />
+      </button>
+      <button onClick={() => sendFeedback('dislike')} className={btnClass} title="Dislike">
+        <iconify-icon icon="solar:dislike-linear" width="14" style={{ color: feedback === 'dislike' ? activeColor : iconColor }} />
+      </button>
+      <button onClick={onRegenerate} className={btnClass} title="Regenerate">
+        <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: iconColor }} />
+      </button>
+    </div>
+  )
 }
 
 function timeAgo(iso: string, t: (key: StringKey) => string): string {
@@ -260,6 +304,16 @@ function ChatView({
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
   useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
+  // Load saved prDescription when opening an existing ticket (no auto-run)
+  useEffect(() => {
+    if (!ticketKey || autoRun) return
+    fetchTicket(ticketKey).then(ticket => {
+      if (ticket.prDescription) {
+        setTurns([{ user: initialPrompt, aiMessages: [{ role: 'ai', isDone: true, output: ticket.prDescription! }] }])
+      }
+    }).catch(() => {})
+  }, [ticketKey])
+
   const handleRefreshResponse = () => {
     if (streaming) return
     setRegenNonce(n => n + 1)
@@ -366,45 +420,41 @@ function ChatView({
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output) return (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
-                        <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
-                      </div>
-                      <div className="text-sm whitespace-pre-wrap break-words flex-1" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
+                    <div key={i} className="group">
+                      <div className="text-sm whitespace-pre-wrap break-words" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
                         {m.output}
+                      </div>
+                      {/* SANDWICH logo + hover actions */}
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
+                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814', opacity: 0.55 }}>
+                            <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
+                          </div>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <AiMessageActions output={m.output} ticketKey={ticketKey} onRegenerate={handleRefreshResponse} />
+                        </div>
                       </div>
                     </div>
                   )
                   if (m.isError) return (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
-                        <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
-                      </div>
-                      <div className="text-sm" style={{ color: '#f87171' }}>{m.text}</div>
-                    </div>
+                    <div key={i} className="text-sm" style={{ color: '#f87171' }}>{m.text}</div>
                   )
                   return null
                 })}
 
                 {/* Loading state — shown while streaming */}
                 {isLast && streaming && !msgs.some(m => m.isDone || m.isError) && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
-                      <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
-                    </div>
-                    <div className="flex flex-col gap-2 pt-1">
-                      {/* Current stage label */}
-                      {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
-                        <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                          {m.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage!]) : m.stage}
-                        </p>
-                      ))}
-                      {/* Animated dots */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
-                      </div>
+                  <div className="flex flex-col gap-2">
+                    {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
+                      <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                        {m.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage!]) : m.stage}
+                      </p>
+                    ))}
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
                     </div>
                   </div>
                 )}
@@ -844,7 +894,11 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<LocalTicket | null>(null)
   const [activeNav, setActiveNav] = useState('home')
 
-  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string; autoRun: boolean } | null>(null)
+  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string; autoRun: boolean } | null>(() => {
+    const saved = localStorage.getItem('sandwich_last_chat')
+    if (!saved) return null
+    try { return { ...JSON.parse(saved) as { prompt: string; ticketKey: string }, autoRun: false } } catch { return null }
+  })
   const [creatingNew, setCreatingNew] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showChatMenu, setShowChatMenu] = useState(false)
@@ -854,6 +908,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [showNotifMenu, setShowNotifMenu] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [contextMenuTicket, setContextMenuTicket] = useState<string | null>(null)
+  const [renamingTicketId, setRenamingTicketId] = useState<string | null>(null)
+  const [renameTicketValue, setRenameTicketValue] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareVisibility, setShareVisibility] = useState<'private' | 'shared'>('private')
@@ -881,6 +938,11 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setShowChatMenu(false)
     setRenamingTitle(false)
     setConfirmDeleteChat(false)
+    if (chatState) {
+      localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, ticketKey: chatState.ticketKey }))
+    } else {
+      localStorage.removeItem('sandwich_last_chat')
+    }
   }, [chatState?.ticketKey])
 
   const toggleChatPin = () => {
@@ -1075,7 +1137,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
               <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
             </div>
-            <span className="font-bold text-sm tracking-wide text-white" style={{ fontFamily: bowlby }}>SANDWICH</span>
           </div>
           <button className="p-1 rounded transition-colors hover:bg-white/10" onClick={() => setSidebarOpen(false)}>
             <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: '#ffffff' }} />
@@ -1133,29 +1194,102 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               tickets.slice().reverse().sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map(t => {
                 const meta = TYPE_META[t.type] ?? TYPE_META.general
                 const isActive = chatState?.ticketKey === t.id
+                const menuOpen = contextMenuTicket === t.id
+                const isRenaming = renamingTicketId === t.id
                 return (
-                  <button key={t.id}
-                    onClick={() => {
-                      setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
-                      if (t.unread) updateTicket(t.id, { unread: false })
-                      refresh()
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left mb-0.5 transition-colors"
-                    style={isActive ? {} : {}}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = '' }}
-                  >
-                    <div className="w-5 h-5 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
-                      <iconify-icon icon={meta.icon} width="11" style={{ color: meta.ic }} />
-                    </div>
-                    <span className="text-xs truncate flex-1" style={{ color: isActive ? '#ffffff' : t.unread ? '#ffffff' : 'rgba(255,255,255,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
-                    {t.pinned && (
-                      <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+                  <div key={t.id} className="relative group/item mb-0.5">
+                    <button
+                      onClick={() => {
+                        setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
+                        if (t.unread) updateTicket(t.id, { unread: false })
+                        refresh()
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
+                      style={{ backgroundColor: isActive || menuOpen ? 'rgba(255,255,255,0.08)' : '' }}
+                      onMouseEnter={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
+                      onMouseLeave={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = '' }}
+                    >
+                      <div className="w-5 h-5 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
+                        <iconify-icon icon={meta.icon} width="11" style={{ color: meta.ic }} />
+                      </div>
+                      {isRenaming ? (
+                        <input
+                          autoFocus
+                          value={renameTicketValue}
+                          onChange={e => setRenameTicketValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              updateTicket(t.id, { summary: renameTicketValue })
+                              setRenamingTicketId(null)
+                            }
+                            if (e.key === 'Escape') setRenamingTicketId(null)
+                          }}
+                          onBlur={() => {
+                            if (renameTicketValue.trim()) updateTicket(t.id, { summary: renameTicketValue })
+                            setRenamingTicketId(null)
+                          }}
+                          onClick={e => e.stopPropagation()}
+                          className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                          style={{ color: '#ffffff' }}
+                        />
+                      ) : (
+                        <span className="text-xs truncate flex-1" style={{ color: isActive ? '#ffffff' : t.unread ? '#ffffff' : 'rgba(255,255,255,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
+                      )}
+                      {t.pinned && !menuOpen && (
+                        <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+                      )}
+                      {t.unread && !menuOpen && (
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#f91814' }} />
+                      )}
+                    </button>
+                    {/* Three dots button — visible on row hover or when menu open */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        setContextMenuTicket(menuOpen ? null : t.id)
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      <iconify-icon icon="solar:menu-dots-bold" width="14" />
+                    </button>
+                    {/* Context menu */}
+                    {menuOpen && (
+                      <>
+                      <div className="fixed inset-0 z-40" onClick={() => setContextMenuTicket(null)} />
+                      <div
+                        className="absolute right-0 top-full mt-0.5 z-50 rounded-xl py-1 min-w-[160px] shadow-xl"
+                        style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <button onClick={() => { updateTicket(t.id, { pinned: !t.pinned }); setContextMenuTicket(null) }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                          style={{ color: 'rgba(255,255,255,0.85)' }}>
+                          <iconify-icon icon="solar:pin-linear" width="14" />
+                          {t.pinned ? 'Unpin' : 'Pin'}
+                        </button>
+                        <button onClick={() => { updateTicket(t.id, { unread: !t.unread }); setContextMenuTicket(null) }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                          style={{ color: 'rgba(255,255,255,0.85)' }}>
+                          <iconify-icon icon="solar:eye-closed-linear" width="14" />
+                          {t.unread ? 'Mark as read' : 'Mark as unread'}
+                        </button>
+                        <button onClick={() => { setRenameTicketValue(t.summary); setRenamingTicketId(t.id); setContextMenuTicket(null) }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                          style={{ color: 'rgba(255,255,255,0.85)', backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                          <iconify-icon icon="solar:pen-2-linear" width="14" />
+                          Rename
+                        </button>
+                        <button onClick={() => { handleDelete(t.id); setContextMenuTicket(null) }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                          style={{ color: '#f91814' }}>
+                          <iconify-icon icon="solar:trash-bin-trash-linear" width="14" />
+                          Delete
+                        </button>
+                      </div>
+                      </>
                     )}
-                    {t.unread && (
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#f91814' }} />
-                    )}
-                  </button>
+                  </div>
                 )
               })
             )}
