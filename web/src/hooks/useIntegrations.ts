@@ -6,9 +6,11 @@ import {
   disconnectIntegration,
 } from '../api/integrations'
 import type { IntegrationItem } from '../api/integrations'
+import { useAuth } from './useAuth'
 
 export function useIntegrations() {
   const queryClient = useQueryClient()
+  const { state } = useAuth()
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,6 +21,7 @@ export function useIntegrations() {
   } = useQuery<IntegrationItem[]>({
     queryKey: ['integrations'],
     queryFn: fetchIntegrations,
+    enabled: state.status === 'authenticated',
   })
 
   const refresh = useCallback(() => {
