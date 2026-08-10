@@ -54,6 +54,12 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     sendJson(res, 200, listTickets(db));
   });
 
+  router.get("/api/tickets/:key", (_req, res, params) => {
+    const ticket = getTicket(db, params.key!);
+    if (!ticket) { sendJson(res, 404, { error: "ticket not found" }); return; }
+    sendJson(res, 200, ticket);
+  });
+
   router.put("/api/tickets/:key", async (req, res, params) => {
     let body: unknown;
     try {

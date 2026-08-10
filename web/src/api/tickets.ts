@@ -45,6 +45,12 @@ export async function createTicket(data: CreateTicketData): Promise<Ticket> {
   return res.json() as Promise<Ticket>
 }
 
+export async function fetchTicket(key: string): Promise<Ticket> {
+  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, { credentials: 'include' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<Ticket>
+}
+
 export async function fetchTickets(): Promise<Ticket[]> {
   const res = await fetch('/api/tickets')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)

@@ -142,6 +142,7 @@ function buildPrompt(summary: string, description: string): string {
 
   return [
     `You are an expert product consultant and software agency specialist.`,
+    `IMPORTANT: Output the document DIRECTLY. Do NOT greet, introduce yourself, ask clarifying questions, or add any preamble. Start immediately with the document content.`,
     ``,
     guide,
     ``,
@@ -154,8 +155,8 @@ function buildPrompt(summary: string, description: string): string {
     `---`,
     ``,
     isPrototype
-      ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above.`
-      : `Output the full document in Indonesian using markdown formatting. Be thorough and professional. Return ONLY the document content, no meta-commentary.`,
+      ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
+      : `Output the full document in Indonesian using markdown formatting. Be thorough and professional. Return ONLY the document content — no greeting, no meta-commentary, no "here is your document" prefix.`,
   ].join("\n");
 }
 
@@ -265,7 +266,7 @@ export function registerTicketRunRoutes(
 
     // Pick first available model if none specified
     if (!modelId) {
-      modelId = "opencode-go/deepseek-v4-pro";
+      modelId = "opencode-go/minimax-m3";
     }
 
     const controller = new AbortController();

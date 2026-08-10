@@ -160,6 +160,7 @@ export interface UpdateTicketInput {
   assignee?: string | null;
   parentKey?: string | null;
   attachments?: string | null;
+  feedback?: string | null;
 }
 
 export function updateTicket(
@@ -338,6 +339,13 @@ export function updateTicket(
   if (input.attachments !== undefined) {
     db.prepare("UPDATE tickets SET attachments = ?, updated_at = ? WHERE key = ?").run(
       input.attachments,
+      now,
+      key,
+    );
+  }
+  if (input.feedback !== undefined) {
+    db.prepare("UPDATE tickets SET feedback = ?, updated_at = ? WHERE key = ?").run(
+      input.feedback,
       now,
       key,
     );

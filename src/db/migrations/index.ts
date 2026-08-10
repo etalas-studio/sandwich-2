@@ -12,6 +12,7 @@ import { migration0011JiraStatus } from "./0011_jira_status.js";
 import { migration0012AutoOpenPr } from "./0012_auto_open_pr.js";
 import { migration0013AddPrContentColumns } from "./0013_add_pr_content_columns.js";
 import { migration0014Payments } from "./0014_payments.js";
+import { migration0015TicketFeedback } from "./0015_ticket_feedback.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
@@ -27,4 +28,5 @@ export const MIGRATIONS: Migration[] = [
   migration0012AutoOpenPr,
   migration0013AddPrContentColumns,
   migration0014Payments,
+  migration0015TicketFeedback,
 ];
