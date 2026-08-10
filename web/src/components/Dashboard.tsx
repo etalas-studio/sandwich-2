@@ -234,7 +234,11 @@ function ChatView({
 }) {
   const { t: tr } = useLanguage()
   const [regenNonce, setRegenNonce] = useState(0)
-  const { messages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, () => {})
+  // turns = committed past exchanges; liveMessages = current stream in progress
+  const [turns, setTurns] = useState<{ user: string; aiMessages: ChatMessage[] }[]>([
+    { user: initialPrompt, aiMessages: [] }
+  ])
+  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, () => {})
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [editingPrompt, setEditingPrompt] = useState(false)
@@ -254,7 +258,7 @@ function ChatView({
     e.target.value = ''
   }, [])
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, streaming])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
   useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
   const handleRefreshResponse = () => {
@@ -289,7 +293,11 @@ function ChatView({
     setFollowUp('')
     setAttachments([])
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
-    onPromptUpdate(text)
+    // Commit current live messages into turns before starting new stream
+    setTurns(prev => {
+      const last = prev[prev.length - 1]
+      return [...prev.slice(0, -1), { ...last, aiMessages: liveMessages }, { user: text, aiMessages: [] }]
+    })
     updateTicketApi(ticketKey, { summary: text, description: text }).catch(() => {})
     setRegenNonce(n => n + 1)
   }
@@ -300,82 +308,110 @@ function ChatView({
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         <div className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-8">
 
-          {/* User message — right bubble */}
-          <div className="flex justify-end">
-            <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
-              {editingPrompt ? (
-                <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
-                  <textarea
-                    autoFocus
-                    value={editValue}
-                    onChange={e => setEditValue(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit() }
-                      if (e.key === 'Escape') setEditingPrompt(false)
-                    }}
-                    rows={Math.min(10, editValue.split('\n').length + 1)}
-                    className="w-full resize-none bg-transparent outline-none text-sm leading-relaxed"
-                    style={{ color: '#ffffff' }}
-                  />
-                  <div className="flex items-center justify-end gap-2 mt-2">
-                    <button onClick={() => setEditingPrompt(false)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      Cancel
-                    </button>
-                    <button onClick={handleSaveEdit} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
-                      {tr('dash_save_resend')}
-                    </button>
+          {/* Render all turns (committed) then live stream for the last one */}
+          {turns.map((turn, ti) => {
+            const isLast = ti === turns.length - 1
+            const msgs = isLast ? liveMessages : turn.aiMessages
+            const isFirstTurn = ti === 0
+            return (
+              <div key={ti} className="flex flex-col gap-8">
+                {/* User bubble */}
+                <div className="flex justify-end">
+                  <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
+                    {isFirstTurn && editingPrompt ? (
+                      <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
+                        <textarea
+                          autoFocus
+                          value={editValue}
+                          onChange={e => setEditValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit() }
+                            if (e.key === 'Escape') setEditingPrompt(false)
+                          }}
+                          rows={Math.min(10, editValue.split('\n').length + 1)}
+                          className="w-full resize-none bg-transparent outline-none text-sm leading-relaxed"
+                          style={{ color: '#ffffff' }}
+                        />
+                        <div className="flex items-center justify-end gap-2 mt-2">
+                          <button onClick={() => setEditingPrompt(false)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            Cancel
+                          </button>
+                          <button onClick={handleSaveEdit} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
+                            {tr('dash_save_resend')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+                        {turn.user}
+                      </div>
+                    )}
+                    {isFirstTurn && !editingPrompt && (
+                      <div className="flex items-center gap-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs" style={{ color: 'rgba(0,0,0,0.35)' }}>{timeAgo(createdAt, tr)}</span>
+                        <button onClick={handleRefreshResponse} disabled={streaming}
+                          className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
+                          <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
+                        </button>
+                        <button onClick={handleStartEdit} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
+                          <iconify-icon icon="solar:pen-2-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
+                        </button>
+                        <button onClick={handleCopyPrompt} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Copy">
+                          <iconify-icon icon={copied ? 'solar:check-circle-linear' : 'solar:copy-linear'} width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
-                  {initialPrompt}
-                </div>
-              )}
-              {!editingPrompt && (
-                <div className="flex items-center gap-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs" style={{ color: 'rgba(0,0,0,0.35)' }}>{timeAgo(createdAt, tr)}</span>
-                  <button onClick={handleRefreshResponse} disabled={streaming}
-                    className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
-                    <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
-                  </button>
-                  <button onClick={handleStartEdit} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
-                    <iconify-icon icon="solar:pen-2-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
-                  </button>
-                  <button onClick={handleCopyPrompt} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Copy">
-                    <iconify-icon icon={copied ? 'solar:check-circle-linear' : 'solar:copy-linear'} width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* AI messages */}
-          {messages.map((m, i) => {
-            if (m.stage) return (
-              <div key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(0,0,0,0.35)' }}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ backgroundColor: '#f91814' }} />
-                {m.stage in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage]) : m.stage}
+                {/* AI messages for this turn */}
+                {msgs.map((m, i) => {
+                  if (m.isDone && m.output) return (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
+                        <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
+                      </div>
+                      <div className="text-sm whitespace-pre-wrap break-words flex-1" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
+                        {m.output}
+                      </div>
+                    </div>
+                  )
+                  if (m.isError) return (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
+                        <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
+                      </div>
+                      <div className="text-sm" style={{ color: '#f87171' }}>{m.text}</div>
+                    </div>
+                  )
+                  return null
+                })}
+
+                {/* Loading state — shown while streaming */}
+                {isLast && streaming && !msgs.some(m => m.isDone || m.isError) && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#f91814' }}>
+                      <iconify-icon icon="solar:cpu-bolt-linear" width="14" style={{ color: '#fff' }} />
+                    </div>
+                    <div className="flex flex-col gap-2 pt-1">
+                      {/* Current stage label */}
+                      {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
+                        <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                          {m.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage!]) : m.stage}
+                        </p>
+                      ))}
+                      {/* Animated dots */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )
-            if (m.isDone && m.output) return (
-              <div key={i} className="text-sm whitespace-pre-wrap break-words" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
-                {m.output}
-              </div>
-            )
-            if (m.isError) return (
-              <div key={i} className="text-sm" style={{ color: '#f87171' }}>{m.text}</div>
-            )
-            return null
           })}
-
-          {/* Typing dots */}
-          {streaming && messages.every(m => !m.stage && !m.isDone && !m.isError) && (
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(255,255,255,0.3)', animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(255,255,255,0.3)', animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(255,255,255,0.3)', animationDelay: '300ms' }} />
-            </div>
-          )}
 
           <div ref={bottomRef} />
         </div>
