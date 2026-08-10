@@ -1219,13 +1219,13 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                           onChange={e => setRenameTicketValue(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
-                              updateTicket(t.id, { summary: renameTicketValue })
+                              updateTicket(t.id, { summary: renameTicketValue }); refresh()
                               setRenamingTicketId(null)
                             }
                             if (e.key === 'Escape') setRenamingTicketId(null)
                           }}
                           onBlur={() => {
-                            if (renameTicketValue.trim()) updateTicket(t.id, { summary: renameTicketValue })
+                            if (renameTicketValue.trim()) { updateTicket(t.id, { summary: renameTicketValue }); refresh() }
                             setRenamingTicketId(null)
                           }}
                           onClick={e => e.stopPropagation()}
@@ -1262,13 +1262,13 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                         style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
                         onClick={e => e.stopPropagation()}
                       >
-                        <button onClick={() => { updateTicket(t.id, { pinned: !t.pinned }); setContextMenuTicket(null) }}
+                        <button onClick={() => { updateTicket(t.id, { pinned: !t.pinned }); setContextMenuTicket(null); refresh() }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:pin-linear" width="14" />
                           {t.pinned ? 'Unpin' : 'Pin'}
                         </button>
-                        <button onClick={() => { updateTicket(t.id, { unread: !t.unread }); setContextMenuTicket(null) }}
+                        <button onClick={() => { updateTicket(t.id, { unread: !t.unread }); setContextMenuTicket(null); refresh() }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:eye-closed-linear" width="14" />
@@ -1276,7 +1276,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                         </button>
                         <button onClick={() => { setRenameTicketValue(t.summary); setRenamingTicketId(t.id); setContextMenuTicket(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.85)', backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                          style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:pen-2-linear" width="14" />
                           Rename
                         </button>
