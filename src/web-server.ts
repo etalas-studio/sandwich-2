@@ -18,6 +18,7 @@ import { registerPurgeRoute } from "./routes/purge.js";
 import { registerTicketRoutes } from "./routes/tickets.js";
 import { registerTicketRunRoutes } from "./routes/ticket-run.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
+import { registerMidtransRoutes } from "./routes/midtrans.js";
 import { createScanRunner } from "./scanner/run-scan.js";
 import { createPiInvokerFactory } from "./scanner/pi-invoker.js";
 import { getOAuthToken } from "./pipeline/oauth-integrations.js";
@@ -53,6 +54,7 @@ const PUBLIC_API_PATHS = new Set([
   "/api/integrations/jira/callback",
   "/api/integrations/bitbucket/callback",
   "/api/integrations/github/callback",
+  "/api/midtrans/notification",
 ]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
@@ -95,6 +97,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerTicketRoutes(router, db);
   registerPurgeRoute(router, db);
   registerSettingsRoutes(router, db);
+  registerMidtransRoutes(router, db);
 
   // Scan runner: uses Pi SDK createAgentSession when a model is selected
   const piInvokerFactory = createPiInvokerFactory(getModelRuntime());

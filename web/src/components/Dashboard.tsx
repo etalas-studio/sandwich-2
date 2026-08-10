@@ -5,7 +5,6 @@ import { createTicket, updateTicket as updateTicketApi } from '../api/tickets'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
-import { ensureSession } from '../lib/session'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { CHIPS } from '../lib/promptChips'
 import { useLanguage, type StringKey } from '../lib/i18n'
@@ -530,7 +529,6 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      await ensureSession()
       const desc = attachments.length
         ? attachments.map(a => `[attachment: ${a.name}]`).join('\n')
         : prompt.trim()

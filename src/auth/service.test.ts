@@ -5,61 +5,41 @@ import { join } from "node:path";
 import { openDb } from "../db/connection.js";
 import { createSession } from "../db/sessions.js";
 import { getUserByUsername } from "../db/users.js";
-import { AuthError, login, logout, register, setupRequired, validateSession } from "./service.js";
+import { AuthError, login, logout, register, validateSession } from "./service.js";
 
 function openTestDb() {
   const dir = mkdtempSync(join(tmpdir(), "auth-service-test-"));
   return openDb(join(dir, "db.sqlite"));
 }
 
-async function testRegisterSucceedsOnce(): Promise<void> {
+async function testRegisterAllowsMultipleAccounts(): Promise<void> {
   const db = openTestDb();
-  assert.equal(setupRequired(db), true);
 
-  const result = await register(db, {
+  const owner = await register(db, {
     username: "owner",
     email: "owner@example.com",
     password: "hunter22",
   });
-  assert.equal(result.user.username, "owner");
-  assert.equal(setupRequired(db), false);
+  assert.equal(owner.user.username, "owner");
 
-  await assert.rejects(
-    register(db, { username: "someone-else", email: "other@example.com", password: "whatever1" }),
-    (err: unknown) => err instanceof AuthError && err.status === 409,
-  );
-  console.log("PASS: testRegisterSucceedsOnce");
+  const second = await register(db, {
+    username: "someone-else",
+    email: "other@example.com",
+    password: "whatever1",
+  });
+  assert.equal(second.user.username, "someone-else");
+  console.log("PASS: testRegisterAllowsMultipleAccounts");
 }
 
-/**
- * Regression guard for the coupling bug introduced by making hashPassword
- * async: register() must hash BEFORE checking anyUserExists, so that the
- * check and the insert stay in one synchronous, uninterruptible stretch.
- * If an `await` sat between them, both of these concurrent calls would
- * observe an empty users table and both would attempt to insert.
- */
-async function testConcurrentRegistrationsCannotBothSucceed(): Promise<void> {
+async function testRegisterRejectsDuplicateUsername(): Promise<void> {
   const db = openTestDb();
+  await register(db, { username: "owner", email: "owner@example.com", password: "hunter22" });
 
-  const results = await Promise.allSettled([
-    register(db, { username: "first", email: "first@example.com", password: "hunter22" }),
-    register(db, { username: "second", email: "second@example.com", password: "hunter22" }),
-  ]);
-
-  const fulfilled = results.filter((r) => r.status === "fulfilled");
-  const rejected = results.filter((r) => r.status === "rejected");
-  assert.equal(fulfilled.length, 1, "exactly one concurrent register() should succeed");
-  assert.equal(rejected.length, 1, "the loser should be rejected, not inserted");
-
-  const reason = (rejected[0] as PromiseRejectedResult).reason as unknown;
-  assert.ok(
-    reason instanceof AuthError && reason.status === 409,
-    "the losing registration should fail with a clean 409, not a raw DB constraint error",
+  await assert.rejects(
+    register(db, { username: "owner", email: "different@example.com", password: "whatever1" }),
+    (err: unknown) => err instanceof AuthError && err.status === 409,
   );
-
-  const userCount = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
-  assert.equal(userCount, 1, "only one account may ever exist");
-  console.log("PASS: testConcurrentRegistrationsCannotBothSucceed");
+  console.log("PASS: testRegisterRejectsDuplicateUsername");
 }
 
 async function testLoginSucceedsWithCorrectCredentials(): Promise<void> {
@@ -118,8 +98,8 @@ async function testExpiredSessionIsRejected(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  await testRegisterSucceedsOnce();
-  await testConcurrentRegistrationsCannotBothSucceed();
+  await testRegisterAllowsMultipleAccounts();
+  await testRegisterRejectsDuplicateUsername();
   await testLoginSucceedsWithCorrectCredentials();
   await testLoginFailsWithWrongPassword();
   await testLoginFailsWithUnknownUsername();

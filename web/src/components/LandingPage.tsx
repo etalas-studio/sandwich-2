@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { createTicket } from '../api/tickets'
 import { saveTicket } from '../lib/localTickets'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
-import { ensureSession } from '../lib/session'
+import { useAuth } from '../hooks/useAuth'
 import { CHIPS } from '../lib/promptChips'
 import type { TicketType } from '../lib/localTickets'
 import { useLanguage } from '../lib/i18n'
@@ -54,6 +54,7 @@ interface AttachedFile {
 
 export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const { lang, setLang, t } = useLanguage()
+  const { state: authState } = useAuth()
   const PLANS = [
     {
       slug: 'starter',
@@ -132,10 +133,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return
+    if (authState.status !== 'authenticated') {
+      onGoToApp()
+      return
+    }
     setIsSubmitting(true)
     setError(null)
     try {
-      await ensureSession()
       const desc = attachments.length
         ? attachments.map((a) => `[attachment: ${a.name}]`).join('\n')
         : prompt.trim()

@@ -23,6 +23,10 @@ export default function AuthGate() {
   const navigate = useNavigate()
   const [forceView, setForceView] = React.useState<'login' | 'register' | null>(null)
 
+  React.useEffect(() => {
+    if (state.status === 'authenticated') setForceView(null)
+  }, [state.status])
+
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
   }
@@ -36,16 +40,14 @@ export default function AuthGate() {
     )
   }
 
-  const showRegister =
-    forceView === 'register' ||
-    (forceView === null && state.status === 'setup_required')
+  const showRegister = forceView === 'register'
 
   // Dashboard — requires login, then a completed checkout
   if (location.pathname.startsWith('/dashboard')) {
     if (showRegister) {
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
-    if (state.status === 'setup_required' || state.status === 'unauthenticated') {
+    if (state.status === 'unauthenticated') {
       return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView('register')} />
     }
     if (!localStorage.getItem('sandwich_paid_plan')) {
@@ -68,7 +70,7 @@ export default function AuthGate() {
     )
   }
 
-  if (state.status === 'setup_required' || state.status === 'unauthenticated') {
+  if (state.status === 'unauthenticated') {
     return (
       <LoginForm
         onSubmit={login}
