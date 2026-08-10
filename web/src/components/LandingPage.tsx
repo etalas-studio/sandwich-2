@@ -391,27 +391,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Center — steps illustration */}
-            <div className="flex flex-col items-center gap-3 w-full max-w-72 md:w-96 shrink-0">
-              {[
-                { step: '01', label: t('step_1_label'), desc: t('step_1_desc') },
-                { step: '02', label: t('step_2_label'), desc: t('step_2_desc') },
-                { step: '03', label: t('step_3_label'), desc: t('step_3_desc') },
-                { step: '04', label: t('step_4_label'), desc: t('step_4_desc') },
-              ].map((s) => (
-                <div
-                  key={s.step}
-                  className="w-full rounded-2xl px-5 py-4 flex items-center gap-4"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.12)' }}
-                >
-                  <span className="text-xs font-bold tracking-widest" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: bowlby }}>{s.step}</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-bold text-white tracking-tight">{s.label}</p>
-                    <p className="text-xs text-white/50 mt-0.5">{s.desc}</p>
-                  </div>
-                  <iconify-icon icon="solar:arrow-right-linear" className="text-white/30 text-base" style={{strokeWidth: 1.5}}></iconify-icon>
-                </div>
-              ))}
+            {/* Center — spec illustration */}
+            <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0">
+              <img
+                src="/spec-illustration.png"
+                alt="SPEC"
+                className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
+              />
             </div>
 
             {/* Right — output types */}
