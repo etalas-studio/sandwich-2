@@ -3,6 +3,7 @@ import type { Router } from "../router.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { createSnapTransaction, verifyNotificationSignature } from "../pipeline/midtrans.js";
+import { upsertPayment } from "../db/payments.js";
 
 export function registerMidtransRoutes(router: Router, db: Database.Database): void {
   router.post("/api/midtrans/transaction", async (req, res) => {
@@ -65,7 +66,18 @@ export function registerMidtransRoutes(router: Router, db: Database.Database): v
       sendJson(res, 401, { error: "invalid signature" });
       return;
     }
-    console.log(`midtrans notification: order=${body.order_id} status=${body.transaction_status ?? "?"}`);
+    try {
+      upsertPayment(db, {
+        order_id: body.order_id,
+        transaction_status: body.transaction_status ?? "unknown",
+        status_code: body.status_code,
+        gross_amount: body.gross_amount,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      sendCaughtError(res, err, "midtrans persist notification");
+      return;
+    }
     sendJson(res, 200, { received: true });
   });
 }
