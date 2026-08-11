@@ -21,13 +21,14 @@ export default function AuthGate() {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const [forceView, setForceView] = React.useState<'login' | 'register' | null>(null)
+  // null = show register (default for checkout); 'login' = forced login
+  const [forceView, setForceView] = React.useState<'login' | null>(null)
 
   React.useEffect(() => {
     if (state.status === 'authenticated') setForceView(null)
   }, [state.status])
 
-  // Landing page at root — always accessible, does not wait on auth
+  // Landing page at root — always accessible
   if (location.pathname === '/') {
     return (
       <LandingPage
@@ -40,15 +41,13 @@ export default function AuthGate() {
     return <div className="ds-bg min-h-screen" />
   }
 
-  const showRegister = forceView === 'register'
-
-  // Dashboard — requires login, then a completed checkout
+  // Dashboard — requires auth + paid plan
   if (location.pathname.startsWith('/dashboard')) {
-    if (showRegister) {
-      return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
-    }
     if (state.status === 'unauthenticated') {
-      return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView('register')} />
+      if (forceView === 'login') {
+        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} />
+      }
+      return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
     if (!localStorage.getItem('sandwich_paid_plan')) {
       navigate('/checkout', { replace: true })
@@ -58,18 +57,20 @@ export default function AuthGate() {
     return <App username={username} onLogout={() => { void logout(); navigate('/') }} />
   }
 
-  if (showRegister) {
-    return (
-      <SetupForm
-        onSubmit={register}
-        error={registerError}
-        isPending={registerPending}
-        onBack={() => navigate('/')}
-        onSwitchToLogin={() => setForceView('login')}
-      />
-    )
+  // Checkout — unauthenticated: register first (default), login on request
+  // Authenticated: render App so CheckoutPage renders (plan picker → payment)
+  if (location.pathname.startsWith('/checkout')) {
+    if (state.status === 'unauthenticated') {
+      if (forceView === 'login') {
+        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} />
+      }
+      return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
+    }
+    const username = state.status === 'authenticated' ? state.username : ''
+    return <App username={username} onLogout={() => { void logout(); navigate('/') }} />
   }
 
+  // Fallback
   if (state.status === 'unauthenticated') {
     return (
       <LoginForm
@@ -77,7 +78,7 @@ export default function AuthGate() {
         error={loginError}
         isPending={loginPending}
         onBack={() => navigate('/')}
-        onSwitchToRegister={() => setForceView('register')}
+        onSwitchToRegister={() => setForceView(null)}
       />
     )
   }
