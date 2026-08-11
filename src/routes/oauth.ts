@@ -30,7 +30,7 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleJiraCallback(code, state);
 
-    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirectBase = process.env.FRONTEND_URL ?? `http://${req.headers.host ?? "localhost"}`;
     const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
@@ -63,7 +63,7 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleBitbucketCallback(code, state);
 
-    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirectBase = process.env.FRONTEND_URL ?? `http://${req.headers.host ?? "localhost"}`;
     const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");
@@ -96,7 +96,7 @@ export function registerOAuthRoutes(router: Router): void {
 
     const result = await handleGithubCallback(code, state);
 
-    const redirectBase = `http://${req.headers.host ?? "localhost"}`;
+    const redirectBase = process.env.FRONTEND_URL ?? `http://${req.headers.host ?? "localhost"}`;
     const redirect = new URL(result.returnTo, redirectBase);
     if (!result.ok) {
       redirect.searchParams.set("error", result.error ?? "oauth_failed");

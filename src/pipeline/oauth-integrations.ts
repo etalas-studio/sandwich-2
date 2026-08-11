@@ -27,11 +27,15 @@ function githubClientSecret(): string {
 
 // ── Helpers
 function baseUrl(): string {
+  if (process.env.API_BASE_URL) return process.env.API_BASE_URL;
   // Derive redirect URI base from env or default to localhost
   const host = process.env.HOST ?? "localhost";
   const port = process.env.PORT ?? "4319";
   const proto = process.env.NODE_ENV === "production" ? "https" : "http";
-  return `${proto}://${host}:${port}`;
+  const defaultPort = proto === "https" ? "443" : "80";
+  return port === defaultPort
+    ? `${proto}://${host}`
+    : `${proto}://${host}:${port}`;
 }
 
 function credentialName(provider: string): string {
