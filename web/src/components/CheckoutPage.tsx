@@ -10,46 +10,91 @@ const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: str
 }
 
 function PlanPicker() {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
   const navigate = useNavigate()
+
+  const PLANS = Object.entries(PLAN_DETAILS).map(([slug, plan]) => ({
+    slug,
+    highlight: slug === 'pro',
+    name: plan.name,
+    price: plan.price,
+    priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+    oldPrice: plan.oldPrice ?? null,
+    desc: lang === 'id' ? plan.desc_id : plan.desc_en,
+    features: lang === 'id' ? plan.features_id : plan.features_en,
+    cta: slug === 'pro' ? t('plan_pro_cta') : t('plan_starter_cta'),
+  }))
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center antialiased px-4"
+      className="min-h-screen flex flex-col items-center justify-center antialiased px-4 py-16"
       style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}
     >
-      <h1 className="text-3xl md:text-4xl mb-2 text-center" style={{ fontFamily: bowlby, color: '#111827' }}>
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+      >
+        <iconify-icon icon="solar:arrow-left-linear" width="16" />
+        Back
+      </button>
+
+      <h1 className="text-4xl md:text-5xl mb-2 text-center tracking-tighter" style={{ fontFamily: bowlby, color: '#111827' }}>
         {lang === 'id' ? 'Pilih Paket' : 'Choose a Plan'}
       </h1>
       <p className="text-sm text-zinc-500 mb-10 text-center">
         {lang === 'id' ? 'Pilih paket yang sesuai untukmu.' : 'Pick the plan that fits you best.'}
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
-        {Object.entries(PLAN_DETAILS).map(([slug, plan]) => (
-          <button
-            key={slug}
-            onClick={() => navigate(`/checkout?plan=${slug}`)}
-            className="flex-1 text-left rounded-2xl p-6 transition-transform hover:scale-[1.02] active:scale-[0.99]"
-            style={{ backgroundColor: slug === 'pro' ? '#111827' : '#ffffff', boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)' }}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl">
+        {PLANS.map((plan) => (
+          <div
+            key={plan.slug}
+            className="flex flex-col rounded-3xl overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+            style={{ backgroundColor: plan.highlight ? '#000000' : '#ffffff' }}
           >
-            {slug === 'pro' && (
-              <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-3" style={{ backgroundColor: '#f91814', color: '#fff' }}>
-                {lang === 'id' ? 'Terbaik' : 'Best Value'}
-              </span>
-            )}
-            <div className="text-lg font-semibold mb-1" style={{ color: slug === 'pro' ? '#fff' : '#111827' }}>{plan.name}</div>
-            <div className="flex items-baseline gap-1 mb-3">
-              {plan.oldPrice && (
-                <span className="text-xs line-through" style={{ color: slug === 'pro' ? '#6b7280' : '#9ca3af' }}>{plan.oldPrice}</span>
-              )}
-              <span className="text-2xl font-bold" style={{ color: slug === 'pro' ? '#fff' : '#111827' }}>{plan.price}</span>
-              <span className="text-xs" style={{ color: slug === 'pro' ? '#9ca3af' : '#6b7280' }}>/{lang === 'id' ? 'bulan' : 'mo'}</span>
+            <div className="px-6 pt-6 pb-5">
+              <div className="flex items-start justify-between mb-6">
+                <span className="text-lg font-semibold" style={{ color: plan.highlight ? '#ffffff' : '#111827' }}>{plan.name}</span>
+                {plan.highlight && (
+                  <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' }}>
+                    {t('pricing_best_value')}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 flex-wrap mb-1">
+                <span className="font-bold" style={{ fontSize: '2.5rem', lineHeight: 1, color: plan.highlight ? '#ffffff' : '#111827' }}>{plan.price}</span>
+                <span className="text-sm ml-1" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#9ca3af' }}>{plan.priceNote}</span>
+                {plan.oldPrice && <span className="text-sm line-through ml-2" style={{ color: plan.highlight ? 'rgba(255,255,255,0.4)' : '#d1d5db' }}>{plan.oldPrice}</span>}
+              </div>
+              <p className="text-sm" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>{plan.desc}</p>
             </div>
-            <p className="text-sm" style={{ color: slug === 'pro' ? '#d1d5db' : '#6b7280' }}>
-              {lang === 'id' ? plan.desc_id : plan.desc_en}
-            </p>
-          </button>
+
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => navigate(`/checkout?plan=${plan.slug}`)}
+                className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
+                style={plan.highlight
+                  ? { backgroundColor: '#f91814', color: '#ffffff' }
+                  : { backgroundColor: '#111827', color: '#ffffff' }
+                }
+              >
+                {plan.cta}
+              </button>
+            </div>
+
+            <ul className="flex flex-col gap-3 px-6 py-5 flex-1 border-t" style={{ borderColor: plan.highlight ? 'rgba(255,255,255,0.08)' : '#f3f4f6' }}>
+              {plan.features.map((f) => (
+                <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.highlight ? 'rgba(255,255,255,0.8)' : '#374151' }}>
+                  <iconify-icon
+                    icon="solar:check-circle-linear"
+                    width="15"
+                    style={{ color: plan.highlight ? '#f91814' : '#9ca3af', flexShrink: 0, marginTop: '2px' }}
+                  />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
       </div>
     </div>
