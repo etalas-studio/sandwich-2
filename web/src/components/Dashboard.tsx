@@ -847,6 +847,307 @@ function TicketList({ tickets, onOpen, onNew }: { tickets: LocalTicket[]; onOpen
   )
 }
 
+// ── Home Overview ────────────────────────────────────────────────────────────
+const EXPORTED_MD_KEY = 'sandwich_exported_md'
+const DAY_LABELS_ID = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+
+function HomeOverview({
+  tickets,
+  username,
+  onSuccess,
+  onOpenTicket,
+  onGoTemplates,
+  onGoBriefs,
+  onGoType,
+}: {
+  tickets: LocalTicket[]
+  username: string
+  onSuccess: (t: LocalTicket) => void
+  onOpenTicket: (t: LocalTicket) => void
+  onGoTemplates: () => void
+  onGoBriefs: () => void
+  onGoType: (type: TicketType) => void
+}) {
+  const { lang, t: tr } = useLanguage()
+  const [filter, setFilter] = useState<'all' | 'done' | 'draft'>('all')
+  const planInfo = getPlanInfo()
+  const plan = localStorage.getItem('sandwich_paid_plan')
+
+  const now = Date.now()
+  const weekMs = 7 * 24 * 60 * 60 * 1000
+  const doneCount = tickets.filter(t => t.status === 'done').length
+  const draftCount = tickets.filter(t => t.status === 'draft').length
+  const weekTickets = tickets.filter(t => now - new Date(t.createdAt).getTime() < weekMs)
+
+  const hour = new Date().getHours()
+  const greetingKey = hour < 11 ? 'home_greeting_morning' : hour < 15 ? 'home_greeting_afternoon' : hour < 19 ? 'home_greeting_evening' : 'home_greeting_night'
+  const dateStr = new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  const dayBuckets = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now - (6 - i) * 24 * 60 * 60 * 1000)
+    d.setHours(0, 0, 0, 0)
+    const count = tickets.filter(t => {
+      const ct = new Date(t.createdAt); ct.setHours(0, 0, 0, 0)
+      return ct.getTime() === d.getTime()
+    }).length
+    return { label: DAY_LABELS_ID[d.getDay()], count }
+  })
+  const maxDay = Math.max(1, ...dayBuckets.map(d => d.count))
+
+  const filteredTickets = tickets.filter(t => filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status === 'draft')
+  const distinctTypes = new Set(tickets.map(t => t.type)).size
+  const exportedMd = localStorage.getItem(EXPORTED_MD_KEY) === '1'
+  const checklist = [
+    { key: 'home_check_1', done: tickets.length > 0 },
+    { key: 'home_check_2', done: doneCount > 0 },
+    { key: 'home_check_3', done: distinctTypes >= 3 },
+    { key: 'home_check_4', done: exportedMd },
+    { key: 'home_check_5', done: planInfo.isPro },
+  ] as const
+  const checklistDone = checklist.filter(c => c.done).length
+
+  const cardStyle = { backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }
+  const sectionStyle = { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(0,0,0,0.08)' }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
+      <div className="max-w-5xl mx-auto flex flex-col gap-6">
+
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#f91814' }}>{dateStr}</p>
+            <h1 className="text-2xl tracking-tighter mt-1" style={{ color: '#111827', fontFamily: bowlby }}>{tr(greetingKey).toUpperCase()}, {username.toUpperCase()}</h1>
+            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>
+              {tickets.length === 0 ? tr('home_subtitle_empty') : tr('home_subtitle_count').replace('{n}', String(tickets.length))}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={onGoTemplates} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
+              style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#111827', backgroundColor: '#ffffff' }}>
+              <iconify-icon icon="solar:widget-linear" width="14" />
+              {tr('home_templates_btn')}
+            </button>
+            <button onClick={onGoBriefs} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white"
+              style={{ backgroundColor: '#f91814' }}>
+              <iconify-icon icon="solar:folder-linear" width="14" />
+              {tr('home_all_briefs_btn')}
+            </button>
+          </div>
+        </div>
+
+        {/* Prompt box */}
+        <PromptBox onSuccess={onSuccess} />
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { icon: 'solar:document-linear', color: '#fef3c7', ic: '#f97316', label: tr('home_stat_total'), value: tickets.length },
+            { icon: 'solar:check-circle-linear', color: '#dcfce7', ic: '#16a34a', label: tr('home_stat_done'), value: doneCount },
+            { icon: 'solar:hourglass-linear', color: '#dbeafe', ic: '#2563eb', label: tr('home_stat_draft'), value: draftCount },
+            { icon: 'solar:graph-new-up-linear', color: '#fce7f3', ic: '#db2777', label: tr('home_stat_week'), value: weekTickets.length },
+          ].map(s => (
+            <div key={s.label} className="rounded-2xl border p-5" style={cardStyle}>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: s.color }}>
+                  <iconify-icon icon={s.icon} width="15" style={{ color: s.ic }} />
+                </div>
+                <span className="text-sm" style={{ color: '#6b7280' }}>{s.label}</span>
+              </div>
+              <p className="text-3xl font-semibold" style={{ color: '#111827' }}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Quota + Activity chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="rounded-2xl border p-6" style={cardStyle}>
+            <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_quota_title')}</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{plan === 'pro' ? tr('home_quota_plan_pro') : plan === 'starter' ? tr('home_quota_plan_starter') : tr('home_quota_plan_free')}</p>
+            <p className="text-3xl font-semibold mt-4" style={{ color: '#111827' }}>
+              {planInfo.used}<span className="text-base font-normal" style={{ color: '#9ca3af' }}> / {planInfo.isPro ? '∞' : planInfo.limit} {tr('home_quota_documents')}</span>
+            </p>
+            <div className="h-1.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
+              <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: planInfo.isPro ? '100%' : `${Math.min(100, (planInfo.used / planInfo.limit) * 100)}%` }} />
+            </div>
+            {!planInfo.isPro && (
+              <a href="/checkout?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+                <iconify-icon icon="solar:crown-linear" width="14" />
+                {tr('home_quota_upgrade')}
+              </a>
+            )}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t text-sm" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+              <span style={{ color: '#9ca3af' }}>{tr('home_quota_completion')}</span>
+              <span className="font-semibold" style={{ color: '#111827' }}>{tickets.length ? Math.round((doneCount / tickets.length) * 100) : 0}%</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border p-6" style={cardStyle}>
+            <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_activity_title')}</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{weekTickets.length === 0 ? tr('home_activity_sub_zero') : tr('home_activity_sub').replace('{n}', String(weekTickets.length))}</p>
+            <div className="flex items-end justify-between gap-2 mt-6" style={{ height: 90 }}>
+              {dayBuckets.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <span className="text-[10px]" style={{ color: '#9ca3af' }}>{d.count || ''}</span>
+                  <div className="w-full rounded-md" style={{ backgroundColor: d.count ? '#f91814' : '#f3f4f6', height: Math.max(4, (d.count / maxDay) * 60) }} />
+                  <span className="text-[10px]" style={{ color: '#9ca3af' }}>{d.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick start */}
+        <div>
+          <h2 className="text-base tracking-tight mb-0.5" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_quickstart_title')}</h2>
+          <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>{tr('home_quickstart_sub')}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {QUICK_TYPES.map(t => (
+              <button key={t.label} onClick={() => onGoType(t.type)}
+                className="flex items-start gap-3 p-4 rounded-2xl border text-left transition-all hover:-translate-y-0.5"
+                style={cardStyle}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: t.color }}>
+                  <iconify-icon icon={t.icon} width="16" style={{ color: t.iconColor }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{t.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{tickets.filter(x => x.type === t.type).length} dibuat</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent activity + Breakdown/Checklist */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 rounded-2xl border p-6" style={sectionStyle}>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_recent_title')}</h2>
+                <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{tr('home_recent_sub').replace('{n}', String(tickets.length))}</p>
+              </div>
+              <div className="flex items-center gap-1 p-1 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
+                {([['all', 'home_filter_all'], ['done', 'home_filter_done'], ['draft', 'home_filter_draft']] as const).map(([key, labelKey]) => (
+                  <button key={key} onClick={() => setFilter(key)}
+                    className="px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                    style={filter === key ? { backgroundColor: '#111827', color: '#ffffff' } : { color: '#6b7280' }}>
+                    {tr(labelKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filteredTickets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
+                  <iconify-icon icon="solar:notes-linear" width="22" style={{ color: 'rgba(0,0,0,0.3)' }} />
+                </div>
+                <p className="text-sm font-medium" style={{ color: '#374151' }}>{tr('home_recent_empty_title')}</p>
+                <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>{tr('home_recent_empty_sub')}</p>
+              </div>
+            ) : (
+              <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.06)', backgroundColor: '#ffffff' }}>
+                {filteredTickets.slice(0, 6).map(t => {
+                  const meta = TYPE_META[t.type] ?? TYPE_META.general
+                  return (
+                    <button key={t.id} onClick={() => onOpenTicket(t)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left border-b last:border-b-0 transition-colors"
+                      style={{ borderColor: 'rgba(0,0,0,0.05)' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: meta.color }}>
+                          <iconify-icon icon={meta.icon} width="13" style={{ color: meta.ic }} />
+                        </div>
+                        <p className="text-sm truncate" style={{ color: '#111827' }}>{t.summary}</p>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0 ml-2" style={{
+                        backgroundColor: t.status === 'done' ? '#dcfce7' : '#f3f4f6',
+                        color: t.status === 'done' ? '#16a34a' : '#9ca3af',
+                      }}>{t.status === 'done' ? 'Done' : t.status === 'processing' ? tr('dash_status_processing') : 'Draft'}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl border p-5" style={cardStyle}>
+              <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_breakdown_title')}</h2>
+              <p className="text-xs mt-0.5 mb-3" style={{ color: '#9ca3af' }}>{tr('home_breakdown_sub')}</p>
+              {tickets.length === 0 ? (
+                <p className="text-xs" style={{ color: '#9ca3af' }}>{tr('home_breakdown_empty')}</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {Object.keys(TYPE_META).filter(k => k !== 'general' && tickets.some(t => t.type === k)).map(k => {
+                    const meta = TYPE_META[k]
+                    const count = tickets.filter(t => t.type === k).length
+                    return (
+                      <div key={k} className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2" style={{ color: '#374151' }}>
+                          <iconify-icon icon={meta.icon} width="13" style={{ color: meta.ic }} />
+                          {meta.label}
+                        </span>
+                        <span className="font-medium" style={{ color: '#111827' }}>{count}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border p-5" style={cardStyle}>
+              <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_checklist_title')}</h2>
+              <p className="text-xs mt-0.5 mb-3" style={{ color: '#9ca3af' }}>{tr('home_checklist_done').replace('{done}', String(checklistDone)).replace('{total}', String(checklist.length))}</p>
+              <div className="flex flex-col gap-2.5">
+                {checklist.map(c => (
+                  <div key={c.key} className="flex items-center gap-2.5">
+                    <iconify-icon icon={c.done ? 'solar:check-circle-bold' : 'solar:record-circle-linear'} width="16" style={{ color: c.done ? '#16a34a' : 'rgba(0,0,0,0.2)' }} />
+                    <span className="text-xs" style={{ color: c.done ? '#111827' : '#9ca3af', textDecoration: c.done ? 'line-through' : 'none' }}>{tr(c.key)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tips */}
+        <div>
+          <h2 className="text-base tracking-tight mb-0.5" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_tips_title')}</h2>
+          <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>{tr('home_tips_sub')}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { icon: 'solar:target-linear', title: tr('home_tip_1_title'), desc: tr('home_tip_1_desc') },
+              { icon: 'solar:paperclip-linear', title: tr('home_tip_2_title'), desc: tr('home_tip_2_desc') },
+              { icon: 'solar:refresh-linear', title: tr('home_tip_3_title'), desc: tr('home_tip_3_desc') },
+            ].map(tip => (
+              <div key={tip.title} className="rounded-2xl border p-5" style={cardStyle}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(249,24,20,0.1)' }}>
+                  <iconify-icon icon={tip.icon} width="15" style={{ color: '#f91814' }} />
+                </div>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>{tip.title}</p>
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#9ca3af' }}>{tip.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Help banner */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl p-6" style={{ backgroundColor: '#111113' }}>
+          <div>
+            <p className="text-sm font-semibold text-white">{tr('home_help_title')}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{tr('home_help_sub')}</p>
+          </div>
+          <a href="/dashboard" onClick={e => { e.preventDefault(); onGoTemplates() }} className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+            <iconify-icon icon="solar:question-circle-linear" width="14" />
+            {tr('home_help_cta')}
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
 function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: () => void; onDelete: (id: string) => void }) {
   const meta = TYPE_META[ticket.type] ?? TYPE_META.general
@@ -1073,6 +1374,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     a.download = `${currentTicket.summary.slice(0, 60).replace(/[^\w\- ]/g, '').trim() || 'sandwich'}.md`
     a.click()
     URL.revokeObjectURL(url)
+    localStorage.setItem(EXPORTED_MD_KEY, '1')
   }
 
   const byType = (type: TicketType) => tickets.filter(t => t.type === type)
@@ -1563,14 +1865,15 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             />
           </div>
         ) : isHomePage ? (
-          <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10">
-            <h1 className="text-2xl md:text-3xl text-center mb-8 tracking-tighter" style={{ color: '#111827', fontFamily: bowlby, maxWidth: '560px' }}>
-              {tr('dash_home_headline')}
-            </h1>
-            <div className="w-full max-w-2xl">
-              <PromptBox onSuccess={handleSuccess} />
-            </div>
-          </div>
+          <HomeOverview
+            tickets={tickets}
+            username={username}
+            onSuccess={handleSuccess}
+            onOpenTicket={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })}
+            onGoTemplates={() => setActiveNav('templates')}
+            onGoBriefs={() => setActiveNav('briefs')}
+            onGoType={(type) => setActiveNav(type === 'workflow' ? 'home' : type)}
+          />
         ) : renderPage()}
       </main>
 

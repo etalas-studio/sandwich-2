@@ -27,17 +27,17 @@ export default function AuthGate() {
     if (state.status === 'authenticated') setForceView(null)
   }, [state.status])
 
-  if (isLoading) {
-    return <div className="ds-bg min-h-screen" />
-  }
-
-  // Landing page at root — always accessible
+  // Landing page at root — always accessible, does not wait on auth
   if (location.pathname === '/') {
     return (
       <LandingPage
         onGoToApp={(plan) => navigate(plan ? `/checkout?plan=${plan}` : '/checkout')}
       />
     )
+  }
+
+  if (isLoading) {
+    return <div className="ds-bg min-h-screen" />
   }
 
   const showRegister = forceView === 'register'
