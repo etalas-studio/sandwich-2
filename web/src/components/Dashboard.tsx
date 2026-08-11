@@ -3,6 +3,7 @@ import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
 import { createTicket, updateTicket as updateTicketApi, fetchTicket } from '../api/tickets'
+import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
@@ -82,7 +83,7 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
 
     // Trigger generate FIRST so inFlight is set before stream connects.
     // Stream checks inFlight on connect — if empty it closes immediately.
-    fetch(`/api/tickets/${ticketKey}/generate`, {
+    fetch(apiUrl(`/api/tickets/${ticketKey}/generate`), {
       method: 'POST',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
@@ -91,7 +92,7 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
 
     // Small delay so inFlight is registered before stream opens
     const streamPromise = new Promise<Response>(resolve =>
-      setTimeout(() => resolve(fetch(`/api/tickets/${ticketKey}/stream`, { credentials: 'include', signal: ctrl.signal })), 100)
+      setTimeout(() => resolve(fetch(apiUrl(`/api/tickets/${ticketKey}/stream`), { credentials: 'include', signal: ctrl.signal })), 100)
     )
 
     streamPromise
@@ -148,7 +149,7 @@ function AiMessageActions({ output, ticketKey, onRegenerate }: { output: string;
   const sendFeedback = (value: 'like' | 'dislike') => {
     const next = feedback === value ? null : value
     setFeedback(next)
-    fetch(`/api/tickets/${ticketKey}`, {
+    fetch(apiUrl(`/api/tickets/${ticketKey}`), {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },

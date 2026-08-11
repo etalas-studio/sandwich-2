@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useIntegrations } from '../hooks/useIntegrations'
 import type { IntegrationItem } from '../api/integrations'
+import { apiUrl } from '../api/base'
 import ConnectModal from './ConnectModal'
 
 type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -170,7 +171,7 @@ export default function Integrations() {
                         </p>
                       </div>
                       <div>
-                        <button type="button" onClick={() => { window.location.href = '/api/integrations/jira/authorize' }} disabled={state === 'connecting'}
+                        <button type="button" onClick={() => { window.location.href = apiUrl('/api/integrations/jira/authorize') }} disabled={state === 'connecting'}
                           className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                           <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
@@ -192,7 +193,7 @@ export default function Integrations() {
                         </p>
                       </div>
                       <div>
-                        <button type="button" onClick={() => { window.location.href = '/api/integrations/bitbucket/authorize' }} disabled={state === 'connecting'}
+                        <button type="button" onClick={() => { window.location.href = apiUrl('/api/integrations/bitbucket/authorize') }} disabled={state === 'connecting'}
                           className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                           <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"
@@ -213,7 +214,7 @@ export default function Integrations() {
                         </p>
                       </div>
                       <div>
-                        <button type="button" onClick={() => { window.location.href = '/api/integrations/github/authorize' }} disabled={state === 'connecting'}
+                        <button type="button" onClick={() => { window.location.href = apiUrl('/api/integrations/github/authorize') }} disabled={state === 'connecting'}
                           className="w-fit relative inline-flex group disabled:opacity-40 disabled:cursor-not-allowed">
                           <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
                           <span className="relative px-4 py-1.5 rounded-md text-xs font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] flex items-center gap-1.5"

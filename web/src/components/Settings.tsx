@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import ConnectModal from './ConnectModal'
 import type { Account } from './AccountSection'
 import { fetchSettings, updateAutoOpenPr, fetchAccount } from '../api/projects'
+import { apiUrl } from '../api/base'
 import { useIntegrations } from '../hooks/useIntegrations'
 import { useProject } from '../hooks/useProject'
 import { useLanguage, type Lang } from '../lib/i18n'
@@ -248,7 +249,7 @@ export default function Settings({ onPurge }: SettingsProps) {
               <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>Connect a repo to enable automation and PR creation.</p>
               <div className="flex flex-col gap-2">
                 {[{ id: 'github', name: 'GitHub', icon: 'simple-icons:github' }, { id: 'bitbucket', name: 'Bitbucket', icon: 'simple-icons:bitbucket' }].map(p => (
-                  <a key={p.id} href={`/api/integrations/${p.id}/authorize`}
+                  <a key={p.id} href={apiUrl(`/api/integrations/${p.id}/authorize`)}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium transition-colors"
                     style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
                     <iconify-icon icon={p.icon} width="14" />
@@ -292,7 +293,7 @@ export default function Settings({ onPurge }: SettingsProps) {
               <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>{provider.description}</p>
 
               {isGh && state !== 'connected' && (
-                <DarkBtn onClick={() => { window.location.href = '/api/integrations/github/authorize' }} disabled={state === 'connecting'}>
+                <DarkBtn onClick={() => { window.location.href = apiUrl('/api/integrations/github/authorize') }} disabled={state === 'connecting'}>
                   {state === 'connecting' ? 'Connecting…' : 'Connect'}
                 </DarkBtn>
               )}

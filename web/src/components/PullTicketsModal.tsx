@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { XIcon, SearchIcon } from 'lucide-react'
+import { apiUrl } from '../api/base'
 
 export interface JiraTicket {
   key: string
@@ -62,7 +63,7 @@ export default function PullTicketsModal({ open, onClose, onImport }: PullTicket
     if (filterSprint) params.set('sprint', filterSprint)
     params.set('startAt', String(atStart))
     params.set('maxResults', '50')
-    return `/api/tickets/pull/preview?${params.toString()}`
+    return apiUrl(`/api/tickets/pull/preview?${params.toString()}`)
   }, [search, filterStatus, filterType, filterPriority, filterAssignee, filterSprint])
 
   const doFetch = useCallback(async (atStart: number, append: boolean) => {
@@ -79,7 +80,7 @@ export default function PullTicketsModal({ open, onClose, onImport }: PullTicket
     setErrorMessage('')
 
     try {
-      const res = await fetch(buildUrl(atStart), { signal: controller.signal })
+      const res = await fetch(buildUrl(atStart), { credentials: 'include', signal: controller.signal })
       if (!res.ok) {
         const body = await res.json().catch(() => null) as { error?: string } | null
         throw new Error(body?.error ?? `HTTP ${res.status}`)

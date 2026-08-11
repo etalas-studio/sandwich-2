@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useProject } from '../hooks/useProject'
 import { useIntegrations } from '../hooks/useIntegrations'
 import { fetchOrgs, fetchRepos } from '../api/projects'
+import { apiUrl } from '../api/base'
 import type { ProjectProvider, VcsOrg, VcsRepo } from '../api/projects'
 import { useQuery } from '@tanstack/react-query'
 
@@ -65,7 +66,7 @@ function ProviderPicker({ connectedProviders }: { connectedProviders: Set<Projec
         {PROVIDERS.map((p) => (
           <a
             key={p.id}
-            href={`/api/integrations/${p.id}/authorize`}
+            href={apiUrl(`/api/integrations/${p.id}/authorize`)}
             className="flex-1 flex items-center gap-2 justify-center px-4 py-3 rounded-lg border border-white/[0.08] bg-white/[0.03] text-sm text-white/80 hover:bg-white/[0.06] transition-colors"
           >
             <iconify-icon icon={p.logo} width="16" />
