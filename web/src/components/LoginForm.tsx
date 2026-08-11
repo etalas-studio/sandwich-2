@@ -24,13 +24,6 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
     void onSubmit(username, password)
   }
 
-  const handleDemoLogin = () => {
-    if (isPending) return
-    setUsername('demo')
-    setPassword('demo')
-    void onSubmit('demo', 'demo')
-  }
-
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10 relative"
@@ -92,21 +85,6 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
             {isPending ? tr('login_pending') : tr('login_cta')}
           </button>
         </form>
-
-        <div className="flex items-center gap-2 my-5">
-          <div className="flex-1 h-px" style={{ backgroundColor: '#e5e7eb' }} />
-          <span className="text-[11px] text-zinc-400 font-medium">{tr('auth_or')}</span>
-          <div className="flex-1 h-px" style={{ backgroundColor: '#e5e7eb' }} />
-        </div>
-
-        <button
-          onClick={handleDemoLogin}
-          disabled={isPending}
-          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: '#F4EBE1', color: '#111827' }}
-        >
-          {tr('login_demo')}
-        </button>
 
         <button
           onClick={onBack}

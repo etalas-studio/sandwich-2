@@ -65,13 +65,6 @@ export async function register(db: Database.Database, input: RegisterInput): Pro
 
 export async function login(db: Database.Database, input: Credentials): Promise<AuthResult> {
   let user = getUserByUsername(db, input.username);
-  if (!user && input.username === "demo" && input.password === "demo") {
-    user = createUser(db, {
-      username: "demo",
-      email: "demo@example.com",
-      passwordHash: await hashPassword("demo"),
-    });
-  }
   if (!user) {
     await getDummyHash().then((hash) => verifyPassword(input.password, hash));
     throw new AuthError(401, "invalid username or password");
