@@ -72,8 +72,8 @@ const STRINGS = {
   pricing_title_l1: { en: 'SIMPLE PRICING.', id: 'HARGA SIMPEL.' },
   pricing_title_l2: { en: 'NO SURPRISES.', id: 'TANPA KEJUTAN.' },
   pricing_desc: {
-    en: 'Clear options for different needs. Start free, upgrade anytime.',
-    id: 'Pilihan jelas untuk kebutuhan berbeda. Mulai gratis, upgrade kapan saja.',
+    en: 'Clear options for different needs. Start small, upgrade anytime.',
+    id: 'Pilihan jelas untuk kebutuhan berbeda. Mulai dari yang kecil, upgrade kapan saja.',
   },
   pricing_best_value: { en: 'Best value', id: 'Paling worth it' },
   plan_starter_desc: { en: 'For those getting serious.', id: 'Buat yang mulai serius.' },

@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: 'Is it free?',
-    a: 'Starter is free forever. Pro and Team unlock priority processing, longer specs, team seats, and API access.',
+    a: 'No free tier right now — Starter is Rp 50k/mo, cheap enough to try on a real brief. Pro unlocks unlimited PRDs, priority processing, and direct support.',
   },
   {
     q: 'Which AI agents are supported?',
@@ -134,6 +134,9 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const handleSubmit = async () => {
     if (!prompt.trim()) return
     if (authState.status !== 'authenticated') {
+      try {
+        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType }))
+      } catch { /* best-effort draft save, e.g. storage quota */ }
       onGoToApp()
       return
     }
@@ -378,9 +381,9 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-10 mt-8">
+          <div className="flex flex-wrap md:flex-nowrap flex-row items-center justify-center gap-6 md:gap-10 mt-8">
             {/* Left — output types */}
-            <div className="hidden md:flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
+            <div className="flex flex-row md:flex-col gap-4 md:gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white order-2 md:order-1 basis-full md:basis-auto justify-center md:justify-start">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-10deg)' }}>
                 <iconify-icon icon="solar:document-text-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
                 <span>PRD</span>
@@ -396,7 +399,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </div>
 
             {/* Center — spec illustration */}
-            <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0">
+            <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0 order-1 md:order-2">
               <img
                 src="/spec-illustration.png"
                 alt="SPEC"
@@ -405,7 +408,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             </div>
 
             {/* Right — output types */}
-            <div className="hidden md:flex flex-col gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white">
+            <div className="flex flex-row md:flex-col gap-4 md:gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white order-3 basis-full md:basis-auto justify-center md:justify-start">
               <div className="flex items-center gap-3" style={{ transform: 'rotate(10deg)' }}>
                 <iconify-icon icon="solar:pen-new-square-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
                 <span>{t('right_write_spec')}</span>
@@ -466,10 +469,10 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </p>
           <div className="grid grid-cols-2 md:flex md:flex-row justify-center items-start gap-x-6 gap-y-10 md:gap-24">
             {[
-              { img: 'https://www.cravburgers.shop/img-webp/tomato.webp', name: '/ Order', desc: t('stack_order_desc'), offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/cheese.webp', name: '/ Prep', desc: t('stack_prep_desc'), offset: true },
-              { img: 'https://www.cravburgers.shop/img-webp/meat.webp', name: '/ Recipe', desc: t('stack_recipe_desc'), offset: false },
-              { img: 'https://www.cravburgers.shop/img-webp/lettuce.webp', name: '/ Validate', desc: t('stack_validate_desc'), offset: true },
+              { img: '/ingredients/tomato.webp', name: '/ Order', desc: t('stack_order_desc'), offset: false },
+              { img: '/ingredients/cheese.webp', name: '/ Prep', desc: t('stack_prep_desc'), offset: true },
+              { img: '/ingredients/meat.webp', name: '/ Recipe', desc: t('stack_recipe_desc'), offset: false },
+              { img: '/ingredients/lettuce.webp', name: '/ Validate', desc: t('stack_validate_desc'), offset: true },
             ].map((item) => (
               <div key={item.name} className={`flex flex-col items-center text-center w-full md:w-40 ${item.offset ? 'md:translate-y-8' : ''}`}>
                 <img

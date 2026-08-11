@@ -568,19 +568,36 @@ interface PromptBoxProps {
   defaultType?: TicketType
   onSuccess: (t: LocalTicket) => void
 }
+function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType: TicketType | null } {
+  try {
+    const raw = localStorage.getItem('sandwich_draft')
+    if (!raw) return { prompt: '', attachments: [], activeType: null }
+    localStorage.removeItem('sandwich_draft')
+    const parsed = JSON.parse(raw) as { prompt?: string; attachments?: AttachedFile[]; activeType?: TicketType }
+    return { prompt: parsed.prompt ?? '', attachments: parsed.attachments ?? [], activeType: parsed.activeType ?? null }
+  } catch {
+    return { prompt: '', attachments: [], activeType: null }
+  }
+}
+
 function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
   const { t: tr } = useLanguage()
-  const [prompt, setPrompt] = useState('')
-  const [activeType, setActiveType] = useState<TicketType>(defaultType)
+  const [draft] = useState(loadDraft)
+  const [prompt, setPrompt] = useState(draft.prompt)
+  const [activeType, setActiveType] = useState<TicketType>(draft.activeType ?? defaultType)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [attachments, setAttachments] = useState<AttachedFile[]>([])
+  const [attachments, setAttachments] = useState<AttachedFile[]>(draft.attachments)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [planInfo, setPlanInfo] = useState(getPlanInfo)
   const atLimit = !planInfo.isPro && planInfo.used >= planInfo.limit
 
-  useEffect(() => { setActiveType(defaultType) }, [defaultType])
+  const skipNextTypeReset = useRef(draft.activeType !== null)
+  useEffect(() => {
+    if (skipNextTypeReset.current) { skipNextTypeReset.current = false; return }
+    setActiveType(defaultType)
+  }, [defaultType])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(e.target.files ?? []).forEach(file => {
