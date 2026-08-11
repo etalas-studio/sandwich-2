@@ -14,7 +14,8 @@ export default function ModelSelector({ scope }: { scope: string }) {
 
   useEffect(() => {
     if (!selectedModelId && connectedModels.length > 0) {
-      setSelectedModelId(connectedModels[0].id)
+      const preferred = connectedModels.find(m => m.id === 'opencode-go/minimax-m3')
+      setSelectedModelId(preferred?.id ?? connectedModels[0].id)
     }
   }, [connectedModels.length])
 

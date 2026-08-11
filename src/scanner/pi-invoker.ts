@@ -57,6 +57,7 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
       );
 
       let responseText = "";
+      let errorMessage = "";
       let eventCount = 0;
       let toolUseCount = 0;
       const eventTypeCounts: Record<string, number> = {};
@@ -135,6 +136,10 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         // Last resort: agent_end has all messages from the session
         if (event.type === "agent_end") {
           console.log("[invoker:agent_end] raw:", JSON.stringify(event).slice(0, 2000));
+          // Capture error message (e.g. 429 GoUsageLimitError)
+          if (!errorMessage && typeof event.errorMessage === "string" && event.errorMessage) {
+            errorMessage = event.errorMessage;
+          }
           if (!responseText) {
             const messages = event.messages;
             if (Array.isArray(messages)) {
@@ -178,6 +183,10 @@ export function createPiInvokerFactory(modelRuntime: unknown): InvokerFactory {
         // Give event listeners a tick to flush before disposing
         await new Promise((r) => setTimeout(r, 100));
         session.dispose();
+        // If model returned empty response with an error (e.g. 429 usage limit), surface it
+        if (!responseText && errorMessage) {
+          return { outcome: "process_error" as const, finalText: "", errorMessage };
+        }
         return { outcome: "ok" as const, finalText: responseText };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

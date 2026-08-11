@@ -28,6 +28,13 @@ const PROVIDERS = [
     docsUrl: 'https://github.com/openai/codex',
   },
   {
+    id: 'groq',
+    name: 'Groq',
+    logo: 'simple-icons:groq',
+    description: 'Fast inference for SANDWICH and getokui document generation — Qwen3, Llama, and more.',
+    docsUrl: 'https://console.groq.com/keys',
+  },
+  {
     id: '9router',
     name: '9Router',
     logo: '/logos/9router-logo.png',

@@ -338,3 +338,17 @@ body {
     @apply font-sans;
   }
 }
+.sandwich-output h1, .sandwich-output h2, .sandwich-output h3 {
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.4em;
+  color: rgba(0,0,0,0.85);
+}
+.sandwich-output h1 { font-size: 1.15rem; }
+.sandwich-output h2 { font-size: 1.05rem; }
+.sandwich-output h3 { font-size: 0.95rem; }
+.sandwich-output p { margin-bottom: 0.75em; }
+.sandwich-output ul, .sandwich-output ol { padding-left: 1.4em; margin-bottom: 0.75em; }
+.sandwich-output li { margin-bottom: 0.25em; }
+.sandwich-output strong { font-weight: 600; }
+.sandwich-output hr { border-color: rgba(0,0,0,0.08); margin: 1em 0; }

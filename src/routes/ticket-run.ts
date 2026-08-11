@@ -1,6 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -8,35 +6,30 @@ import type { Router } from "../router.js";
 import type { InvokerFactory } from "../scanner/run-scan.js";
 import { getProjectRepoPath } from "../db/project.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
+import { getCredential } from "../db/credentials.js";
 import { runTicketPipeline } from "../pipeline/ticket-runner.js";
 import type { TicketRunEvent } from "../pipeline/ticket-runner.js";
 import { sendJson } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
 const SANDWICH_PRD_GUIDE = `
-## PRD Structure (Sandwich methodology)
-Extract and document the following with confidence markers:
-- [stated] = explicitly mentioned by client
-- [discussed] = mentioned but not specified
-- [inferred] = derived from context
-- [assumed] = reasonable assumption not mentioned
-
-PRD sections:
-1. Overview: 2-3 sentence prose — what the product is, who it's for, the core problem
-2. Actors: who uses the system (with confidence marker)
+Write a professional PRD document covering:
+1. Overview: 2-3 sentence prose — what the product is, who it's for, the core problem it solves
+2. Actors: who uses the system (user roles)
 3. Modules: named feature areas using client's own language, each with:
-   - status: planned | exists | partial | broken
-   - features: specific capabilities starting with a verb (with confidence marker)
-4. Integrations: external systems (with confidence marker)
+   - Status: planned / exists / partial / broken
+   - Features: specific capabilities starting with a verb
+4. Integrations: external systems the product connects to
 5. Constraints: technical, legal, regulatory, or timeline requirements
 6. Stakeholders: named parties with decision authority
-7. Timeline: extracted deadline or null
-8. Open Questions: unclear, contradictory, or under-specified items to validate with client
+7. Timeline: project timeline if mentioned
+8. Open Questions: things that need clarification from the client before development starts
 
 Rules:
-- Never invent features not present in the brief
-- Keep client's language verbatim — if Bahasa Indonesia, keep in Bahasa Indonesia
-- Do NOT recommend a tech stack in the PRD (that belongs in technical notes)
+- Base everything strictly on what was stated in the brief — do not invent features
+- Keep client's language — if Bahasa Indonesia, write in Bahasa Indonesia
+- Do NOT include confidence markers like [stated], [discussed], [inferred] in the output
+- Do NOT recommend a tech stack in the PRD
 `;
 
 const SANDWICH_USERFLOWS_GUIDE = `
@@ -120,15 +113,16 @@ HTML — Solar: <script src="https://code.iconify.design/iconify-icon/2.1.0/icon
 Output full, self-contained HTML with Tailwind CDN. Include real @keyframes animations. No placeholder lorem ipsum — generate plausible content for the domain.
 `;
 
-function buildPrompt(summary: string, description: string): string {
+type ConversationTurn = { role: "user" | "assistant"; content: string };
+
+function buildMessages(summary: string, description: string, history: ConversationTurn[]): ConversationTurn[] {
   const lower = (summary ?? "").toLowerCase();
-  const isPrd = lower.includes("prd") || lower.includes("product requirement");
   const isFlow = lower.includes("user flow") || lower.includes("alur");
   const isTech = lower.includes("technical") || lower.includes("teknis") || lower.includes("specs");
   const isQuotation = lower.includes("quotation") || lower.includes("quote") || lower.includes("penawaran") || lower.includes("harga");
   const isPrototype = lower.includes("prototype") || lower.includes("landing") || lower.includes("ui") || lower.includes("design") || lower.includes("html");
 
-  const guide = isPrototype
+  const docGuide = isPrototype
     ? GETOKUI_PROTOTYPE_GUIDE
     : isQuotation
     ? SANDWICH_QUOTATION_GUIDE
@@ -136,28 +130,37 @@ function buildPrompt(summary: string, description: string): string {
     ? SANDWICH_USERFLOWS_GUIDE
     : isTech
     ? SANDWICH_TECHNICAL_GUIDE
-    : isPrd
-    ? SANDWICH_PRD_GUIDE
-    : SANDWICH_PRD_GUIDE; // default to PRD methodology
+    : SANDWICH_PRD_GUIDE;
 
-  return [
-    `You are an expert product consultant and software agency specialist.`,
-    `IMPORTANT: Output the document DIRECTLY. Do NOT greet, introduce yourself, ask clarifying questions, or add any preamble. Start immediately with the document content.`,
+  const outputInstruction = isPrototype
+    ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
+    : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
+
+  const system = [
+    `You are SANDWICH, an expert product consultant AI built by Etalas.`,
+    `You help clients turn ideas and briefs into structured product documents.`,
+    `Reply in the same language as the client (Indonesian or English).`,
     ``,
-    guide,
+    `## Your process:`,
+    `1. When the client first sends a brief, ALWAYS ask 3-5 focused clarifying questions before generating any document. Your questions should fill the most critical gaps (target users, core features, integrations, timeline, constraints).`,
+    `2. Once you have enough context from the client's answers, generate the document following the guidelines below.`,
+    `3. Never generate a document on the first message — always ask questions first.`,
     ``,
-    `---`,
+    docGuide,
     ``,
-    `Document type requested: ${summary ?? "document"}`,
-    `Client brief:`,
-    description,
-    ``,
-    `---`,
-    ``,
-    isPrototype
-      ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
-      : `Output the full document in Indonesian using markdown formatting. Be thorough and professional. Return ONLY the document content — no greeting, no meta-commentary, no "here is your document" prefix.`,
+    outputInstruction,
   ].join("\n");
+
+  const messages: ConversationTurn[] = [
+    { role: "user", content: system + "\n\n---\n\nClient brief:\n" + (description || summary) },
+  ];
+
+  // Append follow-up history if any
+  for (const turn of history) {
+    messages.push(turn);
+  }
+
+  return messages;
 }
 
 const inFlight = new Map<string, AbortController>();
@@ -256,17 +259,11 @@ export function registerTicketRunRoutes(
       return;
     }
 
-    let modelId: string | null = null;
-    try {
-      const body = await readJson(req);
-      if (body && typeof (body as Record<string, unknown>).modelId === "string") {
-        modelId = (body as Record<string, unknown>).modelId as string;
-      }
-    } catch { /* optional body */ }
-
-    // Pick first available model if none specified
-    if (!modelId) {
-      modelId = "opencode-go/minimax-m3";
+    const groqCred = getCredential(db, "groq");
+    const groqKey = groqCred ? (JSON.parse(groqCred.value) as { key?: string }).key ?? null : null;
+    if (!groqKey) {
+      sendJson(res, 503, { error: "Groq API key not configured. Add it via Settings → Integrations." });
+      return;
     }
 
     const controller = new AbortController();
@@ -281,20 +278,40 @@ export function registerTicketRunRoutes(
       }
     };
 
-    const cwd = mkdtempSync(join(tmpdir(), "sandwich-gen-"));
+    let history: ConversationTurn[] = [];
+    try {
+      const body = await readJson(req);
+      if (Array.isArray((body as Record<string, unknown>)?.history)) {
+        history = (body as Record<string, unknown>).history as ConversationTurn[];
+      }
+    } catch { /* no body */ }
 
     broadcast({ type: "stage_start", stage: "implement", ticket: getTicket(db, ticketKey)! });
     updateTicket(db, ticketKey, { status: "in_progress", stage: "implement" });
 
-    const invoker = createInvoker(modelId);
-    invoker.run({
-      cwd,
-      timeoutMs: 5 * 60 * 1000,
-      prompt: buildPrompt(ticket.summary ?? "", ticket.description),
+    fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${groqKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "qwen/qwen3.6-27b",
+        messages: buildMessages(ticket.summary ?? "", ticket.description ?? "", history),
+        max_tokens: 4000,
+        reasoning_effort: "none",
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
     })
-      .then((result) => {
-        const output = result.finalText ?? "";
-        // Store generated doc in prDescription (free-text field, no migration needed)
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`Groq ${r.status}: ${await r.text().catch(() => r.statusText)}`);
+        const json = await r.json() as { choices?: Array<{ message?: { content?: string } }> };
+        return json.choices?.[0]?.message?.content ?? "";
+      })
+      .then((output) => {
+        if (!output) {
+          updateTicket(db, ticketKey, { status: "backlog", stage: null });
+          broadcast({ type: "error", ticket: getTicket(db, ticketKey)!, text: "Model returned no response. Try again." });
+          return;
+        }
         updateTicket(db, ticketKey, { status: "done", stage: null, prDescription: output });
         broadcast({ type: "done", ticket: getTicket(db, ticketKey)! });
       })

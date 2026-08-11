@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { createDbCredentialStore } from "./db-credential-store.js";
-import { upsertCredential, deleteCredential } from "../db/credentials.js";
+import { getCredential, upsertCredential, deleteCredential } from "../db/credentials.js";
 import { isOAuthConnected, disconnectOAuth } from "./oauth-integrations.js";
 
 /**
@@ -53,6 +53,7 @@ const PROVIDER_META: Record<string, { name: string }> = {
   "opencode-go": { name: "OpenCode Go" },
   anthropic: { name: "Claude (Anthropic)" },
   "openai-codex": { name: "OpenAI Codex" },
+  groq: { name: "Groq" },
   jira: { name: "Jira" },
   bitbucket: { name: "Bitbucket" },
   github: { name: "GitHub" },
@@ -127,6 +128,20 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     );
   }
 
+  // ── Groq (direct API key, not via Pi SDK) ──
+  {
+    const row = getCredential(dbRef!, "groq");
+    const connected = !!row;
+    results.push({
+      id: "groq",
+      name: "Groq",
+      connected,
+      authType: "api_key",
+      models: connected ? [{ id: "groq/qwen/qwen3-32b", name: "Qwen3 32B (Groq)" }] : [],
+      error: connected ? undefined : "API key not set",
+    });
+  }
+
   // ── OAuth providers (Jira / Bitbucket / GitHub) ──
   for (const providerId of ["jira", "bitbucket", "github"]) {
     const meta = PROVIDER_META[providerId]!;
@@ -176,6 +191,11 @@ export async function connectWithApiKey(
     };
   }
 
+  if (providerId === "groq") {
+    upsertCredential(dbRef, "groq", JSON.stringify({ type: "api_key", key: apiKey }));
+    return { ok: true, message: "Connected to Groq" };
+  }
+
   if (providerId !== "opencode-go" && providerId !== "anthropic") {
     return {
       ok: false,
@@ -212,6 +232,11 @@ export async function disconnectApiKey(
 
   if (providerId === "jira" || providerId === "bitbucket" || providerId === "github") {
     disconnectOAuth(providerId);
+    return { ok: true, message: "Disconnected" };
+  }
+
+  if (providerId === "groq") {
+    deleteCredential(dbRef, "groq");
     return { ok: true, message: "Disconnected" };
   }
 

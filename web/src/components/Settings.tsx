@@ -20,6 +20,14 @@ const INTEGRATION_PROVIDERS = [
     isImage: true as const,
   },
   {
+    id: 'groq',
+    name: 'Groq',
+    logo: 'simple-icons:groq',
+    description: 'Fast inference for SANDWICH and getokui — Qwen3, Llama, and more.',
+    docsUrl: 'https://console.groq.com/keys',
+    isImage: false as const,
+  },
+  {
     id: 'github',
     name: 'GitHub',
     logo: 'simple-icons:github',
@@ -256,7 +264,7 @@ export default function Settings({ onPurge }: SettingsProps) {
         {INTEGRATION_PROVIDERS.map((provider) => {
           const state = getState(provider.id)
           const isGh = provider.id === 'github'
-          const isOpencode = provider.id === 'opencode-go'
+          const isOpencode = provider.id === 'opencode-go' || provider.id === 'groq'
           const integration = getIntegration(provider.id)
           const isOAuth = integration?.authType === 'oauth'
 

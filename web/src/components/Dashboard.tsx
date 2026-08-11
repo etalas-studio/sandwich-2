@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
 import { createTicket, updateTicket as updateTicketApi, fetchTicket } from '../api/tickets'
@@ -63,7 +64,9 @@ interface ChatMessage {
   ticketId?: string
 }
 
-function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun: boolean, onDone?: (output: string) => void) {
+type HistoryTurn = { role: 'user' | 'assistant'; content: string }
+
+function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun: boolean, history: HistoryTurn[], onDone?: (output: string) => void) {
   const { t: tr } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
@@ -83,6 +86,7 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
       method: 'POST',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ history }),
     }).catch(() => {})
 
     // Small delay so inFlight is registered before stream opens
@@ -283,7 +287,8 @@ function ChatView({
   const [turns, setTurns] = useState<{ user: string; aiMessages: ChatMessage[] }[]>([
     { user: initialPrompt, aiMessages: [] }
   ])
-  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, (output) => {
+  const [history, setHistory] = useState<HistoryTurn[]>([])
+  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, history, (output) => {
     // persist output to localStorage so reload can restore it
     updateTicket(ticketKey, { content: output })
   })
@@ -360,12 +365,23 @@ function ChatView({
     setFollowUp('')
     setAttachments([])
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
+
+    // Build AI response text from live messages to add to history
+    const aiText = liveMessages.filter(m => m.isDone && m.output).map(m => m.output).join('\n')
+
+    // Append to conversation history for next generate call
+    setHistory(prev => [
+      ...prev,
+      ...(aiText ? [{ role: 'assistant' as const, content: aiText }] : []),
+      { role: 'user' as const, content: text },
+    ])
+
     // Commit current live messages into turns before starting new stream
     setTurns(prev => {
       const last = prev[prev.length - 1]
       return [...prev.slice(0, -1), { ...last, aiMessages: liveMessages }, { user: text, aiMessages: [] }]
     })
-    updateTicketApi(ticketKey, { summary: text, description: text }).catch(() => {})
+
     setRegenNonce(n => n + 1)
   }
 
@@ -435,9 +451,8 @@ function ChatView({
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output) return (
                     <div key={i} className="group">
-                      <div className="text-sm whitespace-pre-wrap break-words" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}>
-                        {m.output}
-                      </div>
+                      <div className="text-sm break-words sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                        dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
@@ -559,7 +574,16 @@ function getPlanInfo() {
   const plan = localStorage.getItem('sandwich_paid_plan') ?? 'starter'
   const isPro = plan === 'pro'
   const limit = isPro ? Infinity : 5
-  const used = parseInt(localStorage.getItem(USAGE_KEY()) ?? '0', 10)
+  const stored = parseInt(localStorage.getItem(USAGE_KEY()) ?? '0', 10)
+  // sync with actual ticket count for tickets created before localStorage tracking
+  const now = new Date()
+  const thisMonth = `${now.getFullYear()}-${now.getMonth()}`
+  const actualCount = getTickets().filter(t => {
+    const d = new Date(t.createdAt)
+    return `${d.getFullYear()}-${d.getMonth()}` === thisMonth
+  }).length
+  const used = Math.max(stored, actualCount)
+  if (used > stored) localStorage.setItem(USAGE_KEY(), String(used))
   return { isPro, limit, used, remaining: Math.max(0, limit - used) }
 }
 
