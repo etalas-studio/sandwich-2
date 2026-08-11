@@ -124,7 +124,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     })();
   });
 
-  server.listen(port, "127.0.0.1", () => {
+  server.listen(port, "0.0.0.0", () => {
     const address = server.address();
     boundPort = typeof address === "object" && address ? address.port : port;
   });
