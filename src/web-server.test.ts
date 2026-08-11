@@ -13,7 +13,7 @@ import { startWebServer } from "./web-server.js";
 function rawRequest(
   port: number,
   options: { method: string; path: string; headers?: Record<string, string>; body?: string },
-): Promise<{ status: number; body: string; contentType: string }> {
+): Promise<{ status: number; body: string; contentType: string; headers: Record<string, string> }> {
   return new Promise((resolvePromise, reject) => {
     const req = httpRequest(
       {
@@ -31,6 +31,9 @@ function rawRequest(
             status: res.statusCode ?? 0,
             body: data,
             contentType: String(res.headers["content-type"] ?? ""),
+            headers: Object.fromEntries(
+              Object.entries(res.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : String(v ?? "")]),
+            ),
           }),
         );
       },
@@ -415,6 +418,107 @@ async function testTicketCreateStopDuplicateDeleteRequireSession(): Promise<void
   console.log("PASS: testTicketCreateStopDuplicateDeleteRequireSession");
 }
 
+// --- CORS support ---
+
+async function testCorsPreflightWithoutEnvVar(): Promise<void> {
+  const { server, port } = await startTestServer();
+  try {
+    const prev = process.env.CORS_ORIGIN;
+    delete process.env.CORS_ORIGIN;
+    const res = await rawRequest(port, {
+      method: "OPTIONS",
+      path: "/api/auth/login",
+      headers: {
+        host: `127.0.0.1:${port}`,
+        origin: "https://sandwich.etalas.com",
+        "access-control-request-method": "POST",
+      },
+    });
+    // No CORS_ORIGIN set: preflight falls through to host guard and gets a 204 from node (no explicit handler) or the SPA; important thing is no CORS headers
+    assert.equal(res.headers["access-control-allow-origin"], undefined, "no CORS header when env unset");
+    if (prev !== undefined) process.env.CORS_ORIGIN = prev;
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testCorsPreflightWithoutEnvVar");
+}
+
+async function testCorsPreflightWithEnvVar(): Promise<void> {
+  const { server, port } = await startTestServer();
+  try {
+    const corsOrigin = "https://sandwich.etalas.com";
+    process.env.CORS_ORIGIN = corsOrigin;
+    try {
+      const res = await rawRequest(port, {
+        method: "OPTIONS",
+        path: "/api/auth/login",
+        headers: {
+          host: `127.0.0.1:${port}`,
+          origin: corsOrigin,
+          "access-control-request-method": "POST",
+        },
+      });
+      assert.equal(res.status, 204, "preflight returns 204");
+      assert.equal(res.headers["access-control-allow-origin"], corsOrigin, "allow-origin header set");
+      assert.equal(res.headers["access-control-allow-credentials"], "true", "allow-credentials header set");
+      assert.ok(res.headers["access-control-allow-methods"]?.includes("POST"), "allow-methods includes POST");
+    } finally {
+      delete process.env.CORS_ORIGIN;
+    }
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testCorsPreflightWithEnvVar");
+}
+
+async function testCorsHeadersOnActualRequest(): Promise<void> {
+  const { server, port } = await startTestServer();
+  try {
+    const corsOrigin = "https://sandwich.etalas.com";
+    process.env.CORS_ORIGIN = corsOrigin;
+    try {
+      const res = await rawRequest(port, {
+        method: "GET",
+        path: "/api/auth/me",
+        headers: {
+          host: `127.0.0.1:${port}`,
+          origin: corsOrigin,
+        },
+      });
+      assert.equal(res.headers["access-control-allow-origin"], corsOrigin, "allow-origin on actual response");
+      assert.equal(res.headers["access-control-allow-credentials"], "true", "allow-credentials on actual response");
+    } finally {
+      delete process.env.CORS_ORIGIN;
+    }
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testCorsHeadersOnActualRequest");
+}
+
+async function testCorsHeadersNotAddedForWrongOrigin(): Promise<void> {
+  const { server, port } = await startTestServer();
+  try {
+    process.env.CORS_ORIGIN = "https://sandwich.etalas.com";
+    try {
+      const res = await rawRequest(port, {
+        method: "GET",
+        path: "/api/auth/me",
+        headers: {
+          host: `127.0.0.1:${port}`,
+          origin: "https://evil.example.com",
+        },
+      });
+      assert.equal(res.headers["access-control-allow-origin"], undefined, "no CORS header for wrong origin");
+    } finally {
+      delete process.env.CORS_ORIGIN;
+    }
+  } finally {
+    server.close();
+  }
+  console.log("PASS: testCorsHeadersNotAddedForWrongOrigin");
+}
+
 async function main(): Promise<void> {
   await testTicketsRequiresSession();
   await testRegisterLoginLogoutFlow();
@@ -432,6 +536,10 @@ async function main(): Promise<void> {
   await testArtifactsRequiresSession();
   await testRunTriggerRequiresSession();
   await testTicketCreateStopDuplicateDeleteRequireSession();
+  await testCorsPreflightWithoutEnvVar();
+  await testCorsPreflightWithEnvVar();
+  await testCorsHeadersOnActualRequest();
+  await testCorsHeadersNotAddedForWrongOrigin();
 }
 
 void main();

@@ -90,11 +90,41 @@ export class Router {
 
   async dispatch(req: IncomingMessage, res: ServerResponse): Promise<void> {
     try {
+      const corsOrigin = process.env.CORS_ORIGIN ?? '';
+      const requestOrigin = req.headers.origin ?? '';
+      const isCorsRequest = corsOrigin !== '' && requestOrigin === corsOrigin;
+
+      // Handle CORS preflight
+      if (isCorsRequest && (req.method ?? '') === 'OPTIONS') {
+        res.writeHead(204, {
+          'access-control-allow-origin': corsOrigin,
+          'access-control-allow-credentials': 'true',
+          'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'access-control-allow-headers': 'content-type',
+          'access-control-max-age': '86400',
+        });
+        res.end();
+        return;
+      }
+
       // Host guard — use the socket's actual port (in case boundPort was 0 = pick-free)
       const port = req.socket?.localPort ?? this.boundPort;
       if (!isTrustedHost(req.headers.host, port, this.trustedHosts)) {
         sendJson(res, 403, { error: "forbidden" });
         return;
+      }
+
+      // Attach CORS headers to all responses when origin matches
+      if (isCorsRequest) {
+        const originalWriteHead = res.writeHead.bind(res);
+        // @ts-expect-error overload types are complex
+        res.writeHead = (statusCode: number, headers?: Record<string, string>) => {
+          return originalWriteHead(statusCode, {
+            'access-control-allow-origin': corsOrigin,
+            'access-control-allow-credentials': 'true',
+            ...headers,
+          });
+        };
       }
 
       // Origin / CSRF guard for state-changing methods
