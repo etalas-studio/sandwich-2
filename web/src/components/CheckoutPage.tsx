@@ -120,8 +120,55 @@ export default function CheckoutPage() {
     )
   }
 
-  const handlePay = () => {
+  const handlePay = async () => {
     setIsProcessing(true)
+    const orderId = `${planSlug}-${Date.now()}`
+    const grossAmount = planSlug === 'pro' ? 100000 : 50000
+
+    try {
+      const res = await fetch('/api/midtrans/transaction', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orderId, grossAmount, itemName: `SANDWICH ${plan.name}` }),
+      })
+
+      if (res.ok) {
+        const { token } = await res.json() as { token: string }
+        // Load Snap.js if not already loaded
+        await new Promise<void>((resolve, reject) => {
+          if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
+          const script = document.createElement('script')
+          const isSandbox = true // flip to false in production
+          script.src = isSandbox
+            ? 'https://app.sandbox.midtrans.com/snap/snap.js'
+            : 'https://app.midtrans.com/snap/snap.js'
+          script.setAttribute('data-client-key', '')
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Snap.js failed to load'))
+          document.head.appendChild(script)
+        })
+        ;(window as unknown as { snap: { pay: (token: string, opts: object) => void } }).snap.pay(token, {
+          onSuccess: () => {
+            localStorage.setItem('sandwich_paid_plan', planSlug)
+            setIsProcessing(false)
+            setIsDone(true)
+          },
+          onPending: () => {
+            setIsProcessing(false)
+          },
+          onError: () => {
+            setIsProcessing(false)
+          },
+          onClose: () => {
+            setIsProcessing(false)
+          },
+        })
+        return
+      }
+    } catch { /* fall through to simulation */ }
+
+    // ── Simulation fallback (no Midtrans key configured) ──────────────────────
     setTimeout(() => {
       setIsProcessing(false)
       setIsDone(true)
