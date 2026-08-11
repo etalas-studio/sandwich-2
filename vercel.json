@@ -1,5 +1,8 @@
 {
   "buildCommand": "npm --prefix web run build",
   "outputDirectory": "web/dist",
-  "framework": null
+  "framework": null,
+  "env": {
+    "VITE_API_URL": "https://api.sandwich.etalas.com"
+  }
 }
