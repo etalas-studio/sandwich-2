@@ -28,7 +28,11 @@ function buildAttrs(cookieValue: string, maxAge: number, secure: boolean): strin
     "SameSite=Lax",
     `Max-Age=${maxAge}`,
   ];
-  if (secure) attrs.push("Secure");
+  if (secure) {
+    attrs.push("Secure");
+    // Share cookie across subdomains in production
+    attrs.push("Domain=.etalas.com");
+  }
   return attrs;
 }
 
