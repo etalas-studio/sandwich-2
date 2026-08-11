@@ -35,7 +35,7 @@ describe('fetchCurrentProject', () => {
     const result = await fetchCurrentProject()
 
     expect(result).toEqual(mockProject)
-    expect(fetch).toHaveBeenCalledWith('/api/projects/current')
+    expect(fetch).toHaveBeenCalledWith('/api/projects/current', { credentials: 'include' })
   })
 
   it('returns null when no project connected', async () => {
@@ -66,7 +66,7 @@ describe('fetchOrgs', () => {
     const result = await fetchOrgs('github')
 
     expect(result).toEqual(orgs)
-    expect(fetch).toHaveBeenCalledWith('/api/projects/orgs?provider=github')
+    expect(fetch).toHaveBeenCalledWith('/api/projects/orgs?provider=github', { credentials: 'include' })
   })
 
   it('throws with server error message on failure', async () => {
@@ -90,7 +90,7 @@ describe('fetchRepos', () => {
     const result = await fetchRepos('github', 'acme', 1)
 
     expect(result).toEqual(page)
-    expect(fetch).toHaveBeenCalledWith('/api/projects/repos?provider=github&org=acme&page=1')
+    expect(fetch).toHaveBeenCalledWith('/api/projects/repos?provider=github&org=acme&page=1', { credentials: 'include' })
   })
 
   it('includes q param when a search term is given', async () => {
@@ -101,7 +101,7 @@ describe('fetchRepos', () => {
 
     await fetchRepos('github', 'acme', 1, 'widg')
 
-    expect(fetch).toHaveBeenCalledWith('/api/projects/repos?provider=github&org=acme&page=1&q=widg')
+    expect(fetch).toHaveBeenCalledWith('/api/projects/repos?provider=github&org=acme&page=1&q=widg', { credentials: 'include' })
   })
 })
 
@@ -116,6 +116,7 @@ describe('connectProject', () => {
     expect(result).toEqual({ ok: true, project: mockProject })
     expect(fetch).toHaveBeenCalledWith('/api/projects/connect', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ provider: 'github', owner: 'acme', repoSlug: 'widgets', defaultBranch: 'main' }),
     })
@@ -143,7 +144,7 @@ describe('clearProject', () => {
     const result = await clearProject()
 
     expect(result).toEqual({ ok: true })
-    expect(fetch).toHaveBeenCalledWith('/api/projects/clear', { method: 'POST' })
+    expect(fetch).toHaveBeenCalledWith('/api/projects/clear', { method: 'POST', credentials: 'include' })
   })
 })
 
@@ -159,7 +160,7 @@ describe('syncProject', () => {
     const result = await syncProject()
 
     expect(result).toEqual({ ok: true, output: 'Already up to date.' })
-    expect(fetch).toHaveBeenCalledWith('/api/projects/sync', { method: 'POST' })
+    expect(fetch).toHaveBeenCalledWith('/api/projects/sync', { method: 'POST', credentials: 'include' })
   })
 
   it('returns ok:false with server error on failure', async () => {
@@ -187,7 +188,7 @@ describe('fetchAccount', () => {
     const result = await fetchAccount()
 
     expect(result).toEqual({ username: 'testuser', email: 'test@example.com' })
-    expect(fetch).toHaveBeenCalledWith('/api/account')
+    expect(fetch).toHaveBeenCalledWith('/api/account', { credentials: 'include' })
   })
 
   it('throws with server error on failure', async () => {
@@ -215,6 +216,7 @@ describe('changePassword', () => {
     expect(result).toEqual({ ok: true })
     expect(fetch).toHaveBeenCalledWith('/api/account/password', {
       method: 'PUT',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ currentPassword: 'oldpass', newPassword: 'newpass' }),
     })

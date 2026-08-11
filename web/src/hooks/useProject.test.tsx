@@ -106,6 +106,6 @@ describe('useProject', () => {
       await result.current.clear()
     })
 
-    expect(fetch).toHaveBeenCalledWith('/api/projects/clear', { method: 'POST' })
+    expect(fetch).toHaveBeenCalledWith('/api/projects/clear', { method: 'POST', credentials: 'include' })
   })
 })

@@ -1,3 +1,5 @@
+import { apiUrl } from './base'
+
 export type ProjectProvider = 'github' | 'bitbucket'
 export type CloneStatus = 'cloning' | 'ready' | 'failed'
 
@@ -36,13 +38,13 @@ async function errorMessage(res: Response): Promise<string> {
 }
 
 export async function fetchCurrentProject(): Promise<Project | null> {
-  const res = await fetch('/api/projects/current')
+  const res = await fetch(apiUrl('/api/projects/current'), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<Project | null>
 }
 
 export async function fetchOrgs(provider: ProjectProvider): Promise<VcsOrg[]> {
-  const res = await fetch(`/api/projects/orgs?provider=${encodeURIComponent(provider)}`)
+  const res = await fetch(apiUrl(`/api/projects/orgs?provider=${encodeURIComponent(provider)}`), { credentials: 'include' })
   if (!res.ok) throw new Error(await errorMessage(res))
   return res.json() as Promise<VcsOrg[]>
 }
@@ -55,7 +57,7 @@ export async function fetchRepos(
 ): Promise<VcsRepoPage> {
   const params = new URLSearchParams({ provider, org, page: String(page) })
   if (q) params.set('q', q)
-  const res = await fetch(`/api/projects/repos?${params.toString()}`)
+  const res = await fetch(apiUrl(`/api/projects/repos?${params.toString()}`), { credentials: 'include' })
   if (!res.ok) throw new Error(await errorMessage(res))
   return res.json() as Promise<VcsRepoPage>
 }
@@ -72,8 +74,9 @@ export async function connectProject(
   repoSlug: string,
   defaultBranch: string,
 ): Promise<ConnectProjectResult> {
-  const res = await fetch('/api/projects/connect', {
+  const res = await fetch(apiUrl('/api/projects/connect'), {
     method: 'POST',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ provider, owner, repoSlug, defaultBranch }),
   })
@@ -88,7 +91,7 @@ export interface ClearProjectResult {
 }
 
 export async function clearProject(): Promise<ClearProjectResult> {
-  const res = await fetch('/api/projects/clear', { method: 'POST' })
+  const res = await fetch(apiUrl('/api/projects/clear'), { method: 'POST', credentials: 'include' })
   if (!res.ok) return { ok: false, error: await errorMessage(res) }
   return { ok: true }
 }
@@ -100,7 +103,7 @@ export interface SyncProjectResult {
 }
 
 export async function syncProject(): Promise<SyncProjectResult> {
-  const res = await fetch('/api/projects/sync', { method: 'POST' })
+  const res = await fetch(apiUrl('/api/projects/sync'), { method: 'POST', credentials: 'include' })
   const body = (await res.json().catch(() => null)) as { ok?: boolean; output?: string; error?: string } | null
   if (!res.ok) return { ok: false, error: body?.error ?? `HTTP ${res.status}` }
   return { ok: true, output: body?.output }
@@ -111,14 +114,15 @@ export interface SettingsResponse {
 }
 
 export async function fetchSettings(): Promise<SettingsResponse> {
-  const res = await fetch('/api/settings')
+  const res = await fetch(apiUrl('/api/settings'), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<SettingsResponse>
 }
 
 export async function updateAutoOpenPr(enabled: boolean): Promise<SettingsResponse> {
-  const res = await fetch('/api/settings', {
+  const res = await fetch(apiUrl('/api/settings'), {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ autoOpenPr: enabled }),
   })
@@ -132,7 +136,7 @@ export interface AccountResponse {
 }
 
 export async function fetchAccount(): Promise<AccountResponse> {
-  const res = await fetch('/api/account')
+  const res = await fetch(apiUrl('/api/account'), { credentials: 'include' })
   if (!res.ok) throw new Error(await errorMessage(res))
   return res.json() as Promise<AccountResponse>
 }
@@ -145,8 +149,9 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<ChangePasswordResult> {
-  const res = await fetch('/api/account/password', {
+  const res = await fetch(apiUrl('/api/account/password'), {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ currentPassword, newPassword }),
   })

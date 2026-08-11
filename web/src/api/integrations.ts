@@ -1,3 +1,5 @@
+import { apiUrl } from './base'
+
 export interface IntegrationItem {
   id: string
   name: string
@@ -8,7 +10,7 @@ export interface IntegrationItem {
 }
 
 export async function fetchIntegrations(): Promise<IntegrationItem[]> {
-  const res = await fetch('/api/integrations')
+  const res = await fetch(apiUrl('/api/integrations'), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<IntegrationItem[]>
 }
@@ -18,9 +20,10 @@ export async function connectIntegration(
   apiKey: string,
 ): Promise<{ ok: boolean; message: string }> {
   const res = await fetch(
-    `/api/integrations/${encodeURIComponent(providerId)}/connect`,
+    apiUrl(`/api/integrations/${encodeURIComponent(providerId)}/connect`),
     {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ apiKey }),
     },
@@ -36,8 +39,8 @@ export async function disconnectIntegration(
   providerId: string,
 ): Promise<{ ok: boolean; message: string }> {
   const res = await fetch(
-    `/api/integrations/${encodeURIComponent(providerId)}/disconnect`,
-    { method: 'POST' },
+    apiUrl(`/api/integrations/${encodeURIComponent(providerId)}/disconnect`),
+    { method: 'POST', credentials: 'include' },
   )
   const body = (await res.json().catch(() => null)) as
     | { ok?: boolean; message?: string; error?: string }

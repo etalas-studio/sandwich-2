@@ -18,7 +18,7 @@ describe('fetchMe', () => {
     const result = await fetchMe()
 
     expect(result).toEqual<AuthState>({ status: 'authenticated', username: 'alice' })
-    expect(fetch).toHaveBeenCalledWith('/api/auth/me')
+    expect(fetch).toHaveBeenCalledWith('/api/auth/me', { credentials: 'include' })
   })
 
   it('returns unauthenticated state when server responds with unauthenticated', async () => {
@@ -59,6 +59,7 @@ describe('postLogin', () => {
 
     expect(fetch).toHaveBeenCalledWith('/api/auth/login', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ username: 'alice', password: 'secret' }),
     })
@@ -102,6 +103,7 @@ describe('postRegister', () => {
 
     expect(fetch).toHaveBeenCalledWith('/api/auth/register', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ username: 'alice', email: 'alice@example.com', password: 'secret' }),
     })
@@ -128,6 +130,6 @@ describe('postLogout', () => {
 
     await postLogout()
 
-    expect(fetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' })
+    expect(fetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST', credentials: 'include' })
   })
 })

@@ -25,6 +25,8 @@ export interface AreaSignal {
   note: string;
 }
 
+import { apiUrl } from './base'
+
 export class ScanInProgressError extends Error {
   constructor(message: string) {
     super(message);
@@ -33,8 +35,9 @@ export class ScanInProgressError extends Error {
 }
 
 export async function triggerScan(modelId?: string | null): Promise<{ scanId: string }> {
-  const res = await fetch("/api/scans/run", {
+  const res = await fetch(apiUrl("/api/scans/run"), {
     method: "POST",
+    credentials: "include",
     headers: modelId ? { "content-type": "application/json" } : undefined,
     body: modelId ? JSON.stringify({ modelId }) : undefined,
   });
@@ -48,8 +51,9 @@ export async function triggerScan(modelId?: string | null): Promise<{ scanId: st
 }
 
 export async function abortScan(scanId: string): Promise<void> {
-  const res = await fetch("/api/scans/abort", {
+  const res = await fetch(apiUrl("/api/scans/abort"), {
     method: "POST",
+    credentials: "include",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ scanId }),
   });
@@ -60,7 +64,7 @@ export async function abortScan(scanId: string): Promise<void> {
 }
 
 export async function fetchLatestScan(): Promise<ScanResult | null> {
-  const res = await fetch("/api/scans/latest");
+  const res = await fetch(apiUrl("/api/scans/latest"), { credentials: "include" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<ScanResult | null>;
 }

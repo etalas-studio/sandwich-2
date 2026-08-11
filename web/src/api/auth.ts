@@ -1,3 +1,5 @@
+import { apiUrl } from './base'
+
 export type AuthState =
   | { status: 'loading' }
   | { status: 'unauthenticated' }
@@ -9,7 +11,7 @@ interface MeResponse {
 }
 
 export async function fetchMe(): Promise<AuthState> {
-  const res = await fetch('/api/auth/me')
+  const res = await fetch(apiUrl('/api/auth/me'), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = (await res.json()) as MeResponse
 
@@ -24,6 +26,7 @@ export async function fetchMe(): Promise<AuthState> {
 async function postJson(url: string, body: unknown): Promise<void> {
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   })
@@ -34,7 +37,7 @@ async function postJson(url: string, body: unknown): Promise<void> {
 }
 
 export async function postLogin(username: string, password: string): Promise<void> {
-  await postJson('/api/auth/login', { username, password })
+  await postJson(apiUrl('/api/auth/login'), { username, password })
 }
 
 export async function postRegister(
@@ -42,9 +45,9 @@ export async function postRegister(
   email: string,
   password: string,
 ): Promise<void> {
-  await postJson('/api/auth/register', { username, email, password })
+  await postJson(apiUrl('/api/auth/register'), { username, email, password })
 }
 
 export async function postLogout(): Promise<void> {
-  await fetch('/api/auth/logout', { method: 'POST' })
+  await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' })
 }

@@ -1,3 +1,4 @@
+import { apiUrl } from './base'
 import type { CreateTicketData } from '../components/CreateTicketModal'
 
 export interface Ticket {
@@ -32,7 +33,7 @@ export interface Ticket {
 }
 
 export async function createTicket(data: CreateTicketData): Promise<Ticket> {
-  const res = await fetch('/api/tickets', {
+  const res = await fetch(apiUrl('/api/tickets'), {
     method: 'POST',
     credentials: 'include',
     headers: { 'content-type': 'application/json' },
@@ -46,13 +47,13 @@ export async function createTicket(data: CreateTicketData): Promise<Ticket> {
 }
 
 export async function fetchTicket(key: string): Promise<Ticket> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, { credentials: 'include' })
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(key)}`), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<Ticket>
 }
 
 export async function fetchTickets(): Promise<Ticket[]> {
-  const res = await fetch('/api/tickets')
+  const res = await fetch(apiUrl('/api/tickets'), { credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<Ticket[]>
 }
@@ -65,8 +66,9 @@ export interface UpdateTicketData {
 }
 
 export async function updateTicket(key: string, data: UpdateTicketData): Promise<Ticket> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, {
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(key)}`), {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(data),
   })
@@ -78,8 +80,9 @@ export async function updateTicket(key: string, data: UpdateTicketData): Promise
 }
 
 export async function deleteTicket(key: string): Promise<void> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}`, {
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(key)}`), {
     method: 'DELETE',
+    credentials: 'include',
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { error?: string } | null
@@ -94,8 +97,9 @@ export interface QuickWinChoice {
 }
 
 export async function resolveTicket(key: string, choiceIndex: number, modelId?: string): Promise<void> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}/resolve`, {
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(key)}/resolve`), {
     method: 'POST',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ choiceIndex, ...(modelId ? { modelId } : {}) }),
   })
@@ -106,8 +110,9 @@ export async function resolveTicket(key: string, choiceIndex: number, modelId?: 
 }
 
 export async function runTicket(key: string, modelId?: string): Promise<void> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(key)}/run`, {
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(key)}/run`), {
     method: 'POST',
+    credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(modelId ? { modelId } : {}),
   })
@@ -125,7 +130,7 @@ export interface PullResult {
 }
 
 export async function pullJiraTickets(): Promise<PullResult> {
-  const res = await fetch('/api/tickets/pull', { method: 'POST' })
+  const res = await fetch(apiUrl('/api/tickets/pull'), { method: 'POST', credentials: 'include' })
   if (!res.ok) {
     const body = await res.json().catch(() => null) as PullResult | null
     return body ?? { ok: false, imported: 0, skipped: 0, error: `HTTP ${res.status}` }
@@ -139,7 +144,7 @@ export interface OpenPrResult {
 }
 
 export async function openPr(ticketKey: string): Promise<OpenPrResult> {
-  const res = await fetch(`/api/tickets/${encodeURIComponent(ticketKey)}/open-pr`, { method: 'POST' })
+  const res = await fetch(apiUrl(`/api/tickets/${encodeURIComponent(ticketKey)}/open-pr`), { method: 'POST', credentials: 'include' })
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { error?: string } | null
     throw new Error(body?.error ?? `HTTP ${res.status}`)

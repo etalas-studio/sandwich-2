@@ -33,7 +33,7 @@ describe('fetchIntegrations', () => {
     const result = await fetchIntegrations()
 
     expect(result).toEqual(mockIntegrations)
-    expect(fetch).toHaveBeenCalledWith('/api/integrations')
+    expect(fetch).toHaveBeenCalledWith('/api/integrations', { credentials: 'include' })
   })
 
   it('throws on non-ok response', async () => {
@@ -62,6 +62,7 @@ describe('connectIntegration', () => {
     expect(result).toEqual({ ok: true, message: 'Connected' })
     expect(fetch).toHaveBeenCalledWith('/api/integrations/opencode-go/connect', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ apiKey: 'oc-secret' }),
     })
@@ -107,7 +108,7 @@ describe('disconnectIntegration', () => {
 
     expect(result).toEqual({ ok: true, message: 'Disconnected' })
     expect(fetch).toHaveBeenCalledWith('/api/integrations/opencode-go/disconnect', {
-      method: 'POST',
+      method: 'POST', credentials: 'include',
     })
   })
 
