@@ -9,6 +9,8 @@ import {
 import type { CreateTicketInput, UpdateTicketInput } from "../db/tickets.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
+import { authenticateRequest } from "../auth/middleware.js";
+import { incrementUsage } from "../db/repo/usage.js";
 
 export function registerTicketRoutes(router: Router, db: Database): void {
   router.post("/api/tickets", async (req, res) => {
@@ -47,6 +49,9 @@ export function registerTicketRoutes(router: Router, db: Database): void {
 
     try {
       const ticket = await createTicket(db, input);
+      // Track usage
+      const auth = await authenticateRequest(db, req);
+      if (auth) await incrementUsage(db, auth.userId);
       sendJson(res, 201, ticket);
     } catch (err) {
       sendCaughtError(res, err, "ticket creation");

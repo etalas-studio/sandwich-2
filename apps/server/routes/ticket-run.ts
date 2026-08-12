@@ -2,6 +2,7 @@ import type { Database } from "../db/connection.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
+import { addChatMessage, getChatMessages } from "../db/repo/chat-messages.js";
 import { sendJson } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -344,6 +345,33 @@ export function registerTicketRunRoutes(
       return;
     }
 
+    // Save user prompt as chat message (before engine check)
+    await addChatMessage(db, {
+      ticketId: ticketKey,
+      role: "user",
+      content: ticket.summary ?? ticket.description,
+    });
+
+    let history: ConversationTurn[] = [];
+    try {
+      const body = await readJson(req);
+      if (Array.isArray((body as Record<string, unknown>)?.history)) {
+        history = (body as Record<string, unknown>)
+          .history as ConversationTurn[];
+      }
+    } catch {
+      /* no body */
+    }
+
+    // Save history turns from client
+    for (const turn of history) {
+      await addChatMessage(db, {
+        ticketId: ticketKey,
+        role: turn.role,
+        content: turn.content,
+      });
+    }
+
     const engine = getEngine();
     if (!engine) {
       sendJson(res, 503, {
@@ -368,17 +396,6 @@ export function registerTicketRunRoutes(
         }
       }
     };
-
-    let history: ConversationTurn[] = [];
-    try {
-      const body = await readJson(req);
-      if (Array.isArray((body as Record<string, unknown>)?.history)) {
-        history = (body as Record<string, unknown>)
-          .history as ConversationTurn[];
-      }
-    } catch {
-      /* no body */
-    }
 
     broadcast({
       type: "stage_start",
@@ -421,6 +438,12 @@ export function registerTicketRunRoutes(
           stage: null,
           prDescription: output,
         });
+        await addChatMessage(db, {
+          ticketId: ticketKey,
+          role: "assistant",
+          content: output,
+          stage: "generate",
+        });
         broadcast({ type: "done", ticket: (await getTicket(db, ticketKey))! });
       })
       .catch(async (err) => {
@@ -448,6 +471,12 @@ export function registerTicketRunRoutes(
       });
 
     sendJson(res, 200, { ticketKey, started: true });
+  });
+
+  // Get chat history for a ticket
+  router.get("/api/tickets/:key/messages", async (_req, res, params) => {
+    const messages = await getChatMessages(db, params.key!);
+    sendJson(res, 200, messages);
   });
 
   // SSE stream for ticket progress

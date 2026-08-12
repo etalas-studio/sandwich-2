@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
+import { apiUrl } from '../api/base'
 
 const bowlby = "'Bowlby One', system-ui"
 
@@ -188,7 +189,17 @@ function PaymentTrigger({
             document.head.appendChild(script)
           })
           ;(window as unknown as { snap: { pay: (token: string, opts: object) => void } }).snap.pay(token, {
-            onSuccess: () => { localStorage.setItem('sandwich_paid_plan', planSlug); setIsDone(true) },
+            onSuccess: () => {
+              localStorage.setItem('sandwich_paid_plan', planSlug);
+              // Create subscription in DB
+              fetch(apiUrl('/api/subscriptions'), {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ planSlug }),
+              }).catch(() => {});
+              setIsDone(true);
+            },
             onPending: () => { navigate(backTo) },
             onError: () => { navigate(backTo) },
             onClose: () => { navigate('/') },
@@ -200,6 +211,13 @@ function PaymentTrigger({
       // ── Simulation fallback ──────────────────────────────────────────────
       setTimeout(() => {
         localStorage.setItem('sandwich_paid_plan', planSlug)
+        // Create subscription in DB
+        fetch(apiUrl('/api/subscriptions'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ planSlug }),
+        }).catch(() => {});
         setIsDone(true)
       }, 1500)
     }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
 import SetupForm from './SetupForm'
 import LoginForm from './LoginForm'
 import App from '../App'
@@ -18,6 +19,8 @@ export default function AuthGate() {
     registerPending,
     logout,
   } = useAuth()
+
+  const { data: sub } = useSubscription()
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -49,7 +52,7 @@ export default function AuthGate() {
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
-    if (!localStorage.getItem('sandwich_paid_plan')) {
+    if (!sub?.planSlug) {
       navigate('/checkout', { replace: true })
       return null
     }
