@@ -79,6 +79,9 @@ PORT=4319
 DATABASE_URL=postgresql://localhost:5432/sandwich
 TRUSTED_HOSTS=localhost
 
+# Set to PRODUCTION for real Midtrans payments. Anything else uses simulation.
+ENVIRONMENT=development
+
 # ─── AI Engine (pick one) ───
 OPENCODE_API_KEY=your-opencode-key
 # GROQ_API_KEY=your-groq-key    # fallback if OpenCode fails

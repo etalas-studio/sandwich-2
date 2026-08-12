@@ -10,6 +10,7 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
     sendJson(res, 200, {
       clientKey: process.env.MIDTRANS_CLIENT_KEY ?? "",
       isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+      environment: process.env.ENVIRONMENT ?? "development",
     });
   });
 

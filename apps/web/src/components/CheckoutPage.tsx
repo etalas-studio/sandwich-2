@@ -160,8 +160,33 @@ function PaymentTrigger({
       const orderId = `${planSlug}-${Date.now()}`
       const grossAmount = plan.amount
 
+      // Check environment — only use Midtrans in PRODUCTION
+      let isProductionEnv = false
       try {
-        const [cfgRes, txRes] = await Promise.all([
+        const cfgRes = await fetch(apiUrl('/api/midtrans/config'))
+        if (cfgRes.ok) {
+          const cfg = await cfgRes.json() as { environment?: string }
+          isProductionEnv = cfg.environment === 'PRODUCTION'
+        }
+      } catch { /* use simulation */ }
+
+      if (!isProductionEnv) {
+        // Simulation — non-PRODUCTION environment
+        setTimeout(() => {
+          localStorage.setItem('sandwich_paid_plan', planSlug)
+          fetch(apiUrl('/api/subscriptions'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ planSlug }),
+          }).catch(() => {});
+          setIsDone(true)
+        }, 1500)
+        return
+      }
+
+      try {
+        const [cfgRes2, txRes] = await Promise.all([
           fetch(apiUrl('/api/midtrans/config')),
           fetch(apiUrl('/api/midtrans/transaction'), {
             method: 'POST',
@@ -173,8 +198,8 @@ function PaymentTrigger({
 
         if (txRes.ok) {
           const { token } = await txRes.json() as { token: string }
-          const { clientKey, isProduction } = cfgRes.ok
-            ? await cfgRes.json() as { clientKey: string; isProduction: boolean }
+          const { clientKey, isProduction } = cfgRes2.ok
+            ? await cfgRes2.json() as { clientKey: string; isProduction: boolean }
             : { clientKey: '', isProduction: true }
 
           await new Promise<void>((resolve, reject) => {
