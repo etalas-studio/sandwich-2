@@ -4,7 +4,6 @@ import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
 
 const bowlby = "'Bowlby One', system-ui"
-const mousememoirs = "'Mouse Memoirs', sans-serif"
 
 const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; amount: number }> = {
   starter: { name: 'Starter', price: 'Rp 50k', amount: 50000 },
