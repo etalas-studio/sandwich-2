@@ -1,5 +1,4 @@
 import type { Ticket } from '../api/tickets'
-import type { PipelineStage } from '../types'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,25 +10,6 @@ interface TicketCardProps {
   ticket: Ticket
   onClick: () => void
   onDelete?: (ticket: Ticket) => void
-  onRun?: (ticket: Ticket) => void
-}
-
-const STAGE_LABELS: Record<PipelineStage, string> = {
-  judge: 'Judge',
-  implement: 'Implement',
-  verify: 'Verify',
-  open_pr: 'Open PR',
-}
-
-const NEEDS_HUMAN_LABELS: Record<string, string> = {
-  ambiguous_ticket: 'Ambiguous ticket',
-  forbidden_path: 'Forbidden path',
-  forbidden_path_or_action: 'Forbidden path',
-  weak_verification: 'Weak verification',
-  missing_context: 'Missing context',
-  credential_missing: 'Credential missing',
-  test_failure: 'Test failure',
-  agent_error: 'Agent error',
 }
 
 function formatRelativeTime(iso: string | null): string {
@@ -50,7 +30,6 @@ export default function TicketCard({
   ticket,
   onClick,
   onDelete,
-  onRun,
 }: TicketCardProps) {
   const isInProgress = ticket.status === 'in_progress'
   const isBlocked = ticket.status === 'blocked'
@@ -106,26 +85,7 @@ export default function TicketCard({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {isInProgress && ticket.stage && (
-            <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a2e1d] to-[#241a10] text-[#f59e0b] text-[10px] font-normal tracking-wide border border-[#5a4525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              {STAGE_LABELS[ticket.stage as PipelineStage]}
-            </span>
-          )}
-          {/* Most blocked outcomes (verify_failed, implement_timeout, ...)
-              have no needs-human category — only a free-text reason — so the
-              badge falls back to a generic label rather than disappearing. */}
-          {isBlocked && (ticket.needsHumanCategory || ticket.needsHumanReason) && (
-            <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#3a1d1d] to-[#241010] text-[#ff8a8a] text-[10px] font-normal tracking-wide border border-[#522525]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              {ticket.needsHumanCategory
-                ? NEEDS_HUMAN_LABELS[ticket.needsHumanCategory] || ticket.needsHumanCategory
-                : 'Needs human'}
-            </span>
-          )}
-          {isDone && ticket.prUrl && (
-            <span className="px-2 py-0.5 rounded bg-gradient-to-b from-[#1d3a24] to-[#102415] text-[#8affb1] text-[10px] font-normal tracking-wide border border-[#2b5936]" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)' }}>
-              PR
-            </span>
-          )}
+
         </div>
 
         {/* Summary */}
@@ -141,38 +101,7 @@ export default function TicketCard({
              ticket.startedAt ? `Ran ${formatRelativeTime(ticket.startedAt)}` : ''}
           </span>
           <div className="flex items-center gap-1.5">
-            {isDone && ticket.prUrl && (
-              <a
-                href={ticket.prUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[10px] text-[#8affb1] hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                View →
-              </a>
-            )}
-            {ticket.status === 'backlog' && (
-              <button
-                className="relative inline-flex group"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRun?.(ticket)
-                }}
-              >
-                <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-b from-white/30 to-transparent opacity-80" />
-                <span
-                  className="relative flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-normal text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a]"
-                  style={{
-                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 3px rgba(0,0,0,0.6)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  <iconify-icon icon="solar:play-linear" width="10" className="text-white/80" />
-                  Run
-                </span>
-              </button>
-            )}
+
           </div>
         </div>
       </div>

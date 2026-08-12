@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth'
 import { CHIPS } from '../lib/promptChips'
 import type { TicketType } from '../lib/localTickets'
 import { useLanguage } from '../lib/i18n'
-import ModelSelector from './ModelSelector'
 
 interface LandingPageProps {
   onGoToApp: (plan?: string) => void
@@ -338,7 +337,6 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                     <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <ModelSelector scope="landing" />
                     <button
                       onClick={() => void handleSubmit()}
                       disabled={isSubmitting || !prompt.trim()}

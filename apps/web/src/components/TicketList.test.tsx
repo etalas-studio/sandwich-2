@@ -12,25 +12,12 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
     url: 'https://linear.app/runchise/issue/RCH-101',
     status: 'backlog',
     stage: null,
-    needsHumanCategory: null,
-    needsHumanReason: null,
-    prUrl: null,
-    prSummary: null,
+    prDescription: null,
     startedAt: null,
     finishedAt: null,
-    quickWinChoices: null,
-    quickWinAttempts: 0,
+    priority: 'High',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    issueType: 'Story',
-    priority: 'High',
-    sprint: null,
-    storyPoints: null,
-    team: null,
-    assignee: null,
-    parentKey: null,
-    attachments: null,
-    jiraStatus: null,
     ...overrides,
   }
 }
@@ -101,20 +88,6 @@ describe('TicketList', () => {
     const row = screen.getByText('RCH-101').closest('tr')!
     await user.click(within(row).getByRole('button', { name: /delete/i }))
     expect(onDeleteTicket).toHaveBeenCalledWith(ticket)
-  })
-
-  it('calls onRunTicket when run action is clicked for a backlog ticket', async () => {
-    const onRunTicket = vi.fn()
-    const ticket = makeTicket({ key: 'RCH-101', status: 'backlog' })
-    const user = userEvent.setup()
-
-    render(
-      <TicketList tickets={[ticket]} onOpenTicket={vi.fn()} onRunTicket={onRunTicket} />,
-    )
-
-    const row = screen.getByText('RCH-101').closest('tr')!
-    await user.click(within(row).getByRole('button', { name: /run/i }))
-    expect(onRunTicket).toHaveBeenCalledWith(ticket)
   })
 
   it('shows status with correct styling', () => {

@@ -53,16 +53,11 @@ function tempWebRoot(): string {
   return mkdtempSync(join(tmpdir(), "web-server-webroot-"));
 }
 
-function tempReposDir(): string {
-  return mkdtempSync(join(tmpdir(), "web-server-repos-"));
-}
-
 async function startTestServer() {
   const server = await startWebServer({
     dbPath: tempDbPath(),
     port: 0,
     webRoot: tempWebRoot(),
-    reposDir: tempReposDir(),
   });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const { port } = server.address() as AddressInfo;
