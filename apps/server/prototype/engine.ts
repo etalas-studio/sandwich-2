@@ -28,16 +28,14 @@ export async function generatePrototype(
   prototype: Prototype,
   signal?: AbortSignal,
 ): Promise<void> {
-  const pi = await import("@earendil-works/pi-coding-agent");
-
-  const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
-  const model = modelRuntime.getModel("opencode-go", "gpt-5.1");
-  if (!model) throw new Error("OpenCode model not available");
-
-  // Workspace dir where the agent writes files
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
+    const pi = await import("@earendil-works/pi-coding-agent");
+
+    const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
+    const model = modelRuntime.getModel("opencode-go", "gpt-5.1");
+    if (!model) throw new Error("OpenCode model not available");
     const { session } = await pi.createAgentSession({
       cwd: workspace,
       model: model as any,
