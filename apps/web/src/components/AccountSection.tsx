@@ -57,19 +57,21 @@ export default function AccountSection({ account, onChangePassword, onPurge }: A
 
   return (
     <>
-      <div className="ds-card-outer ds-shadow-elevated">
-        <div className="ds-card-inner p-6">
-          <div className="absolute inset-0 ds-noise pointer-events-none" />
-          <div className="relative z-10">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-normal tracking-tight text-white ds-text-shadow">
-                Account
-              </h3>
-            </div>
-
-            {/* Account info */}
-            <div className="space-y-3">
+      <div
+        style={{
+          backgroundColor: "#111827",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: "1rem",
+          padding: "1.25rem",
+        }}
+      >
+        <p
+          className="text-xs font-semibold uppercase tracking-widest mb-3"
+          style={{ color: "rgba(255,255,255,0.4)" }}
+        >
+          Account
+        </p>
+        <div className="space-y-3">
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-white/50 font-light">Username</span>
                 <span className="text-sm text-white/80 font-light">{account.username}</span>
@@ -98,8 +100,6 @@ export default function AccountSection({ account, onChangePassword, onPurge }: A
                   </button>
                 </div>
               )}
-            </div>
-          </div>
         </div>
       </div>
 

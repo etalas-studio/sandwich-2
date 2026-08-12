@@ -1,4 +1,8 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
+import { useLanguage } from "../lib/i18n";
+
+const bowlby = "'Bowlby One', system-ui";
 
 interface SetupFormProps {
   onSubmit: (username: string, email: string, password: string) => void;
@@ -15,83 +19,139 @@ export default function SetupForm({
   onBack,
   onSwitchToLogin,
 }: SetupFormProps) {
+  const { t: tr } = useLanguage();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (isPending) return;
     if (!username.trim() || !email.trim() || !password.trim()) return;
     onSubmit(username.trim(), email.trim(), password);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center ds-bg">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10 relative"
+      style={{
+        fontFamily: "'Inter', sans-serif",
+        backgroundColor: "#F4EBE1",
+      }}
+    >
       <div
-        className="w-full max-w-sm p-6 rounded-xl"
+        className="w-full max-w-sm rounded-3xl p-8"
         style={{
-          backgroundColor: "#111827",
-          border: "1px solid rgba(255,255,255,0.06)",
+          backgroundColor: "#ffffff",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.08)",
         }}
       >
-        <div className="flex items-center gap-2 mb-6">
-          <button
-            onClick={onBack}
-            className="text-white/40 hover:text-white/70 transition-colors"
+        <div className="flex justify-center mb-6">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: "#f91814" }}
           >
-            <iconify-icon icon="solar:arrow-left-linear" width="18" />
-          </button>
-          <h1
-            className="text-lg font-bold"
-            style={{ color: "rgba(255,255,255,0.85)" }}
-          >
-            Create Account
-          </h1>
+            <iconify-icon
+              icon="solar:user-plus-bold"
+              width="24"
+              className="text-white"
+            />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="w-full px-3 py-2 rounded-lg text-sm"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.85)",
-            }}
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 rounded-lg text-sm"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.85)",
-            }}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-3 py-2 rounded-lg text-sm"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.85)",
-            }}
-          />
+        <h1
+          className="text-2xl text-center tracking-tight mb-1.5"
+          style={{ fontFamily: bowlby, color: "#111827" }}
+        >
+          {tr("setup_title")}
+        </h1>
+        <p className="text-sm text-zinc-500 text-center mb-7">
+          {tr("setup_subtitle")}
+        </p>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div
+            className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
+            style={{ backgroundColor: "#F4EBE1" }}
+          >
+            <iconify-icon
+              icon="solar:user-linear"
+              width="18"
+              style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
+            />
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+              placeholder="Username"
+              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+            />
+          </div>
+
+          <div
+            className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
+            style={{ backgroundColor: "#F4EBE1" }}
+          >
+            <iconify-icon
+              icon="solar:letter-linear"
+              width="18"
+              style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Email"
+              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+            />
+          </div>
+
+          <div
+            className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
+            style={{ backgroundColor: "#F4EBE1" }}
+          >
+            <iconify-icon
+              icon="solar:lock-password-linear"
+              width="18"
+              style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
+            />
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Password"
+              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="shrink-0 flex items-center"
+              style={{ color: "rgba(0,0,0,0.35)" }}
+            >
+              <iconify-icon
+                icon={
+                  showPassword
+                    ? "solar:eye-closed-linear"
+                    : "solar:eye-linear"
+                }
+                width="18"
+              />
+            </button>
+          </div>
 
           {error && (
-            <p className="text-xs" style={{ color: "#ef4444" }}>
+            <p
+              className="text-xs font-medium rounded-lg px-3 py-2"
+              style={{
+                color: "#f91814",
+                backgroundColor: "rgba(249,24,20,0.08)",
+              }}
+            >
               {error}
             </p>
           )}
@@ -99,24 +159,35 @@ export default function SetupForm({
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-2 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-40"
-            style={{ backgroundColor: "#f91814" }}
+            className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            style={{ backgroundColor: "#0a0a0a" }}
           >
-            {isPending ? "Creating…" : "Create Account"}
+            {isPending ? tr("setup_pending") : tr("setup_cta")}
           </button>
         </form>
 
-        <p
-          className="text-xs text-center mt-4"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+        <button
+          onClick={onBack}
+          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
+          style={{
+            border: "1.5px solid #0a0a0a",
+            color: "#0a0a0a",
+            backgroundColor: "transparent",
+          }}
         >
-          Already have an account?{" "}
+          <iconify-icon icon="solar:arrow-left-linear" width="16" />
+          {tr("auth_back")}
+        </button>
+
+        <p className="text-center text-xs text-zinc-400 mt-4">
+          {tr("auth_have_account")}{" "}
           <button
+            type="button"
             onClick={onSwitchToLogin}
-            className="underline hover:text-white/60 transition-colors"
+            className="font-semibold underline"
             style={{ color: "#f91814" }}
           >
-            Sign in
+            {tr("auth_login_link")}
           </button>
         </p>
       </div>

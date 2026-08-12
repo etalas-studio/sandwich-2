@@ -2,7 +2,6 @@ import type Database from "better-sqlite3";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
-import { getCredential } from "../db/credentials.js";
 import { sendJson } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -183,8 +182,153 @@ function buildMessages(
 const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
 
-export function registerTicketRunRoutes(router: Router, db: Database.Database): void {
-  // Generate document via Groq — PRD / Prototype / Quotation / Specs / MOM
+// ── Engine selection ─────────────────────────────────────────────────────────
+// OpenCode (Pi SDK) is primary. Groq is dev fallback.
+// Owner sets via env vars — users never pick.
+
+function getEngine(): "opencode" | "groq" | null {
+  if (process.env.OPENCODE_API_KEY) return "opencode";
+  if (process.env.GROQ_API_KEY) return "groq";
+  return null;
+}
+
+async function runWithGroq(
+  ticketKey: string,
+  ticket: ReturnType<typeof getTicket>,
+  history: ConversationTurn[],
+  signal: AbortSignal,
+): Promise<string> {
+  const groqKey = process.env.GROQ_API_KEY!;
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${groqKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "qwen/qwen3.6-27b",
+      messages: buildMessages(
+        ticket?.summary ?? "",
+        ticket?.description ?? "",
+        history,
+      ),
+      max_tokens: 4000,
+      reasoning_effort: "none",
+      temperature: 0.7,
+    }),
+    signal,
+  });
+  if (!res.ok) {
+    throw new Error(
+      `Groq ${res.status}: ${await res.text().catch(() => res.statusText)}`,
+    );
+  }
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return json.choices?.[0]?.message?.content ?? "";
+}
+
+async function runWithOpenCode(
+  ticketKey: string,
+  ticket: ReturnType<typeof getTicket>,
+  history: ConversationTurn[],
+  signal: AbortSignal,
+): Promise<string> {
+  // Dynamic import Pi SDK — only loaded when OpenCode is configured
+  const pi = await import("@earendil-works/pi-coding-agent");
+
+  const modelRuntime = await pi.ModelRuntime.create({
+    modelsPath: null,
+  });
+
+  const model = modelRuntime.getModel("opencode-go", "gpt-5.1"); // defaults to latest
+  if (!model) throw new Error("OpenCode model not available");
+
+  const { session } = await pi.createAgentSession({
+    cwd: process.cwd(),
+    model: model as any,
+    modelRuntime: modelRuntime as any,
+    tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    sessionManager: pi.SessionManager.inMemory(),
+    settingsManager: pi.SettingsManager.inMemory({
+      compaction: { enabled: false },
+    }),
+  });
+
+  let responseText = "";
+  let errorMessage = "";
+
+  session.subscribe((event: any) => {
+    if (signal.aborted) return;
+
+    if (
+      event.type === "message_update" &&
+      event.assistantMessageEvent?.type === "text_delta"
+    ) {
+      responseText += event.assistantMessageEvent.delta;
+      return;
+    }
+
+    if (event.type === "agent_end") {
+      if (!errorMessage && typeof event.errorMessage === "string" && event.errorMessage) {
+        errorMessage = event.errorMessage;
+      }
+      if (!responseText) {
+        const messages = event.messages;
+        if (Array.isArray(messages)) {
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const msg = messages[i];
+            if (msg?.role === "assistant" || msg?.type === "assistant") {
+              const content = msg.content;
+              if (Array.isArray(content)) {
+                for (const block of content) {
+                  if (block?.type === "text" && block.text) responseText += block.text;
+                }
+              } else if (typeof content === "string") {
+                responseText = content;
+              } else if (typeof msg.text === "string") {
+                responseText = msg.text;
+              }
+              if (responseText) break;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const messages = buildMessages(
+    ticket?.summary ?? "",
+    ticket?.description ?? "",
+    history,
+  );
+
+  // Build a single prompt string from messages
+  const prompt = messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .join("\n\n");
+
+  try {
+    await session.prompt(prompt);
+    await new Promise((r) => setTimeout(r, 100));
+    session.dispose();
+
+    if (!responseText && errorMessage) {
+      throw new Error(errorMessage);
+    }
+    return responseText;
+  } catch (err) {
+    session.dispose();
+    throw err;
+  }
+}
+
+export function registerTicketRunRoutes(
+  router: Router,
+  db: Database.Database,
+): void {
+  // Generate document — OpenCode (primary) or Groq (fallback)
   router.post("/api/tickets/:key/generate", async (req, res, params) => {
     const ticketKey = params.key!;
     const ticket = getTicket(db, ticketKey);
@@ -192,18 +336,19 @@ export function registerTicketRunRoutes(router: Router, db: Database.Database): 
       sendJson(res, 404, { error: "Ticket not found" });
       return;
     }
+    // Idempotent — if already running, just return success so the
+    // stream (which connects separately) receives events from the
+    // in-flight run. This also handles React StrictMode double-fire.
     if (inFlight.has(ticketKey)) {
-      sendJson(res, 409, { error: "Already running" });
+      sendJson(res, 200, { ticketKey, started: true });
       return;
     }
 
-    const groqCred = getCredential(db, "groq");
-    const groqKey = groqCred
-      ? (JSON.parse(groqCred.value) as { key?: string }).key ?? null
-      : null;
-    if (!groqKey) {
+    const engine = getEngine();
+    if (!engine) {
       sendJson(res, 503, {
-        error: "Groq API key not configured. Add it via Settings → Integrations.",
+        error:
+          "No AI engine configured. Set OPENCODE_API_KEY or GROQ_API_KEY env var.",
       });
       return;
     }
@@ -228,7 +373,8 @@ export function registerTicketRunRoutes(router: Router, db: Database.Database): 
     try {
       const body = await readJson(req);
       if (Array.isArray((body as Record<string, unknown>)?.history)) {
-        history = (body as Record<string, unknown>).history as ConversationTurn[];
+        history = (body as Record<string, unknown>)
+          .history as ConversationTurn[];
       }
     } catch {
       /* no body */
@@ -241,35 +387,25 @@ export function registerTicketRunRoutes(router: Router, db: Database.Database): 
     });
     updateTicket(db, ticketKey, { status: "in_progress", stage: "generate" });
 
-    fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${groqKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen/qwen3.6-27b",
-        messages: buildMessages(
-          ticket.summary ?? "",
-          ticket.description ?? "",
-          history,
-        ),
-        max_tokens: 4000,
-        reasoning_effort: "none",
-        temperature: 0.7,
-      }),
-      signal: controller.signal,
-    })
-      .then(async (r) => {
-        if (!r.ok)
-          throw new Error(
-            `Groq ${r.status}: ${await r.text().catch(() => r.statusText)}`,
-          );
-        const json = (await r.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return json.choices?.[0]?.message?.content ?? "";
-      })
+    const useOpenCode = engine === "opencode";
+    const hasGroqFallback = !!process.env.GROQ_API_KEY;
+
+    const run = useOpenCode
+      ? () =>
+          runWithOpenCode(ticketKey, ticket, history, controller.signal).catch(
+            (err) => {
+              if (hasGroqFallback) {
+                console.log(
+                  `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
+                );
+                return runWithGroq(ticketKey, ticket, history, controller.signal);
+              }
+              throw err;
+            },
+          )
+      : () => runWithGroq(ticketKey, ticket, history, controller.signal);
+
+    run()
       .then((output) => {
         if (!output) {
           updateTicket(db, ticketKey, { status: "backlog", stage: null });
@@ -324,7 +460,6 @@ export function registerTicketRunRoutes(router: Router, db: Database.Database): 
       return;
     }
 
-    // Set SSE headers
     res.writeHead(200, {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
@@ -332,16 +467,13 @@ export function registerTicketRunRoutes(router: Router, db: Database.Database): 
       "x-accel-buffering": "no",
     });
 
-    // Send current state
     res.write(`data: ${JSON.stringify({ type: "current", ticket })}\n\n`);
 
-    // Register client
     if (!sseClients.has(ticketKey)) {
       sseClients.set(ticketKey, new Set());
     }
     sseClients.get(ticketKey)!.add(res);
 
-    // If no run in flight, close after sending current state
     if (!inFlight.has(ticketKey)) {
       res.write(`data: ${JSON.stringify({ type: "done", ticket })}\n\n`);
       res.end();

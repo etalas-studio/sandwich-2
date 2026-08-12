@@ -7,6 +7,7 @@ import { migration0010TicketBranch } from "./0010_ticket_branch.js";
 import { migration0011JiraStatus } from "./0011_jira_status.js";
 import { migration0014Payments } from "./0014_payments.js";
 import { migration0015TicketFeedback } from "./0015_ticket_feedback.js";
+import { migration0016PrColumns } from "./0016_pr_columns.js";
 
 export const MIGRATIONS: Migration[] = [
   migration0001Init,
@@ -17,4 +18,5 @@ export const MIGRATIONS: Migration[] = [
   migration0011JiraStatus,
   migration0014Payments,
   migration0015TicketFeedback,
+  migration0016PrColumns,
 ];

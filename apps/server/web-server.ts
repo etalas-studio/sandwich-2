@@ -4,7 +4,6 @@ import type { Server, ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
-import { initIntegrations } from "./pipeline/integrations.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
@@ -48,9 +47,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   const db = openDb(dbPath);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
-
-  // Init Groq integration
-  initIntegrations(db);
 
   // Build router
   const router = new Router(trustedHosts, boundPort);
