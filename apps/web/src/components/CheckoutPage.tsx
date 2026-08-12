@@ -4,9 +4,9 @@ import { useLanguage } from '../lib/i18n'
 
 const bowlby = "'Bowlby One', system-ui"
 
-const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; desc_en: string; desc_id: string; amount: number }> = {
-  starter: { name: 'Starter', price: 'Rp 50k', desc_en: 'For those getting serious.', desc_id: 'Buat yang mulai serius.', amount: 50000 },
-  pro: { name: 'Pro', price: 'Rp 100k', oldPrice: 'Rp 250k', desc_en: 'Unlimited, full access.', desc_id: 'Unlimited, semua akses.', amount: 100000 },
+const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; desc_en: string; desc_id: string; features_en: string[]; features_id: string[]; amount: number }> = {
+  starter: { name: 'Starter', price: 'Rp 50k', desc_en: 'For those getting serious.', desc_id: 'Buat yang mulai serius.', features_en: [], features_id: [], amount: 50000 },
+  pro: { name: 'Pro', price: 'Rp 100k', oldPrice: 'Rp 250k', desc_en: 'Unlimited, full access.', desc_id: 'Unlimited, semua akses.', features_en: [], features_id: [], amount: 100000 },
 }
 
 function PlanPicker() {
