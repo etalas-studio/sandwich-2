@@ -3,7 +3,7 @@ import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
-import { createTicket, updateTicket as updateTicketApi, fetchTicket } from '../api/tickets'
+import { createTicket, updateTicket as updateTicketApi } from '../api/tickets'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
@@ -316,22 +316,36 @@ function ChatView({
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
   useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
-  // Load saved output when opening an existing ticket (no auto-run)
+  // Load saved messages when opening an existing ticket (no auto-run)
   useEffect(() => {
     if (!ticketKey || autoRun) return
-    // Try localStorage first (instant, reliable)
-    const local = getTickets().find(t => t.id === ticketKey)
-    if (local?.content) {
-      setTurns([{ user: initialPrompt, aiMessages: [{ role: 'ai', isDone: true, output: local.content }] }])
-      return
-    }
-    // Fallback: fetch from server
-    fetchTicket(ticketKey).then(ticket => {
-      if (ticket.prDescription) {
-        updateTicket(ticketKey, { content: ticket.prDescription })
-        setTurns([{ user: initialPrompt, aiMessages: [{ role: 'ai', isDone: true, output: ticket.prDescription! }] }])
-      }
-    }).catch(() => {})
+    fetch(apiUrl(`/api/tickets/${ticketKey}/messages`), { credentials: 'include' })
+      .then(r => r.json())
+      .then((msgs: Array<{ role: string; content: string }>) => {
+        if (!msgs.length) return
+        // Reconstruct turns from chat history
+        const reconstructed: { user: string; aiMessages: ChatMessage[] }[] = []
+        let currentUser = ''
+        let currentAi: ChatMessage[] = []
+        for (const m of msgs) {
+          if (m.role === 'user') {
+            if (currentUser) {
+              reconstructed.push({ user: currentUser, aiMessages: currentAi })
+            }
+            currentUser = m.content
+            currentAi = []
+          } else if (m.role === 'assistant') {
+            currentAi.push({ role: 'ai', isDone: true, output: m.content })
+          }
+        }
+        if (currentUser) {
+          reconstructed.push({ user: currentUser, aiMessages: currentAi })
+        }
+        if (reconstructed.length > 0) {
+          setTurns(reconstructed)
+        }
+      })
+      .catch(() => {})
   }, [ticketKey])
 
   const handleRefreshResponse = () => {
