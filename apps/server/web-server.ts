@@ -16,6 +16,7 @@ import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
 import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 import { registerPreferenceRoutes } from "./routes/preferences.js";
+import { registerPrototypeRoutes, registerPrototypePublicRoutes } from "./prototype/routes.js";
 
 export interface WebServerOptions {
   port: number;
@@ -72,13 +73,17 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerMidtransRoutes(router, db);
   registerSubscriptionRoutes(router, db);
   registerPreferenceRoutes(router, db);
+  registerPrototypeRoutes(router, db);
+  registerPrototypePublicRoutes(router, db);
 
   const server = createServer((req, res) => {
     void (async () => {
       try {
         const url = req.url ?? "/";
         const path = url.split("?")[0] ?? "/";
-        if (path === "/api" || path.startsWith("/api/")) {
+        const isApiPath = path === "/api" || path.startsWith("/api/");
+        const isPrototypePath = path === "/p" || path.startsWith("/p/");
+        if (isApiPath || isPrototypePath) {
           await router.dispatch(req, res);
           return;
         }
