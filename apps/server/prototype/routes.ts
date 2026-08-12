@@ -132,7 +132,14 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
 
 export function registerPrototypePublicRoutes(router: Router, db: Database): void {
   // Serve prototype index (public share link)
-  router.get("/p/:shareId", async (_req, res, params) => {
+  router.get("/p/:shareId", async (req, res, params) => {
+    // Redirect to trailing slash so relative paths (styles.css, script.js) resolve correctly
+    const urlPath = (req.url ?? "").split("?")[0] ?? "";
+    if (!urlPath.endsWith("/")) {
+      res.writeHead(301, { location: `/p/${params.shareId!}/` });
+      res.end();
+      return;
+    }
     const proto = await getPrototypeByShareId(db, params.shareId!);
     if (!proto) {
       sendJson(res, 404, { error: "not found" });
