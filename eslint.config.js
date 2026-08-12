@@ -1,10 +1,10 @@
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", "node_modules/", "web/", "poc/", "config/"] },
+  { ignores: ["dist/", "node_modules/", "apps/web/", "poc/", "config/"] },
   tseslint.configs.recommended,
   {
-    files: ["src/**/*.ts"],
+    files: ["apps/server/**/*.ts"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {

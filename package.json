@@ -8,13 +8,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "postinstall": "npm --prefix web install",
-    "build": "tsc -p tsconfig.json && npm --prefix web run build",
-    "dev:web": "npm --prefix web run dev",
+    "postinstall": "npm --prefix apps/web install",
+    "build": "tsc -p tsconfig.json && npm --prefix apps/web run build",
+    "dev:web": "npm --prefix apps/web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.json && node --test dist/**/*.test.js",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write \"apps/server/**/*.ts\"",
+    "lint": "eslint \"apps/server/**/*.ts\"",
     "serve": "node dist/web-server.js",
     "start": "npm run build && npm run serve"
   },

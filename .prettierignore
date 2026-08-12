@@ -1,6 +1,6 @@
 node_modules/
 dist/
-web/
+apps/web/
 poc/
 config/
 package-lock.json
