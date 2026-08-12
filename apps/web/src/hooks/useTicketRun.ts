@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { apiUrl } from '../api/base'
 import type { Ticket } from '../api/tickets'
 
 interface TicketRunState {
@@ -32,7 +33,7 @@ export function useTicketRun(ticket: Ticket | null): TicketRunState {
       eventSourceRef.current.close()
     }
 
-    const es = new EventSource(`/api/tickets/${encodeURIComponent(ticketKey)}/stream`)
+    const es = new EventSource(apiUrl(`/api/tickets/${encodeURIComponent(ticketKey)}/stream`))
     eventSourceRef.current = es
     keyRef.current = ticketKey
 

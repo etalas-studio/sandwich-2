@@ -1,33 +1,14 @@
 import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
-import { getCurrentProject, setAutoOpenPr } from "../db/project.js";
 import { getUserById, updatePassword } from "../db/users.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { hashPassword, verifyPassword } from "../auth/password.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
 
-export function registerSettingsRoutes(router: Router, db: Database.Database): void {
-  router.get("/api/settings", (_req, res) => {
-    const project = getCurrentProject(db);
-    sendJson(res, 200, {
-      autoOpenPr: project?.autoOpenPr ?? true,
-    });
-  });
-
-  router.put("/api/settings", async (req, res) => {
-    const body = (await readJsonBody(req).catch(() => null)) as { autoOpenPr?: boolean } | null;
-    if (!body || typeof body.autoOpenPr !== "boolean") {
-      sendJson(res, 400, { error: "autoOpenPr must be a boolean" });
-      return;
-    }
-    const updated = setAutoOpenPr(db, body.autoOpenPr);
-    if (!updated) {
-      sendJson(res, 404, { error: "No project configured" });
-      return;
-    }
-    sendJson(res, 200, { autoOpenPr: updated.autoOpenPr });
-  });
-
+export function registerSettingsRoutes(
+  router: Router,
+  db: Database.Database,
+): void {
   router.get("/api/account", (req, res) => {
     const auth = authenticateRequest(db, req);
     if (!auth) {
@@ -58,12 +39,16 @@ export function registerSettingsRoutes(router: Router, db: Database.Database): v
     } | null;
 
     if (!body || !body.currentPassword || !body.newPassword) {
-      sendJson(res, 400, { error: "currentPassword and newPassword are required" });
+      sendJson(res, 400, {
+        error: "currentPassword and newPassword are required",
+      });
       return;
     }
 
     if (body.currentPassword === body.newPassword) {
-      sendJson(res, 400, { error: "new password must be different from current password" });
+      sendJson(res, 400, {
+        error: "new password must be different from current password",
+      });
       return;
     }
 
@@ -73,7 +58,10 @@ export function registerSettingsRoutes(router: Router, db: Database.Database): v
       return;
     }
 
-    const passwordOk = await verifyPassword(body.currentPassword, user.passwordHash);
+    const passwordOk = await verifyPassword(
+      body.currentPassword,
+      user.passwordHash,
+    );
     if (!passwordOk) {
       sendJson(res, 400, { error: "current password is incorrect" });
       return;

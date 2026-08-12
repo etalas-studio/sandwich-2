@@ -4,16 +4,14 @@ import { sendJson } from "../http-utils.js";
 
 // User data only — schema_migrations is infrastructure, not reset on purge.
 // Children must be deleted before parents (foreign_keys = ON).
-//   blocklist → readiness_scans, sessions → users
+//   sessions → users
 const TABLES = [
-  "blocklist",
-  "readiness_scans",
   "credentials",
   "sessions",
   "tickets",
   "users",
   "instance_settings",
-  "project",
+  "payments",
 ];
 
 export function registerPurgeRoute(router: Router, db: Database.Database): void {

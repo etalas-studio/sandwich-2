@@ -10,7 +10,6 @@ import ConfirmDeleteModal from './ConfirmDeleteModal'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { CHIPS } from '../lib/promptChips'
 import { useLanguage, type StringKey } from '../lib/i18n'
-import ModelSelector from './ModelSelector'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
 
@@ -544,7 +543,6 @@ function ChatView({
             </button>
             <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
             <div className="flex-1" />
-            <ModelSelector scope="chat" />
             <button
               onClick={handleSend}
               disabled={streaming || !followUp.trim()}
@@ -741,7 +739,6 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
           <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
         </div>
         <div className="flex items-center gap-2">
-          <ModelSelector scope="prompt" />
           <button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !prompt.trim() || atLimit}
@@ -1908,9 +1905,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       <ConfirmDeleteModal
         open={confirmDeleteChat}
         title="Delete Chat"
-        itemName={currentTicket?.summary ?? ''}
+        message={`Are you sure you want to delete "${currentTicket?.summary ?? ''}"?`}
         onConfirm={confirmDeleteChatNow}
-        onCancel={() => setConfirmDeleteChat(false)}
+        onClose={() => setConfirmDeleteChat(false)}
       />
 
       {showShareModal && (

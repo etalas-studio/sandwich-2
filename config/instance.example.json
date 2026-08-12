@@ -1,9 +1,0 @@
-{
-  "repoPath": "../runchise",
-  "worktreeRoot": ".work/worktrees",
-  "branchPrefix": "agent/",
-  "baseBranch": "master",
-  "engineMode": "pty",
-  "implementTimeoutMs": 1200000,
-  "verifyTimeoutMs": 1800000
-}

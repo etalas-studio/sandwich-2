@@ -1,14 +1,8 @@
-import { randomUUID } from "node:crypto";
-import { join } from "node:path";
 import type Database from "better-sqlite3";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
-import type { InvokerFactory } from "../scanner/run-scan.js";
-import { getProjectRepoPath } from "../db/project.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
 import { getCredential } from "../db/credentials.js";
-import { runTicketPipeline } from "../pipeline/ticket-runner.js";
-import type { TicketRunEvent } from "../pipeline/ticket-runner.js";
 import { sendJson } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -113,24 +107,45 @@ HTML — Solar: <script src="https://code.iconify.design/iconify-icon/2.1.0/icon
 Output full, self-contained HTML with Tailwind CDN. Include real @keyframes animations. No placeholder lorem ipsum — generate plausible content for the domain.
 `;
 
+export interface TicketRunEvent {
+  type: "stage_start" | "stage_end" | "output" | "error" | "done";
+  stage?: string;
+  text?: string;
+  ticket?: ReturnType<typeof getTicket>;
+}
+
 type ConversationTurn = { role: "user" | "assistant"; content: string };
 
-function buildMessages(summary: string, description: string, history: ConversationTurn[]): ConversationTurn[] {
+function buildMessages(
+  summary: string,
+  description: string,
+  history: ConversationTurn[],
+): ConversationTurn[] {
   const lower = (summary ?? "").toLowerCase();
   const isFlow = lower.includes("user flow") || lower.includes("alur");
-  const isTech = lower.includes("technical") || lower.includes("teknis") || lower.includes("specs");
-  const isQuotation = lower.includes("quotation") || lower.includes("quote") || lower.includes("penawaran") || lower.includes("harga");
-  const isPrototype = lower.includes("prototype") || lower.includes("landing") || lower.includes("ui") || lower.includes("design") || lower.includes("html");
+  const isTech =
+    lower.includes("technical") || lower.includes("teknis") || lower.includes("specs");
+  const isQuotation =
+    lower.includes("quotation") ||
+    lower.includes("quote") ||
+    lower.includes("penawaran") ||
+    lower.includes("harga");
+  const isPrototype =
+    lower.includes("prototype") ||
+    lower.includes("landing") ||
+    lower.includes("ui") ||
+    lower.includes("design") ||
+    lower.includes("html");
 
   const docGuide = isPrototype
     ? GETOKUI_PROTOTYPE_GUIDE
     : isQuotation
-    ? SANDWICH_QUOTATION_GUIDE
-    : isFlow
-    ? SANDWICH_USERFLOWS_GUIDE
-    : isTech
-    ? SANDWICH_TECHNICAL_GUIDE
-    : SANDWICH_PRD_GUIDE;
+      ? SANDWICH_QUOTATION_GUIDE
+      : isFlow
+        ? SANDWICH_USERFLOWS_GUIDE
+        : isTech
+          ? SANDWICH_TECHNICAL_GUIDE
+          : SANDWICH_PRD_GUIDE;
 
   const outputInstruction = isPrototype
     ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
@@ -152,10 +167,12 @@ function buildMessages(summary: string, description: string, history: Conversati
   ].join("\n");
 
   const messages: ConversationTurn[] = [
-    { role: "user", content: system + "\n\n---\n\nClient brief:\n" + (description || summary) },
+    {
+      role: "user",
+      content: system + "\n\n---\n\nClient brief:\n" + (description || summary),
+    },
   ];
 
-  // Append follow-up history if any
   for (const turn of history) {
     messages.push(turn);
   }
@@ -166,87 +183,8 @@ function buildMessages(summary: string, description: string, history: Conversati
 const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
 
-export function registerTicketRunRoutes(
-  router: Router,
-  db: Database.Database,
-  createInvoker: InvokerFactory,
-  reposDir: string,
-): void {
-  // Trigger a ticket pipeline run
-  router.post("/api/tickets/:key/run", async (req, res, params) => {
-    const repoPath = getProjectRepoPath(db, reposDir);
-    if (!repoPath) {
-      sendJson(res, 503, { error: "No project configured." });
-      return;
-    }
-
-    const ticketKey = params.key!;
-    const ticket = getTicket(db, ticketKey);
-    if (!ticket) {
-      sendJson(res, 404, { error: "Ticket not found" });
-      return;
-    }
-
-    if (ticket.status === "done") {
-      sendJson(res, 409, { error: "Ticket is already done" });
-      return;
-    }
-
-    // Only one run per ticket at a time
-    if (inFlight.has(ticketKey)) {
-      sendJson(res, 409, { error: "A run is already in progress for this ticket" });
-      return;
-    }
-
-    // Read optional modelId from body
-    let modelId: string | null = null;
-    try {
-      const body = await readJson(req);
-      if (body && typeof (body as Record<string, unknown>).modelId === "string") {
-        modelId = (body as Record<string, unknown>).modelId as string;
-      }
-    } catch {
-      // body is optional
-    }
-
-    const controller = new AbortController();
-    inFlight.set(ticketKey, controller);
-
-    const broadcast = (event: TicketRunEvent) => {
-      const clients = sseClients.get(ticketKey);
-      if (!clients) return;
-      const data = `data: ${JSON.stringify(event)}\n\n`;
-      for (const client of clients) {
-        try {
-          client.write(data);
-        } catch {
-          clients.delete(client);
-        }
-      }
-    };
-
-    runTicketPipeline(db, createInvoker, ticketKey, repoPath, modelId, broadcast, controller.signal)
-      .catch(() => {})
-      .finally(() => {
-        inFlight.delete(ticketKey);
-        // Close SSE connections
-        const clients = sseClients.get(ticketKey);
-        if (clients) {
-          for (const client of clients) {
-            try {
-              client.end();
-            } catch {
-              /* ignore */
-            }
-          }
-          sseClients.delete(ticketKey);
-        }
-      });
-
-    sendJson(res, 200, { ticketKey, started: true });
-  });
-
-  // Generate document without a repo — for PRD/MOM/Quotation/Specs
+export function registerTicketRunRoutes(router: Router, db: Database.Database): void {
+  // Generate document via Groq — PRD / Prototype / Quotation / Specs / MOM
   router.post("/api/tickets/:key/generate", async (req, res, params) => {
     const ticketKey = params.key!;
     const ticket = getTicket(db, ticketKey);
@@ -260,147 +198,13 @@ export function registerTicketRunRoutes(
     }
 
     const groqCred = getCredential(db, "groq");
-    const groqKey = groqCred ? (JSON.parse(groqCred.value) as { key?: string }).key ?? null : null;
+    const groqKey = groqCred
+      ? (JSON.parse(groqCred.value) as { key?: string }).key ?? null
+      : null;
     if (!groqKey) {
-      sendJson(res, 503, { error: "Groq API key not configured. Add it via Settings → Integrations." });
-      return;
-    }
-
-    const controller = new AbortController();
-    inFlight.set(ticketKey, controller);
-
-    const broadcast = (event: TicketRunEvent) => {
-      const clients = sseClients.get(ticketKey);
-      if (!clients) return;
-      const data = `data: ${JSON.stringify(event)}\n\n`;
-      for (const client of clients) {
-        try { client.write(data); } catch { clients.delete(client); }
-      }
-    };
-
-    let history: ConversationTurn[] = [];
-    try {
-      const body = await readJson(req);
-      if (Array.isArray((body as Record<string, unknown>)?.history)) {
-        history = (body as Record<string, unknown>).history as ConversationTurn[];
-      }
-    } catch { /* no body */ }
-
-    broadcast({ type: "stage_start", stage: "implement", ticket: getTicket(db, ticketKey)! });
-    updateTicket(db, ticketKey, { status: "in_progress", stage: "implement" });
-
-    fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${groqKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "qwen/qwen3.6-27b",
-        messages: buildMessages(ticket.summary ?? "", ticket.description ?? "", history),
-        max_tokens: 4000,
-        reasoning_effort: "none",
-        temperature: 0.7,
-      }),
-      signal: controller.signal,
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`Groq ${r.status}: ${await r.text().catch(() => r.statusText)}`);
-        const json = await r.json() as { choices?: Array<{ message?: { content?: string } }> };
-        return json.choices?.[0]?.message?.content ?? "";
-      })
-      .then((output) => {
-        if (!output) {
-          updateTicket(db, ticketKey, { status: "backlog", stage: null });
-          broadcast({ type: "error", ticket: getTicket(db, ticketKey)!, text: "Model returned no response. Try again." });
-          return;
-        }
-        updateTicket(db, ticketKey, { status: "done", stage: null, prDescription: output });
-        broadcast({ type: "done", ticket: getTicket(db, ticketKey)! });
-      })
-      .catch((err) => {
-        const msg = err instanceof Error ? err.message : "generation failed";
-        updateTicket(db, ticketKey, { status: "backlog", stage: null });
-        broadcast({ type: "error", ticket: getTicket(db, ticketKey)!, text: msg });
-      })
-      .finally(() => {
-        inFlight.delete(ticketKey);
-        const clients = sseClients.get(ticketKey);
-        if (clients) {
-          for (const client of clients) { try { client.end(); } catch { /* ignore */ } }
-          sseClients.delete(ticketKey);
-        }
+      sendJson(res, 503, {
+        error: "Groq API key not configured. Add it via Settings → Integrations.",
       });
-
-    sendJson(res, 200, { ticketKey, started: true });
-  });
-
-  // Resolve a quick-win choice and re-run
-  router.post("/api/tickets/:key/resolve", async (req, res, params) => {
-    const ticketKey = params.key!;
-    const ticket = getTicket(db, ticketKey);
-    if (!ticket) {
-      sendJson(res, 404, { error: "Ticket not found" });
-      return;
-    }
-
-    if (!ticket.quickWinChoices) {
-      sendJson(res, 400, { error: "No pending choices for this ticket" });
-      return;
-    }
-
-    let body: unknown;
-    try {
-      body = await readJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON" });
-      return;
-    }
-
-    const choiceIndex = (body as Record<string, unknown> | null)?.["choiceIndex"];
-    if (typeof choiceIndex !== "number") {
-      sendJson(res, 400, { error: "choiceIndex is required" });
-      return;
-    }
-
-    let choices: Array<{ label: string; description: string; inject: string }>;
-    try {
-      choices = JSON.parse(ticket.quickWinChoices);
-    } catch {
-      sendJson(res, 500, { error: "Invalid choices data" });
-      return;
-    }
-
-    if (choiceIndex < 0 || choiceIndex >= choices.length) {
-      sendJson(res, 400, { error: "Invalid choiceIndex" });
-      return;
-    }
-
-    const chosen = choices[choiceIndex]!;
-    const newDescription = `${ticket.description}\n\n[Resolved] ${chosen.inject}`;
-
-    updateTicket(db, ticketKey, {
-      description: newDescription,
-      quickWinChoices: null,
-      quickWinAttempts: (ticket.quickWinAttempts ?? 0) + 1,
-      status: "backlog",
-      stage: null,
-      needsHumanCategory: null,
-      needsHumanReason: null,
-    });
-
-    // Trigger re-run
-    const repoPath = getProjectRepoPath(db, reposDir);
-    if (!repoPath) {
-      sendJson(res, 200, { resolved: true, rerun: false, error: "No project configured" });
-      return;
-    }
-
-    // Read optional modelId from body
-    let modelId: string | null = null;
-    if (typeof (body as Record<string, unknown>).modelId === "string") {
-      modelId = (body as Record<string, unknown>).modelId as string;
-    }
-
-    if (inFlight.has(ticketKey)) {
-      sendJson(res, 200, { resolved: true, rerun: false, error: "Run already in progress" });
       return;
     }
 
@@ -420,8 +224,78 @@ export function registerTicketRunRoutes(
       }
     };
 
-    runTicketPipeline(db, createInvoker, ticketKey, repoPath, modelId, broadcast, controller.signal)
-      .catch(() => {})
+    let history: ConversationTurn[] = [];
+    try {
+      const body = await readJson(req);
+      if (Array.isArray((body as Record<string, unknown>)?.history)) {
+        history = (body as Record<string, unknown>).history as ConversationTurn[];
+      }
+    } catch {
+      /* no body */
+    }
+
+    broadcast({
+      type: "stage_start",
+      stage: "generate",
+      ticket: getTicket(db, ticketKey)!,
+    });
+    updateTicket(db, ticketKey, { status: "in_progress", stage: "generate" });
+
+    fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "qwen/qwen3.6-27b",
+        messages: buildMessages(
+          ticket.summary ?? "",
+          ticket.description ?? "",
+          history,
+        ),
+        max_tokens: 4000,
+        reasoning_effort: "none",
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
+    })
+      .then(async (r) => {
+        if (!r.ok)
+          throw new Error(
+            `Groq ${r.status}: ${await r.text().catch(() => r.statusText)}`,
+          );
+        const json = (await r.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        return json.choices?.[0]?.message?.content ?? "";
+      })
+      .then((output) => {
+        if (!output) {
+          updateTicket(db, ticketKey, { status: "backlog", stage: null });
+          broadcast({
+            type: "error",
+            ticket: getTicket(db, ticketKey)!,
+            text: "Model returned no response. Try again.",
+          });
+          return;
+        }
+        updateTicket(db, ticketKey, {
+          status: "done",
+          stage: null,
+          prDescription: output,
+        });
+        broadcast({ type: "done", ticket: getTicket(db, ticketKey)! });
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "generation failed";
+        updateTicket(db, ticketKey, { status: "backlog", stage: null });
+        broadcast({
+          type: "error",
+          ticket: getTicket(db, ticketKey)!,
+          text: msg,
+        });
+      })
       .finally(() => {
         inFlight.delete(ticketKey);
         const clients = sseClients.get(ticketKey);
@@ -437,7 +311,7 @@ export function registerTicketRunRoutes(
         }
       });
 
-    sendJson(res, 200, { resolved: true, rerun: true });
+    sendJson(res, 200, { ticketKey, started: true });
   });
 
   // SSE stream for ticket progress
@@ -475,7 +349,6 @@ export function registerTicketRunRoutes(
       return;
     }
 
-    // Cleanup on disconnect
     req.on("close", () => {
       sseClients.get(ticketKey)?.delete(res);
       res.end();
