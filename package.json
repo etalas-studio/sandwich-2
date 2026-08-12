@@ -16,7 +16,7 @@
     "format": "prettier --write \"apps/server/**/*.ts\"",
     "lint": "eslint \"apps/server/**/*.ts\"",
     "serve": "node dist/web-server.js",
-    "start": "npm run serve",
+    "start": "npm run serve"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
