@@ -52,7 +52,9 @@ export default function AuthGate() {
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
-    if (!sub?.planSlug) {
+    // Check DB first, fallback to localStorage (for pre-migration users)
+    const hasPlan = sub?.planSlug || localStorage.getItem('sandwich_paid_plan')
+    if (!hasPlan) {
       navigate('/checkout', { replace: true })
       return null
     }
