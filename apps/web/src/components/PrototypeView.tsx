@@ -8,6 +8,7 @@ interface Prototype {
   brief: string;
   status: string;
   createdAt: string;
+  previewUrl?: string;
 }
 
 function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
@@ -145,13 +146,13 @@ export default function PrototypeView() {
           <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: active.status === "done" ? "#dcfce7" : "#fef3c7", color: active.status === "done" ? "#16a34a" : "#b45309" }}>
             {active.status}
           </span>
-          <a href={`/p/${active.shareId}/`} target="_blank" rel="noreferrer" className="text-sm underline ml-auto">Share link</a>
+          <a href={active.previewUrl ?? `/p/${active.shareId}/`} target="_blank" rel="noreferrer" className="text-sm underline ml-auto">Share link</a>
         </div>
         <div className="flex-1 flex">
           <div className="flex-1">
             <iframe
               id="prototype-preview"
-              src={`/p/${active.shareId}/`}
+              src={active.previewUrl ?? `/p/${active.shareId}/`}
               className="w-full h-full border-0"
               title="prototype preview"
             />

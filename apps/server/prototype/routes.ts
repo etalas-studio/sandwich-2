@@ -25,6 +25,18 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
+function previewUrlFor(shareId: string): string {
+  const domain = process.env.PREVIEW_DOMAIN;
+  if (domain) {
+    return `https://${domain}/p/${shareId}/`;
+  }
+  return `/p/${shareId}/`;
+}
+
+function withPreviewUrl(proto: { id: string; userId: string; shareId: string; name: string; brief: string; logoData: string | null; palette: string | null; status: string; createdAt: string; updatedAt: string }) {
+  return { ...proto, previewUrl: previewUrlFor(proto.shareId) };
+}
+
 function extFor(path: string): string {
   const dot = path.lastIndexOf(".");
   return dot >= 0 ? path.slice(dot).toLowerCase() : "";
@@ -70,7 +82,7 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
       console.error("[prototype] generation failed:", err);
     });
 
-    sendJson(res, 201, proto);
+    sendJson(res, 201, withPreviewUrl(proto));
   });
 
   // List prototypes
@@ -80,7 +92,8 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "unauthorized" });
       return;
     }
-    sendJson(res, 200, await listPrototypes(db, auth.userId));
+    const protos = await listPrototypes(db, auth.userId);
+    sendJson(res, 200, protos.map(withPreviewUrl));
   });
 
   // Get prototype
@@ -95,7 +108,7 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
       sendJson(res, 404, { error: "prototype not found" });
       return;
     }
-    sendJson(res, 200, proto);
+    sendJson(res, 200, withPreviewUrl(proto));
   });
 
   // Regenerate / iterate via chat
