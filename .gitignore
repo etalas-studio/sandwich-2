@@ -7,8 +7,8 @@ data/
 queue.json
 *.log
 .DS_Store
-web/node_modules/
-web/dist/
+apps/web/node_modules/
+apps/web/dist/
 *.tsbuildinfo
 web/vite.config.js
 web/vite.config.d.ts
