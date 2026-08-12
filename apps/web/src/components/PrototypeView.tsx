@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { apiUrl } from "../api/base";
 
 interface Prototype {
@@ -18,6 +18,16 @@ function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
   const [logoData, setLogoData] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setLogoData(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const submit = async () => {
     if (!name.trim() || !brief.trim()) return;
@@ -32,7 +42,7 @@ function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
           name: name.trim(),
           brief: brief.trim(),
           palette: palette.trim() || null,
-          logoData: logoData.trim() || null,
+          logoData: logoData || null,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -80,13 +90,32 @@ function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Logo (URL or description)</label>
+          <label className="text-sm font-medium mb-1 block">Logo</label>
           <input
-            value={logoData}
-            onChange={(e) => setLogoData(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border"
-            placeholder="https://example.com/logo.png or 'a red circle with letter S'"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleLogoFile}
           />
+          <div className="flex items-center gap-2">
+            <input
+              value={logoData.startsWith("data:") ? "(logo uploaded)" : logoData}
+              onChange={(e) => setLogoData(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border"
+              placeholder="URL or description, e.g. https://example.com/logo.png"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-2 rounded-lg border text-sm whitespace-nowrap"
+            >
+              Upload file
+            </button>
+          </div>
+          {logoData.startsWith("data:") && (
+            <p className="text-xs mt-1" style={{ color: "#16a34a" }}>✓ Logo file uploaded</p>
+          )}
         </div>
         {error && <p className="text-sm" style={{ color: "#f91814" }}>{error}</p>}
         <button
@@ -102,18 +131,54 @@ function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
   );
 }
 
+function usePrototypeStatus(id: string | null, onDone: () => void) {
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    const poll = async () => {
+      const res = await fetch(apiUrl(`/api/prototypes/${id}`), { credentials: "include" });
+      if (!res.ok) return;
+      const p = (await res.json()) as Prototype;
+      if (cancelled) return;
+      if (p.status === "done") {
+        onDone();
+      } else if (p.status === "failed") {
+        // stop polling on failure
+        return;
+      } else {
+        setTimeout(poll, 2000);
+      }
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [id, onDone]);
+}
+
 export default function PrototypeView() {
   const [prototypes, setPrototypes] = useState<Prototype[]>([]);
   const [active, setActive] = useState<Prototype | null>(null);
   const [instruction, setInstruction] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
 
-  useEffect(() => {
+  const loadPrototypes = useCallback(() => {
     fetch(apiUrl("/api/prototypes"), { credentials: "include" })
       .then((r) => r.json())
-      .then(setPrototypes)
+      .then((list: Prototype[]) => {
+        setPrototypes(list);
+        setActive((prev) => prev ? list.find((p) => p.id === prev.id) ?? prev : prev);
+      })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { loadPrototypes(); }, [loadPrototypes]);
+
+  // Poll status while generating, reload iframe when done
+  usePrototypeStatus(active?.id ?? null, () => {
+    setRefreshing(false);
+    setIframeKey((k) => k + 1);
+    loadPrototypes();
+  });
 
   const regenerate = async () => {
     if (!active || !instruction.trim()) return;
@@ -126,31 +191,36 @@ export default function PrototypeView() {
         body: JSON.stringify({ instruction: instruction.trim() }),
       });
       setInstruction("");
-      // Reload preview after a delay to let generation finish
-      setTimeout(() => {
-        const iframe = document.getElementById("prototype-preview") as HTMLIFrameElement | null;
-        iframe?.contentWindow?.location.reload();
-        setRefreshing(false);
-      }, 5000);
+      setActive({ ...active, status: "generating" });
     } catch {
       setRefreshing(false);
     }
   };
 
   if (active) {
+    const isGenerating = active.status === "generating";
     return (
       <div className="flex flex-col h-screen">
         <div className="flex items-center gap-3 p-4 border-b" style={{ backgroundColor: "#fff" }}>
           <button onClick={() => setActive(null)} className="text-sm">← Back</button>
           <span className="font-semibold">{active.name}</span>
-          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: active.status === "done" ? "#dcfce7" : "#fef3c7", color: active.status === "done" ? "#16a34a" : "#b45309" }}>
+          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: active.status === "done" ? "#dcfce7" : active.status === "failed" ? "#fee2e2" : "#fef3c7", color: active.status === "done" ? "#16a34a" : active.status === "failed" ? "#dc2626" : "#b45309" }}>
             {active.status}
           </span>
           <a href={active.previewUrl ?? `/p/${active.shareId}/`} target="_blank" rel="noreferrer" className="text-sm underline ml-auto">Share link</a>
         </div>
         <div className="flex-1 flex">
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            {isGenerating && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: "rgba(244,235,225,0.9)" }}>
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-3" style={{ borderColor: "#f91814", borderTopColor: "transparent" }} />
+                  <p className="text-sm" style={{ color: "#111827" }}>Generating prototype…</p>
+                </div>
+              </div>
+            )}
             <iframe
+              key={iframeKey}
               id="prototype-preview"
               src={active.previewUrl ?? `/p/${active.shareId}/`}
               className="w-full h-full border-0"
@@ -168,11 +238,11 @@ export default function PrototypeView() {
             />
             <button
               onClick={regenerate}
-              disabled={refreshing}
+              disabled={refreshing || isGenerating}
               className="px-4 py-2 rounded-full text-white font-semibold"
-              style={{ backgroundColor: "#f91814", opacity: refreshing ? 0.5 : 1 }}
+              style={{ backgroundColor: "#f91814", opacity: (refreshing || isGenerating) ? 0.5 : 1 }}
             >
-              {refreshing ? "Applying..." : "Apply Change"}
+              {refreshing || isGenerating ? "Applying..." : "Apply Change"}
             </button>
           </div>
         </div>
@@ -194,7 +264,7 @@ export default function PrototypeView() {
                 className="flex items-center justify-between p-4 rounded-xl bg-white border"
               >
                 <span className="font-medium">{p.name}</span>
-                <span className="text-xs" style={{ color: p.status === "done" ? "#16a34a" : "#b45309" }}>{p.status}</span>
+                <span className="text-xs" style={{ color: p.status === "done" ? "#16a34a" : p.status === "failed" ? "#dc2626" : "#b45309" }}>{p.status}</span>
               </button>
             ))}
           </div>

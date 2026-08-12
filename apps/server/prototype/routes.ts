@@ -8,6 +8,7 @@ import {
   listPrototypes,
   updatePrototypeBrief,
   getPrototypeFile,
+  savePrototypeFile,
 } from "./storage.js";
 import { generatePrototype } from "./engine.js";
 import type { Database } from "../db/connection.js";
@@ -40,6 +41,14 @@ function withPreviewUrl(proto: { id: string; userId: string; shareId: string; na
 function extFor(path: string): string {
   const dot = path.lastIndexOf(".");
   return dot >= 0 ? path.slice(dot).toLowerCase() : "";
+}
+
+function parseDataUrl(dataUrl: string): { ext: string; mime: string; base64: string } | null {
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) return null;
+  const mime = match[1]!;
+  const ext = mime === "image/svg+xml" ? "svg" : mime === "image/png" ? "png" : mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
+  return { ext, mime, base64: match[2]! };
 }
 
 export function registerPrototypeRoutes(router: Router, db: Database): void {
@@ -75,6 +84,15 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
     } catch (err) {
       sendCaughtError(res, err, "prototype creation");
       return;
+    }
+
+    // If logo is a base64 data URL, save it as a file the generated prototype can reference
+    if (body.logoData?.startsWith("data:")) {
+      const parsed = parseDataUrl(body.logoData);
+      if (parsed) {
+        // Store the full data URL so the serve route can decode it
+        await savePrototypeFile(db, proto.id, `assets/logo.${parsed.ext}`, body.logoData);
+      }
     }
 
     // Kick off generation in background (don't block response)
@@ -179,6 +197,18 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
       sendJson(res, 404, { error: "file not found" });
       return;
     }
+
+    // Handle base64 data URLs (uploaded logos/images stored inline)
+    if (file.content.startsWith("data:")) {
+      const parsed = parseDataUrl(file.content);
+      if (parsed) {
+        const buf = Buffer.from(parsed.base64, "base64");
+        res.writeHead(200, { "content-type": parsed.mime, "content-length": buf.length });
+        res.end(buf);
+        return;
+      }
+    }
+
     res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream" });
     res.end(file.content);
   });
