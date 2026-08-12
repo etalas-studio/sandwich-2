@@ -1,8 +1,11 @@
-import type Database from "better-sqlite3";
+import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { tickets } from "./schema.js";
+import type { Database } from "./connection.js";
 
 export interface Ticket {
   key: string;
+  type: string | null;
   summary: string | null;
   description: string;
   url: string | null;
@@ -20,7 +23,6 @@ export interface Ticket {
   branchName: string | null;
   quickWinChoices: string | null;
   quickWinAttempts: number;
-  // Informational Jira fields (nullable — pipeline never reads these)
   issueType: string | null;
   priority: string | null;
   sprint: string | null;
@@ -30,6 +32,7 @@ export interface Ticket {
   parentKey: string | null;
   attachments: string | null;
   jiraStatus: string | null;
+  feedback: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,89 +52,75 @@ export interface CreateTicketInput {
   attachments?: string | null;
 }
 
-function validate(input: CreateTicketInput): void {
-  if (!input.description.trim()) throw new Error("description must not be empty");
-}
-
-const nullishNum = (v: unknown): number | null =>
-  v === undefined || v === null ? null : Number(v);
-
-function normaliseTicket(row: Record<string, unknown>): Ticket {
-  const nullish = (v: unknown) => (v === undefined || v === null ? null : String(v));
+function normaliseTicket(row: typeof tickets.$inferSelect): Ticket {
   return {
-    key: String(row.key),
-    summary: nullish(row.summary),
-    description: String(row.description),
-    url: nullish(row.url),
-    status: String(row.status),
-    stage: nullish(row.stage),
-    needsHumanCategory: nullish(row.needs_human_category),
-    needsHumanReason: nullish(row.needs_human_reason),
-    prUrl: nullish(row.pr_url),
-    prSummary: nullish(row.pr_summary),
-    prTitle: nullish(row.pr_title),
-    prDescription: nullish(row.pr_description),
-    startedAt: nullish(row.started_at),
-    finishedAt: nullish(row.finished_at),
-    worktreePath: nullish(row.worktree_path),
-    branchName: nullish(row.branch_name),
-    quickWinChoices: nullish(row.quick_win_choices),
-    quickWinAttempts: typeof row.quick_win_attempts === "number" ? row.quick_win_attempts : 0,
-    issueType: nullish(row.issue_type),
-    priority: nullish(row.priority),
-    sprint: nullish(row.sprint),
-    storyPoints: nullishNum(row.story_points),
-    team: nullish(row.team),
-    assignee: nullish(row.assignee),
-    parentKey: nullish(row.parent_key),
-    attachments: nullish(row.attachments),
-    jiraStatus: nullish(row.jira_status),
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
+    key: row.key,
+    type: row.type,
+    summary: row.summary,
+    description: row.description,
+    url: row.url,
+    status: row.status,
+    stage: row.stage,
+    needsHumanCategory: row.needsHumanCategory,
+    needsHumanReason: row.needsHumanReason,
+    prUrl: row.prUrl,
+    prSummary: row.prSummary,
+    prTitle: row.prTitle,
+    prDescription: row.prDescription,
+    startedAt: row.startedAt,
+    finishedAt: row.finishedAt,
+    worktreePath: row.worktreePath,
+    branchName: row.branchName,
+    quickWinChoices: row.quickWinChoices,
+    quickWinAttempts: row.quickWinAttempts ?? 0,
+    issueType: row.issueType,
+    priority: row.priority,
+    sprint: row.sprint,
+    storyPoints: row.storyPoints,
+    team: row.team,
+    assignee: row.assignee,
+    parentKey: row.parentKey,
+    attachments: row.attachments,
+    jiraStatus: row.jiraStatus,
+    feedback: row.feedback,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
-export function createTicket(db: Database.Database, input: CreateTicketInput): Ticket {
-  validate(input);
+export async function createTicket(db: Database, input: CreateTicketInput): Promise<Ticket> {
+  if (!input.description.trim()) throw new Error("description must not be empty");
   const key = input.id.trim() || `T-${randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO tickets (key, summary, description, url, status, created_at, updated_at,
-      issue_type, priority, sprint, story_points, team, assignee, parent_key, attachments)
-     VALUES (?, ?, ?, ?, 'backlog', ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
+  await db.insert(tickets).values({
     key,
-    input.summary ?? null,
-    input.description,
-    input.url,
-    now,
-    now,
-    input.issueType ?? null,
-    input.priority ?? null,
-    input.sprint ?? null,
-    input.storyPoints ?? null,
-    input.team ?? null,
-    input.assignee ?? null,
-    input.parentKey ?? null,
-    input.attachments ?? null,
-  );
-  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
-  return normaliseTicket(row);
+    summary: input.summary ?? null,
+    description: input.description,
+    url: input.url,
+    status: "backlog",
+    createdAt: now,
+    updatedAt: now,
+    issueType: input.issueType ?? null,
+    priority: input.priority ?? null,
+    sprint: input.sprint ?? null,
+    storyPoints: input.storyPoints ?? null,
+    team: input.team ?? null,
+    assignee: input.assignee ?? null,
+    parentKey: input.parentKey ?? null,
+    attachments: input.attachments ?? null,
+  });
+  return (await getTicket(db, key))!;
 }
 
-export function listTickets(db: Database.Database): Ticket[] {
-  const rows = db
-    .prepare("SELECT * FROM tickets ORDER BY created_at DESC, rowid DESC")
-    .all() as Record<string, unknown>[];
+export async function listTickets(db: Database): Promise<Ticket[]> {
+  const rows = await db.select().from(tickets).orderBy(desc(tickets.createdAt));
   return rows.map(normaliseTicket);
 }
 
-export function getTicket(db: Database.Database, key: string): Ticket | null {
-  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as
-    Record<string, unknown> | undefined;
-  if (!row) return null;
-  return normaliseTicket(row);
+export async function getTicket(db: Database, key: string): Promise<Ticket | null> {
+  const rows = await db.select().from(tickets).where(eq(tickets.key, key)).limit(1);
+  if (rows.length === 0) return null;
+  return normaliseTicket(rows[0]!);
 }
 
 export interface UpdateTicketInput {
@@ -161,201 +150,53 @@ export interface UpdateTicketInput {
   parentKey?: string | null;
   attachments?: string | null;
   feedback?: string | null;
+  type?: string | null;
 }
 
-export function updateTicket(
-  db: Database.Database,
+export async function updateTicket(
+  db: Database,
   key: string,
   input: UpdateTicketInput,
-): Ticket | null {
-  const existing = db.prepare("SELECT key FROM tickets WHERE key = ?").get(key);
-  if (!existing) return null;
+): Promise<Ticket | null> {
+  const existing = await db.select({ key: tickets.key }).from(tickets).where(eq(tickets.key, key)).limit(1);
+  if (existing.length === 0) return null;
 
   const now = new Date().toISOString();
-  if (input.description !== undefined) {
-    db.prepare("UPDATE tickets SET description = ?, updated_at = ? WHERE key = ?").run(
-      input.description,
-      now,
-      key,
-    );
-  }
-  if (input.summary !== undefined) {
-    db.prepare("UPDATE tickets SET summary = ?, updated_at = ? WHERE key = ?").run(
-      input.summary,
-      now,
-      key,
-    );
-  }
-  if (input.url !== undefined) {
-    db.prepare("UPDATE tickets SET url = ?, updated_at = ? WHERE key = ?").run(input.url, now, key);
-  }
-  if (input.status !== undefined) {
-    db.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE key = ?").run(
-      input.status,
-      now,
-      key,
-    );
-  }
-  if (input.stage !== undefined) {
-    db.prepare("UPDATE tickets SET stage = ?, updated_at = ? WHERE key = ?").run(
-      input.stage,
-      now,
-      key,
-    );
-  }
-  if (input.worktreePath !== undefined) {
-    db.prepare("UPDATE tickets SET worktree_path = ?, updated_at = ? WHERE key = ?").run(
-      input.worktreePath,
-      now,
-      key,
-    );
-  }
-  if (input.branchName !== undefined) {
-    db.prepare("UPDATE tickets SET branch_name = ?, updated_at = ? WHERE key = ?").run(
-      input.branchName,
-      now,
-      key,
-    );
-  }
-  if (input.startedAt !== undefined) {
-    db.prepare("UPDATE tickets SET started_at = ?, updated_at = ? WHERE key = ?").run(
-      input.startedAt,
-      now,
-      key,
-    );
-  }
-  if (input.finishedAt !== undefined) {
-    db.prepare("UPDATE tickets SET finished_at = ?, updated_at = ? WHERE key = ?").run(
-      input.finishedAt,
-      now,
-      key,
-    );
-  }
-  if (input.prUrl !== undefined) {
-    db.prepare("UPDATE tickets SET pr_url = ?, updated_at = ? WHERE key = ?").run(
-      input.prUrl,
-      now,
-      key,
-    );
-  }
-  if (input.prSummary !== undefined) {
-    db.prepare("UPDATE tickets SET pr_summary = ?, updated_at = ? WHERE key = ?").run(
-      input.prSummary,
-      now,
-      key,
-    );
-  }
-  if (input.prTitle !== undefined) {
-    db.prepare("UPDATE tickets SET pr_title = ?, updated_at = ? WHERE key = ?").run(
-      input.prTitle,
-      now,
-      key,
-    );
-  }
-  if (input.prDescription !== undefined) {
-    db.prepare("UPDATE tickets SET pr_description = ?, updated_at = ? WHERE key = ?").run(
-      input.prDescription,
-      now,
-      key,
-    );
-  }
-  if (input.needsHumanCategory !== undefined) {
-    db.prepare("UPDATE tickets SET needs_human_category = ?, updated_at = ? WHERE key = ?").run(
-      input.needsHumanCategory,
-      now,
-      key,
-    );
-  }
-  if (input.needsHumanReason !== undefined) {
-    db.prepare("UPDATE tickets SET needs_human_reason = ?, updated_at = ? WHERE key = ?").run(
-      input.needsHumanReason,
-      now,
-      key,
-    );
-  }
-  if (input.quickWinChoices !== undefined) {
-    db.prepare("UPDATE tickets SET quick_win_choices = ?, updated_at = ? WHERE key = ?").run(
-      input.quickWinChoices,
-      now,
-      key,
-    );
-  }
-  if (input.quickWinAttempts !== undefined) {
-    db.prepare("UPDATE tickets SET quick_win_attempts = ?, updated_at = ? WHERE key = ?").run(
-      input.quickWinAttempts,
-      now,
-      key,
-    );
-  }
-  if (input.issueType !== undefined) {
-    db.prepare("UPDATE tickets SET issue_type = ?, updated_at = ? WHERE key = ?").run(
-      input.issueType,
-      now,
-      key,
-    );
-  }
-  if (input.priority !== undefined) {
-    db.prepare("UPDATE tickets SET priority = ?, updated_at = ? WHERE key = ?").run(
-      input.priority,
-      now,
-      key,
-    );
-  }
-  if (input.sprint !== undefined) {
-    db.prepare("UPDATE tickets SET sprint = ?, updated_at = ? WHERE key = ?").run(
-      input.sprint,
-      now,
-      key,
-    );
-  }
-  if (input.storyPoints !== undefined) {
-    db.prepare("UPDATE tickets SET story_points = ?, updated_at = ? WHERE key = ?").run(
-      input.storyPoints,
-      now,
-      key,
-    );
-  }
-  if (input.team !== undefined) {
-    db.prepare("UPDATE tickets SET team = ?, updated_at = ? WHERE key = ?").run(
-      input.team,
-      now,
-      key,
-    );
-  }
-  if (input.assignee !== undefined) {
-    db.prepare("UPDATE tickets SET assignee = ?, updated_at = ? WHERE key = ?").run(
-      input.assignee,
-      now,
-      key,
-    );
-  }
-  if (input.parentKey !== undefined) {
-    db.prepare("UPDATE tickets SET parent_key = ?, updated_at = ? WHERE key = ?").run(
-      input.parentKey,
-      now,
-      key,
-    );
-  }
-  if (input.attachments !== undefined) {
-    db.prepare("UPDATE tickets SET attachments = ?, updated_at = ? WHERE key = ?").run(
-      input.attachments,
-      now,
-      key,
-    );
-  }
-  if (input.feedback !== undefined) {
-    db.prepare("UPDATE tickets SET feedback = ?, updated_at = ? WHERE key = ?").run(
-      input.feedback,
-      now,
-      key,
-    );
-  }
+  const sets: Record<string, unknown> = { updatedAt: now };
 
-  const row = db.prepare("SELECT * FROM tickets WHERE key = ?").get(key) as Record<string, unknown>;
-  return normaliseTicket(row);
+  if (input.description !== undefined) sets.description = input.description;
+  if (input.summary !== undefined) sets.summary = input.summary;
+  if (input.url !== undefined) sets.url = input.url;
+  if (input.status !== undefined) sets.status = input.status;
+  if (input.stage !== undefined) sets.stage = input.stage;
+  if (input.worktreePath !== undefined) sets.worktreePath = input.worktreePath;
+  if (input.branchName !== undefined) sets.branchName = input.branchName;
+  if (input.startedAt !== undefined) sets.startedAt = input.startedAt;
+  if (input.finishedAt !== undefined) sets.finishedAt = input.finishedAt;
+  if (input.prUrl !== undefined) sets.prUrl = input.prUrl;
+  if (input.prSummary !== undefined) sets.prSummary = input.prSummary;
+  if (input.prTitle !== undefined) sets.prTitle = input.prTitle;
+  if (input.prDescription !== undefined) sets.prDescription = input.prDescription;
+  if (input.needsHumanCategory !== undefined) sets.needsHumanCategory = input.needsHumanCategory;
+  if (input.needsHumanReason !== undefined) sets.needsHumanReason = input.needsHumanReason;
+  if (input.quickWinChoices !== undefined) sets.quickWinChoices = input.quickWinChoices;
+  if (input.quickWinAttempts !== undefined) sets.quickWinAttempts = input.quickWinAttempts;
+  if (input.issueType !== undefined) sets.issueType = input.issueType;
+  if (input.priority !== undefined) sets.priority = input.priority;
+  if (input.sprint !== undefined) sets.sprint = input.sprint;
+  if (input.storyPoints !== undefined) sets.storyPoints = input.storyPoints;
+  if (input.team !== undefined) sets.team = input.team;
+  if (input.assignee !== undefined) sets.assignee = input.assignee;
+  if (input.parentKey !== undefined) sets.parentKey = input.parentKey;
+  if (input.attachments !== undefined) sets.attachments = input.attachments;
+  if (input.feedback !== undefined) sets.feedback = input.feedback;
+  if (input.type !== undefined) sets.type = input.type;
+
+  await db.update(tickets).set(sets).where(eq(tickets.key, key));
+  return getTicket(db, key);
 }
 
-export function deleteTicket(db: Database.Database, key: string): boolean {
-  const result = db.prepare("DELETE FROM tickets WHERE key = ?").run(key);
-  return result.changes > 0;
+export async function deleteTicket(db: Database, key: string): Promise<boolean> {
+  const result = await db.delete(tickets).where(eq(tickets.key, key));
+  return (result.rowCount ?? 0) > 0;
 }

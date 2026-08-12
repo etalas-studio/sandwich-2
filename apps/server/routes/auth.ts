@@ -1,4 +1,3 @@
-import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { AuthError, type AuthResult, login, logout, register } from "../auth/service.js";
 import { authenticateRequest } from "../auth/middleware.js";
@@ -10,6 +9,7 @@ import {
   parseCookies,
 } from "../auth/cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import type { Database } from "../db/connection.js";
 
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
 
@@ -31,16 +31,16 @@ function handleAuthRequest(
 
 export function registerAuthRoutes(
   router: Router,
-  db: Database.Database,
+  db: Database,
   publicPaths: Set<string>,
 ): void {
-  router.get("/api/auth/me", (_req, res) => {
-    const auth = authenticateRequest(db, _req);
+  router.get("/api/auth/me", async (_req, res) => {
+    const auth = await authenticateRequest(db, _req);
     if (!auth) {
       sendJson(res, 200, { state: "unauthenticated" });
       return;
     }
-    const user = getUserById(db, auth.userId);
+    const user = await getUserById(db, auth.userId);
     sendJson(res, 200, { state: "authenticated", user: { username: user?.username ?? "" } });
   });
 
@@ -76,10 +76,10 @@ export function registerAuthRoutes(
     }
   });
 
-  router.post("/api/auth/logout", (req, res) => {
+  router.post("/api/auth/logout", async (req, res) => {
     const cookies = parseCookies(req.headers.cookie);
     const token = cookies[SESSION_COOKIE_NAME];
-    if (token) logout(db, token);
+    if (token) await logout(db, token);
     res.writeHead(204, { "set-cookie": buildClearedSessionCookie(COOKIE_SECURE) });
     res.end();
   });

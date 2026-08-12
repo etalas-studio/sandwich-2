@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../lib/i18n'
+import { apiUrl } from '../api/base'
 
 const bowlby = "'Bowlby One', system-ui"
 const mousememoirs = "'Mouse Memoirs', sans-serif"
@@ -161,8 +162,8 @@ function PaymentTrigger({
 
       try {
         const [cfgRes, txRes] = await Promise.all([
-          fetch('/api/midtrans/config'),
-          fetch('/api/midtrans/transaction', {
+          fetch(apiUrl('/api/midtrans/config')),
+          fetch(apiUrl('/api/midtrans/transaction'), {
             method: 'POST',
             credentials: 'include',
             headers: { 'content-type': 'application/json' },

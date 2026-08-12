@@ -1,32 +1,26 @@
-import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
+import { tickets, payments, chatMessages, sessions, users, subscriptions, usage, userPreferences, instanceSettings } from "../db/schema.js";
 import { sendJson } from "../http-utils.js";
+import type { Database } from "../db/connection.js";
 
-// User data only — schema_migrations is infrastructure, not reset on purge.
-// Children must be deleted before parents (foreign_keys = ON).
-//   sessions → users
-const TABLES = [
-  "credentials",
-  "sessions",
-  "tickets",
-  "users",
-  "instance_settings",
-  "payments",
-];
-
-export function registerPurgeRoute(router: Router, db: Database.Database): void {
-  router.post("/api/purge", (_req, res) => {
+export function registerPurgeRoute(router: Router, db: Database): void {
+  router.post("/api/purge", async (_req, res) => {
     try {
-      db.transaction(() => {
-        for (const table of TABLES) {
-          db.prepare(`DELETE FROM ${table}`).run();
-        }
-        // Re-seed instance_settings
-        db.prepare("INSERT OR IGNORE INTO instance_settings (id) VALUES (1)").run();
-      })();
+      await db.transaction(async (tx) => {
+        await tx.delete(chatMessages);
+        await tx.delete(usage);
+        await tx.delete(userPreferences);
+        await tx.delete(payments);
+        await tx.delete(subscriptions);
+        await tx.delete(tickets);
+        await tx.delete(sessions);
+        await tx.delete(users);
+        await tx.delete(instanceSettings);
+        await tx.insert(instanceSettings).values({});
+      });
       sendJson(res, 200, { purged: true });
     } catch (err) {
-      sendJson(res, 500, { error: err instanceof Error ? err.message : "purge failed" });
+      sendJson(res, 500, { error: "purge failed" });
     }
   });
 }

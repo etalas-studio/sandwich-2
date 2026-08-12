@@ -1,23 +1,36 @@
-import Database from "better-sqlite3";
-import { chmodSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-import { migrate } from "./migrate.js";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import * as schema from "./schema.js";
+
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
+
+let pool: Pool | null = null;
 
 /**
- * Opens (creating if absent) the SQLite file at `path`, ensures its parent
- * directory exists, enables foreign-key enforcement (off by default in
- * SQLite), and applies any pending migrations before returning.
+ * Opens a PostgreSQL connection pool using DATABASE_URL, runs any pending
+ * Drizzle migrations, and returns a typed Drizzle instance.
  *
- * The directory and file are created owner-only (0700/0600) — file
- * permissions on `dataDir` are the actual security boundary for the
- * plaintext-at-rest credentials and password hashes stored in this database
- * (see docs/superpowers/specs/2026-08-03-storage-sqlite-design.md).
+ * Migrations are auto-run on every startup — safe and idempotent because
+ * Drizzle tracks applied migrations in a `__drizzle_migrations` table.
+ * No manual step needed before deploy.
  */
-export function openDb(path: string): Database.Database {
-  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-  const db = new Database(path);
-  chmodSync(path, 0o600);
-  db.pragma("foreign_keys = ON");
-  migrate(db);
+export async function openDb(databaseUrl: string): Promise<Database> {
+  pool = new Pool({ connectionString: databaseUrl });
+  const db = drizzle(pool, { schema });
+
+  const migrationsFolder = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "drizzle",
+  );
+
+  await migrate(db, { migrationsFolder });
+
   return db;
+}
+
+export function closeDb(): Promise<void> {
+  return pool ? pool.end() : Promise.resolve();
 }
