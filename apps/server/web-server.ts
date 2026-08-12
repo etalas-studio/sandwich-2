@@ -14,6 +14,8 @@ import { registerTicketRunRoutes } from "./routes/ticket-run.js";
 import { registerPurgeRoute } from "./routes/purge.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
+import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
+import { registerPreferenceRoutes } from "./routes/preferences.js";
 
 export interface WebServerOptions {
   port: number;
@@ -68,6 +70,8 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerPurgeRoute(router, db);
   registerSettingsRoutes(router, db);
   registerMidtransRoutes(router, db);
+  registerSubscriptionRoutes(router, db);
+  registerPreferenceRoutes(router, db);
 
   const server = createServer((req, res) => {
     void (async () => {

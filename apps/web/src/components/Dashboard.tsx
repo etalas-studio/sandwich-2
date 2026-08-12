@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
 import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
 import { createTicket, updateTicket as updateTicketApi, fetchTicket } from '../api/tickets'
 import { apiUrl } from '../api/base'
@@ -209,7 +210,8 @@ const PLAN_BENEFITS: Record<string, { icon: string; text: string }[]> = {
 function PlanBadge() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const plan = localStorage.getItem('sandwich_paid_plan')
+  const { data: sub } = useSubscription()
+  const plan = sub?.planSlug
   if (!plan) return null
   const isPro = plan === 'pro'
   const benefits = PLAN_BENEFITS[plan] ?? PLAN_BENEFITS.starter
@@ -569,8 +571,8 @@ export function incrementUsage() {
   const cur = parseInt(localStorage.getItem(key) ?? '0', 10)
   localStorage.setItem(key, String(cur + 1))
 }
-function getPlanInfo() {
-  const plan = localStorage.getItem('sandwich_paid_plan') ?? 'starter'
+function getPlanInfo(planOverride?: string | null) {
+  const plan = planOverride ?? localStorage.getItem('sandwich_paid_plan') ?? 'starter'
   const isPro = plan === 'pro'
   const limit = isPro ? Infinity : 5
   const stored = parseInt(localStorage.getItem(USAGE_KEY()) ?? '0', 10)
@@ -892,8 +894,9 @@ function HomeOverview({
 }) {
   const { lang, t: tr } = useLanguage()
   const [filter, setFilter] = useState<'all' | 'done' | 'draft'>('all')
-  const planInfo = getPlanInfo()
-  const plan = localStorage.getItem('sandwich_paid_plan')
+  const { data: sub } = useSubscription()
+  const plan = sub?.planSlug ?? localStorage.getItem('sandwich_paid_plan')
+  const planInfo = getPlanInfo(plan)
 
   const now = Date.now()
   const weekMs = 7 * 24 * 60 * 60 * 1000
