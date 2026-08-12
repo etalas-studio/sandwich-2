@@ -243,7 +243,7 @@ async function runWithOpenCode(
     modelsPath: null,
   });
 
-  const model = modelRuntime.getModel("opencode-go", "gpt-5.1"); // defaults to latest
+  const model = modelRuntime.getModel("opencode-go", "glm-5.2");
   if (!model) throw new Error("OpenCode model not available");
 
   const { session } = await pi.createAgentSession({

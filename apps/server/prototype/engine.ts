@@ -34,22 +34,26 @@ export async function generatePrototype(
     const pi = await import("@earendil-works/pi-coding-agent");
 
     const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
-    const model = modelRuntime.getModel("opencode-go", "gpt-5.1");
+    const model = modelRuntime.getModel("opencode-go", "glm-5.2");
     if (!model) throw new Error("OpenCode model not available");
     const { session } = await pi.createAgentSession({
       cwd: workspace,
       model: model as any,
       modelRuntime: modelRuntime as any,
       tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
-      sessionManager: pi.SessionManager.inMemory(),
+      sessionManager: pi.SessionManager.inMemory(workspace),
       settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
     });
 
     let errorMessage = "";
     let finished = false;
+    let responseText = "";
 
     session.subscribe((event: any) => {
       if (signal?.aborted) return;
+      if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
+        responseText += event.assistantMessageEvent.delta;
+      }
       if (event.type === "agent_end") {
         finished = true;
         if (typeof event.errorMessage === "string" && event.errorMessage) {
@@ -67,7 +71,7 @@ export async function generatePrototype(
     try {
       await session.prompt(systemPrompt);
       // Small delay for agent_end event to propagate
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 500));
       session.dispose();
 
       if (errorMessage) throw new Error(errorMessage);
@@ -78,6 +82,8 @@ export async function generatePrototype(
 
     // Read all generated files from workspace
     const files = listFilesRecursive(workspace);
+    console.log("[prototype] workspace files:", files.map((f) => relative(workspace, f)));
+    console.log("[prototype] agent response (first 500 chars):", responseText.slice(0, 500));
     if (files.length === 0) throw new Error("no files generated");
 
     for (const fullPath of files) {
