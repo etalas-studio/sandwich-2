@@ -16,7 +16,6 @@ import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
 
 export interface WebServerOptions {
-  dbPath: string;
   port: number;
   webRoot: string;
 }
@@ -43,28 +42,25 @@ const PUBLIC_API_PATHS = new Set([
 ]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
-  const { dbPath, port, webRoot } = options;
-  const db = openDb(dbPath);
+  const { port, webRoot } = options;
+  const db = openDb(process.env.DATABASE_URL!);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 
-  // Build router
   const router = new Router(trustedHosts, boundPort);
 
-  // Auth middleware — session gate for non-public API paths
-  router.use((req, res) => {
+  router.use(async (req, res) => {
     const url = req.url ?? "/";
     const path = url.split("?")[0] ?? "/";
     const isApiPath = path === "/api" || path.startsWith("/api/");
     if (isApiPath && !PUBLIC_API_PATHS.has(path)) {
-      if (!authenticateRequest(db, req)) {
+      if (!(await authenticateRequest(db, req))) {
         sendJson(res, 401, { error: "unauthorized" });
         return false;
       }
     }
   });
 
-  // Register route modules
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerIntegrationRoutes(router);
   registerTicketRoutes(router, db);
@@ -136,9 +132,8 @@ if (
   import.meta.url === `file://${process.argv[1]}`
 ) {
   startWebServer({
-    dbPath: process.env.DB_PATH ?? "data/instance.sqlite",
     port: process.env.PORT ? Number(process.env.PORT) : 4319,
-    webRoot: process.env.WEB_ROOT ?? "web/dist",
+    webRoot: process.env.WEB_ROOT ?? "apps/web/dist",
   }).catch((err) => {
     console.error("Failed to start:", err);
     process.exit(1);

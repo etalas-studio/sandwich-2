@@ -1,13 +1,21 @@
-import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { createSnapTransaction, verifyNotificationSignature } from "../pipeline/midtrans.js";
 import { upsertPayment } from "../db/payments.js";
+import type { Database } from "../db/connection.js";
 
-export function registerMidtransRoutes(router: Router, db: Database.Database): void {
+export function registerMidtransRoutes(router: Router, db: Database): void {
+  router.get("/api/midtrans/config", (_req, res) => {
+    sendJson(res, 200, {
+      clientKey: process.env.MIDTRANS_CLIENT_KEY ?? "",
+      isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+    });
+  });
+
   router.post("/api/midtrans/transaction", async (req, res) => {
-    if (!authenticateRequest(db, req)) {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
@@ -37,7 +45,6 @@ export function registerMidtransRoutes(router: Router, db: Database.Database): v
     }
   });
 
-  // Called by Midtrans directly, no session — trust only a valid signature.
   router.post("/api/midtrans/notification", async (req, res) => {
     const body = (await readJsonBody(req)) as Partial<{
       order_id: string;
@@ -67,7 +74,7 @@ export function registerMidtransRoutes(router: Router, db: Database.Database): v
       return;
     }
     try {
-      upsertPayment(db, {
+      await upsertPayment(db, {
         order_id: body.order_id,
         transaction_status: body.transaction_status ?? "unknown",
         status_code: body.status_code,

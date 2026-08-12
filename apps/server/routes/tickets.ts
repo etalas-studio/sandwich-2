@@ -1,4 +1,3 @@
-import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import {
   createTicket,
@@ -9,8 +8,9 @@ import {
 } from "../db/tickets.js";
 import type { CreateTicketInput, UpdateTicketInput } from "../db/tickets.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import type { Database } from "../db/connection.js";
 
-export function registerTicketRoutes(router: Router, db: Database.Database): void {
+export function registerTicketRoutes(router: Router, db: Database): void {
   router.post("/api/tickets", async (req, res) => {
     let body: unknown;
     try {
@@ -46,19 +46,19 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     const input: CreateTicketInput = { id, summary, description, url };
 
     try {
-      const ticket = createTicket(db, input);
+      const ticket = await createTicket(db, input);
       sendJson(res, 201, ticket);
     } catch (err) {
       sendCaughtError(res, err, "ticket creation");
     }
   });
 
-  router.get("/api/tickets", (_req, res) => {
-    sendJson(res, 200, listTickets(db));
+  router.get("/api/tickets", async (_req, res) => {
+    sendJson(res, 200, await listTickets(db));
   });
 
-  router.get("/api/tickets/:key", (_req, res, params) => {
-    const ticket = getTicket(db, params.key!);
+  router.get("/api/tickets/:key", async (_req, res, params) => {
+    const ticket = await getTicket(db, params.key!);
     if (!ticket) {
       sendJson(res, 404, { error: "ticket not found" });
       return;
@@ -88,7 +88,7 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     if (typeof candidate.url === "string") input.url = candidate.url.trim() || null;
     if (typeof candidate.status === "string") input.status = candidate.status;
 
-    const ticket = updateTicket(db, params.key!, input);
+    const ticket = await updateTicket(db, params.key!, input);
     if (!ticket) {
       sendJson(res, 404, { error: "ticket not found" });
       return;
@@ -96,8 +96,8 @@ export function registerTicketRoutes(router: Router, db: Database.Database): voi
     sendJson(res, 200, ticket);
   });
 
-  router.delete("/api/tickets/:key", (_req, res, params) => {
-    const deleted = deleteTicket(db, params.key!);
+  router.delete("/api/tickets/:key", async (_req, res, params) => {
+    const deleted = await deleteTicket(db, params.key!);
     if (!deleted) {
       sendJson(res, 404, { error: "ticket not found" });
       return;

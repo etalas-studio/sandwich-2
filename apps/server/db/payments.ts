@@ -1,4 +1,6 @@
-import type Database from "better-sqlite3";
+import { eq } from "drizzle-orm";
+import { payments } from "./schema.js";
+import type { Database } from "./connection.js";
 
 export interface Payment {
   order_id: string;
@@ -8,18 +10,33 @@ export interface Payment {
   updated_at: string;
 }
 
-export function upsertPayment(db: Database.Database, payment: Payment): void {
-  db.prepare(`
-    INSERT INTO payments (order_id, transaction_status, status_code, gross_amount, updated_at)
-    VALUES (@order_id, @transaction_status, @status_code, @gross_amount, @updated_at)
-    ON CONFLICT(order_id) DO UPDATE SET
-      transaction_status = excluded.transaction_status,
-      status_code = excluded.status_code,
-      gross_amount = excluded.gross_amount,
-      updated_at = excluded.updated_at
-  `).run(payment);
+export async function upsertPayment(db: Database, payment: Payment): Promise<void> {
+  await db.insert(payments).values({
+    orderId: payment.order_id,
+    transactionStatus: payment.transaction_status,
+    statusCode: payment.status_code,
+    grossAmount: payment.gross_amount,
+    updatedAt: payment.updated_at,
+  }).onConflictDoUpdate({
+    target: payments.orderId,
+    set: {
+      transactionStatus: payment.transaction_status,
+      statusCode: payment.status_code,
+      grossAmount: payment.gross_amount,
+      updatedAt: payment.updated_at,
+    },
+  });
 }
 
-export function getPayment(db: Database.Database, orderId: string): Payment | undefined {
-  return db.prepare("SELECT * FROM payments WHERE order_id = ?").get(orderId) as Payment | undefined;
+export async function getPayment(db: Database, orderId: string): Promise<Payment | undefined> {
+  const rows = await db.select().from(payments).where(eq(payments.orderId, orderId)).limit(1);
+  if (rows.length === 0) return undefined;
+  const r = rows[0]!;
+  return {
+    order_id: r.orderId,
+    transaction_status: r.transactionStatus,
+    status_code: r.statusCode,
+    gross_amount: r.grossAmount,
+    updated_at: r.updatedAt,
+  };
 }

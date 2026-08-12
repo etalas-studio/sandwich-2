@@ -1,21 +1,21 @@
-import type Database from "better-sqlite3";
 import type { Router } from "../router.js";
 import { getUserById, updatePassword } from "../db/users.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { hashPassword, verifyPassword } from "../auth/password.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
+import type { Database } from "../db/connection.js";
 
 export function registerSettingsRoutes(
   router: Router,
-  db: Database.Database,
+  db: Database,
 ): void {
-  router.get("/api/account", (req, res) => {
-    const auth = authenticateRequest(db, req);
+  router.get("/api/account", async (req, res) => {
+    const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthorized" });
       return;
     }
-    const user = getUserById(db, auth.userId);
+    const user = await getUserById(db, auth.userId);
     if (!user) {
       sendJson(res, 401, { error: "unauthorized" });
       return;
@@ -27,7 +27,7 @@ export function registerSettingsRoutes(
   });
 
   router.put("/api/account/password", async (req, res) => {
-    const auth = authenticateRequest(db, req);
+    const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthorized" });
       return;
@@ -52,7 +52,7 @@ export function registerSettingsRoutes(
       return;
     }
 
-    const user = getUserById(db, auth.userId);
+    const user = await getUserById(db, auth.userId);
     if (!user) {
       sendJson(res, 401, { error: "unauthorized" });
       return;
@@ -68,7 +68,7 @@ export function registerSettingsRoutes(
     }
 
     const newHash = await hashPassword(body.newPassword);
-    updatePassword(db, user.id, newHash);
+    await updatePassword(db, user.id, newHash);
     sendJson(res, 200, { ok: true });
   });
 }

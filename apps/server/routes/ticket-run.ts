@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { Database } from "../db/connection.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Router } from "../router.js";
 import { getTicket, updateTicket } from "../db/tickets.js";
@@ -110,7 +110,7 @@ export interface TicketRunEvent {
   type: "stage_start" | "stage_end" | "output" | "error" | "done";
   stage?: string;
   text?: string;
-  ticket?: ReturnType<typeof getTicket>;
+  ticket?: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never;
 }
 
 type ConversationTurn = { role: "user" | "assistant"; content: string };
@@ -194,7 +194,7 @@ function getEngine(): "opencode" | "groq" | null {
 
 async function runWithGroq(
   ticketKey: string,
-  ticket: ReturnType<typeof getTicket>,
+  ticket: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never,
   history: ConversationTurn[],
   signal: AbortSignal,
 ): Promise<string> {
@@ -231,7 +231,7 @@ async function runWithGroq(
 
 async function runWithOpenCode(
   ticketKey: string,
-  ticket: ReturnType<typeof getTicket>,
+  ticket: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never,
   history: ConversationTurn[],
   signal: AbortSignal,
 ): Promise<string> {
@@ -326,12 +326,12 @@ async function runWithOpenCode(
 
 export function registerTicketRunRoutes(
   router: Router,
-  db: Database.Database,
+  db: Database,
 ): void {
   // Generate document — OpenCode (primary) or Groq (fallback)
   router.post("/api/tickets/:key/generate", async (req, res, params) => {
     const ticketKey = params.key!;
-    const ticket = getTicket(db, ticketKey);
+    const ticket = await getTicket(db, ticketKey);
     if (!ticket) {
       sendJson(res, 404, { error: "Ticket not found" });
       return;
@@ -383,9 +383,9 @@ export function registerTicketRunRoutes(
     broadcast({
       type: "stage_start",
       stage: "generate",
-      ticket: getTicket(db, ticketKey)!,
+      ticket: (await getTicket(db, ticketKey))!,
     });
-    updateTicket(db, ticketKey, { status: "in_progress", stage: "generate" });
+    await updateTicket(db, ticketKey, { status: "in_progress", stage: "generate" });
 
     const useOpenCode = engine === "opencode";
     const hasGroqFallback = !!process.env.GROQ_API_KEY;
@@ -406,29 +406,29 @@ export function registerTicketRunRoutes(
       : () => runWithGroq(ticketKey, ticket, history, controller.signal);
 
     run()
-      .then((output) => {
+      .then(async (output) => {
         if (!output) {
-          updateTicket(db, ticketKey, { status: "backlog", stage: null });
+          await updateTicket(db, ticketKey, { status: "backlog", stage: null });
           broadcast({
             type: "error",
-            ticket: getTicket(db, ticketKey)!,
+            ticket: (await getTicket(db, ticketKey))!,
             text: "Model returned no response. Try again.",
           });
           return;
         }
-        updateTicket(db, ticketKey, {
+        await updateTicket(db, ticketKey, {
           status: "done",
           stage: null,
           prDescription: output,
         });
-        broadcast({ type: "done", ticket: getTicket(db, ticketKey)! });
+        broadcast({ type: "done", ticket: (await getTicket(db, ticketKey))! });
       })
-      .catch((err) => {
+      .catch(async (err) => {
         const msg = err instanceof Error ? err.message : "generation failed";
-        updateTicket(db, ticketKey, { status: "backlog", stage: null });
+        await updateTicket(db, ticketKey, { status: "backlog", stage: null });
         broadcast({
           type: "error",
-          ticket: getTicket(db, ticketKey)!,
+          ticket: (await getTicket(db, ticketKey))!,
           text: msg,
         });
       })
@@ -451,9 +451,9 @@ export function registerTicketRunRoutes(
   });
 
   // SSE stream for ticket progress
-  router.get("/api/tickets/:key/stream", (req, res, params) => {
+  router.get("/api/tickets/:key/stream", async (req, res, params) => {
     const ticketKey = params.key!;
-    const ticket = getTicket(db, ticketKey);
+    const ticket = await getTicket(db, ticketKey);
 
     if (!ticket) {
       sendJson(res, 404, { error: "Ticket not found" });

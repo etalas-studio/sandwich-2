@@ -7,7 +7,7 @@ export type RouteHandler = (
   params: Record<string, string>,
 ) => void | Promise<void>;
 
-export type MiddlewareFn = (req: IncomingMessage, res: ServerResponse) => boolean | void;
+export type MiddlewareFn = (req: IncomingMessage, res: ServerResponse) => boolean | void | Promise<boolean | void>;
 
 interface RouteEntry {
   method: string;
@@ -140,7 +140,7 @@ export class Router {
 
       // Middleware
       if (this.middlwareFn) {
-        const result = this.middlwareFn(req, res);
+        const result = await this.middlwareFn(req, res);
         if (result === false) return;
       }
 
