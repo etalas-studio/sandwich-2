@@ -43,7 +43,7 @@ const PUBLIC_API_PATHS = new Set([
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { port, webRoot } = options;
-  const db = openDb(process.env.DATABASE_URL!);
+  const db = await openDb(process.env.DATABASE_URL!);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 
