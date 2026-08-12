@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
-import { apiUrl } from '../api/base'
 
 const bowlby = "'Bowlby One', system-ui"
 
