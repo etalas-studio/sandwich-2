@@ -9,7 +9,7 @@
   },
   "scripts": {
     "postinstall": "npm --prefix apps/web install",
-    "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp -R apps/server/db/drizzle dist/db/drizzle && npm --prefix apps/web run build",
+    "build": "tsc -p tsconfig.json && npm --prefix apps/web run build",
     "dev:web": "npm --prefix apps/web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.json && node --test dist/**/*.test.js",

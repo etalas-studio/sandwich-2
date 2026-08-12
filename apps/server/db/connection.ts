@@ -1,8 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import * as schema from "./schema.js";
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
@@ -21,10 +20,7 @@ export async function openDb(databaseUrl: string): Promise<Database> {
   pool = new Pool({ connectionString: databaseUrl });
   const db = drizzle(pool, { schema });
 
-  const migrationsFolder = join(
-    dirname(fileURLToPath(import.meta.url)),
-    "drizzle",
-  );
+  const migrationsFolder = join(process.cwd(), "apps/server/db/drizzle");
 
   await migrate(db, { migrationsFolder });
 
