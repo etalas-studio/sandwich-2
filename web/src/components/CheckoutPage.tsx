@@ -4,9 +4,19 @@ import { useLanguage } from '../lib/i18n'
 
 const bowlby = "'Bowlby One', system-ui"
 
-const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; desc_en: string; desc_id: string; amount: number }> = {
-  starter: { name: 'Starter', price: 'Rp 50k', desc_en: 'For those getting serious.', desc_id: 'Buat yang mulai serius.', amount: 50000 },
-  pro: { name: 'Pro', price: 'Rp 100k', oldPrice: 'Rp 250k', desc_en: 'Unlimited, full access.', desc_id: 'Unlimited, semua akses.', amount: 100000 },
+const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; desc_en: string; desc_id: string; features_en: string[]; features_id: string[]; amount: number }> = {
+  starter: {
+    name: 'Starter', price: 'Rp 50k', amount: 50000,
+    desc_en: 'For those getting serious.', desc_id: 'Buat yang mulai serius.',
+    features_en: ['5 tickets/day', 'Standard pipeline', 'Email support', 'Groq AI assistant', 'Basic analytics'],
+    features_id: ['5 tiket/hari', 'Pipeline standar', 'Dukungan email', 'Asisten AI Groq', 'Analitik dasar'],
+  },
+  pro: {
+    name: 'Pro', price: 'Rp 100k', oldPrice: 'Rp 250k', amount: 100000,
+    desc_en: 'Unlimited, full access.', desc_id: 'Unlimited, semua akses.',
+    features_en: ['Unlimited tickets', 'Priority pipeline', 'Priority support', 'Groq AI assistant', 'Advanced analytics', 'Early access to new features'],
+    features_id: ['Tiket tak terbatas', 'Pipeline prioritas', 'Dukungan prioritas', 'Asisten AI Groq', 'Analitik lanjutan', 'Akses awal fitur baru'],
+  },
 }
 
 function PlanPicker() {
@@ -143,8 +153,8 @@ function PaymentTrigger({
       const grossAmount = plan.amount
 
       try {
-        const [cfgRes, txRes] = await Promise.all([
-          fetch('/api/midtrans/config'),
+        const [cfg, txRes] = await Promise.all([
+          fetch('/api/midtrans/config').then(r => r.json() as Promise<{ clientKey: string; isProduction: boolean }>),
           fetch('/api/midtrans/transaction', {
             method: 'POST',
             credentials: 'include',
@@ -153,32 +163,38 @@ function PaymentTrigger({
           }),
         ])
 
-        if (txRes.ok) {
-          const { token } = await txRes.json() as { token: string }
-          const { clientKey, isProduction } = cfgRes.ok
-            ? await cfgRes.json() as { clientKey: string; isProduction: boolean }
-            : { clientKey: '', isProduction: true }
-
-          await new Promise<void>((resolve, reject) => {
-            if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
-            const script = document.createElement('script')
-            script.src = isProduction
-              ? 'https://app.midtrans.com/snap/snap.js'
-              : 'https://app.sandbox.midtrans.com/snap/snap.js'
-            script.setAttribute('data-client-key', clientKey)
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error('Snap.js failed to load'))
-            document.head.appendChild(script)
-          })
-          ;(window as unknown as { snap: { pay: (token: string, opts: object) => void } }).snap.pay(token, {
-            onSuccess: () => { localStorage.setItem('sandwich_paid_plan', planSlug); setIsDone(true) },
-            onPending: () => { navigate(backTo) },
-            onError: () => { navigate(backTo) },
-            onClose: () => { navigate('/') },
-          })
-          return
+        if (!txRes.ok) {
+          const err = await txRes.json().catch(() => ({})) as { error?: string }
+          console.error('[midtrans] transaction error:', err)
+          throw new Error(err.error ?? `HTTP ${txRes.status}`)
         }
-      } catch { /* fall through to simulation */ }
+
+        const { token } = await txRes.json() as { token: string }
+        const { clientKey, isProduction } = cfg
+
+        await new Promise<void>((resolve, reject) => {
+          // Snap.js already loaded — just resolve
+          if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
+          const script = document.createElement('script')
+          script.src = isProduction
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js'
+          script.setAttribute('data-client-key', clientKey)
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Snap.js failed to load'))
+          document.head.appendChild(script)
+        })
+
+        ;(window as unknown as { snap: { pay: (token: string, opts: object) => void } }).snap.pay(token, {
+          onSuccess: () => { localStorage.setItem('sandwich_paid_plan', planSlug); setIsDone(true) },
+          onPending: () => { navigate(backTo) },
+          onError: () => { navigate(backTo) },
+          onClose: () => { navigate(backTo) },
+        })
+        return
+      } catch (e) {
+        console.error('[midtrans] falling back to simulation:', e)
+      }
 
       // ── Simulation fallback ──────────────────────────────────────────────
       setTimeout(() => {

@@ -671,7 +671,7 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
             <p className="text-xs font-semibold" style={{ color: '#f91814' }}>{tr('plan_limit_title')}</p>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{tr('plan_limit_desc')}</p>
           </div>
-          <a href="/checkout?plan=pro" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#f91814' }}>
+          <a href="/checkout?plan=pro&from=dashboard" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#f91814' }}>
             {tr('plan_limit_upgrade')}
           </a>
         </div>
@@ -995,7 +995,7 @@ function HomeOverview({
               <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: planInfo.isPro ? '100%' : `${Math.min(100, (planInfo.used / planInfo.limit) * 100)}%` }} />
             </div>
             {!planInfo.isPro && (
-              <a href="/checkout?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+              <a href="/checkout?plan=pro&from=dashboard" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:crown-linear" width="14" />
                 {tr('home_quota_upgrade')}
               </a>

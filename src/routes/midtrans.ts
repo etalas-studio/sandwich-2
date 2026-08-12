@@ -6,6 +6,14 @@ import { createSnapTransaction, verifyNotificationSignature } from "../pipeline/
 import { upsertPayment } from "../db/payments.js";
 
 export function registerMidtransRoutes(router: Router, db: Database.Database): void {
+  // Public — FE needs client key to initialise Snap.js
+  router.get("/api/midtrans/config", (_req, res) => {
+    sendJson(res, 200, {
+      clientKey: process.env.MIDTRANS_CLIENT_KEY ?? "",
+      isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+    });
+  });
+
   router.post("/api/midtrans/transaction", async (req, res) => {
     if (!authenticateRequest(db, req)) {
       sendJson(res, 401, { error: "unauthenticated" });

@@ -55,6 +55,7 @@ const PUBLIC_API_PATHS = new Set([
   "/api/integrations/bitbucket/callback",
   "/api/integrations/github/callback",
   "/api/midtrans/notification",
+  "/api/midtrans/config",
 ]);
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
