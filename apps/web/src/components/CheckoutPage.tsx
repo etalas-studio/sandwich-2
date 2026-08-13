@@ -158,6 +158,20 @@ function PaymentTrigger({
   const [isDone, setIsDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const waitForActivePlan = async (): Promise<boolean> => {
+    for (let i = 0; i < 10; i++) {
+      try {
+        const res = await fetch(apiUrl('/api/subscriptions/active'), { credentials: 'include' })
+        if (res.ok) {
+          const s = await res.json() as { planSlug: string | null }
+          if (s.planSlug) return true
+        }
+      } catch { /* transient */ }
+      await new Promise((r) => setTimeout(r, 1500))
+    }
+    return false
+  }
+
   const hasTriggered = React.useRef(false)
   React.useEffect(() => {
     if (hasTriggered.current) return
@@ -185,7 +199,9 @@ function PaymentTrigger({
       const data = await txRes.json() as {
         token: string | null
         simulated: boolean
-        redirectUrl: string | null
+        orderId: string
+        clientKey: string
+        isProduction: boolean
       }
 
       // Dev simulation — the subscription is already activated server-side.
@@ -195,15 +211,38 @@ function PaymentTrigger({
         return
       }
 
-      if (!data.redirectUrl) {
+      // Popup flow — load snap.js then open the Snap popup.
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const w = window as unknown as Record<string, unknown>
+          if (w.snap) { resolve(); return }
+          const script = document.createElement('script')
+          script.src = data.isProduction
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js'
+          script.setAttribute('data-client-key', data.clientKey)
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Snap.js failed to load'))
+          document.head.appendChild(script)
+        })
+      } catch {
         setError(tr('checkout_payment_error'))
         return
       }
 
-      // Redirect mode — hand the browser to Midtrans's hosted payment page.
-      // Midtrans redirects back to the dashboard Finish/Unfinish/Error URLs,
-      // which should point at /checkout/return.
-      window.location.href = data.redirectUrl
+      ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
+        onSuccess: () => {
+          // UX hint only — confirm via backend, then refresh the cache.
+          void (async () => {
+            await waitForActivePlan()
+            queryClient.invalidateQueries({ queryKey: ['subscription'] })
+            setIsDone(true)
+          })()
+        },
+        onPending: () => { navigate(`/checkout/return?order_id=${data.orderId}&transaction_status=pending`) },
+        onError: () => { setError(tr('checkout_payment_error')) },
+        onClose: () => { navigate('/checkout') },
+      })
     }
 
     void run()
