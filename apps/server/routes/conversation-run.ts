@@ -129,41 +129,56 @@ export interface ConversationRunEvent {
 type Role = "system" | "user" | "assistant";
 type ConversationTurn = { role: Role; content: string };
 
-function buildMessages(history: ConversationTurn[]): ConversationTurn[] {
+function buildMessages(history: ConversationTurn[], docType: string | null): ConversationTurn[] {
   const brief = history
     .filter((m) => m.role === "user")
     .map((m) => m.content)
     .join("\n")
     .toLowerCase();
 
-  const isFlow = brief.includes("user flow") || brief.includes("alur");
-  const isTech =
-    brief.includes("technical") || brief.includes("teknis") || brief.includes("specs");
-  const isQuotation =
-    brief.includes("quotation") ||
-    brief.includes("quote") ||
-    brief.includes("penawaran") ||
-    brief.includes("harga");
-  const isPrototype =
-    brief.includes("prototype") ||
-    brief.includes("landing") ||
-    brief.includes("ui") ||
-    brief.includes("design") ||
-    brief.includes("html");
+  // Keyword fallback — word-boundary only, used when the conversation has no
+  // explicit type. "ui" must be a standalone word, not a substring of
+  // "require"/"build"/"guide".
+  const isFlow = /\buser flow\b/.test(brief) || /\balur\b/.test(brief);
+  const isTech = /\btechnical\b/.test(brief) || /\bteknis\b/.test(brief) || /\bspecs?\b/.test(brief);
+  const isQuotation = /\bquotation\b/.test(brief) || /\bquote\b/.test(brief) || /\bpenawaran\b/.test(brief) || /\bharga\b/.test(brief);
+  const isPrototype = /\bprototype\b/.test(brief) || /\blanding\b/.test(brief) || /\bui\b/.test(brief) || /\bdesign\b/.test(brief) || /\bhtml\b/.test(brief);
 
-  const docGuide = isPrototype
-    ? GETOKUI_PROTOTYPE_GUIDE
-    : isQuotation
-      ? SANDWICH_QUOTATION_GUIDE
-      : isFlow
-        ? SANDWICH_USERFLOWS_GUIDE
-        : isTech
-          ? SANDWICH_TECHNICAL_GUIDE
-          : SANDWICH_PRD_GUIDE;
+  // Explicit conversation type wins; keyword matching is only the fallback.
+  const guideKind =
+    docType === "prototype"
+      ? "prototype"
+      : docType === "quotation"
+        ? "quotation"
+        : docType === "specs" || docType === "workflow"
+          ? "tech"
+          : docType === "prd" || docType === "mom"
+            ? "prd"
+            : isPrototype
+              ? "prototype"
+              : isQuotation
+                ? "quotation"
+                : isFlow
+                  ? "flow"
+                  : isTech
+                    ? "tech"
+                    : "prd";
 
-  const outputInstruction = isPrototype
-    ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
-    : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
+  const docGuide =
+    guideKind === "prototype"
+      ? GETOKUI_PROTOTYPE_GUIDE
+      : guideKind === "quotation"
+        ? SANDWICH_QUOTATION_GUIDE
+        : guideKind === "flow"
+          ? SANDWICH_USERFLOWS_GUIDE
+          : guideKind === "tech"
+            ? SANDWICH_TECHNICAL_GUIDE
+            : SANDWICH_PRD_GUIDE;
+
+  const outputInstruction =
+    guideKind === "prototype"
+      ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
+      : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
 
   const system = [
     `You are SANDWICH, an expert product consultant AI built by Etalas.`,
@@ -196,9 +211,12 @@ function getEngine(): "opencode" | "groq" | null {
   return null;
 }
 
+const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engine call
+
 async function runWithGroq(
   history: ConversationTurn[],
   signal: AbortSignal,
+  docType: string | null,
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY!;
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -209,12 +227,12 @@ async function runWithGroq(
     },
     body: JSON.stringify({
       model: "qwen/qwen3.6-27b",
-      messages: buildMessages(history),
+      messages: buildMessages(history, docType),
       max_tokens: 4000,
       reasoning_effort: "none",
       temperature: 0.7,
     }),
-    signal,
+    signal: AbortSignal.any([signal, AbortSignal.timeout(ENGINE_TIMEOUT_MS)]),
   });
   if (!res.ok) {
     throw new Error(
@@ -230,6 +248,7 @@ async function runWithGroq(
 async function runWithOpenCode(
   history: ConversationTurn[],
   signal: AbortSignal,
+  docType: string | null,
 ): Promise<string> {
   // Dynamic import Pi SDK — only loaded when OpenCode is configured
   const pi = await import("@earendil-works/pi-coding-agent");
@@ -249,7 +268,7 @@ async function runWithOpenCode(
     cwd: process.cwd(),
     model: model as any,
     modelRuntime: modelRuntime as any,
-    tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    tools: [],
     sessionManager: pi.SessionManager.inMemory(),
     settingsManager: pi.SettingsManager.inMemory({
       compaction: { enabled: false },
@@ -298,7 +317,7 @@ async function runWithOpenCode(
     }
   });
 
-  const messages = buildMessages(history);
+  const messages = buildMessages(history, docType);
   const prompt = messages
     .map((m) => {
       if (m.role === "system") return m.content;
@@ -307,7 +326,14 @@ async function runWithOpenCode(
     .join("\n\n");
 
   try {
-    await session.prompt(prompt);
+    const promptPromise = session.prompt(prompt);
+    promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
+    await Promise.race([
+      promptPromise,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("AI generation timed out")), ENGINE_TIMEOUT_MS),
+      ),
+    ]);
     await new Promise((r) => setTimeout(r, 100));
     session.dispose();
 
@@ -514,19 +540,20 @@ export function registerConversationRunRoutes(
 
         const useOpenCode = engine === "opencode";
         const hasGroqFallback = !!process.env.GROQ_API_KEY;
+        const docType = conversation.type;
 
         const run = useOpenCode
           ? () =>
-              runWithOpenCode(turns, controller.signal).catch((err) => {
+              runWithOpenCode(turns, controller.signal, docType).catch((err) => {
                 if (hasGroqFallback) {
                   console.log(
                     `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
                   );
-                  return runWithGroq(turns, controller.signal);
+                  return runWithGroq(turns, controller.signal, docType);
                 }
                 throw err;
               })
-          : () => runWithGroq(turns, controller.signal);
+          : () => runWithGroq(turns, controller.signal, docType);
 
         run()
           .then(async (output) => {
