@@ -8,7 +8,7 @@ describe('apiUrl', () => {
   it('returns path unchanged when VITE_API_URL is not set', async () => {
     vi.stubEnv('VITE_API_URL', '')
     const { apiUrl } = await import('./base')
-    expect(apiUrl('/api/tickets')).toBe('/api/tickets')
+    expect(apiUrl('/api/conversations')).toBe('/api/conversations')
   })
 
   it('prefixes path with VITE_API_URL when set', async () => {
@@ -16,6 +16,6 @@ describe('apiUrl', () => {
     // Re-import to pick up stubbed env
     vi.resetModules()
     const { apiUrl } = await import('./base')
-    expect(apiUrl('/api/tickets')).toBe('https://api.sandwich.etalas.com/api/tickets')
+    expect(apiUrl('/api/conversations')).toBe('https://api.sandwich.etalas.com/api/conversations')
   })
 })

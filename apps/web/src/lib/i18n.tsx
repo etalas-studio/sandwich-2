@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { getPreference, setPreference } from '../api/preferences'
 
 export type Lang = 'en' | 'id'
 
@@ -20,8 +21,8 @@ const STRINGS = {
   // ── Hero ──
   hero_tagline: { en: 'From a messy brief to an execution-ready spec', id: 'Dari brief berantakan jadi spek siap eksekusi' },
   hero_prompt_placeholder: { en: 'Tell us about your brief...', id: 'Ceritain brief lo di sini...' },
-  hero_ticket_created: { en: 'Ticket created!', id: 'Ticket dibuat!' },
-  hero_ticket_processing: { en: 'Your pipeline is processing the brief. Check the result in the dashboard.', id: 'Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.' },
+  hero_brief_created: { en: 'Brief created!', id: 'Brief dibuat!' },
+  hero_brief_processing: { en: 'Your pipeline is processing the brief. Check the result in the dashboard.', id: 'Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.' },
   hero_see_result: { en: 'See result', id: 'Lihat hasil' },
   hero_error_generic: { en: 'Failed to submit', id: 'Gagal mengirim' },
 
@@ -271,7 +272,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLang = (next: Lang) => {
     setLangState(next)
     try { localStorage.setItem(STORAGE_KEY, next) } catch { /* ignore */ }
+    void setPreference('lang', next).catch(() => {})
   }
+
+  // Sync from the server for authenticated users (localStorage is the instant cache).
+  useEffect(() => {
+    void getPreference('lang')
+      .then((value) => {
+        if (value === 'en' || value === 'id') setLangState(value)
+      })
+      .catch(() => {})
+  }, [])
 
   const t = (key: StringKey) => STRINGS[key][lang]
 
