@@ -82,9 +82,17 @@ TRUSTED_HOSTS=localhost
 # Set to PRODUCTION for real Midtrans payments. Anything else uses simulation.
 ENVIRONMENT=development
 
-# ─── AI Engine (pick one) ───
+# ─── AI Engine (OpenCode / Pi SDK) ───
 OPENCODE_API_KEY=your-opencode-key
-# GROQ_API_KEY=your-groq-key    # fallback if OpenCode fails
+OPENCODE_PROVIDER=opencode-go       # Pi provider id
+OPENCODE_MODEL=deepseek-v4-pro      # main doc-generation model
+# GROQ_API_KEY=your-groq-key        # fallback engine (text + whisper)
+
+# ─── Attachment extraction ───
+OPENCODE_VISION_PROVIDER=opencode           # provider for image vision
+OPENCODE_VISION_MODEL=gemini-3.5-flash-lite # image model
+OCR_LANGS=eng                               # OCR fallback (eng+ind for Indonesian)
+GROQ_TRANSCRIPTION_MODEL=whisper-large-v3   # audio model
 
 # ─── Midtrans (optional) ───
 MIDTRANS_SERVER_KEY=your-server-key
