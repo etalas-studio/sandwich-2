@@ -59,3 +59,60 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     `Edit the files in place with the write/edit tool. After finishing, respond with ONLY the text "DONE".`,
   ].join("\n");
 }
+
+const GLOWUP_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+export async function polishWorkspace(
+  workspace: string,
+  brief: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const pi = await import("@earendil-works/pi-coding-agent");
+
+  const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
+  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
+  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
+  const model = modelRuntime.getModel(provider, modelId);
+  if (!model) {
+    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+  }
+
+  const { session } = await pi.createAgentSession({
+    cwd: workspace,
+    model: model as any,
+    modelRuntime: modelRuntime as any,
+    tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    sessionManager: pi.SessionManager.inMemory(workspace),
+    settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
+  });
+
+  let errorMessage = "";
+
+  session.subscribe((event: any) => {
+    if (signal?.aborted) return;
+    if (event.type === "agent_end") {
+      if (typeof event.errorMessage === "string" && event.errorMessage) {
+        errorMessage = event.errorMessage;
+      }
+    }
+  });
+
+  try {
+    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief }));
+    promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
+    await Promise.race([
+      promptPromise,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Prototype glowup timed out")), GLOWUP_TIMEOUT_MS),
+      ),
+    ]);
+    // Small delay for agent_end event to propagate
+    await new Promise((r) => setTimeout(r, 500));
+    session.dispose();
+
+    if (errorMessage) throw new Error(errorMessage);
+  } catch (err) {
+    session.dispose();
+    throw err;
+  }
+}
