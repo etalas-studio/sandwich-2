@@ -191,7 +191,13 @@ function PaymentTrigger({
         return
       }
 
-      const data = await txRes.json() as { token: string | null; simulated: boolean; orderId: string }
+      const data = await txRes.json() as {
+        token: string | null
+        simulated: boolean
+        orderId: string
+        clientKey: string
+        isProduction: boolean
+      }
 
       // Dev simulation — the subscription is already activated server-side.
       if (data.simulated || !data.token) {
@@ -200,20 +206,16 @@ function PaymentTrigger({
         return
       }
 
-      // Real Snap flow
-      const cfgRes = await fetch(apiUrl('/api/midtrans/config'))
-      const { clientKey, isProduction } = cfgRes.ok
-        ? await cfgRes.json() as { clientKey: string; isProduction: boolean }
-        : { clientKey: '', isProduction: true }
+      // Real Snap flow — client key + env come from the transaction response.
 
       try {
         await new Promise<void>((resolve, reject) => {
           if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
           const script = document.createElement('script')
-          script.src = isProduction
+          script.src = data.isProduction
             ? 'https://app.midtrans.com/snap/snap.js'
             : 'https://app.sandbox.midtrans.com/snap/snap.js'
-          script.setAttribute('data-client-key', clientKey)
+          script.setAttribute('data-client-key', data.clientKey)
           script.onload = () => resolve()
           script.onerror = () => reject(new Error('Snap.js failed to load'))
           document.head.appendChild(script)

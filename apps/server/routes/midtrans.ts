@@ -46,6 +46,10 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
 
     // Server-side order id + price (never trust client amounts).
     const orderId = generateOrderId(plan.slug, auth.userId);
+    // Snap config travels with the transaction response so the frontend never
+    // needs a separate (auth-dependent) config round trip.
+    const clientKey = process.env.MIDTRANS_CLIENT_KEY ?? "";
+    const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 
     try {
       // Persist `creating_payment` BEFORE any provider call.
@@ -75,6 +79,8 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
           redirectUrl: null,
           orderId,
           simulated: true,
+          clientKey,
+          isProduction,
         });
         return;
       }
@@ -98,6 +104,8 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
         redirectUrl: result.redirectUrl,
         orderId,
         simulated: false,
+        clientKey,
+        isProduction,
       });
     } catch (err) {
       // Row stays in `creating_payment`, so the attempt is recoverable.
