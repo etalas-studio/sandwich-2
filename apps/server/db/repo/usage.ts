@@ -2,17 +2,27 @@ import { eq, and } from "drizzle-orm";
 import { usage } from "../schema.js";
 import type { Database } from "../connection.js";
 
+export type UsageKind = "prd" | "chat";
+
 /** "YYYY-MM" (1-indexed, zero-padded month) — stable sortable key. */
 function currentYearMonth(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function incrementUsage(db: Database, userId: string): Promise<number> {
+export async function incrementUsage(
+  db: Database,
+  userId: string,
+  kind: UsageKind,
+): Promise<number> {
   const yearMonth = currentYearMonth();
 
   const existing = await db.select().from(usage)
-    .where(and(eq(usage.userId, userId), eq(usage.yearMonth, yearMonth)))
+    .where(and(
+      eq(usage.userId, userId),
+      eq(usage.yearMonth, yearMonth),
+      eq(usage.kind, kind),
+    ))
     .limit(1);
 
   if (existing.length > 0) {
@@ -23,14 +33,22 @@ export async function incrementUsage(db: Database, userId: string): Promise<numb
     return newCount;
   }
 
-  await db.insert(usage).values({ userId, yearMonth, count: 1 });
+  await db.insert(usage).values({ userId, yearMonth, kind, count: 1 });
   return 1;
 }
 
-export async function getMonthlyUsage(db: Database, userId: string): Promise<number> {
+export async function getMonthlyUsage(
+  db: Database,
+  userId: string,
+  kind: UsageKind,
+): Promise<number> {
   const yearMonth = currentYearMonth();
   const rows = await db.select().from(usage)
-    .where(and(eq(usage.userId, userId), eq(usage.yearMonth, yearMonth)))
+    .where(and(
+      eq(usage.userId, userId),
+      eq(usage.yearMonth, yearMonth),
+      eq(usage.kind, kind),
+    ))
     .limit(1);
   return rows.length > 0 ? rows[0]!.count : 0;
 }

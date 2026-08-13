@@ -79,18 +79,15 @@ const STRINGS = {
   pricing_best_value: { en: 'Best value', id: 'Paling worth it' },
   plan_starter_desc: { en: 'For those getting serious.', id: 'Buat yang mulai serius.' },
   plan_starter_cta: { en: 'Start Now', id: 'Mulai Sekarang' },
-  plan_starter_f1: { en: 'Premium AI model', id: 'Premium AI model' },
   plan_starter_f2: { en: '5 PRDs / month', id: '5 PRD / bulan' },
   plan_starter_f3: { en: 'Chat with AI about PRD, feature, and task planning (100x/mo)', id: 'Chat dengan AI mengenai planning PRD, fitur, task (100x/bln)' },
   plan_starter_f4: { en: 'Download Markdown', id: 'Download Markdown' },
   plan_starter_f5: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
   plan_pro_desc: { en: 'Unlimited, full access.', id: 'Unlimited, semua akses.' },
   plan_pro_cta: { en: 'Upgrade to Pro', id: 'Upgrade ke Pro' },
-  plan_pro_f1: { en: 'Premium AI model', id: 'Premium AI model' },
   plan_pro_f2: { en: 'Unlimited PRDs', id: 'Unlimited PRD' },
   plan_pro_f3: { en: 'Chat with AI about PRD, feature, and task planning (unlimited)', id: 'Chat dengan AI mengenai planning PRD, fitur, task (unlimited)' },
   plan_pro_f4: { en: 'Download Markdown', id: 'Download Markdown' },
-  plan_pro_f5: { en: 'Direct chat with Raf Dev for help', id: 'Chat langsung dengan Raf Dev untuk bantuan' },
   plan_pro_f6: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
 
   // ── FAQ ──
@@ -160,6 +157,7 @@ const STRINGS = {
   dash_expired_banner: { en: 'Your plan has expired. Renew to continue.', id: 'Plan kamu sudah habis. Perpanjang untuk lanjut.' },
   dash_expiring_banner: { en: 'Your plan expires soon. Renew to avoid interruption.', id: 'Plan kamu segera habis. Perpanjang agar tidak terputus.' },
   dash_expired_error: { en: 'Your subscription is no longer active. Renew to continue.', id: 'Langganan kamu sudah tidak aktif. Perpanjang untuk lanjut.' },
+  chat_quota_reached: { en: 'You\'ve reached your monthly chat limit. Upgrade to Pro for unlimited chat.', id: 'Kamu sudah mencapai batas chat bulanan. Upgrade ke Pro untuk chat unlimited.' },
 
   // ── Auth shared ──
   auth_back: { en: 'Back', id: 'Kembali' },
@@ -219,10 +217,10 @@ const STRINGS = {
   home_stat_draft: { en: 'Still draft', id: 'Masih draft' },
   home_stat_week: { en: 'This week', id: 'Minggu ini' },
   home_quota_title: { en: 'THIS MONTH\'S QUOTA', id: 'KUOTA BULAN INI' },
-  home_quota_plan_free: { en: 'Free plan', id: 'Plan Free' },
   home_quota_plan_starter: { en: 'Starter plan', id: 'Plan Starter' },
   home_quota_plan_pro: { en: 'Pro plan', id: 'Plan Pro' },
   home_quota_documents: { en: 'documents', id: 'dokumen' },
+  home_quota_chats: { en: 'chats', id: 'chat' },
   home_quota_upgrade: { en: 'Upgrade to Pro', id: 'Upgrade ke Pro' },
   home_quota_completion: { en: 'Completion rate', id: 'Completion rate' },
   home_activity_title: { en: 'LAST 7 DAYS', id: 'AKTIVITAS 7 HARI' },

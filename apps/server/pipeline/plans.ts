@@ -9,13 +9,16 @@ export interface PlanConfig {
   slug: "starter" | "pro";
   name: string;
   amount: number;
+  // Monthly PRD quota; null = unlimited.
   limit: number | null;
+  // Monthly follow-up chat quota; null = unlimited.
+  chatLimit: number | null;
   periodDays: number;
 }
 
 export const PLANS: Record<PlanConfig["slug"], PlanConfig> = {
-  starter: { slug: "starter", name: "Starter", amount: 50000, limit: 5, periodDays: 30 },
-  pro: { slug: "pro", name: "Pro", amount: 100000, limit: null, periodDays: 30 },
+  starter: { slug: "starter", name: "Starter", amount: 50000, limit: 5, chatLimit: 100, periodDays: 30 },
+  pro: { slug: "pro", name: "Pro", amount: 100000, limit: null, chatLimit: null, periodDays: 30 },
 };
 
 export function getPlan(slug: string): PlanConfig | undefined {

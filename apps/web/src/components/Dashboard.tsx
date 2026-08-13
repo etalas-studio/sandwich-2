@@ -211,8 +211,6 @@ const PLAN_BENEFITS: Record<string, { icon: string; text: string }[]> = {
     { icon: 'solar:chat-round-linear', text: 'Unlimited AI chat' },
     { icon: 'solar:download-minimalistic-linear', text: 'Download Markdown' },
     { icon: 'solar:checklist-linear', text: 'Generate specs & tasks' },
-    { icon: 'solar:crown-linear', text: 'Premium AI model' },
-    { icon: 'solar:user-speak-linear', text: 'Direct chat with Raf Dev' },
   ],
 }
 
@@ -341,6 +339,7 @@ function ChatView({
   })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
+  const [chatError, setChatError] = useState<string | null>(null)
   const [editingPrompt, setEditingPrompt] = useState(false)
   const [editValue, setEditValue] = useState(initialPrompt)
   const [copied, setCopied] = useState(false)
@@ -422,6 +421,7 @@ function ChatView({
 
   const handleSend = async () => {
     if (!followUp.trim() || streaming) return
+    setChatError(null)
     try {
       const uploaded: Attachment[] = []
       for (const a of attachments) {
@@ -452,8 +452,11 @@ function ChatView({
 
       regenerateRef.current = false
       setRegenNonce(n => n + 1)
-    } catch {
-      /* keep the draft on failure */
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      if (msg === 'chat quota reached') setChatError(tr('chat_quota_reached'))
+      else if (msg === 'active subscription required') setChatError(tr('dash_expired_error'))
+      else setChatError(tr('dash_generic_error'))
     }
   }
 
@@ -575,6 +578,9 @@ function ChatView({
       {/* Input — Claude style floating */}
       <div className="shrink-0 px-6 pb-6 pt-3">
         <div className="max-w-3xl mx-auto rounded-2xl" style={{ backgroundColor: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)' }}>
+          {chatError && (
+            <p className="px-5 pt-3 text-xs" style={{ color: '#f91814' }}>{chatError}</p>
+          )}
           <textarea
             ref={textareaRef}
             value={followUp}
@@ -637,7 +643,7 @@ function ChatView({
 
 
 // ── Plan limit (server-side) ────────────────────────────────────────────────
-interface PlanUsage { used: number; limit: number | null; isPro: boolean }
+interface PlanUsage { used: number; chatUsed: number; limit: number | null; chatLimit: number | null; isPro: boolean }
 function isAtLimit(u: PlanUsage): boolean {
   return !u.isPro && u.limit !== null && u.used >= u.limit
 }
@@ -1049,13 +1055,16 @@ function HomeOverview({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="rounded-2xl border p-6" style={cardStyle}>
             <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_quota_title')}</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{plan === 'pro' ? tr('home_quota_plan_pro') : plan === 'starter' ? tr('home_quota_plan_starter') : tr('home_quota_plan_free')}</p>
+            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{plan === 'pro' ? tr('home_quota_plan_pro') : tr('home_quota_plan_starter')}</p>
             <p className="text-3xl font-semibold mt-4" style={{ color: '#111827' }}>
               {usage.used}<span className="text-base font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.limit} {tr('home_quota_documents')}</span>
             </p>
             <div className="h-1.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
               <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
             </div>
+            <p className="text-sm mt-4" style={{ color: '#111827' }}>
+              {usage.chatUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.chatLimit} {tr('home_quota_chats')}</span>
+            </p>
             {!usage.isPro && (
               <a href="/checkout?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:crown-linear" width="14" />
@@ -1339,7 +1348,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [shareVisibility, setShareVisibility] = useState<'private' | 'shared'>('private')
   const { logout, state: authState } = useAuth()
   const usageQuery = useUsage()
-  const usage: PlanUsage = usageQuery.data ?? { used: 0, limit: 5, isPro: false }
+  const usage: PlanUsage = usageQuery.data ?? { used: 0, chatUsed: 0, limit: 5, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
 

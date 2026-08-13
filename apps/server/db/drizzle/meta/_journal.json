@@ -43,6 +43,13 @@
       "when": 1786602368286,
       "tag": "0005_breezy_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786603729859,
+      "tag": "0006_brave_madrox",
+      "breakpoints": true
     }
   ]
 }

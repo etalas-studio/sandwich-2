@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { CHIPS } from '../lib/promptChips'
 import type { ConversationType } from '../lib/conversations'
 import { useLanguage } from '../lib/i18n'
+import { PLANS_META } from '../lib/plans'
 
 interface LandingPageProps {
   onGoToApp: (plan?: string) => void
@@ -33,7 +34,7 @@ const FAQS = [
   },
   {
     q: 'Is it free?',
-    a: 'No free tier right now — Starter is Rp 50k/mo, cheap enough to try on a real brief. Pro unlocks unlimited PRDs, priority processing, and direct support.',
+    a: 'No free tier — Starter is Rp 50k/mo, Pro is Rp 100k/mo. Pro unlocks unlimited PRDs and unlimited AI chat.',
   },
   {
     q: 'Which AI agents are supported?',
@@ -54,30 +55,17 @@ interface AttachedFile {
 export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
-  const PLANS = [
-    {
-      slug: 'starter',
-      name: 'Starter',
-      price: 'Rp 50k',
-      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
-      desc: t('plan_starter_desc'),
-      features: [t('plan_starter_f1'), t('plan_starter_f2'), t('plan_starter_f3'), t('plan_starter_f4'), t('plan_starter_f5')],
-      cta: t('plan_starter_cta'),
-      highlight: false,
-      oldPrice: null as string | null,
-    },
-    {
-      slug: 'pro',
-      name: 'Pro',
-      price: 'Rp 100k',
-      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
-      oldPrice: 'Rp 250k',
-      desc: t('plan_pro_desc'),
-      features: [t('plan_pro_f1'), t('plan_pro_f2'), t('plan_pro_f3'), t('plan_pro_f4'), t('plan_pro_f5'), t('plan_pro_f6')],
-      cta: t('plan_pro_cta'),
-      highlight: true,
-    },
-  ]
+  const PLANS = PLANS_META.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    price: p.price,
+    priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+    desc: t(p.descKey),
+    features: p.featureKeys.map((k) => t(k)),
+    cta: t(p.ctaKey),
+    highlight: p.highlight,
+    oldPrice: p.oldPrice,
+  }))
   const [prompt, setPrompt] = useState('')
   const [activeType, setActiveType] = useState<ConversationType>('general')
   const [isSubmitting, setIsSubmitting] = useState(false)

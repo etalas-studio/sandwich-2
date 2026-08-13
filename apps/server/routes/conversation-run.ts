@@ -12,6 +12,9 @@ import {
 } from "../db/repo/chat-messages.js";
 import { getPendingAttachmentIds } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";
+import { getActiveSubscription } from "../db/repo/subscriptions.js";
+import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
+import { PLANS } from "../pipeline/plans.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -394,6 +397,21 @@ export function registerConversationRunRoutes(
       ? body.attachmentIds.filter((x) => typeof x === "string")
       : [];
 
+    // Chat quota (starter) — follow-up messages are metered per month.
+    const sub = await getActiveSubscription(db, auth.userId);
+    const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
+    if (!plan) {
+      sendJson(res, 403, { error: "active subscription required" });
+      return;
+    }
+    if (plan.chatLimit !== null) {
+      const chatUsed = await getMonthlyUsage(db, auth.userId, "chat");
+      if (chatUsed >= plan.chatLimit) {
+        sendJson(res, 403, { error: "chat quota reached" });
+        return;
+      }
+    }
+
     try {
       const message = await createMessage(db, {
         conversationId: params.id!,
@@ -401,6 +419,7 @@ export function registerConversationRunRoutes(
         content: body.content.trim(),
         attachmentIds,
       });
+      await incrementUsage(db, auth.userId, "chat");
       sendJson(res, 201, message);
     } catch (err) {
       sendCaughtError(res, err, "message creation");

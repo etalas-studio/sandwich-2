@@ -160,12 +160,15 @@ export const usage = pgTable(
       .notNull()
       .references(() => users.id),
     yearMonth: text("year_month").notNull(),
+    // prd = document quota, chat = follow-up message quota
+    kind: text("kind").notNull().default("prd"),
     count: integer("count").notNull().default(0),
   },
   (table) => ({
-    uniqueUserMonth: uniqueIndex("idx_usage_user_month").on(
+    uniqueUserMonthKind: uniqueIndex("idx_usage_user_month_kind").on(
       table.userId,
       table.yearMonth,
+      table.kind,
     ),
   }),
 );

@@ -62,7 +62,7 @@ const HELP_SECTIONS = [
     items: [
       {
         q: { en: "What's the difference between Starter and Pro?", id: 'Apa perbedaan Starter dan Pro?' },
-        a: { en: 'Starter: 5 PRDs/month + basic features. Pro: unlimited PRDs, unlimited AI chat, direct access to the Etalas team.', id: 'Starter: 5 PRD/bulan + fitur dasar. Pro: unlimited PRD, chat AI unlimited, akses langsung ke tim Etalas.' },
+        a: { en: 'Starter: 5 PRDs/month + 100 AI chats. Pro: unlimited PRDs, unlimited AI chat.', id: 'Starter: 5 PRD/bulan + 100 chat AI. Pro: unlimited PRD, chat AI unlimited.' },
       },
       {
         q: { en: 'How do I upgrade to Pro?', id: 'Bagaimana cara upgrade ke Pro?' },
@@ -70,7 +70,7 @@ const HELP_SECTIONS = [
       },
       {
         q: { en: 'Is there a free trial?', id: 'Apakah ada free trial?' },
-        a: { en: 'Starter is free forever with limited quota. There\'s no paid trial — you can start right away with Starter.', id: 'Starter gratis selamanya dengan kuota terbatas. Tidak ada trial berbayar — Anda bisa langsung coba dengan Starter.' },
+        a: { en: 'No free tier — Starter is Rp 50k/mo, Pro is Rp 100k/mo.', id: 'Tidak ada paket gratis — Starter Rp 50k/bulan, Pro Rp 100k/bulan.' },
       },
     ],
   },

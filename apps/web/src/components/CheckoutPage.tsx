@@ -4,42 +4,25 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
 import { useSubscription } from '../hooks/useSubscription'
+import { PLANS_META, getPlanMeta } from '../lib/plans'
 
 const bowlby = "'Bowlby One', system-ui"
-
-const PLAN_DETAILS: Record<string, { name: string; price: string; oldPrice?: string; amount: number }> = {
-  starter: { name: 'Starter', price: 'Rp 50k', amount: 50000 },
-  pro: { name: 'Pro', price: 'Rp 100k', oldPrice: 'Rp 250k', amount: 100000 },
-}
 
 function PlanPicker() {
   const { lang, t } = useLanguage()
   const navigate = useNavigate()
 
-  const PLANS = [
-    {
-      slug: 'starter',
-      name: 'Starter',
-      price: 'Rp 50k',
-      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
-      desc: t('plan_starter_desc'),
-      features: [t('plan_starter_f1'), t('plan_starter_f2'), t('plan_starter_f3'), t('plan_starter_f4'), t('plan_starter_f5')],
-      cta: t('plan_starter_cta'),
-      highlight: false,
-      oldPrice: null as string | null,
-    },
-    {
-      slug: 'pro',
-      name: 'Pro',
-      price: 'Rp 100k',
-      priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
-      oldPrice: 'Rp 250k',
-      desc: t('plan_pro_desc'),
-      features: [t('plan_pro_f1'), t('plan_pro_f2'), t('plan_pro_f3'), t('plan_pro_f4'), t('plan_pro_f5'), t('plan_pro_f6')],
-      cta: t('plan_pro_cta'),
-      highlight: true,
-    },
-  ]
+  const PLANS = PLANS_META.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    price: p.price,
+    priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+    desc: t(p.descKey),
+    features: p.featureKeys.map((k) => t(k)),
+    cta: t(p.ctaKey),
+    highlight: p.highlight,
+    oldPrice: p.oldPrice,
+  }))
 
   return (
     <div
@@ -150,7 +133,7 @@ export default function CheckoutPage() {
   }
 
   const planSlug = paramPlan
-  const plan = PLAN_DETAILS[planSlug] ?? PLAN_DETAILS.starter
+  const plan = getPlanMeta(planSlug) ?? getPlanMeta('starter')!
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F4EBE1' }}>
@@ -167,7 +150,7 @@ function PaymentTrigger({
   navigate,
 }: {
   planSlug: string
-  plan: typeof PLAN_DETAILS[string]
+  plan: { name: string }
   tr: ReturnType<typeof useLanguage>['t']
   navigate: ReturnType<typeof useNavigate>
 }) {

@@ -53,10 +53,12 @@ export interface Attachment {
 
 export interface Usage {
   used: number
+  chatUsed: number
   yearMonth: string
   planSlug: string | null
   isPro: boolean
   limit: number | null
+  chatLimit: number | null
 }
 
 async function json<T>(res: Response): Promise<T> {

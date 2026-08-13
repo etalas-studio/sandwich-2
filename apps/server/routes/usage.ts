@@ -14,20 +14,24 @@ export function registerUsageRoutes(router: Router, db: Database): void {
       return;
     }
 
-    const used = await getMonthlyUsage(db, auth.userId);
     const sub = await getActiveSubscription(db, auth.userId);
     const planSlug = sub?.planSlug ?? null;
     const plan = planSlug ? PLANS[planSlug as keyof typeof PLANS] : undefined;
     const isPro = planSlug === "pro";
 
+    const used = await getMonthlyUsage(db, auth.userId, "prd");
+    const chatUsed = await getMonthlyUsage(db, auth.userId, "chat");
+
     const now = new Date();
     sendJson(res, 200, {
       used,
-      yearMonth: `${now.getFullYear()}-${now.getMonth()}`,
+      chatUsed,
+      yearMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
       planSlug,
       isPro,
-      // No active plan ⇒ 0 quota; starter ⇒ its limit; pro ⇒ unlimited.
+      // No active plan ⇒ 0 quota; starter ⇒ its limits; pro ⇒ unlimited.
       limit: isPro ? null : plan ? plan.limit : 0,
+      chatLimit: isPro ? null : plan ? plan.chatLimit : 0,
     });
   });
 }

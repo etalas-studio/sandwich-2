@@ -66,15 +66,18 @@ export function registerConversationRoutes(router: Router, db: Database): void {
       return;
     }
 
-    // Enforce the monthly quota server-side (FE gating is UX only).
+    // Every document type still requires an active subscription, but only
+    // PRD-type briefs consume the monthly document quota.
     const sub = await getActiveSubscription(db, auth.userId);
     const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
     if (!plan) {
       sendJson(res, 403, { error: "active subscription required" });
       return;
     }
-    if (plan.limit !== null) {
-      const used = await getMonthlyUsage(db, auth.userId);
+
+    const conversationType = (type as ConversationType) ?? "general";
+    if (conversationType === "prd" && plan.limit !== null) {
+      const used = await getMonthlyUsage(db, auth.userId, "prd");
       if (used >= plan.limit) {
         sendJson(res, 403, { error: "monthly quota reached" });
         return;
@@ -84,11 +87,13 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     try {
       const conversation = await createConversation(db, auth.userId, {
         id: id || undefined,
-        type: (type as ConversationType) ?? "general",
+        type: conversationType,
         title: title ?? prompt,
         prompt,
       });
-      await incrementUsage(db, auth.userId);
+      if (conversationType === "prd") {
+        await incrementUsage(db, auth.userId, "prd");
+      }
       sendJson(res, 201, conversation);
     } catch (err) {
       sendCaughtError(res, err, "conversation creation");
