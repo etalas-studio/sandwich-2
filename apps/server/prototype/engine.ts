@@ -34,8 +34,12 @@ export async function generatePrototype(
     const pi = await import("@earendil-works/pi-coding-agent");
 
     const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
-    const model = modelRuntime.getModel("opencode-go", "glm-5.2");
-    if (!model) throw new Error("OpenCode model not available");
+    const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
+    const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
+    const model = modelRuntime.getModel(provider, modelId);
+    if (!model) {
+      throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+    }
     const { session } = await pi.createAgentSession({
       cwd: workspace,
       model: model as any,

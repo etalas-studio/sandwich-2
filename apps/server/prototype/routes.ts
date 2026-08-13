@@ -34,7 +34,7 @@ function previewUrlFor(shareId: string): string {
   return `/p/${shareId}/`;
 }
 
-function withPreviewUrl(proto: { id: string; userId: string; shareId: string; name: string; brief: string; logoData: string | null; palette: string | null; status: string; createdAt: string; updatedAt: string }) {
+function withPreviewUrl(proto: { id: string; userId: string; shareId: string; name: string; brief: string; logoData: string | null; palette: string | null; status: string; createdAt: Date; updatedAt: Date }) {
   return { ...proto, previewUrl: previewUrlFor(proto.shareId) };
 }
 

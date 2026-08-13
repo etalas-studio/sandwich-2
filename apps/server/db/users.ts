@@ -8,7 +8,7 @@ export interface User {
   username: string;
   email: string;
   passwordHash: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface NewUser {
@@ -19,7 +19,7 @@ export interface NewUser {
 
 export async function createUser(db: Database, input: NewUser): Promise<User> {
   const id = randomUUID();
-  const createdAt = new Date().toISOString();
+  const createdAt = new Date();
   await db.insert(users).values({
     id,
     username: input.username,

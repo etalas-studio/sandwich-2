@@ -3,7 +3,7 @@ CREATE TABLE "prototype_files" (
 	"prototype_id" text NOT NULL,
 	"path" text NOT NULL,
 	"content" text NOT NULL,
-	"created_at" text NOT NULL
+	"created_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "prototypes" (
@@ -15,8 +15,8 @@ CREATE TABLE "prototypes" (
 	"logo_data" text,
 	"palette" text,
 	"status" text DEFAULT 'generating' NOT NULL,
-	"created_at" text NOT NULL,
-	"updated_at" text NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "prototypes_share_id_unique" UNIQUE("share_id")
 );
 --> statement-breakpoint

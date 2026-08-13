@@ -12,8 +12,8 @@ export interface Prototype {
   logoData: string | null;
   palette: string | null;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface PrototypeFile {
@@ -21,7 +21,7 @@ export interface PrototypeFile {
   prototypeId: string;
   path: string;
   content: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface CreatePrototypeInput {
@@ -35,7 +35,7 @@ export interface CreatePrototypeInput {
 export async function createPrototype(db: Database, input: CreatePrototypeInput): Promise<Prototype> {
   const id = randomUUID();
   const shareId = randomBytes(6).toString("hex");
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.insert(prototypes).values({
     id,
     userId: input.userId,
@@ -66,17 +66,17 @@ export async function listPrototypes(db: Database, userId: string): Promise<Prot
 }
 
 export async function updatePrototypeStatus(db: Database, id: string, status: string): Promise<void> {
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.update(prototypes).set({ status, updatedAt: now }).where(eq(prototypes.id, id));
 }
 
 export async function updatePrototypeBrief(db: Database, id: string, brief: string): Promise<void> {
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.update(prototypes).set({ brief, status: "generating", updatedAt: now }).where(eq(prototypes.id, id));
 }
 
 export async function savePrototypeFile(db: Database, prototypeId: string, path: string, content: string): Promise<void> {
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.insert(prototypeFiles).values({
     prototypeId,
     path,

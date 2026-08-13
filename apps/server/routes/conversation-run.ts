@@ -1,9 +1,18 @@
 import type { Database } from "../db/connection.js";
-import type { IncomingMessage, ServerResponse } from "node:http";
+import type { ServerResponse } from "node:http";
 import type { Router } from "../router.js";
-import { getTicket, updateTicket } from "../db/tickets.js";
-import { addChatMessage, getChatMessages } from "../db/repo/chat-messages.js";
-import { sendJson } from "../http-utils.js";
+import { getConversation, updateConversation, type Conversation } from "../db/conversations.js";
+import {
+  addChatMessage,
+  createMessage,
+  getMessages,
+  getMessageHistory,
+  getMessagesForPrompt,
+  deleteMessage,
+} from "../db/repo/chat-messages.js";
+import { getPendingAttachmentIds } from "../db/repo/attachments.js";
+import { authenticateRequest } from "../auth/middleware.js";
+import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
 const SANDWICH_PRD_GUIDE = `
@@ -107,35 +116,37 @@ HTML — Solar: <script src="https://code.iconify.design/iconify-icon/2.1.0/icon
 Output full, self-contained HTML with Tailwind CDN. Include real @keyframes animations. No placeholder lorem ipsum — generate plausible content for the domain.
 `;
 
-export interface TicketRunEvent {
+export interface ConversationRunEvent {
   type: "stage_start" | "stage_end" | "output" | "error" | "done";
   stage?: string;
   text?: string;
-  ticket?: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never;
+  conversation?: Conversation;
 }
 
-type ConversationTurn = { role: "user" | "assistant"; content: string };
+type Role = "system" | "user" | "assistant";
+type ConversationTurn = { role: Role; content: string };
 
-function buildMessages(
-  summary: string,
-  description: string,
-  history: ConversationTurn[],
-): ConversationTurn[] {
-  const lower = (summary ?? "").toLowerCase();
-  const isFlow = lower.includes("user flow") || lower.includes("alur");
+function buildMessages(history: ConversationTurn[]): ConversationTurn[] {
+  const brief = history
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join("\n")
+    .toLowerCase();
+
+  const isFlow = brief.includes("user flow") || brief.includes("alur");
   const isTech =
-    lower.includes("technical") || lower.includes("teknis") || lower.includes("specs");
+    brief.includes("technical") || brief.includes("teknis") || brief.includes("specs");
   const isQuotation =
-    lower.includes("quotation") ||
-    lower.includes("quote") ||
-    lower.includes("penawaran") ||
-    lower.includes("harga");
+    brief.includes("quotation") ||
+    brief.includes("quote") ||
+    brief.includes("penawaran") ||
+    brief.includes("harga");
   const isPrototype =
-    lower.includes("prototype") ||
-    lower.includes("landing") ||
-    lower.includes("ui") ||
-    lower.includes("design") ||
-    lower.includes("html");
+    brief.includes("prototype") ||
+    brief.includes("landing") ||
+    brief.includes("ui") ||
+    brief.includes("design") ||
+    brief.includes("html");
 
   const docGuide = isPrototype
     ? GETOKUI_PROTOTYPE_GUIDE
@@ -166,18 +177,7 @@ function buildMessages(
     outputInstruction,
   ].join("\n");
 
-  const messages: ConversationTurn[] = [
-    {
-      role: "user",
-      content: system + "\n\n---\n\nClient brief:\n" + (description || summary),
-    },
-  ];
-
-  for (const turn of history) {
-    messages.push(turn);
-  }
-
-  return messages;
+  return [{ role: "system", content: system }, ...history];
 }
 
 const inFlight = new Map<string, AbortController>();
@@ -194,8 +194,6 @@ function getEngine(): "opencode" | "groq" | null {
 }
 
 async function runWithGroq(
-  ticketKey: string,
-  ticket: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never,
   history: ConversationTurn[],
   signal: AbortSignal,
 ): Promise<string> {
@@ -208,11 +206,7 @@ async function runWithGroq(
     },
     body: JSON.stringify({
       model: "qwen/qwen3.6-27b",
-      messages: buildMessages(
-        ticket?.summary ?? "",
-        ticket?.description ?? "",
-        history,
-      ),
+      messages: buildMessages(history),
       max_tokens: 4000,
       reasoning_effort: "none",
       temperature: 0.7,
@@ -231,8 +225,6 @@ async function runWithGroq(
 }
 
 async function runWithOpenCode(
-  ticketKey: string,
-  ticket: ReturnType<typeof getTicket> extends Promise<infer T> ? T : never,
   history: ConversationTurn[],
   signal: AbortSignal,
 ): Promise<string> {
@@ -243,8 +235,12 @@ async function runWithOpenCode(
     modelsPath: null,
   });
 
-  const model = modelRuntime.getModel("opencode-go", "glm-5.2");
-  if (!model) throw new Error("OpenCode model not available");
+  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
+  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
+  const model = modelRuntime.getModel(provider, modelId);
+  if (!model) {
+    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+  }
 
   const { session } = await pi.createAgentSession({
     cwd: process.cwd(),
@@ -299,15 +295,12 @@ async function runWithOpenCode(
     }
   });
 
-  const messages = buildMessages(
-    ticket?.summary ?? "",
-    ticket?.description ?? "",
-    history,
-  );
-
-  // Build a single prompt string from messages
+  const messages = buildMessages(history);
   const prompt = messages
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .map((m) => {
+      if (m.role === "system") return m.content;
+      return `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`;
+    })
     .join("\n\n");
 
   try {
@@ -325,51 +318,128 @@ async function runWithOpenCode(
   }
 }
 
-export function registerTicketRunRoutes(
+function closeInFlight(conversationId: string): void {
+  inFlight.delete(conversationId);
+  const clients = sseClients.get(conversationId);
+  if (clients) {
+    for (const client of clients) {
+      try {
+        client.end();
+      } catch {
+        /* ignore */
+      }
+    }
+    sseClients.delete(conversationId);
+  }
+}
+
+async function waitForExtraction(
+  db: Database,
+  conversationId: string,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const pending = await getPendingAttachmentIds(db, conversationId);
+    if (pending.length === 0) return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
+function enrichMessageContent(m: {
+  role: string;
+  content: string;
+  attachments: {
+    filename: string;
+    mimeType: string;
+    extractedText: string | null;
+    extractStatus: string;
+  }[];
+}): string {
+  if (m.role !== "user") return m.content;
+  const blocks = m.attachments
+    .filter((a) => a.extractStatus === "done" && a.extractedText)
+    .map((a) => `[attachment: ${a.filename}]\n${a.extractedText}`);
+  if (blocks.length === 0) return m.content;
+  return `${m.content}\n\n${blocks.join("\n\n")}`;
+}
+
+export function registerConversationRunRoutes(
   router: Router,
   db: Database,
 ): void {
-  // Generate document — OpenCode (primary) or Groq (fallback)
-  router.post("/api/tickets/:key/generate", async (req, res, params) => {
-    const ticketKey = params.key!;
-    const ticket = await getTicket(db, ticketKey);
-    if (!ticket) {
-      sendJson(res, 404, { error: "Ticket not found" });
+  // Persist a user message (+ optional attachments).
+  router.post("/api/conversations/:id/messages", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthorized" });
       return;
     }
-    // Idempotent — if already running, just return success so the
-    // stream (which connects separately) receives events from the
-    // in-flight run. This also handles React StrictMode double-fire.
-    if (inFlight.has(ticketKey)) {
-      sendJson(res, 200, { ticketKey, started: true });
+    const conversation = await getConversation(db, params.id!);
+    if (!conversation || conversation.userId !== auth.userId) {
+      sendJson(res, 404, { error: "Conversation not found" });
       return;
     }
 
-    // Save user prompt as chat message (before engine check)
-    await addChatMessage(db, {
-      ticketId: ticketKey,
-      role: "user",
-      content: ticket.summary ?? ticket.description,
-    });
+    const body = (await readJsonBody(req).catch(() => null)) as {
+      content?: string;
+      attachmentIds?: string[];
+    } | null;
+    if (!body || typeof body.content !== "string" || !body.content.trim()) {
+      sendJson(res, 400, { error: "content is required" });
+      return;
+    }
 
-    let history: ConversationTurn[] = [];
+    const attachmentIds = Array.isArray(body.attachmentIds)
+      ? body.attachmentIds.filter((x) => typeof x === "string")
+      : [];
+
     try {
-      const body = await readJson(req);
-      if (Array.isArray((body as Record<string, unknown>)?.history)) {
-        history = (body as Record<string, unknown>)
-          .history as ConversationTurn[];
-      }
-    } catch {
-      /* no body */
+      const message = await createMessage(db, {
+        conversationId: params.id!,
+        userId: auth.userId,
+        content: body.content.trim(),
+        attachmentIds,
+      });
+      sendJson(res, 201, message);
+    } catch (err) {
+      sendCaughtError(res, err, "message creation");
+    }
+  });
+
+  // Generate the assistant reply — reads history from the DB.
+  router.post("/api/conversations/:id/generate", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
     }
 
-    // Save history turns from client
-    for (const turn of history) {
-      await addChatMessage(db, {
-        ticketId: ticketKey,
-        role: turn.role,
-        content: turn.content,
-      });
+    const conversationId = params.id!;
+    const conversation = await getConversation(db, conversationId);
+    if (!conversation || conversation.userId !== auth.userId) {
+      sendJson(res, 404, { error: "Conversation not found" });
+      return;
+    }
+
+    // Idempotent — if already running, just return success.
+    if (inFlight.has(conversationId)) {
+      sendJson(res, 200, { conversationId, started: true });
+      return;
+    }
+
+    const body = (await readJsonBody(req).catch(() => null)) as {
+      regenerate?: boolean;
+    } | null;
+
+    // For a regenerate, drop the previous assistant reply so we re-run the
+    // last user turn cleanly instead of double-stacking assistant messages.
+    if (body?.regenerate) {
+      const history = await getMessageHistory(db, conversationId);
+      const last = history[history.length - 1];
+      if (last && last.role === "assistant") {
+        await deleteMessage(db, last.id);
+      }
     }
 
     const engine = getEngine();
@@ -382,10 +452,10 @@ export function registerTicketRunRoutes(
     }
 
     const controller = new AbortController();
-    inFlight.set(ticketKey, controller);
+    inFlight.set(conversationId, controller);
 
-    const broadcast = (event: TicketRunEvent) => {
-      const clients = sseClients.get(ticketKey);
+    const broadcast = (event: ConversationRunEvent) => {
+      const clients = sseClients.get(conversationId);
       if (!clients) return;
       const data = `data: ${JSON.stringify(event)}\n\n`;
       for (const client of clients) {
@@ -397,95 +467,130 @@ export function registerTicketRunRoutes(
       }
     };
 
-    broadcast({
-      type: "stage_start",
-      stage: "generate",
-      ticket: (await getTicket(db, ticketKey))!,
-    });
-    await updateTicket(db, ticketKey, { status: "in_progress", stage: "generate" });
+    // Respond immediately so the SSE stream (connecting ~100ms later) sees
+    // that a run is in flight instead of closing instantly.
+    sendJson(res, 200, { conversationId, started: true });
 
-    const useOpenCode = engine === "opencode";
-    const hasGroqFallback = !!process.env.GROQ_API_KEY;
+    void (async () => {
+      try {
+        // Wait for attachment extraction (image/audio/pdf/docx -> text) so
+        // the prompt includes their content.
+        await waitForExtraction(db, conversationId, 30_000);
 
-    const run = useOpenCode
-      ? () =>
-          runWithOpenCode(ticketKey, ticket, history, controller.signal).catch(
-            (err) => {
-              if (hasGroqFallback) {
-                console.log(
-                  `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-                );
-                return runWithGroq(ticketKey, ticket, history, controller.signal);
-              }
-              throw err;
-            },
-          )
-      : () => runWithGroq(ticketKey, ticket, history, controller.signal);
+        const messages = await getMessagesForPrompt(db, conversationId);
+        const turns: ConversationTurn[] = messages.map((m) => ({
+          role: m.role as Role,
+          content: enrichMessageContent(m),
+        }));
 
-    run()
-      .then(async (output) => {
-        if (!output) {
-          await updateTicket(db, ticketKey, { status: "backlog", stage: null });
-          broadcast({
-            type: "error",
-            ticket: (await getTicket(db, ticketKey))!,
-            text: "Model returned no response. Try again.",
-          });
-          return;
-        }
-        await updateTicket(db, ticketKey, {
-          status: "done",
-          stage: null,
-          prDescription: output,
+        broadcast({
+          type: "stage_start",
+          stage: "generate",
+          conversation: (await getConversation(db, conversationId))!,
         });
-        await addChatMessage(db, {
-          ticketId: ticketKey,
-          role: "assistant",
-          content: output,
+        await updateConversation(db, conversationId, {
+          status: "in_progress",
           stage: "generate",
         });
-        broadcast({ type: "done", ticket: (await getTicket(db, ticketKey))! });
-      })
-      .catch(async (err) => {
-        const msg = err instanceof Error ? err.message : "generation failed";
-        await updateTicket(db, ticketKey, { status: "backlog", stage: null });
+
+        const useOpenCode = engine === "opencode";
+        const hasGroqFallback = !!process.env.GROQ_API_KEY;
+
+        const run = useOpenCode
+          ? () =>
+              runWithOpenCode(turns, controller.signal).catch((err) => {
+                if (hasGroqFallback) {
+                  console.log(
+                    `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
+                  );
+                  return runWithGroq(turns, controller.signal);
+                }
+                throw err;
+              })
+          : () => runWithGroq(turns, controller.signal);
+
+        run()
+          .then(async (output) => {
+            if (!output) {
+              await updateConversation(db, conversationId, {
+                status: "backlog",
+                stage: null,
+              });
+              broadcast({
+                type: "error",
+                conversation: (await getConversation(db, conversationId))!,
+                text: "Model returned no response. Try again.",
+              });
+              return;
+            }
+            await updateConversation(db, conversationId, {
+              status: "done",
+              stage: null,
+              output,
+            });
+            await addChatMessage(db, {
+              conversationId,
+              role: "assistant",
+              content: output,
+            });
+            broadcast({
+              type: "done",
+              conversation: (await getConversation(db, conversationId))!,
+            });
+          })
+          .catch(async (err) => {
+            const msg = err instanceof Error ? err.message : "generation failed";
+            await updateConversation(db, conversationId, {
+              status: "backlog",
+              stage: null,
+            });
+            broadcast({
+              type: "error",
+              conversation: (await getConversation(db, conversationId))!,
+              text: msg,
+            });
+          })
+          .finally(() => closeInFlight(conversationId));
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "generation setup failed";
         broadcast({
           type: "error",
-          ticket: (await getTicket(db, ticketKey))!,
+          conversation: (await getConversation(db, conversationId))!,
           text: msg,
         });
-      })
-      .finally(() => {
-        inFlight.delete(ticketKey);
-        const clients = sseClients.get(ticketKey);
-        if (clients) {
-          for (const client of clients) {
-            try {
-              client.end();
-            } catch {
-              /* ignore */
-            }
-          }
-          sseClients.delete(ticketKey);
-        }
-      });
-
-    sendJson(res, 200, { ticketKey, started: true });
+        closeInFlight(conversationId);
+      }
+    })();
   });
 
-  // Get chat history for a ticket
-  router.get("/api/tickets/:key/messages", async (_req, res, params) => {
-    const messages = await getChatMessages(db, params.key!);
-    sendJson(res, 200, messages);
+  // Message history (with attachments).
+  router.get("/api/conversations/:id/messages", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    const conversation = await getConversation(db, params.id!);
+    if (!conversation || conversation.userId !== auth.userId) {
+      sendJson(res, 404, { error: "Conversation not found" });
+      return;
+    }
+    sendJson(res, 200, await getMessages(db, params.id!));
   });
 
-  // SSE stream for ticket progress
-  router.get("/api/tickets/:key/stream", async (req, res, params) => {
-    const ticketKey = params.key!;
-    const ticket = await getTicket(db, ticketKey);
+  // SSE stream for generation progress.
+  router.get("/api/conversations/:id/stream", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
 
-    if (!ticket) {
-      sendJson(res, 404, { error: "Ticket not found" });
+    const conversationId = params.id!;
+    const conversation = await getConversation(db, conversationId);
+    if (!conversation || conversation.userId !== auth.userId) {
+      sendJson(res, 404, { error: "Conversation not found" });
       return;
     }
 
@@ -496,33 +601,27 @@ export function registerTicketRunRoutes(
       "x-accel-buffering": "no",
     });
 
-    res.write(`data: ${JSON.stringify({ type: "current", ticket })}\n\n`);
+    res.write(
+      `data: ${JSON.stringify({ type: "current", conversation })}\n\n`,
+    );
 
-    if (!sseClients.has(ticketKey)) {
-      sseClients.set(ticketKey, new Set());
+    if (!sseClients.has(conversationId)) {
+      sseClients.set(conversationId, new Set());
     }
-    sseClients.get(ticketKey)!.add(res);
+    sseClients.get(conversationId)!.add(res);
 
-    if (!inFlight.has(ticketKey)) {
-      res.write(`data: ${JSON.stringify({ type: "done", ticket })}\n\n`);
+    if (!inFlight.has(conversationId)) {
+      res.write(
+        `data: ${JSON.stringify({ type: "done", conversation })}\n\n`,
+      );
       res.end();
-      sseClients.get(ticketKey)?.delete(res);
+      sseClients.get(conversationId)?.delete(res);
       return;
     }
 
     req.on("close", () => {
-      sseClients.get(ticketKey)?.delete(res);
+      sseClients.get(conversationId)?.delete(res);
       res.end();
     });
   });
-}
-
-async function readJson(req: IncomingMessage): Promise<unknown> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(chunk);
-  }
-  const raw = Buffer.concat(chunks).toString("utf-8");
-  if (!raw.trim()) return null;
-  return JSON.parse(raw);
 }

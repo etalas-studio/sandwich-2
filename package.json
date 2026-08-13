@@ -1,8 +1,8 @@
 {
-  "name": "runchise-agent-pipeline",
+  "name": "sandwich",
   "version": "0.1.0",
   "private": true,
-  "description": "Orchestrator untuk AI dev pipeline Runchise. Menjalankan coding agent per tiket di git worktree terpisah, menegakkan guardrail, dan merekam tiap percobaan.",
+  "description": "SANDWICH — from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -20,8 +20,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/busboy": "^1.5.4",
     "@types/dotenv": "^6.1.1",
     "@types/node": "^22.7.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.21.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.0",
@@ -30,9 +32,15 @@
     "typescript-eslint": "^8.66.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1109.0",
+    "@aws-sdk/s3-request-presigner": "^3.1109.0",
     "@earendil-works/pi-coding-agent": "^0.83.0",
+    "busboy": "^1.6.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "mammoth": "^1.12.1",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.23.0",
+    "tesseract.js": "^7.0.0"
   }
 }

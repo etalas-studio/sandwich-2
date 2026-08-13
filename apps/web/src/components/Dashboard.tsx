@@ -2,8 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
-import { getTickets, saveTicket, updateTicket, deleteTicket, type LocalTicket, type TicketType } from '../lib/localTickets'
-import { createTicket, updateTicket as updateTicketApi } from '../api/tickets'
+import { getConversations, loadConversations, createConversationLocal, updateLocalConversation, deleteLocalConversation, type LocalConversation, type ConversationType } from '../lib/conversations'
+import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, type Attachment } from '../api/conversations'
+import { useUsage } from '../hooks/useUsage'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
@@ -14,6 +15,15 @@ import { useLanguage, type StringKey } from '../lib/i18n'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
 
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [meta, data] = dataUrl.split(',')
+  const mime = meta?.match(/:(.*?);/)?.[1] ?? 'application/octet-stream'
+  const bytes = atob(data ?? '')
+  const buf = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i)
+  return new Blob([buf], { type: mime })
+}
+
 const bowlby = "'Bowlby One', system-ui"
 const inter = "'Inter', sans-serif"
 
@@ -22,15 +32,15 @@ const NAV = [
 ]
 
 const QUICK_TYPES = [
-  { label: 'PRD Lengkap',          type: 'prd'       as TicketType, icon: 'solar:document-add-linear',        color: '#fef3c7', iconColor: '#f97316', prompt: 'Buatkan PRD lengkap untuk ' },
-  { label: 'Prototype Brief',      type: 'prototype'  as TicketType, icon: 'solar:widget-linear',              color: '#ede9fe', iconColor: '#7c3aed', prompt: 'Buatkan prototype brief untuk ' },
-  { label: 'Workflow Automations', type: 'workflow'   as TicketType, icon: 'solar:settings-minimalistic-linear', color: '#dbeafe', iconColor: '#2563eb', prompt: 'Buatkan workflow automation untuk ' },
-  { label: 'MOM Meeting',          type: 'mom'        as TicketType, icon: 'solar:calendar-linear',            color: '#dcfce7', iconColor: '#16a34a', prompt: 'Buatkan MOM untuk ' },
-  { label: 'Quotation Brief',      type: 'quotation'  as TicketType, icon: 'solar:dollar-minimalistic-linear', color: '#fce7f3', iconColor: '#db2777', prompt: 'Buatkan quotation untuk ' },
-  { label: 'Specs & Task',         type: 'specs'      as TicketType, icon: 'solar:checklist-linear',           color: '#f0fdf4', iconColor: '#15803d', prompt: 'Buatkan specs dan task untuk ' },
+  { label: 'PRD Lengkap',          type: 'prd'       as ConversationType, icon: 'solar:document-add-linear',        color: '#fef3c7', iconColor: '#f97316', prompt: 'Buatkan PRD lengkap untuk ' },
+  { label: 'Prototype Brief',      type: 'prototype'  as ConversationType, icon: 'solar:widget-linear',              color: '#ede9fe', iconColor: '#7c3aed', prompt: 'Buatkan prototype brief untuk ' },
+  { label: 'Workflow Automations', type: 'workflow'   as ConversationType, icon: 'solar:settings-minimalistic-linear', color: '#dbeafe', iconColor: '#2563eb', prompt: 'Buatkan workflow automation untuk ' },
+  { label: 'MOM Meeting',          type: 'mom'        as ConversationType, icon: 'solar:calendar-linear',            color: '#dcfce7', iconColor: '#16a34a', prompt: 'Buatkan MOM untuk ' },
+  { label: 'Quotation Brief',      type: 'quotation'  as ConversationType, icon: 'solar:dollar-minimalistic-linear', color: '#fce7f3', iconColor: '#db2777', prompt: 'Buatkan quotation untuk ' },
+  { label: 'Specs & Task',         type: 'specs'      as ConversationType, icon: 'solar:checklist-linear',           color: '#f0fdf4', iconColor: '#15803d', prompt: 'Buatkan specs dan task untuk ' },
 ]
 
-const PIPELINE_MAP: Record<string, { type: TicketType; title: string; desc: string; prompt: string; chip: string }> = {
+const PIPELINE_MAP: Record<string, { type: ConversationType; title: string; desc: string; prompt: string; chip: string }> = {
   prd:       { type: 'prd',       title: 'PRD',           desc: 'Product Requirements Documents',     prompt: 'Buatkan PRD lengkap untuk ',      chip: 'PRD Lengkap' },
   prototype: { type: 'prototype', title: 'Prototype',     desc: 'Prototype brief dan UI flow',        prompt: 'Buatkan prototype brief untuk ',  chip: 'Prototype' },
   quotation: { type: 'quotation', title: 'Quotation',     desc: 'Estimasi dan kalkulasi proyek',      prompt: 'Buatkan quotation untuk ',        chip: 'Quotation' },
@@ -62,19 +72,23 @@ interface ChatMessage {
   isDone?: boolean
   isError?: boolean
   output?: string
-  ticketId?: string
+  conversationId?: string
 }
 
-type HistoryTurn = { role: 'user' | 'assistant'; content: string }
+interface Turn {
+  user: string
+  attachments: Attachment[]
+  aiMessages: ChatMessage[]
+}
 
-function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun: boolean, history: HistoryTurn[], onDone?: (output: string) => void) {
+function usePipelineStream(conversationId: string | null, regenNonce: number, autoRun: boolean, regenerateRef: { current: boolean }, onDone?: (output: string) => void) {
   const { t: tr } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
 
   useEffect(() => {
-    if (!ticketKey) return
-    // Don't auto-generate when opening existing ticket from history (regenNonce=0 and autoRun=false)
+    if (!conversationId) return
+    // Don't auto-generate when opening existing conversation from history (regenNonce=0 and autoRun=false)
     if (!autoRun && regenNonce === 0) return
     setMessages([])
     setStreaming(true)
@@ -83,16 +97,11 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
 
     // Trigger generate FIRST so inFlight is set before stream connects.
     // Stream checks inFlight on connect — if empty it closes immediately.
-    fetch(apiUrl(`/api/tickets/${ticketKey}/generate`), {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ history }),
-    }).catch(() => {})
+    generateConversation(conversationId, { regenerate: regenerateRef.current }).catch(() => {})
 
     // Small delay so inFlight is registered before stream opens
     const streamPromise = new Promise<Response>(resolve =>
-      setTimeout(() => resolve(fetch(apiUrl(`/api/tickets/${ticketKey}/stream`), { credentials: 'include', signal: ctrl.signal })), 100)
+      setTimeout(() => resolve(fetch(apiUrl(`/api/conversations/${conversationId}/stream`), { credentials: 'include', signal: ctrl.signal })), 100)
     )
 
     streamPromise
@@ -110,11 +119,11 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
             const line = part.replace(/^data: /, '').trim()
             if (!line) continue
             try {
-              const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; ticket?: { prDescription?: string } }
+              const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; conversation?: { output?: string | null } }
               if (ev.type === 'stage_start' && ev.stage) {
                 setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
               } else if (ev.type === 'done') {
-                const output = ev.ticket?.prDescription ?? ''
+                const output = ev.conversation?.output ?? ''
                 setMessages(m => [...m, { role: 'ai', isDone: true, output }])
                 setStreaming(false)
                 onDone?.(output)
@@ -130,12 +139,12 @@ function usePipelineStream(ticketKey: string | null, regenNonce: number, autoRun
       .catch(() => setStreaming(false))
 
     return () => ctrl.abort()
-  }, [ticketKey, regenNonce])
+  }, [conversationId, regenNonce])
 
   return { messages, streaming }
 }
 
-function AiMessageActions({ output, ticketKey, onRegenerate }: { output: string; ticketKey: string; onRegenerate: () => void }) {
+function AiMessageActions({ output, conversationId, onRegenerate }: { output: string; conversationId: string; onRegenerate: () => void }) {
   const [copied, setCopied] = useState(false)
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null)
 
@@ -149,7 +158,7 @@ function AiMessageActions({ output, ticketKey, onRegenerate }: { output: string;
   const sendFeedback = (value: 'like' | 'dislike') => {
     const next = feedback === value ? null : value
     setFeedback(next)
-    fetch(apiUrl(`/api/tickets/${ticketKey}`), {
+    fetch(apiUrl(`/api/conversations/${conversationId}`), {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
@@ -211,10 +220,6 @@ function PlanBadge() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { data: sub } = useSubscription()
-  const plan = sub?.planSlug
-  if (!plan) return null
-  const isPro = plan === 'pro'
-  const benefits = PLAN_BENEFITS[plan] ?? PLAN_BENEFITS.starter
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -223,6 +228,11 @@ function PlanBadge() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  const plan = sub?.planSlug
+  if (!plan) return null
+  const isPro = plan === 'pro'
+  const benefits = PLAN_BENEFITS[plan] ?? PLAN_BENEFITS.starter
 
   return (
     <div ref={ref} className="relative shrink-0">
@@ -270,29 +280,64 @@ function PlanBadge() {
   )
 }
 
+function fileExtension(filename: string): string {
+  const parts = filename.split('.')
+  return parts.length > 1 ? (parts.pop() ?? '').toUpperCase().slice(0, 4) : 'FILE'
+}
+
+function AttachmentTile({ attachment }: { attachment: Attachment }) {
+  const isImage = attachment.mimeType?.startsWith('image/')
+  const ext = fileExtension(attachment.filename)
+  return (
+    <a
+      href={attachment.url}
+      target="_blank"
+      rel="noreferrer"
+      title={attachment.filename}
+      className="relative w-20 h-20 rounded-lg overflow-hidden border group shrink-0"
+      style={{ borderColor: 'rgba(0,0,0,0.1)', backgroundColor: '#ffffff' }}
+    >
+      {isImage ? (
+        <img src={attachment.url} alt={attachment.filename} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h12M4 17h8" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
+      <span
+        className="absolute bottom-1 right-1 text-[8px] font-bold px-1 py-0.5 rounded"
+        style={{ backgroundColor: 'rgba(0,0,0,0.65)', color: '#ffffff' }}
+      >
+        {ext}
+      </span>
+    </a>
+  )
+}
+
 function ChatView({
   initialPrompt,
-  ticketKey,
+  conversationId,
   createdAt,
   autoRun,
   onPromptUpdate,
 }: {
   initialPrompt: string
-  ticketKey: string
+  conversationId: string
   createdAt: string
   autoRun: boolean
   onPromptUpdate: (text: string) => void
 }) {
   const { t: tr } = useLanguage()
   const [regenNonce, setRegenNonce] = useState(0)
+  const regenerateRef = useRef(false)
   // turns = committed past exchanges; liveMessages = current stream in progress
-  const [turns, setTurns] = useState<{ user: string; aiMessages: ChatMessage[] }[]>([
-    { user: initialPrompt, aiMessages: [] }
+  const [turns, setTurns] = useState<Turn[]>([
+    { user: initialPrompt, attachments: [], aiMessages: [] }
   ])
-  const [history, setHistory] = useState<HistoryTurn[]>([])
-  const { messages: liveMessages, streaming } = usePipelineStream(ticketKey, regenNonce, autoRun, history, (output) => {
-    // persist output to localStorage so reload can restore it
-    updateTicket(ticketKey, { content: output })
+  const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
+    updateLocalConversation(conversationId, { content: output, status: 'done' })
   })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
@@ -316,41 +361,42 @@ function ChatView({
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
   useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
-  // Load saved messages when opening an existing ticket (no auto-run)
+  // Load saved messages when opening a conversation.
   useEffect(() => {
-    if (!ticketKey || autoRun) return
-    fetch(apiUrl(`/api/tickets/${ticketKey}/messages`), { credentials: 'include' })
-      .then(r => r.json())
-      .then((msgs: Array<{ role: string; content: string }>) => {
+    if (!conversationId) return
+    getMessages(conversationId)
+      .then((msgs) => {
         if (!msgs.length) return
         // Reconstruct turns from chat history
-        const reconstructed: { user: string; aiMessages: ChatMessage[] }[] = []
+        const reconstructed: Turn[] = []
         let currentUser = ''
+        let currentAttachments: Attachment[] = []
         let currentAi: ChatMessage[] = []
         for (const m of msgs) {
           if (m.role === 'user') {
             if (currentUser) {
-              reconstructed.push({ user: currentUser, aiMessages: currentAi })
+              reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
             }
             currentUser = m.content
+            currentAttachments = m.attachments ?? []
             currentAi = []
           } else if (m.role === 'assistant') {
             currentAi.push({ role: 'ai', isDone: true, output: m.content })
           }
         }
         if (currentUser) {
-          reconstructed.push({ user: currentUser, aiMessages: currentAi })
+          reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
         }
         if (reconstructed.length > 0) {
           setTurns(reconstructed)
         }
       })
       .catch(() => {})
-  }, [ticketKey])
+  }, [conversationId])
 
   const handleRefreshResponse = () => {
     if (streaming) return
-    setTurns([{ user: initialPrompt, aiMessages: [] }])
+    regenerateRef.current = true
     setRegenNonce(n => n + 1)
   }
 
@@ -364,7 +410,7 @@ function ChatView({
     setEditingPrompt(false)
     if (!text || text === initialPrompt) return
     onPromptUpdate(text)
-    updateTicketApi(ticketKey, { summary: text, description: text }).catch(() => {})
+    updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
     setRegenNonce(n => n + 1)
   }
 
@@ -374,31 +420,41 @@ function ChatView({
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!followUp.trim() || streaming) return
-    const attachmentTags = attachments.map(a => `[attachment: ${a.name}]`).join('\n')
-    const text = attachmentTags ? `${followUp.trim()}\n${attachmentTags}` : followUp.trim()
-    setFollowUp('')
-    setAttachments([])
-    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    try {
+      const uploaded: Attachment[] = []
+      for (const a of attachments) {
+        try {
+          uploaded.push(await uploadAttachment(dataUrlToBlob(a.dataUrl), a.name, conversationId))
+        } catch {
+          /* skip failed upload — keep the message text */
+        }
+      }
+      const text = followUp.trim()
+      const message = await createMessage(conversationId, {
+        content: text,
+        attachmentIds: uploaded.map(a => a.id),
+      })
+      setFollowUp('')
+      setAttachments([])
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
-    // Build AI response text from live messages to add to history
-    const aiText = liveMessages.filter(m => m.isDone && m.output).map(m => m.output).join('\n')
+      // Commit current live messages into the previous turn, then start a new one.
+      setTurns(prev => {
+        const last = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          { ...last, aiMessages: liveMessages },
+          { user: message.content, attachments: message.attachments, aiMessages: [] },
+        ]
+      })
 
-    // Append to conversation history for next generate call
-    setHistory(prev => [
-      ...prev,
-      ...(aiText ? [{ role: 'assistant' as const, content: aiText }] : []),
-      { role: 'user' as const, content: text },
-    ])
-
-    // Commit current live messages into turns before starting new stream
-    setTurns(prev => {
-      const last = prev[prev.length - 1]
-      return [...prev.slice(0, -1), { ...last, aiMessages: liveMessages }, { user: text, aiMessages: [] }]
-    })
-
-    setRegenNonce(n => n + 1)
+      regenerateRef.current = false
+      setRegenNonce(n => n + 1)
+    } catch {
+      /* keep the draft on failure */
+    }
   }
 
   return (
@@ -410,12 +466,17 @@ function ChatView({
           {/* Render all turns (committed) then live stream for the last one */}
           {turns.map((turn, ti) => {
             const isLast = ti === turns.length - 1
-            const msgs = isLast ? liveMessages : turn.aiMessages
+            const msgs = isLast && liveMessages.length > 0 ? liveMessages : turn.aiMessages
             const isFirstTurn = ti === 0
             return (
               <div key={ti} className="flex flex-col gap-8">
-                {/* User bubble */}
-                <div className="flex justify-end">
+                {/* Attachments + user bubble */}
+                <div className="flex flex-col items-end gap-2">
+                  {turn.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {turn.attachments.map(a => <AttachmentTile key={a.id} attachment={a} />)}
+                    </div>
+                  )}
                   <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
                     {isFirstTurn && editingPrompt ? (
                       <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
@@ -477,7 +538,7 @@ function ChatView({
                           </div>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <AiMessageActions output={m.output} ticketKey={ticketKey} onRegenerate={handleRefreshResponse} />
+                          <AiMessageActions output={m.output} conversationId={conversationId} onRegenerate={handleRefreshResponse} />
                         </div>
                       </div>
                     </div>
@@ -575,62 +636,41 @@ function ChatView({
 }
 
 
-// ── Plan limit helper ─────────────────────────────────────────────────────────
-const USAGE_KEY = () => {
-  const now = new Date()
-  return `sandwich_usage_${now.getFullYear()}_${now.getMonth()}`
-}
-export function incrementUsage() {
-  const key = USAGE_KEY()
-  const cur = parseInt(localStorage.getItem(key) ?? '0', 10)
-  localStorage.setItem(key, String(cur + 1))
-}
-function getPlanInfo(planOverride?: string | null) {
-  const plan = planOverride ?? localStorage.getItem('sandwich_paid_plan') ?? 'starter'
-  const isPro = plan === 'pro'
-  const limit = isPro ? Infinity : 5
-  const stored = parseInt(localStorage.getItem(USAGE_KEY()) ?? '0', 10)
-  // sync with actual ticket count for tickets created before localStorage tracking
-  const now = new Date()
-  const thisMonth = `${now.getFullYear()}-${now.getMonth()}`
-  const actualCount = getTickets().filter(t => {
-    const d = new Date(t.createdAt)
-    return `${d.getFullYear()}-${d.getMonth()}` === thisMonth
-  }).length
-  const used = Math.max(stored, actualCount)
-  if (used > stored) localStorage.setItem(USAGE_KEY(), String(used))
-  return { isPro, limit, used, remaining: Math.max(0, limit - used) }
+// ── Plan limit (server-side) ────────────────────────────────────────────────
+interface PlanUsage { used: number; limit: number | null; isPro: boolean }
+function isAtLimit(u: PlanUsage): boolean {
+  return !u.isPro && u.limit !== null && u.used >= u.limit
 }
 
 // ── Prompt Box (reusable) ──────────────────────────────────────────────────────
 interface PromptBoxProps {
-  defaultType?: TicketType
-  onSuccess: (t: LocalTicket) => void
+  defaultType?: ConversationType
+  onSuccess: (t: LocalConversation) => void
+  usage: PlanUsage
 }
-function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType: TicketType | null } {
+function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType: ConversationType | null } {
   try {
     const raw = localStorage.getItem('sandwich_draft')
     if (!raw) return { prompt: '', attachments: [], activeType: null }
     localStorage.removeItem('sandwich_draft')
-    const parsed = JSON.parse(raw) as { prompt?: string; attachments?: AttachedFile[]; activeType?: TicketType }
+    const parsed = JSON.parse(raw) as { prompt?: string; attachments?: AttachedFile[]; activeType?: ConversationType }
     return { prompt: parsed.prompt ?? '', attachments: parsed.attachments ?? [], activeType: parsed.activeType ?? null }
   } catch {
     return { prompt: '', attachments: [], activeType: null }
   }
 }
 
-function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
+function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps) {
   const { t: tr } = useLanguage()
   const [draft] = useState(loadDraft)
   const [prompt, setPrompt] = useState(draft.prompt)
-  const [activeType, setActiveType] = useState<TicketType>(draft.activeType ?? defaultType)
+  const [activeType, setActiveType] = useState<ConversationType>(draft.activeType ?? defaultType)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<AttachedFile[]>(draft.attachments)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const [planInfo, setPlanInfo] = useState(getPlanInfo)
-  const atLimit = !planInfo.isPro && planInfo.used >= planInfo.limit
+  const atLimit = isAtLimit(usage)
 
   const skipNextTypeReset = useRef(draft.activeType !== null)
   useEffect(() => {
@@ -653,23 +693,18 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      const desc = attachments.length
-        ? attachments.map(a => `[attachment: ${a.name}]`).join('\n')
-        : prompt.trim()
-      const ticket = await createTicket({ id: '', summary: prompt.trim(), description: desc, url: '' })
-      const local: LocalTicket = {
-        id: ticket.key,
-        summary: ticket.summary ?? prompt.trim(),
-        description: desc,
-        createdAt: ticket.createdAt,
-        type: activeType,
-        status: 'processing',
+      const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
+      const uploaded: Attachment[] = []
+      for (const a of attachments) {
+        try {
+          uploaded.push(await uploadAttachment(dataUrlToBlob(a.dataUrl), a.name, local.id))
+        } catch {
+          /* skip failed upload */
+        }
       }
-      saveTicket(local)
-      incrementUsage()
+      await createMessage(local.id, { content: prompt.trim(), attachmentIds: uploaded.map(a => a.id) })
       setPrompt('')
       setAttachments([])
-      setPlanInfo(getPlanInfo())
       onSuccess(local)
     } catch (err) {
       setError(err instanceof Error ? err.message : tr('dash_generic_error'))
@@ -705,8 +740,8 @@ function PromptBox({ defaultType = 'general', onSuccess }: PromptBoxProps) {
               {tr(c.labelKey)}
             </button>
           ))}
-          {!planInfo.isPro && !atLimit && (
-            <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{planInfo.used}/{planInfo.limit} this month</span>
+          {!usage.isPro && !atLimit && (
+            <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
           )}
         </div>
       )}
@@ -777,8 +812,8 @@ function ArtifactGrid({
   onNew,
 }: {
   title: string
-  items: LocalTicket[]
-  onOpen: (t: LocalTicket) => void
+  items: LocalConversation[]
+  onOpen: (t: LocalConversation) => void
   onNew: () => void
 }) {
   const { t: tr } = useLanguage()
@@ -832,10 +867,10 @@ function ArtifactGrid({
   )
 }
 
-// ── Ticket List ────────────────────────────────────────────────────────────────
-function TicketList({ tickets, onOpen, onNew }: { tickets: LocalTicket[]; onOpen: (t: LocalTicket) => void; onNew: () => void }) {
+// ── Conversation List ────────────────────────────────────────────────────────────────
+function ConversationList({ conversations, onOpen, onNew }: { conversations: LocalConversation[]; onOpen: (t: LocalConversation) => void; onNew: () => void }) {
   const { lang, t: tr } = useLanguage()
-  if (tickets.length === 0) {
+  if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
@@ -852,7 +887,7 @@ function TicketList({ tickets, onOpen, onNew }: { tickets: LocalTicket[]; onOpen
   }
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
-      {tickets.map(t => {
+      {conversations.map(t => {
         const meta = TYPE_META[t.type] ?? TYPE_META.general
         return (
           <button key={t.id} onClick={() => onOpen(t)}
@@ -890,33 +925,34 @@ const EXPORTED_MD_KEY = 'sandwich_exported_md'
 const DAY_LABELS_ID = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
 function HomeOverview({
-  tickets,
+  conversations,
   username,
+  usage,
   onSuccess,
-  onOpenTicket,
+  onOpenConversation,
   onGoTemplates,
   onGoBriefs,
   onGoType,
 }: {
-  tickets: LocalTicket[]
+  conversations: LocalConversation[]
   username: string
-  onSuccess: (t: LocalTicket) => void
-  onOpenTicket: (t: LocalTicket) => void
+  usage: PlanUsage
+  onSuccess: (t: LocalConversation) => void
+  onOpenConversation: (t: LocalConversation) => void
   onGoTemplates: () => void
   onGoBriefs: () => void
-  onGoType: (type: TicketType) => void
+  onGoType: (type: ConversationType) => void
 }) {
   const { lang, t: tr } = useLanguage()
   const [filter, setFilter] = useState<'all' | 'done' | 'draft'>('all')
   const { data: sub } = useSubscription()
   const plan = sub?.planSlug ?? localStorage.getItem('sandwich_paid_plan')
-  const planInfo = getPlanInfo(plan)
 
   const now = Date.now()
   const weekMs = 7 * 24 * 60 * 60 * 1000
-  const doneCount = tickets.filter(t => t.status === 'done').length
-  const draftCount = tickets.filter(t => t.status === 'draft').length
-  const weekTickets = tickets.filter(t => now - new Date(t.createdAt).getTime() < weekMs)
+  const doneCount = conversations.filter(t => t.status === 'done').length
+  const draftCount = conversations.filter(t => t.status === 'draft').length
+  const weekConversations = conversations.filter(t => now - new Date(t.createdAt).getTime() < weekMs)
 
   const hour = new Date().getHours()
   const greetingKey = hour < 11 ? 'home_greeting_morning' : hour < 15 ? 'home_greeting_afternoon' : hour < 19 ? 'home_greeting_evening' : 'home_greeting_night'
@@ -925,7 +961,7 @@ function HomeOverview({
   const dayBuckets = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now - (6 - i) * 24 * 60 * 60 * 1000)
     d.setHours(0, 0, 0, 0)
-    const count = tickets.filter(t => {
+    const count = conversations.filter(t => {
       const ct = new Date(t.createdAt); ct.setHours(0, 0, 0, 0)
       return ct.getTime() === d.getTime()
     }).length
@@ -933,15 +969,15 @@ function HomeOverview({
   })
   const maxDay = Math.max(1, ...dayBuckets.map(d => d.count))
 
-  const filteredTickets = tickets.filter(t => filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status === 'draft')
-  const distinctTypes = new Set(tickets.map(t => t.type)).size
+  const filteredConversations = conversations.filter(t => filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status === 'draft')
+  const distinctTypes = new Set(conversations.map(t => t.type)).size
   const exportedMd = localStorage.getItem(EXPORTED_MD_KEY) === '1'
   const checklist = [
-    { key: 'home_check_1', done: tickets.length > 0 },
+    { key: 'home_check_1', done: conversations.length > 0 },
     { key: 'home_check_2', done: doneCount > 0 },
     { key: 'home_check_3', done: distinctTypes >= 3 },
     { key: 'home_check_4', done: exportedMd },
-    { key: 'home_check_5', done: planInfo.isPro },
+    { key: 'home_check_5', done: usage.isPro },
   ] as const
   const checklistDone = checklist.filter(c => c.done).length
 
@@ -958,7 +994,7 @@ function HomeOverview({
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#f91814' }}>{dateStr}</p>
             <h1 className="text-2xl tracking-tighter mt-1" style={{ color: '#111827', fontFamily: bowlby }}>{tr(greetingKey).toUpperCase()}, {username.toUpperCase()}</h1>
             <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>
-              {tickets.length === 0 ? tr('home_subtitle_empty') : tr('home_subtitle_count').replace('{n}', String(tickets.length))}
+              {conversations.length === 0 ? tr('home_subtitle_empty') : tr('home_subtitle_count').replace('{n}', String(conversations.length))}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -976,15 +1012,15 @@ function HomeOverview({
         </div>
 
         {/* Prompt box */}
-        <PromptBox onSuccess={onSuccess} />
+        <PromptBox onSuccess={onSuccess} usage={usage} />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: 'solar:document-linear', color: '#fef3c7', ic: '#f97316', label: tr('home_stat_total'), value: tickets.length },
+            { icon: 'solar:document-linear', color: '#fef3c7', ic: '#f97316', label: tr('home_stat_total'), value: conversations.length },
             { icon: 'solar:check-circle-linear', color: '#dcfce7', ic: '#16a34a', label: tr('home_stat_done'), value: doneCount },
             { icon: 'solar:hourglass-linear', color: '#dbeafe', ic: '#2563eb', label: tr('home_stat_draft'), value: draftCount },
-            { icon: 'solar:graph-new-up-linear', color: '#fce7f3', ic: '#db2777', label: tr('home_stat_week'), value: weekTickets.length },
+            { icon: 'solar:graph-new-up-linear', color: '#fce7f3', ic: '#db2777', label: tr('home_stat_week'), value: weekConversations.length },
           ].map(s => (
             <div key={s.label} className="rounded-2xl border p-5" style={cardStyle}>
               <div className="flex items-center gap-2 mb-4">
@@ -1004,12 +1040,12 @@ function HomeOverview({
             <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_quota_title')}</h2>
             <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{plan === 'pro' ? tr('home_quota_plan_pro') : plan === 'starter' ? tr('home_quota_plan_starter') : tr('home_quota_plan_free')}</p>
             <p className="text-3xl font-semibold mt-4" style={{ color: '#111827' }}>
-              {planInfo.used}<span className="text-base font-normal" style={{ color: '#9ca3af' }}> / {planInfo.isPro ? '∞' : planInfo.limit} {tr('home_quota_documents')}</span>
+              {usage.used}<span className="text-base font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.limit} {tr('home_quota_documents')}</span>
             </p>
             <div className="h-1.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
-              <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: planInfo.isPro ? '100%' : `${Math.min(100, (planInfo.used / planInfo.limit) * 100)}%` }} />
+              <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
             </div>
-            {!planInfo.isPro && (
+            {!usage.isPro && (
               <a href="/checkout?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:crown-linear" width="14" />
                 {tr('home_quota_upgrade')}
@@ -1017,13 +1053,13 @@ function HomeOverview({
             )}
             <div className="flex items-center justify-between mt-4 pt-4 border-t text-sm" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
               <span style={{ color: '#9ca3af' }}>{tr('home_quota_completion')}</span>
-              <span className="font-semibold" style={{ color: '#111827' }}>{tickets.length ? Math.round((doneCount / tickets.length) * 100) : 0}%</span>
+              <span className="font-semibold" style={{ color: '#111827' }}>{conversations.length ? Math.round((doneCount / conversations.length) * 100) : 0}%</span>
             </div>
           </div>
 
           <div className="rounded-2xl border p-6" style={cardStyle}>
             <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_activity_title')}</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{weekTickets.length === 0 ? tr('home_activity_sub_zero') : tr('home_activity_sub').replace('{n}', String(weekTickets.length))}</p>
+            <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{weekConversations.length === 0 ? tr('home_activity_sub_zero') : tr('home_activity_sub').replace('{n}', String(weekConversations.length))}</p>
             <div className="flex items-end justify-between gap-2 mt-6" style={{ height: 90 }}>
               {dayBuckets.map((d, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
@@ -1050,7 +1086,7 @@ function HomeOverview({
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{t.label}</p>
-                  <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{tickets.filter(x => x.type === t.type).length} dibuat</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{conversations.filter(x => x.type === t.type).length} dibuat</p>
                 </div>
               </button>
             ))}
@@ -1063,7 +1099,7 @@ function HomeOverview({
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_recent_title')}</h2>
-                <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{tr('home_recent_sub').replace('{n}', String(tickets.length))}</p>
+                <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{tr('home_recent_sub').replace('{n}', String(conversations.length))}</p>
               </div>
               <div className="flex items-center gap-1 p-1 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
                 {([['all', 'home_filter_all'], ['done', 'home_filter_done'], ['draft', 'home_filter_draft']] as const).map(([key, labelKey]) => (
@@ -1075,7 +1111,7 @@ function HomeOverview({
                 ))}
               </div>
             </div>
-            {filteredTickets.length === 0 ? (
+            {filteredConversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
                   <iconify-icon icon="solar:notes-linear" width="22" style={{ color: 'rgba(0,0,0,0.3)' }} />
@@ -1085,10 +1121,10 @@ function HomeOverview({
               </div>
             ) : (
               <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.06)', backgroundColor: '#ffffff' }}>
-                {filteredTickets.slice(0, 6).map(t => {
+                {filteredConversations.slice(0, 6).map(t => {
                   const meta = TYPE_META[t.type] ?? TYPE_META.general
                   return (
-                    <button key={t.id} onClick={() => onOpenTicket(t)}
+                    <button key={t.id} onClick={() => onOpenConversation(t)}
                       className="w-full flex items-center justify-between px-4 py-3 text-left border-b last:border-b-0 transition-colors"
                       style={{ borderColor: 'rgba(0,0,0,0.05)' }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)')}
@@ -1114,13 +1150,13 @@ function HomeOverview({
             <div className="rounded-2xl border p-5" style={cardStyle}>
               <h2 className="text-base tracking-tight" style={{ color: '#111827', fontFamily: bowlby }}>{tr('home_breakdown_title')}</h2>
               <p className="text-xs mt-0.5 mb-3" style={{ color: '#9ca3af' }}>{tr('home_breakdown_sub')}</p>
-              {tickets.length === 0 ? (
+              {conversations.length === 0 ? (
                 <p className="text-xs" style={{ color: '#9ca3af' }}>{tr('home_breakdown_empty')}</p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {Object.keys(TYPE_META).filter(k => k !== 'general' && tickets.some(t => t.type === k)).map(k => {
+                  {Object.keys(TYPE_META).filter(k => k !== 'general' && conversations.some(t => t.type === k)).map(k => {
                     const meta = TYPE_META[k]
-                    const count = tickets.filter(t => t.type === k).length
+                    const count = conversations.filter(t => t.type === k).length
                     return (
                       <div key={k} className="flex items-center justify-between text-sm">
                         <span className="flex items-center gap-2" style={{ color: '#374151' }}>
@@ -1188,8 +1224,8 @@ function HomeOverview({
 }
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
-function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: () => void; onDelete: (id: string) => void }) {
-  const meta = TYPE_META[ticket.type] ?? TYPE_META.general
+function Drawer({ conversation, onClose, onDelete }: { conversation: LocalConversation; onClose: () => void; onDelete: (id: string) => void }) {
+  const meta = TYPE_META[conversation.type] ?? TYPE_META.general
   const [confirmDelete, setConfirmDelete] = useState(false)
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
@@ -1204,10 +1240,10 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
             </div>
             <p className="text-sm font-semibold" style={{ color: '#111827' }}>{meta.label}</p>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
-              backgroundColor: ticket.status === 'done' ? '#dcfce7' : ticket.status === 'processing' ? '#fef3c7' : '#f3f4f6',
-              color: ticket.status === 'done' ? '#16a34a' : ticket.status === 'processing' ? '#f97316' : '#6b7280'
+              backgroundColor: conversation.status === 'done' ? '#dcfce7' : conversation.status === 'processing' ? '#fef3c7' : '#f3f4f6',
+              color: conversation.status === 'done' ? '#16a34a' : conversation.status === 'processing' ? '#f97316' : '#6b7280'
             }}>
-              {ticket.status === 'done' ? 'Selesai' : ticket.status === 'processing' ? 'Diproses' : 'Draft'}
+              {conversation.status === 'done' ? 'Selesai' : conversation.status === 'processing' ? 'Diproses' : 'Draft'}
             </span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
@@ -1216,14 +1252,14 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
         </div>
         <div className="p-6 flex flex-col gap-4 flex-1">
           <p className="text-xs" style={{ color: '#9ca3af' }}>
-            {new Date(ticket.createdAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
+            {new Date(conversation.createdAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
           </p>
-          <h2 className="text-base font-semibold leading-snug" style={{ color: '#111827' }}>{ticket.summary}</h2>
-          {ticket.content ? (
+          <h2 className="text-base font-semibold leading-snug" style={{ color: '#111827' }}>{conversation.summary}</h2>
+          {conversation.content ? (
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#9ca3af' }}>Output</p>
               <div className="text-sm leading-relaxed whitespace-pre-wrap rounded-xl p-4" style={{ backgroundColor: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
-                {ticket.content}
+                {conversation.content}
               </div>
             </div>
           ) : (
@@ -1232,10 +1268,10 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
               Brief dalam antrian — output akan muncul di sini
             </div>
           )}
-          {ticket.description && (
-            <p className="text-xs leading-relaxed" style={{ color: '#6b7280' }}>{ticket.description}</p>
+          {conversation.description && (
+            <p className="text-xs leading-relaxed" style={{ color: '#6b7280' }}>{conversation.description}</p>
           )}
-          <p className="text-xs font-mono" style={{ color: '#d1d5db' }}>ID: {ticket.id}</p>
+          <p className="text-xs font-mono" style={{ color: '#d1d5db' }}>ID: {conversation.id}</p>
         </div>
         <div className="px-6 pb-6 flex gap-2 shrink-0">
           {!confirmDelete ? (
@@ -1248,7 +1284,7 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-xs" style={{ color: '#6b7280' }}>Yakin hapus?</span>
-              <button onClick={() => { onDelete(ticket.id); onClose() }}
+              <button onClick={() => { onDelete(conversation.id); onClose() }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
                 style={{ backgroundColor: '#ef4444' }}>Hapus</button>
               <button onClick={() => setConfirmDelete(false)}
@@ -1266,14 +1302,14 @@ function Drawer({ ticket, onClose, onDelete }: { ticket: LocalTicket; onClose: (
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const { t: tr } = useLanguage()
-  const [tickets, setTickets] = useState<LocalTicket[]>(() => getTickets())
-  const [selected, setSelected] = useState<LocalTicket | null>(null)
+  const [conversations, setConversations] = useState<LocalConversation[]>([])
+  const [selected, setSelected] = useState<LocalConversation | null>(null)
   const [activeNav, setActiveNav] = useState('home')
 
-  const [chatState, setChatState] = useState<{ prompt: string; ticketKey: string; autoRun: boolean } | null>(() => {
+  const [chatState, setChatState] = useState<{ prompt: string; conversationId: string; autoRun: boolean } | null>(() => {
     const saved = localStorage.getItem('sandwich_last_chat')
     if (!saved) return null
-    try { return { ...JSON.parse(saved) as { prompt: string; ticketKey: string }, autoRun: false } } catch { return null }
+    try { return { ...JSON.parse(saved) as { prompt: string; conversationId: string }, autoRun: false } } catch { return null }
   })
   const [creatingNew, setCreatingNew] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
@@ -1284,70 +1320,77 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [showNotifMenu, setShowNotifMenu] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
-  const [contextMenuTicket, setContextMenuTicket] = useState<string | null>(null)
-  const [renamingTicketId, setRenamingTicketId] = useState<string | null>(null)
-  const [renameTicketValue, setRenameTicketValue] = useState('')
+  const [contextMenuConversation, setContextMenuConversation] = useState<string | null>(null)
+  const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null)
+  const [renameConversationValue, setRenameConversationValue] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareVisibility, setShareVisibility] = useState<'private' | 'shared'>('private')
   const { logout, state: authState } = useAuth()
+  const usageQuery = useUsage()
+  const usage: PlanUsage = usageQuery.data ?? { used: 0, limit: 5, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
 
-  const refresh = () => setTickets(getTickets())
+  const refresh = () => setConversations(getConversations())
 
-  const handleSuccess = (t: LocalTicket) => {
+  useEffect(() => {
+    void loadConversations().then(setConversations).catch(() => {})
+  }, [])
+
+  const handleSuccess = (t: LocalConversation) => {
     refresh()
-    setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: true })
+    usageQuery.invalidate()
+    setChatState({ prompt: t.summary, conversationId: t.id, autoRun: true })
     setCreatingNew(false)
   }
 
   const handleDelete = (id: string) => {
-    deleteTicket(id)
-    if (chatState?.ticketKey === id) setChatState(null)
+    deleteLocalConversation(id)
+    if (chatState?.conversationId === id) setChatState(null)
     refresh()
     setSelected(null)
   }
 
-  const currentTicket = tickets.find(t => t.id === chatState?.ticketKey) ?? null
+  const currentConversation = conversations.find(t => t.id === chatState?.conversationId) ?? null
 
   useEffect(() => {
     setShowChatMenu(false)
     setRenamingTitle(false)
     setConfirmDeleteChat(false)
     if (chatState) {
-      localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, ticketKey: chatState.ticketKey }))
+      localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, conversationId: chatState.conversationId }))
     } else {
       localStorage.removeItem('sandwich_last_chat')
     }
-  }, [chatState?.ticketKey])
+  }, [chatState?.conversationId])
 
   const toggleChatPin = () => {
-    if (!currentTicket) return
-    updateTicket(currentTicket.id, { pinned: !currentTicket.pinned })
+    if (!currentConversation) return
+    updateLocalConversation(currentConversation.id, { pinned: !currentConversation.pinned })
     refresh()
     setShowChatMenu(false)
   }
 
   const toggleChatUnread = () => {
-    if (!currentTicket) return
-    updateTicket(currentTicket.id, { unread: !currentTicket.unread })
+    if (!currentConversation) return
+    updateLocalConversation(currentConversation.id, { unread: !currentConversation.unread })
     refresh()
     setShowChatMenu(false)
   }
 
   const startChatRename = () => {
-    if (!currentTicket) return
-    setRenameValue(currentTicket.summary)
+    if (!currentConversation) return
+    setRenameValue(currentConversation.summary)
     setRenamingTitle(true)
     setShowChatMenu(false)
   }
 
   const commitChatRename = () => {
-    if (currentTicket) {
+    if (currentConversation) {
       const value = renameValue.trim()
-      if (value && value !== currentTicket.summary) {
-        updateTicket(currentTicket.id, { summary: value })
+      if (value && value !== currentConversation.summary) {
+        updateLocalConversation(currentConversation.id, { summary: value })
         setChatState(prev => (prev ? { ...prev, prompt: value } : prev))
         refresh()
       }
@@ -1356,8 +1399,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   }
 
   const handleChatPromptUpdate = (text: string) => {
-    if (!currentTicket) return
-    updateTicket(currentTicket.id, { summary: text, description: text })
+    if (!currentConversation) return
+    updateLocalConversation(currentConversation.id, { summary: text, description: text })
     setChatState(prev => (prev ? { ...prev, prompt: text } : prev))
     refresh()
   }
@@ -1368,34 +1411,41 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   }
 
   const confirmDeleteChatNow = () => {
-    if (!currentTicket) return
-    deleteTicket(currentTicket.id)
+    if (!currentConversation) return
+    deleteLocalConversation(currentConversation.id)
     refresh()
     setChatState(null)
     setConfirmDeleteChat(false)
   }
 
-  const notifications = tickets.filter(t => t.status === 'done' && t.unread)
+  const notifications = conversations.filter(t => t.status === 'done' && t.unread)
 
-  const openNotification = (t: LocalTicket) => {
+  const openNotification = (t: LocalConversation) => {
     setShowNotifMenu(false)
-    updateTicket(t.id, { unread: false })
+    updateLocalConversation(t.id, { unread: false })
     refresh()
-    setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
+    setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
     setActiveNav('home')
   }
 
   const openShareModal = () => {
-    if (!currentTicket) return
+    if (!currentConversation) return
     setShowMoreMenu(false)
     setShowNotifMenu(false)
     setShareVisibility('private')
     setShowShareModal(true)
   }
 
-  const handleCreateShareLink = () => {
-    if (!currentTicket) return
-    const url = `${window.location.origin}/dashboard?ticket=${currentTicket.id}${shareVisibility === 'shared' ? '&shared=1' : ''}`
+  const handleCreateShareLink = async () => {
+    if (!currentConversation) return
+    let url: string
+    if (shareVisibility === 'shared') {
+      const { url: sharePath } = await shareConversation(currentConversation.id)
+      url = `${window.location.origin}${sharePath}`
+    } else {
+      await unshareConversation(currentConversation.id).catch(() => {})
+      url = `${window.location.origin}/dashboard`
+    }
     void navigator.clipboard.writeText(url)
     setShowShareModal(false)
     setShareCopied(true)
@@ -1403,20 +1453,20 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   }
 
   const handleExportMarkdown = () => {
-    if (!currentTicket) return
+    if (!currentConversation) return
     setShowMoreMenu(false)
-    const md = currentTicket.content ?? currentTicket.description
+    const md = currentConversation.content ?? currentConversation.description
     const blob = new Blob([md], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${currentTicket.summary.slice(0, 60).replace(/[^\w\- ]/g, '').trim() || 'sandwich'}.md`
+    a.download = `${currentConversation.summary.slice(0, 60).replace(/[^\w\- ]/g, '').trim() || 'sandwich'}.md`
     a.click()
     URL.revokeObjectURL(url)
     localStorage.setItem(EXPORTED_MD_KEY, '1')
   }
 
-  const byType = (type: TicketType) => tickets.filter(t => t.type === type)
+  const byType = (type: ConversationType) => conversations.filter(t => t.type === type)
   const isHomePage = activeNav === 'home'
 
   const renderPage = () => {
@@ -1428,9 +1478,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>MY BRIEFS</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{tickets.length} {tr('dash_docs_saved')}</p>
+            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{conversations.length} {tr('dash_docs_saved')}</p>
           </div>
-          <TicketList tickets={tickets} onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })} onNew={() => setActiveNav('home')} />
+          <ConversationList conversations={conversations} onOpen={(t) => setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })} onNew={() => setActiveNav('home')} />
         </div>
       </div>
     )
@@ -1474,7 +1524,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <ArtifactGrid
           title={pp.title}
           items={items}
-          onOpen={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })}
+          onOpen={(t) => setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })}
           onNew={() => setCreatingNew(true)}
         />
       )
@@ -1496,7 +1546,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           {tr('dash_home_headline_pipeline')}
         </h1>
         <div className="w-full max-w-2xl">
-          <PromptBox defaultType={pp.type} onSuccess={handleSuccess} />
+          <PromptBox defaultType={pp.type} onSuccess={handleSuccess} usage={usage} />
         </div>
       </div>
     )
@@ -1543,7 +1593,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           <div className="mt-3 mb-1">
             {NAV.map(item => {
               const isActive = activeNav === item.id
-              const count = byType(PIPELINE_MAP[item.id]?.type ?? 'general' as TicketType).length
+              const count = byType(PIPELINE_MAP[item.id]?.type ?? 'general' as ConversationType).length
               return (
                 <button key={item.id} onClick={() => { setActiveNav(item.id); setChatState(null); setCreatingNew(false); if (window.innerWidth < 768) setSidebarOpen(false) }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
@@ -1566,20 +1616,20 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <div className="flex-1 min-h-0 flex flex-col mt-8 px-2">
           <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase shrink-0" style={{ color: '#ffffff' }}>{tr('dash_chat_history')}</p>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-            {tickets.length === 0 ? (
+            {conversations.length === 0 ? (
               <p className="px-3 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>{tr('dash_no_chats')}</p>
             ) : (
-              tickets.slice().reverse().sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map(t => {
+              conversations.slice().reverse().sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map(t => {
                 const meta = TYPE_META[t.type] ?? TYPE_META.general
-                const isActive = chatState?.ticketKey === t.id
-                const menuOpen = contextMenuTicket === t.id
-                const isRenaming = renamingTicketId === t.id
+                const isActive = chatState?.conversationId === t.id
+                const menuOpen = contextMenuConversation === t.id
+                const isRenaming = renamingConversationId === t.id
                 return (
                   <div key={t.id} className="relative group/item mb-0.5">
                     <button
                       onClick={() => {
-                        setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })
-                        if (t.unread) updateTicket(t.id, { unread: false })
+                        setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
+                        if (t.unread) updateLocalConversation(t.id, { unread: false })
                         refresh()
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
@@ -1593,18 +1643,18 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                       {isRenaming ? (
                         <input
                           autoFocus
-                          value={renameTicketValue}
-                          onChange={e => setRenameTicketValue(e.target.value)}
+                          value={renameConversationValue}
+                          onChange={e => setRenameConversationValue(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
-                              updateTicket(t.id, { summary: renameTicketValue }); refresh()
-                              setRenamingTicketId(null)
+                              updateLocalConversation(t.id, { summary: renameConversationValue }); refresh()
+                              setRenamingConversationId(null)
                             }
-                            if (e.key === 'Escape') setRenamingTicketId(null)
+                            if (e.key === 'Escape') setRenamingConversationId(null)
                           }}
                           onBlur={() => {
-                            if (renameTicketValue.trim()) { updateTicket(t.id, { summary: renameTicketValue }); refresh() }
-                            setRenamingTicketId(null)
+                            if (renameConversationValue.trim()) { updateLocalConversation(t.id, { summary: renameConversationValue }); refresh() }
+                            setRenamingConversationId(null)
                           }}
                           onClick={e => e.stopPropagation()}
                           className="flex-1 bg-transparent outline-none text-xs min-w-0"
@@ -1624,7 +1674,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                       onClick={e => {
                         e.stopPropagation()
-                        setContextMenuTicket(menuOpen ? null : t.id)
+                        setContextMenuConversation(menuOpen ? null : t.id)
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-0 group-hover/item:opacity-100 transition-opacity"
                       style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
@@ -1634,31 +1684,31 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     {/* Context menu */}
                     {menuOpen && (
                       <>
-                      <div className="fixed inset-0 z-40" onClick={() => setContextMenuTicket(null)} />
+                      <div className="fixed inset-0 z-40" onClick={() => setContextMenuConversation(null)} />
                       <div
                         className="absolute right-0 top-full mt-0.5 z-50 rounded-xl py-1 min-w-[160px] shadow-xl"
                         style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
                         onClick={e => e.stopPropagation()}
                       >
-                        <button onClick={() => { updateTicket(t.id, { pinned: !t.pinned }); setContextMenuTicket(null); refresh() }}
+                        <button onClick={() => { updateLocalConversation(t.id, { pinned: !t.pinned }); setContextMenuConversation(null); refresh() }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:pin-linear" width="14" />
                           {t.pinned ? 'Unpin' : 'Pin'}
                         </button>
-                        <button onClick={() => { updateTicket(t.id, { unread: !t.unread }); setContextMenuTicket(null); refresh() }}
+                        <button onClick={() => { updateLocalConversation(t.id, { unread: !t.unread }); setContextMenuConversation(null); refresh() }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:eye-closed-linear" width="14" />
                           {t.unread ? 'Mark as read' : 'Mark as unread'}
                         </button>
-                        <button onClick={() => { setRenameTicketValue(t.summary); setRenamingTicketId(t.id); setContextMenuTicket(null) }}
+                        <button onClick={() => { setRenameConversationValue(t.summary); setRenamingConversationId(t.id); setContextMenuConversation(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: 'rgba(255,255,255,0.85)' }}>
                           <iconify-icon icon="solar:pen-2-linear" width="14" />
                           Rename
                         </button>
-                        <button onClick={() => { handleDelete(t.id); setContextMenuTicket(null) }}
+                        <button onClick={() => { handleDelete(t.id); setContextMenuConversation(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
                           style={{ color: '#f91814' }}>
                           <iconify-icon icon="solar:trash-bin-trash-linear" width="14" />
@@ -1775,16 +1825,16 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                             style={{ color: 'rgba(255,255,255,0.7)' }}
                             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
-                            <iconify-icon icon={currentTicket?.pinned ? 'solar:pin-bold' : 'solar:pin-linear'} width="15" />
-                            {currentTicket?.pinned ? 'Unpin' : 'Pin'}
+                            <iconify-icon icon={currentConversation?.pinned ? 'solar:pin-bold' : 'solar:pin-linear'} width="15" />
+                            {currentConversation?.pinned ? 'Unpin' : 'Pin'}
                           </button>
                           <button onClick={toggleChatUnread}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
                             style={{ color: 'rgba(255,255,255,0.7)' }}
                             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
-                            <iconify-icon icon={currentTicket?.unread ? 'solar:eye-linear' : 'solar:eye-closed-linear'} width="15" />
-                            {currentTicket?.unread ? 'Mark as read' : 'Mark as unread'}
+                            <iconify-icon icon={currentConversation?.unread ? 'solar:eye-linear' : 'solar:eye-closed-linear'} width="15" />
+                            {currentConversation?.unread ? 'Mark as read' : 'Mark as unread'}
                           </button>
                           <button onClick={startChatRename}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
@@ -1897,18 +1947,19 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           <div className="flex-1 min-h-0">
             <ChatView
               initialPrompt={chatState.prompt}
-              ticketKey={chatState.ticketKey}
-              createdAt={currentTicket?.createdAt ?? new Date().toISOString()}
+              conversationId={chatState.conversationId}
+              createdAt={currentConversation?.createdAt ?? new Date().toISOString()}
               autoRun={chatState.autoRun}
               onPromptUpdate={handleChatPromptUpdate}
             />
           </div>
         ) : isHomePage ? (
           <HomeOverview
-            tickets={tickets}
+            conversations={conversations}
             username={username}
+            usage={usage}
             onSuccess={handleSuccess}
-            onOpenTicket={(t) => setChatState({ prompt: t.summary, ticketKey: t.id, autoRun: false })}
+            onOpenConversation={(t) => setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })}
             onGoTemplates={() => setActiveNav('templates')}
             onGoBriefs={() => setActiveNav('briefs')}
             onGoType={(type) => setActiveNav(type === 'workflow' ? 'home' : type)}
@@ -1917,12 +1968,12 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       </main>
 
 
-      {selected && <Drawer ticket={selected} onClose={() => setSelected(null)} onDelete={handleDelete} />}
+      {selected && <Drawer conversation={selected} onClose={() => setSelected(null)} onDelete={handleDelete} />}
 
       <ConfirmDeleteModal
         open={confirmDeleteChat}
         title="Delete Chat"
-        message={`Are you sure you want to delete "${currentTicket?.summary ?? ''}"?`}
+        message={`Are you sure you want to delete "${currentConversation?.summary ?? ''}"?`}
         onConfirm={confirmDeleteChatNow}
         onClose={() => setConfirmDeleteChat(false)}
       />
