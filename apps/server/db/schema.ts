@@ -111,6 +111,9 @@ export const attachments = pgTable("attachments", {
   filename: text("filename").notNull(),
   mimeType: text("mime_type").notNull(),
   sizeBytes: integer("size_bytes").notNull(),
+  // Extraction pipeline output (image/audio/pdf/docx -> text for the AI).
+  extractedText: text("extracted_text"),
+  extractStatus: text("extract_status").notNull().default("pending"),
   createdAt: ts("created_at").notNull(),
 });
 

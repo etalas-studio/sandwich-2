@@ -15,6 +15,13 @@
       "when": 1786575540186,
       "tag": "0001_sparkling_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786584427885,
+      "tag": "0002_striped_lily_hollister",
+      "breakpoints": true
     }
   ]
 }
