@@ -19,7 +19,8 @@ const pdfParse = require("pdf-parse") as (
  * injected into the AI's prompt. This is deliberately decoupled from the main
  * document-generation engine:
  *
- *   image → Groq vision (read text + describe layout)
+ *   image → OpenCode Gemini vision (read text + describe layout),
+ *           falling back to local OCR (tesseract.js)
  *   audio → Groq Whisper transcription
  *   pdf   → pdf-parse (text-based PDFs only)
  *   docx  → mammoth
@@ -32,9 +33,26 @@ const pdfParse = require("pdf-parse") as (
 const GROQ_BASE = "https://api.groq.com/openai/v1";
 const TRANSCRIPTION_MODEL =
   process.env.GROQ_TRANSCRIPTION_MODEL ?? "whisper-large-v3";
-// Groq currently has no vision model, so images go through local OCR
-// (tesseract.js) — text-only extraction, no layout description.
+// Vision runs through the user's OpenCode subscription (Gemini flash-lite);
+// if it fails or OpenCode isn't configured, fall back to local OCR.
+const OPENCODE_VISION_PROVIDER =
+  process.env.OPENCODE_VISION_PROVIDER ?? "opencode";
+const OPENCODE_VISION_MODEL =
+  process.env.OPENCODE_VISION_MODEL ?? "gemini-3.5-flash-lite";
 const OCR_LANGS = process.env.OCR_LANGS ?? "eng";
+
+const VISION_PROMPT =
+  "Extract every piece of text in this image verbatim, then describe the layout, UI elements, and visual design in detail. If there is no text, just describe what you see.";
+
+let modelRuntimePromise: Promise<any> | null = null;
+function getModelRuntime(): Promise<any> {
+  if (!modelRuntimePromise) {
+    modelRuntimePromise = import("@earendil-works/pi-coding-agent").then((pi) =>
+      pi.ModelRuntime.create({ modelsPath: null }),
+    );
+  }
+  return modelRuntimePromise;
+}
 
 function groqKey(): string {
   const key = process.env.GROQ_API_KEY;
@@ -54,7 +72,7 @@ export async function extractAttachmentText(input: {
   const { storageKey, filename, mimeType } = input;
 
   if (mimeType.startsWith("image/")) {
-    return { text: await extractImage(storageKey) };
+    return { text: await extractImage(storageKey, mimeType) };
   }
   if (mimeType.startsWith("audio/") || mimeType.startsWith("video/")) {
     return { text: await transcribeAudio(storageKey, filename, mimeType) };
@@ -85,8 +103,46 @@ function isTextLike(mimeType: string): boolean {
   );
 }
 
-async function extractImage(storageKey: string): Promise<string> {
-  const buffer = await downloadFromStorage(storageKey);
+async function extractImageWithVision(
+  buffer: Buffer,
+  mimeType: string,
+): Promise<string> {
+  const rt = await getModelRuntime();
+  const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
+  if (!model) {
+    throw new Error(
+      `vision model not available: ${OPENCODE_VISION_PROVIDER}/${OPENCODE_VISION_MODEL}`,
+    );
+  }
+
+  // `Models.stream()` resolves auth (env/stored/runtime) and delegates to the
+  // provider — calling `provider.stream()` directly bypasses auth resolution.
+  const stream = rt.stream(model, {
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: VISION_PROMPT },
+          { type: "image", data: buffer.toString("base64"), mimeType },
+        ],
+      },
+    ],
+  });
+
+  const assistant = await stream.result();
+  if (assistant.stopReason === "error" && assistant.errorMessage) {
+    throw new Error(assistant.errorMessage);
+  }
+  const text = (assistant?.content ?? [])
+    .filter((c: any) => c.type === "text")
+    .map((c: any) => c.text ?? "")
+    .join("")
+    .trim();
+  if (!text) throw new Error("vision model returned no text");
+  return text;
+}
+
+async function extractImageWithOcr(buffer: Buffer): Promise<string> {
   // Lazy import so the (large) OCR worker/wasm only loads when needed.
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker(OCR_LANGS, 1, {
@@ -99,6 +155,22 @@ async function extractImage(storageKey: string): Promise<string> {
     return text;
   } finally {
     await worker.terminate();
+  }
+}
+
+async function extractImage(
+  storageKey: string,
+  mimeType: string,
+): Promise<string> {
+  const buffer = await downloadFromStorage(storageKey);
+  try {
+    return await extractImageWithVision(buffer, mimeType);
+  } catch (err) {
+    console.warn(
+      "OpenCode vision failed, falling back to OCR:",
+      err instanceof Error ? err.message : err,
+    );
+    return await extractImageWithOcr(buffer);
   }
 }
 
