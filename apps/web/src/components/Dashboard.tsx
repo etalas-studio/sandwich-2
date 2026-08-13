@@ -1329,7 +1329,10 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [chatState, setChatState] = useState<{ prompt: string; conversationId: string; autoRun: boolean } | null>(() => {
     const saved = localStorage.getItem('sandwich_last_chat')
     if (!saved) return null
-    try { return { ...JSON.parse(saved) as { prompt: string; conversationId: string }, autoRun: false } } catch { return null }
+    try {
+      const parsed = JSON.parse(saved) as { prompt: string; conversationId: string; autoRun?: boolean }
+      return { prompt: parsed.prompt, conversationId: parsed.conversationId, autoRun: parsed.autoRun === true }
+    } catch { return null }
   })
   const [creatingNew, setCreatingNew] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)

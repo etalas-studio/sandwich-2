@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
@@ -55,6 +56,7 @@ interface AttachedFile {
 export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
+  const navigate = useNavigate()
   const PLANS = PLANS_META.map((p) => ({
     slug: p.slug,
     name: p.name,
@@ -70,7 +72,6 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const [activeType, setActiveType] = useState<ConversationType>('general')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [submitted, setSubmitted] = useState(false)
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const activeSectionRef = useRef<string>('')
@@ -132,11 +133,20 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     try {
       const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
       await createMessage(local.id, { content: prompt.trim() })
-      setPrompt('')
-      setAttachments([])
-      setSubmitted(true)
+      // Hand off to the dashboard with the new session already auto-running.
+      try {
+        localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
+      } catch { /* ignore storage errors */ }
+      navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('hero_error_generic'))
+      const msg = err instanceof Error ? err.message : ''
+      if (msg === 'active subscription required') {
+        // No active plan — stash the draft and send them to checkout.
+        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType })) } catch { /* ignore */ }
+        onGoToApp()
+        return
+      }
+      setError(msg || t('hero_error_generic'))
       setIsSubmitting(false)
     }
   }
@@ -241,24 +251,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
         {/* prompt box */}
         <div className="w-full max-w-xl mx-auto mt-0 z-10">
-          {submitted ? (
-            <div className="rounded-2xl p-8 text-center border" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f91814' }}>
-                <iconify-icon icon="solar:check-circle-bold" width="24" style={{ color: '#ffffff' }} />
-              </div>
-              <p className="font-semibold text-zinc-900 mb-1">{t('hero_brief_created')}</p>
-              <p className="text-sm text-zinc-400 mb-5">{t('hero_brief_processing')}</p>
-              <button
-                onClick={() => onGoToApp()}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium text-white mx-auto hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: '#f91814' }}
-              >
-                {t('hero_see_result')}
-                <iconify-icon icon="solar:arrow-right-linear" width="14" />
-              </button>
-            </div>
-          ) : (
-            <>
+          <>
               <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
               <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
 
@@ -337,8 +330,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               </div>
 
               {error && <p className="mt-2 text-xs text-center" style={{ color: '#f91814' }}>{error}</p>}
-            </>
-          )}
+          </>
         </div>
 
       </section>
