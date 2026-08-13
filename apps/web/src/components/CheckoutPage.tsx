@@ -120,11 +120,10 @@ function PlanPicker() {
 }
 
 export default function CheckoutPage() {
-  const { t: tr, lang } = useLanguage()
+  const { t: tr } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const paramPlan = searchParams.get('plan')
-  const backTo = searchParams.get('from') === 'dashboard' ? '/dashboard' : '/'
 
   // No plan selected yet — show picker
   if (!paramPlan) return <PlanPicker />
@@ -132,40 +131,23 @@ export default function CheckoutPage() {
   const planSlug = paramPlan
   const plan = PLAN_DETAILS[planSlug] ?? PLAN_DETAILS.starter
 
-  return <PaymentTrigger planSlug={planSlug} plan={plan} backTo={backTo} tr={tr} lang={lang} navigate={navigate} />
+  return <PaymentTrigger planSlug={planSlug} plan={plan} tr={tr} navigate={navigate} />
 }
 
 function PaymentTrigger({
   planSlug,
   plan,
-  backTo,
   tr,
   navigate,
 }: {
   planSlug: string
   plan: typeof PLAN_DETAILS[string]
-  backTo: string
   tr: ReturnType<typeof useLanguage>['t']
-  lang: string
   navigate: ReturnType<typeof useNavigate>
 }) {
   const queryClient = useQueryClient()
   const [isDone, setIsDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const waitForActivePlan = async (): Promise<boolean> => {
-    for (let i = 0; i < 10; i++) {
-      try {
-        const res = await fetch(apiUrl('/api/subscriptions/active'), { credentials: 'include' })
-        if (res.ok) {
-          const s = await res.json() as { planSlug: string | null }
-          if (s.planSlug) return true
-        }
-      } catch { /* transient */ }
-      await new Promise((r) => setTimeout(r, 1500))
-    }
-    return false
-  }
 
   const hasTriggered = React.useRef(false)
   React.useEffect(() => {
@@ -194,9 +176,7 @@ function PaymentTrigger({
       const data = await txRes.json() as {
         token: string | null
         simulated: boolean
-        orderId: string
-        clientKey: string
-        isProduction: boolean
+        redirectUrl: string | null
       }
 
       // Dev simulation — the subscription is already activated server-side.
@@ -206,38 +186,15 @@ function PaymentTrigger({
         return
       }
 
-      // Real Snap flow — client key + env come from the transaction response.
-
-      try {
-        await new Promise<void>((resolve, reject) => {
-          if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
-          const script = document.createElement('script')
-          script.src = data.isProduction
-            ? 'https://app.midtrans.com/snap/snap.js'
-            : 'https://app.sandbox.midtrans.com/snap/snap.js'
-          script.setAttribute('data-client-key', data.clientKey)
-          script.onload = () => resolve()
-          script.onerror = () => reject(new Error('Snap.js failed to load'))
-          document.head.appendChild(script)
-        })
-      } catch {
+      if (!data.redirectUrl) {
         setError(tr('checkout_payment_error'))
         return
       }
 
-      ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
-        onSuccess: () => {
-          // UX hint only — confirm via backend, then refresh the cache.
-          void (async () => {
-            await waitForActivePlan()
-            queryClient.invalidateQueries({ queryKey: ['subscription'] })
-            setIsDone(true)
-          })()
-        },
-        onPending: () => { navigate(backTo) },
-        onError: () => { navigate(backTo) },
-        onClose: () => { navigate('/') },
-      })
+      // Redirect mode — hand the browser to Midtrans's hosted payment page.
+      // Midtrans redirects back to the dashboard Finish/Unfinish/Error URLs,
+      // which should point at /checkout/return.
+      window.location.href = data.redirectUrl
     }
 
     void run()
