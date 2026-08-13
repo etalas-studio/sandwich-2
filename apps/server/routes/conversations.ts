@@ -11,7 +11,9 @@ import {
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
 import { authenticateRequest } from "../auth/middleware.js";
-import { incrementUsage } from "../db/repo/usage.js";
+import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
+import { getActiveSubscription } from "../db/repo/subscriptions.js";
+import { PLANS } from "../pipeline/plans.js";
 
 function parseUpdateInput(candidate: Record<string, unknown>): UpdateConversationInput {
   const input: UpdateConversationInput = {};
@@ -62,6 +64,21 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     if (!prompt) {
       sendJson(res, 400, { error: "prompt is required" });
       return;
+    }
+
+    // Enforce the monthly quota server-side (FE gating is UX only).
+    const sub = await getActiveSubscription(db, auth.userId);
+    const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
+    if (!plan) {
+      sendJson(res, 403, { error: "active subscription required" });
+      return;
+    }
+    if (plan.limit !== null) {
+      const used = await getMonthlyUsage(db, auth.userId);
+      if (used >= plan.limit) {
+        sendJson(res, 403, { error: "monthly quota reached" });
+        return;
+      }
     }
 
     try {

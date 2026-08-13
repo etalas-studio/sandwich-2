@@ -14,6 +14,7 @@ export interface SnapTransactionInput {
   orderId: string;
   grossAmount: number;
   itemName: string;
+  customerEmail?: string;
 }
 
 export interface SnapTransactionResult {
@@ -28,6 +29,22 @@ export async function createSnapTransaction(
   if (!serverKey) throw new Error("MIDTRANS_SERVER_KEY is not set");
   const auth = Buffer.from(`${serverKey}:`).toString("base64");
 
+  const payload: Record<string, unknown> = {
+    transaction_details: {
+      order_id: input.orderId,
+      gross_amount: input.grossAmount,
+    },
+    item_details: [
+      { id: input.orderId, price: input.grossAmount, quantity: 1, name: input.itemName },
+    ],
+    // Card is in scope (full Snap page, no enabled_payments restriction), so
+    // enforce 3-D Secure per transaction instead of relying on a dashboard default.
+    credit_card: { secure: true },
+  };
+  if (input.customerEmail) {
+    payload.customer_details = { email: input.customerEmail };
+  }
+
   const res = await fetch(`${snapBaseUrl()}/snap/v1/transactions`, {
     method: "POST",
     headers: {
@@ -35,15 +52,7 @@ export async function createSnapTransaction(
       accept: "application/json",
       authorization: `Basic ${auth}`,
     },
-    body: JSON.stringify({
-      transaction_details: {
-        order_id: input.orderId,
-        gross_amount: input.grossAmount,
-      },
-      item_details: [
-        { id: input.orderId, price: input.grossAmount, quantity: 1, name: input.itemName },
-      ],
-    }),
+    body: JSON.stringify(payload),
   });
 
   const body = (await res.json()) as { token?: string; redirect_url?: string; error_messages?: string[] };

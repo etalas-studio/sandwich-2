@@ -1,44 +1,93 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { subscriptions } from "../schema.js";
 import type { Database } from "../connection.js";
+import { PLANS } from "../../pipeline/plans.js";
 
 export interface Subscription {
   id: number;
   userId: string;
   planSlug: string;
   status: string;
+  periodDays: number;
+  expiresAt: Date | null;
   startedAt: Date;
   updatedAt: Date;
 }
 
-export async function createSubscription(
-  db: Database,
-  input: { userId: string; planSlug: string },
-): Promise<Subscription> {
-  const now = new Date();
-  await db.insert(subscriptions).values({
-    userId: input.userId,
-    planSlug: input.planSlug,
-    status: "active",
-    startedAt: now,
-    updatedAt: now,
-  });
-  const rows = await db.select().from(subscriptions)
-    .where(and(eq(subscriptions.userId, input.userId), eq(subscriptions.status, "active")))
-    .limit(1);
-  return rows[0]!;
+export function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
-export async function getActiveSubscription(db: Database, userId: string): Promise<Subscription | null> {
-  const rows = await db.select().from(subscriptions)
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")))
+export async function getSubscriptionForUser(
+  db: Database,
+  userId: string,
+): Promise<Subscription | null> {
+  const rows = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId)).limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * An active subscription must be `active` AND not yet expired. Expiry is
+ * enforced here (no grace period per product decision).
+ */
+export async function getActiveSubscription(
+  db: Database,
+  userId: string,
+): Promise<Subscription | null> {
+  const rows = await db.select()
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.userId, userId),
+        eq(subscriptions.status, "active"),
+        gt(subscriptions.expiresAt, new Date()),
+      ),
+    )
     .limit(1);
   return rows[0] ?? null;
 }
 
-export async function cancelSubscription(db: Database, userId: string): Promise<void> {
+/**
+ * Activate or extend a plan. Called ONLY from the verified payment webhook
+ * (or the dev simulation path server-side) — never from client input.
+ *
+ * Renewal extends from `max(now, existing.expiresAt)` so an active plan
+ * stacks, while an expired plan restarts from now.
+ */
+export async function activateSubscription(
+  db: Database,
+  input: { userId: string; planSlug: string },
+): Promise<Subscription> {
+  const plan = PLANS[input.planSlug as keyof typeof PLANS] ?? PLANS.starter;
   const now = new Date();
-  await db.update(subscriptions)
-    .set({ status: "cancelled", updatedAt: now })
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")));
+  const existing = await getSubscriptionForUser(db, input.userId);
+
+  if (existing) {
+    const base =
+      existing.expiresAt && existing.expiresAt.getTime() > now.getTime()
+        ? existing.expiresAt
+        : now;
+    const expiresAt = addDays(base, plan.periodDays);
+    await db.update(subscriptions).set({
+      planSlug: input.planSlug,
+      status: "active",
+      periodDays: plan.periodDays,
+      expiresAt,
+      updatedAt: now,
+    }).where(eq(subscriptions.id, existing.id));
+  } else {
+    await db.insert(subscriptions).values({
+      userId: input.userId,
+      planSlug: input.planSlug,
+      status: "active",
+      periodDays: plan.periodDays,
+      expiresAt: addDays(now, plan.periodDays),
+      startedAt: now,
+      updatedAt: now,
+    });
+  }
+
+  return (await getSubscriptionForUser(db, input.userId))!;
 }

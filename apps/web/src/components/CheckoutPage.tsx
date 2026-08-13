@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
 
@@ -123,7 +124,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const paramPlan = searchParams.get('plan')
-  const backTo = searchParams.get('from') === 'dashboard' || localStorage.getItem('sandwich_paid_plan') ? '/dashboard' : '/'
+  const backTo = searchParams.get('from') === 'dashboard' ? '/dashboard' : '/'
 
   // No plan selected yet — show picker
   if (!paramPlan) return <PlanPicker />
@@ -148,7 +149,23 @@ function PaymentTrigger({
   lang: string
   navigate: ReturnType<typeof useNavigate>
 }) {
+  const queryClient = useQueryClient()
   const [isDone, setIsDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const waitForActivePlan = async (): Promise<boolean> => {
+    for (let i = 0; i < 10; i++) {
+      try {
+        const res = await fetch(apiUrl('/api/subscriptions/active'), { credentials: 'include' })
+        if (res.ok) {
+          const s = await res.json() as { planSlug: string | null }
+          if (s.planSlug) return true
+        }
+      } catch { /* transient */ }
+      await new Promise((r) => setTimeout(r, 1500))
+    }
+    return false
+  }
 
   const hasTriggered = React.useRef(false)
   React.useEffect(() => {
@@ -156,94 +173,69 @@ function PaymentTrigger({
     hasTriggered.current = true
 
     const run = async () => {
-      const orderId = `${planSlug}-${Date.now()}`
-      const grossAmount = plan.amount
-
-      // Check environment — only use Midtrans in PRODUCTION
-      let isProductionEnv = false
+      let txRes: Response
       try {
-        const cfgRes = await fetch(apiUrl('/api/midtrans/config'))
-        if (cfgRes.ok) {
-          const cfg = await cfgRes.json() as { environment?: string }
-          isProductionEnv = cfg.environment === 'PRODUCTION'
-        }
-      } catch { /* use simulation */ }
-
-      if (!isProductionEnv) {
-        // Simulation — non-PRODUCTION environment
-        setTimeout(() => {
-          localStorage.setItem('sandwich_paid_plan', planSlug)
-          fetch(apiUrl('/api/subscriptions'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ planSlug }),
-          }).catch(() => {});
-          setIsDone(true)
-        }, 1500)
-        return
-      }
-
-      try {
-        const [cfgRes2, txRes] = await Promise.all([
-          fetch(apiUrl('/api/midtrans/config')),
-          fetch(apiUrl('/api/midtrans/transaction'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ orderId, grossAmount, itemName: `SANDWICH ${plan.name}` }),
-          }),
-        ])
-
-        if (txRes.ok) {
-          const { token } = await txRes.json() as { token: string }
-          const { clientKey, isProduction } = cfgRes2.ok
-            ? await cfgRes2.json() as { clientKey: string; isProduction: boolean }
-            : { clientKey: '', isProduction: true }
-
-          await new Promise<void>((resolve, reject) => {
-            if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
-            const script = document.createElement('script')
-            script.src = isProduction
-              ? 'https://app.midtrans.com/snap/snap.js'
-              : 'https://app.sandbox.midtrans.com/snap/snap.js'
-            script.setAttribute('data-client-key', clientKey)
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error('Snap.js failed to load'))
-            document.head.appendChild(script)
-          })
-          ;(window as unknown as { snap: { pay: (token: string, opts: object) => void } }).snap.pay(token, {
-            onSuccess: () => {
-              localStorage.setItem('sandwich_paid_plan', planSlug);
-              // Create subscription in DB
-              fetch(apiUrl('/api/subscriptions'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ planSlug }),
-              }).catch(() => {});
-              setIsDone(true);
-            },
-            onPending: () => { navigate(backTo) },
-            onError: () => { navigate(backTo) },
-            onClose: () => { navigate('/') },
-          })
-          return
-        }
-      } catch { /* fall through to simulation */ }
-
-      // ── Simulation fallback ──────────────────────────────────────────────
-      setTimeout(() => {
-        localStorage.setItem('sandwich_paid_plan', planSlug)
-        // Create subscription in DB
-        fetch(apiUrl('/api/subscriptions'), {
+        txRes = await fetch(apiUrl('/api/midtrans/transaction'), {
           method: 'POST',
           credentials: 'include',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ planSlug }),
-        }).catch(() => {});
+        })
+      } catch {
+        setError(tr('checkout_payment_error'))
+        return
+      }
+
+      if (!txRes.ok) {
+        setError(tr('checkout_payment_error'))
+        return
+      }
+
+      const data = await txRes.json() as { token: string | null; simulated: boolean; orderId: string }
+
+      // Dev simulation — the subscription is already activated server-side.
+      if (data.simulated || !data.token) {
+        queryClient.invalidateQueries({ queryKey: ['subscription'] })
         setIsDone(true)
-      }, 1500)
+        return
+      }
+
+      // Real Snap flow
+      const cfgRes = await fetch(apiUrl('/api/midtrans/config'))
+      const { clientKey, isProduction } = cfgRes.ok
+        ? await cfgRes.json() as { clientKey: string; isProduction: boolean }
+        : { clientKey: '', isProduction: true }
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          if ((window as unknown as Record<string, unknown>).snap) { resolve(); return }
+          const script = document.createElement('script')
+          script.src = isProduction
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js'
+          script.setAttribute('data-client-key', clientKey)
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Snap.js failed to load'))
+          document.head.appendChild(script)
+        })
+      } catch {
+        setError(tr('checkout_payment_error'))
+        return
+      }
+
+      ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
+        onSuccess: () => {
+          // UX hint only — confirm via backend, then refresh the cache.
+          void (async () => {
+            await waitForActivePlan()
+            queryClient.invalidateQueries({ queryKey: ['subscription'] })
+            setIsDone(true)
+          })()
+        },
+        onPending: () => { navigate(backTo) },
+        onError: () => { navigate(backTo) },
+        onClose: () => { navigate('/') },
+      })
     }
 
     void run()
@@ -274,6 +266,31 @@ function PaymentTrigger({
             style={{ backgroundColor: '#111827' }}
           >
             {tr('checkout_success_cta')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center antialiased px-4"
+        style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}
+      >
+        <div className="w-full max-w-sm text-center">
+          <div className="flex justify-center mb-6">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f91814' }}>
+              <iconify-icon icon="solar:danger-circle-bold" width="28" className="text-white" />
+            </div>
+          </div>
+          <p className="text-sm text-zinc-600 mb-8">{error}</p>
+          <button
+            onClick={() => navigate('/checkout')}
+            className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: '#111827' }}
+          >
+            {tr('auth_back')}
           </button>
         </div>
       </div>

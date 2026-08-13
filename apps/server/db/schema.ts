@@ -119,10 +119,20 @@ export const attachments = pgTable("attachments", {
 
 export const payments = pgTable("payments", {
   orderId: text("order_id").primaryKey(),
-  transactionStatus: text("transaction_status").notNull(),
-  statusCode: text("status_code").notNull(),
+  userId: text("user_id").references(() => users.id),
+  planSlug: text("plan_slug"),
+  // Local state machine (creating_payment → awaiting_payment → paid/…)
+  localStatus: text("local_status").notNull().default("creating_payment"),
+  transactionStatus: text("transaction_status").notNull().default("pending"),
+  statusCode: text("status_code").notNull().default("0"),
   grossAmount: text("gross_amount").notNull(),
-  updatedAt: ts("updated_at").notNull(),
+  paymentType: text("payment_type"),
+  fraudStatus: text("fraud_status"),
+  snapToken: text("snap_token"),
+  redirectUrl: text("redirect_url"),
+  expiresAt: ts("expires_at"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
 });
 
 export const subscriptions = pgTable("subscriptions", {
@@ -132,6 +142,9 @@ export const subscriptions = pgTable("subscriptions", {
     .references(() => users.id),
   planSlug: text("plan_slug").notNull(),
   status: text("status").notNull().default("active"),
+  periodDays: integer("period_days").notNull().default(30),
+  // null only for legacy rows; new rows always set a concrete expiry.
+  expiresAt: ts("expires_at"),
   startedAt: ts("started_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
 });

@@ -52,8 +52,8 @@ export default function AuthGate() {
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
-    // Check DB first, fallback to localStorage (for pre-migration users)
-    const hasPlan = sub?.planSlug || localStorage.getItem('sandwich_paid_plan')
+    // Gate on the DB subscription only (server-side source of truth).
+    const hasPlan = sub?.planSlug
     if (!hasPlan) {
       navigate('/checkout', { replace: true })
       return null

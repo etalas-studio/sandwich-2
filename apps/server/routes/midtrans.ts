@@ -1,16 +1,30 @@
 import type { Router } from "../router.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { authenticateRequest } from "../auth/middleware.js";
-import { createSnapTransaction, verifyNotificationSignature } from "../pipeline/midtrans.js";
-import { upsertPayment } from "../db/payments.js";
+import { getUserById } from "../db/users.js";
+import {
+  createSnapTransaction,
+  verifyNotificationSignature,
+} from "../pipeline/midtrans.js";
+import {
+  mapTransactionStatus,
+  shouldTransition,
+  type LocalPaymentStatus,
+} from "../pipeline/payment-status.js";
+import { getPlan, generateOrderId } from "../pipeline/plans.js";
+import { createPayment, getPayment, updatePayment } from "../db/payments.js";
+import { activateSubscription } from "../db/repo/subscriptions.js";
 import type { Database } from "../db/connection.js";
 
 export function registerMidtransRoutes(router: Router, db: Database): void {
   router.get("/api/midtrans/config", (_req, res) => {
+    const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
     sendJson(res, 200, {
       clientKey: process.env.MIDTRANS_CLIENT_KEY ?? "",
-      isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
-      environment: process.env.ENVIRONMENT ?? "development",
+      isProduction,
+      // Whether a server key is present drives whether the app can talk to
+      // Midtrans at all (false ⇒ dev simulation path).
+      configured: !!process.env.MIDTRANS_SERVER_KEY,
     });
   });
 
@@ -20,41 +34,84 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const body = (await readJsonBody(req)) as Partial<{
-      orderId: string;
-      grossAmount: number;
-      itemName: string;
-    }>;
-    if (
-      typeof body.orderId !== "string" ||
-      !body.orderId ||
-      typeof body.grossAmount !== "number" ||
-      !(body.grossAmount > 0)
-    ) {
-      sendJson(res, 400, { error: "orderId (string) and grossAmount (positive number) are required" });
+
+    const body = (await readJsonBody(req).catch(() => null)) as {
+      planSlug?: string;
+    } | null;
+    const plan = body?.planSlug ? getPlan(body.planSlug) : undefined;
+    if (!plan) {
+      sendJson(res, 400, { error: "planSlug must be 'starter' or 'pro'" });
       return;
     }
+
+    // Server-side order id + price (never trust client amounts).
+    const orderId = generateOrderId(plan.slug, auth.userId);
+
     try {
-      const result = await createSnapTransaction({
-        orderId: body.orderId,
-        grossAmount: body.grossAmount,
-        itemName: typeof body.itemName === "string" && body.itemName ? body.itemName : body.orderId,
+      // Persist `creating_payment` BEFORE any provider call.
+      await createPayment(db, {
+        orderId,
+        userId: auth.userId,
+        planSlug: plan.slug,
+        grossAmount: plan.amount,
       });
-      sendJson(res, 200, result);
+
+      // Dev simulation — no server key configured. Activate server-side so
+      // the client can never self-provision a subscription.
+      if (!process.env.MIDTRANS_SERVER_KEY) {
+        await updatePayment(db, orderId, {
+          localStatus: "paid",
+          transactionStatus: "settlement",
+          statusCode: "200",
+          paymentType: "simulated",
+          fraudStatus: "accept",
+        });
+        await activateSubscription(db, {
+          userId: auth.userId,
+          planSlug: plan.slug,
+        });
+        sendJson(res, 200, {
+          token: null,
+          redirectUrl: null,
+          orderId,
+          simulated: true,
+        });
+        return;
+      }
+
+      const user = await getUserById(db, auth.userId);
+      const result = await createSnapTransaction({
+        orderId,
+        grossAmount: plan.amount,
+        itemName: `SANDWICH ${plan.name}`,
+        customerEmail: user?.email,
+      });
+
+      await updatePayment(db, orderId, {
+        localStatus: "awaiting_payment",
+        snapToken: result.token,
+        redirectUrl: result.redirectUrl,
+      });
+
+      sendJson(res, 200, {
+        token: result.token,
+        redirectUrl: result.redirectUrl,
+        orderId,
+        simulated: false,
+      });
     } catch (err) {
+      // Row stays in `creating_payment`, so the attempt is recoverable.
       sendCaughtError(res, err, "midtrans create transaction");
     }
   });
 
   router.post("/api/midtrans/notification", async (req, res) => {
-    const body = (await readJsonBody(req)) as Partial<{
-      order_id: string;
-      status_code: string;
-      gross_amount: string;
-      signature_key: string;
-      transaction_status: string;
-    }>;
+    const body = (await readJsonBody(req).catch(() => null)) as Record<
+      string,
+      unknown
+    > | null;
     if (
+      !body ||
       typeof body.order_id !== "string" ||
       typeof body.status_code !== "string" ||
       typeof body.gross_amount !== "string" ||
@@ -63,6 +120,7 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
       sendJson(res, 400, { error: "invalid notification payload" });
       return;
     }
+
     if (
       !verifyNotificationSignature({
         order_id: body.order_id,
@@ -74,18 +132,57 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "invalid signature" });
       return;
     }
+
+    const orderId = body.order_id;
+    const payment = await getPayment(db, orderId);
+    if (!payment) {
+      // Unknown order id — accept without action; there is no user mapping.
+      console.warn(`midtrans notification for unknown order_id=${orderId}`);
+      sendJson(res, 200, { received: true });
+      return;
+    }
+
+    const incoming = mapTransactionStatus(
+      typeof body.transaction_status === "string"
+        ? body.transaction_status
+        : "pending",
+      typeof body.fraud_status === "string" ? body.fraud_status : null,
+    );
+
+    // Idempotent + monotonic: never regress paid/refunded, never double-run.
+    if (!shouldTransition(payment.localStatus as LocalPaymentStatus, incoming)) {
+      sendJson(res, 200, { received: true });
+      return;
+    }
+
     try {
-      await upsertPayment(db, {
-        order_id: body.order_id,
-        transaction_status: body.transaction_status ?? "unknown",
-        status_code: body.status_code,
-        gross_amount: body.gross_amount,
-        updated_at: new Date().toISOString(),
+      await updatePayment(db, orderId, {
+        localStatus: incoming,
+        transactionStatus:
+          typeof body.transaction_status === "string"
+            ? body.transaction_status
+            : "pending",
+        statusCode: body.status_code,
+        grossAmount: body.gross_amount,
+        paymentType:
+          typeof body.payment_type === "string" ? body.payment_type : null,
+        fraudStatus:
+          typeof body.fraud_status === "string" ? body.fraud_status : null,
       });
+
+      // Fulfill only on the verified transition into `paid`, server-side.
+      if (incoming === "paid" && payment.userId && payment.planSlug) {
+        await activateSubscription(db, {
+          userId: payment.userId,
+          planSlug: payment.planSlug,
+        });
+      }
     } catch (err) {
+      // 500 so Midtrans retries; the notification was not safely accepted.
       sendCaughtError(res, err, "midtrans persist notification");
       return;
     }
+
     sendJson(res, 200, { received: true });
   });
 }

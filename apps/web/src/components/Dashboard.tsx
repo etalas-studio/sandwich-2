@@ -946,7 +946,7 @@ function HomeOverview({
   const { lang, t: tr } = useLanguage()
   const [filter, setFilter] = useState<'all' | 'done' | 'draft'>('all')
   const { data: sub } = useSubscription()
-  const plan = sub?.planSlug ?? localStorage.getItem('sandwich_paid_plan')
+  const plan = sub?.planSlug
 
   const now = Date.now()
   const weekMs = 7 * 24 * 60 * 60 * 1000

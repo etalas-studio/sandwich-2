@@ -224,11 +224,12 @@ await db.transaction(async (tx) => {
 | `GET` | `/api/share/:token` | No | Public read-only share view |
 | `POST` | `/api/attachments` | Yes | Upload attachment (multipart) |
 | `GET` | `/api/usage` | Yes | Monthly usage + plan limit |
+| `GET` | `/api/subscriptions/active` | Yes | Active plan (expiry-aware) |
 | `GET` | `/api/preferences/:key` | Yes | Get a user preference |
 | `PUT` | `/api/preferences/:key` | Yes | Set a user preference |
-| `GET` | `/api/midtrans/config` | No | Midtrans client config |
-| `POST` | `/api/midtrans/transaction` | Yes | Create Snap transaction |
-| `POST` | `/api/midtrans/notification` | No | Midtrans payment webhook |
+| `GET` | `/api/midtrans/config` | Yes | Midtrans client config |
+| `POST` | `/api/midtrans/transaction` | Yes | Create Snap transaction (`planSlug`; server-side price) |
+| `POST` | `/api/midtrans/notification` | No | Midtrans payment webhook (activates subscription) |
 | `GET` | `/api/account` | Yes | User account info |
 | `PUT` | `/api/account/password` | Yes | Change password |
 | `POST` | `/api/purge` | Yes | Delete all data (dev only) |

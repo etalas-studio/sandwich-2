@@ -186,6 +186,7 @@ const STRINGS = {
   checkout_simulation_note: { en: 'Simulation only — no real charge.', id: 'Simulasi pembayaran — tidak ada charge sungguhan.' },
   checkout_success_title: { en: 'Payment successful', id: 'Pembayaran berhasil' },
   checkout_success_note: { en: 'This is a payment simulation — no real charge.', id: 'Ini simulasi pembayaran — belum ada charge sungguhan.' },
+  checkout_payment_error: { en: 'Unable to start payment. Please try again.', id: 'Gagal memulai pembayaran. Silakan coba lagi.' },
   checkout_success_cta: { en: 'Go to Dashboard', id: 'Lanjut ke Dashboard' },
   checkout_price_per_month: { en: '/ month', id: '/ bulan' },
   checkout_plan_active: { en: 'plan is now active.', id: 'kamu aktif.' },
