@@ -84,6 +84,10 @@ export class Router {
     this.add("PUT", path, handler);
   }
 
+  patch(path: string, handler: RouteHandler): void {
+    this.add("PATCH", path, handler);
+  }
+
   delete(path: string, handler: RouteHandler): void {
     this.add("DELETE", path, handler);
   }
@@ -99,7 +103,7 @@ export class Router {
         res.writeHead(204, {
           'access-control-allow-origin': corsOrigin,
           'access-control-allow-credentials': 'true',
-          'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
           'access-control-allow-headers': 'content-type',
           'access-control-max-age': '86400',
         });

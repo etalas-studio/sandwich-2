@@ -187,7 +187,7 @@ export default function AccountSection({ account, onChangePassword, onPurge }: A
               <div>
                 <p className="text-sm text-[#ff8a8a] font-normal mb-1">This action is irreversible</p>
                 <p className="text-xs text-[#ff8a8a]/60 font-light">
-                  This will permanently delete all tickets, pipeline runs, scan results, and settings.
+                  This will permanently delete all your briefs, chat history, uploads, and settings.
                   You will be logged out after the purge completes.
                 </p>
               </div>

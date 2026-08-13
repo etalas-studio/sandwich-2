@@ -7,15 +7,15 @@ export interface Subscription {
   userId: string;
   planSlug: string;
   status: string;
-  startedAt: string;
-  updatedAt: string;
+  startedAt: Date;
+  updatedAt: Date;
 }
 
 export async function createSubscription(
   db: Database,
   input: { userId: string; planSlug: string },
 ): Promise<Subscription> {
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.insert(subscriptions).values({
     userId: input.userId,
     planSlug: input.planSlug,
@@ -37,7 +37,7 @@ export async function getActiveSubscription(db: Database, userId: string): Promi
 }
 
 export async function cancelSubscription(db: Database, userId: string): Promise<void> {
-  const now = new Date().toISOString();
+  const now = new Date();
   await db.update(subscriptions)
     .set({ status: "cancelled", updatedAt: now })
     .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")));

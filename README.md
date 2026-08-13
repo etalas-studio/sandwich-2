@@ -29,10 +29,10 @@ sandwich-2/
 │   │   └── routes/      # API route handlers
 │   └── web/             # Frontend React app (Vite dev on port 3000)
 │       └── src/
-│           ├── components/  # AuthGate, Dashboard, CheckoutPage, LandingPage
-│           ├── hooks/       # useAuth, useTicketRun
-│           ├── api/         # API client functions
-│           └── lib/         # i18n, localTickets, promptTemplates
+│           ├── components/  # AuthGate, Dashboard, CheckoutPage, LandingPage, SharePage
+│           ├── hooks/       # useAuth, useSubscription, useUsage
+│           ├── api/         # API client functions (conversations, attachments, preferences)
+│           └── lib/         # i18n, conversations, promptTemplates, promptChips
 ├── docs/superpowers/   # Design specs & implementation plans
 └── .env                # Environment variables (gitignored)
 ```
@@ -82,14 +82,29 @@ TRUSTED_HOSTS=localhost
 # Set to PRODUCTION for real Midtrans payments. Anything else uses simulation.
 ENVIRONMENT=development
 
-# ─── AI Engine (pick one) ───
+# ─── AI Engine (OpenCode / Pi SDK) ───
 OPENCODE_API_KEY=your-opencode-key
-# GROQ_API_KEY=your-groq-key    # fallback if OpenCode fails
+OPENCODE_PROVIDER=opencode-go       # Pi provider id
+OPENCODE_MODEL=deepseek-v4-pro      # main doc-generation model
+# GROQ_API_KEY=your-groq-key        # fallback engine (text + whisper)
+
+# ─── Attachment extraction ───
+OPENCODE_VISION_PROVIDER=opencode           # provider for image vision
+OPENCODE_VISION_MODEL=gemini-3.5-flash-lite # image model
+OCR_LANGS=eng                               # OCR fallback (eng+ind for Indonesian)
+GROQ_TRANSCRIPTION_MODEL=whisper-large-v3   # audio model
 
 # ─── Midtrans (optional) ───
 MIDTRANS_SERVER_KEY=your-server-key
 MIDTRANS_CLIENT_KEY=your-client-key
 MIDTRANS_IS_PRODUCTION=false    # sandbox by default
+
+# ─── Attachments (Cloudflare R2) ───
+R2_ACCOUNT_ID=your-account-id
+R2_ACCESS_KEY_ID=your-access-key-id
+R2_SECRET_ACCESS_KEY=your-secret-access-key
+R2_BUCKET_NAME=sandwich-attachments
+R2_PUBLIC_URL=                  # optional public base URL; if empty, presigned URLs are used
 ```
 
 ### 4. Run Database Migrations
@@ -125,13 +140,13 @@ Open `http://localhost:3000` in your browser.
 |-------|---------|
 | `users` | User accounts (auth) |
 | `sessions` | Session tokens (7-day expiry) |
-| `tickets` | Briefs/documents (PRD, prototype, MOM, etc.) |
+| `conversations` | Briefs/chats + generated documents (PRD, prototype, MOM, etc.) |
+| `chat_messages` | Per-conversation message history |
+| `attachments` | Uploaded file metadata (bytes live in Cloudflare R2) |
 | `payments` | Midtrans payment records |
 | `subscriptions` | User plan subscriptions (starter/pro) |
-| `chat_messages` | Per-ticket conversation history |
 | `usage` | Monthly brief quota tracking |
 | `user_preferences` | Key-value settings (language, etc.) |
-| `instance_settings` | Instance-level config |
 
 ### Making Schema Changes
 
@@ -195,13 +210,22 @@ await db.transaction(async (tx) => {
 | `POST` | `/api/auth/register` | No | Create account |
 | `POST` | `/api/auth/login` | No | Login |
 | `POST` | `/api/auth/logout` | No | Logout |
-| `GET` | `/api/tickets` | Yes | List all tickets |
-| `POST` | `/api/tickets` | Yes | Create ticket |
-| `GET` | `/api/tickets/:key` | Yes | Get ticket |
-| `PUT` | `/api/tickets/:key` | Yes | Update ticket |
-| `DELETE` | `/api/tickets/:key` | Yes | Delete ticket |
-| `POST` | `/api/tickets/:key/generate` | Yes | Start AI pipeline |
-| `GET` | `/api/tickets/:key/stream` | Yes | SSE stream for pipeline progress |
+| `GET` | `/api/conversations` | Yes | List the user's conversations |
+| `POST` | `/api/conversations` | Yes | Create conversation |
+| `GET` | `/api/conversations/:id` | Yes | Get conversation |
+| `PUT` | `/api/conversations/:id` | Yes | Update conversation |
+| `PATCH` | `/api/conversations/:id` | Yes | Lightweight update (feedback, pin, unread) |
+| `DELETE` | `/api/conversations/:id` | Yes | Delete conversation |
+| `POST` | `/api/conversations/:id/generate` | Yes | Start AI generation |
+| `GET` | `/api/conversations/:id/stream` | Yes | SSE stream for generation progress |
+| `GET` | `/api/conversations/:id/messages` | Yes | Message history |
+| `POST` | `/api/conversations/:id/share` | Yes | Create share link |
+| `POST` | `/api/conversations/:id/unshare` | Yes | Revoke share link |
+| `GET` | `/api/share/:token` | No | Public read-only share view |
+| `POST` | `/api/attachments` | Yes | Upload attachment (multipart) |
+| `GET` | `/api/usage` | Yes | Monthly usage + plan limit |
+| `GET` | `/api/preferences/:key` | Yes | Get a user preference |
+| `PUT` | `/api/preferences/:key` | Yes | Set a user preference |
 | `GET` | `/api/midtrans/config` | No | Midtrans client config |
 | `POST` | `/api/midtrans/transaction` | Yes | Create Snap transaction |
 | `POST` | `/api/midtrans/notification` | No | Midtrans payment webhook |

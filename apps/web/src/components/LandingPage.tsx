@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { createTicket } from '../api/tickets'
-import { saveTicket } from '../lib/localTickets'
+import { createConversationLocal } from '../lib/conversations'
+import { createMessage } from '../api/conversations'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { useAuth } from '../hooks/useAuth'
 import { CHIPS } from '../lib/promptChips'
-import type { TicketType } from '../lib/localTickets'
+import type { ConversationType } from '../lib/conversations'
 import { useLanguage } from '../lib/i18n'
 
 interface LandingPageProps {
@@ -79,7 +79,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     },
   ]
   const [prompt, setPrompt] = useState('')
-  const [activeType, setActiveType] = useState<TicketType>('general')
+  const [activeType, setActiveType] = useState<ConversationType>('general')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -142,11 +142,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      const desc = attachments.length
-        ? attachments.map((a) => `[attachment: ${a.name}]`).join('\n')
-        : prompt.trim()
-      const ticket = await createTicket({ id: '', summary: prompt.trim(), description: desc, url: '' })
-      saveTicket({ id: ticket.key, summary: ticket.summary ?? prompt.trim(), description: desc, createdAt: ticket.createdAt, type: activeType, status: 'processing' })
+      const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
+      await createMessage(local.id, { content: prompt.trim() })
       setPrompt('')
       setAttachments([])
       setSubmitted(true)
@@ -261,8 +258,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:check-circle-bold" width="24" style={{ color: '#ffffff' }} />
               </div>
-              <p className="font-semibold text-zinc-900 mb-1">{t('hero_ticket_created')}</p>
-              <p className="text-sm text-zinc-400 mb-5">{t('hero_ticket_processing')}</p>
+              <p className="font-semibold text-zinc-900 mb-1">{t('hero_brief_created')}</p>
+              <p className="text-sm text-zinc-400 mb-5">{t('hero_brief_processing')}</p>
               <button
                 onClick={() => onGoToApp()}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium text-white mx-auto hover:opacity-90 transition-opacity"

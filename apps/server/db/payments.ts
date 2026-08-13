@@ -16,14 +16,14 @@ export async function upsertPayment(db: Database, payment: Payment): Promise<voi
     transactionStatus: payment.transaction_status,
     statusCode: payment.status_code,
     grossAmount: payment.gross_amount,
-    updatedAt: payment.updated_at,
+    updatedAt: new Date(payment.updated_at),
   }).onConflictDoUpdate({
     target: payments.orderId,
     set: {
       transactionStatus: payment.transaction_status,
       statusCode: payment.status_code,
       grossAmount: payment.gross_amount,
-      updatedAt: payment.updated_at,
+      updatedAt: new Date(payment.updated_at),
     },
   });
 }
@@ -37,6 +37,6 @@ export async function getPayment(db: Database, orderId: string): Promise<Payment
     transaction_status: r.transactionStatus,
     status_code: r.statusCode,
     gross_amount: r.grossAmount,
-    updated_at: r.updatedAt,
+    updated_at: r.updatedAt.toISOString(),
   };
 }
