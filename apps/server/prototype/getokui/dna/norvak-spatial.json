@@ -1,0 +1,63 @@
+{
+  "slug": "norvak-spatial",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "select-none text-[20vw] leading-[0.85] text-center will-change-transform font-geist tracking-tighter",
+    "h1_sizes": [],
+    "cta_classes": "cta-btn group inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] border border-white/20 rounded-full px-5 py-2.5 hover:bg-white hover:text-[#0a0d1f] transition-all duration-300 will-change-transform font-geist"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-28",
+      "py-20",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-xl",
+    "rounded-2xl",
+    "rounded-full"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-attr"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "slug": "aura-ai-landing",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "aura-heading text-7xl md:text-9xl text-[#EDEDEC] select-none text-center",
+    "h1_sizes": [
+      "text-7xl",
+      "text-9xl"
+    ],
+    "cta_classes": "inline-block bg-[#070707] text-[#EDEDEC] aura-meta text-xs px-6 py-3 hover:bg-[#8B5CF6] transition-colors rounded-none"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "sweep"
+    ],
+    "keyframes_css": [
+      "@keyframes sweep { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-[dash_2s_ease-out_forwards]",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

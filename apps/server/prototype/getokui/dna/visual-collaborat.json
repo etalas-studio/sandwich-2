@@ -1,0 +1,124 @@
+{
+  "slug": "visual-collaborat",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "canvas-title font-semibold tracking-tight",
+    "h1_sizes": [],
+    "cta_classes": "px-8 py-3 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-full hover:bg-gray-50 transition-colors shadow-sm cursor-pointer inline-flex items-center justify-center"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-6xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "py-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-5"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "allActive",
+      "boxResize",
+      "cardAnim1",
+      "cardAnim2",
+      "cardAnim3",
+      "cardAnim4",
+      "circlePop",
+      "cpvAvatarBounce",
+      "cpvCommentSlide",
+      "cpvCommentSlide2",
+      "cpvCursorMove1",
+      "cpvCursorMove2",
+      "cpvDrawLine",
+      "cpvFlowPop",
+      "cpvStickyPop",
+      "cpvToolHighlight",
+      "cursor-move",
+      "cursorFollow",
+      "dot-pop",
+      "draw-arrow-1",
+      "draw-arrow-1-head",
+      "draw-arrow-2",
+      "draw-arrow-2-head",
+      "draw-arrow-3-1",
+      "draw-arrow-3-2",
+      "draw-arrow-3-3",
+      "drawBorderBottom",
+      "drawBorderLeft",
+      "drawBorderRight",
+      "drawBorderTop",
+      "drawPathLine",
+      "float",
+      "floatNames",
+      "handlePop",
+      "moveAlex",
+      "moveSam",
+      "moveTaylor",
+      "note-float",
+      "note-pop-1",
+      "note-pop-2",
+      "note-pop-3",
+      "pillFade1",
+      "pillFade2",
+      "pillFade3",
+      "pillFade4",
+      "pillFade5",
+      "slideInC1",
+      "slideInC2",
+      "textPopIn",
+      "type-text-1",
+      "type-text-2",
+      "type-text-3"
+    ],
+    "keyframes_css": [
+      "@keyframes drawBorderTop { 0%, 10% { width: 0%; opacity: 0; } 10.1% { opacity: 1; width: 0%; } 17.5%, 80% { width: 100%; opacity: 1; } 85%, 100% { opacity: 0; width: 100%; } }",
+      "@keyframes drawBorderRight { 0%, 17.5% { height: 0%; opacity: 0; } 17.6% { opacity: 1; height: 0%; } 25%, 80% { height: 100%; opacity: 1; } 85%, 100% { opacity: 0; height: 100%; } }",
+      "@keyframes drawBorderBottom { 0%, 25% { width: 0%; opacity: 0; } 25.1% { opacity: 1; width: 0%; } 32.5%, 80% { width: 100%; opacity: 1; } 85%, 100% { opacity: 0; width: 100%; } }"
+    ],
+    "animate_classes": [
+      "animate-pulse",
+      "animate-spin"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius"
+  ]
+}

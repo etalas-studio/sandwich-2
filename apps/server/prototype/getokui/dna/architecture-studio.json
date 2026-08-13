@@ -1,0 +1,67 @@
+{
+  "slug": "architecture-studio",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-serif-custom text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-none tracking-tight font-normal w-full md:w-3/4",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl",
+      "text-8xl",
+      "text-9xl"
+    ],
+    "cta_classes": "bg-[#2A3324] text-[#E3E7E0] p-3 hover:bg-[#5C715E] transition-colors rounded-sm flex items-center justify-center"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-16",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-sm",
+    "rounded-full"
+  ],
+  "shadow": [
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "bento-grid"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { to { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "slug": "financial-infrastruc-68",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl leading-[1.1] mb-8 text-white font-manrope font-medium tracking-tighter",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl"
+    ],
+    "cta_classes": "px-8 py-3 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-700 text-white hover:brightness-110 transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] flex items-center gap-2 border border-emerald-400/20 font-sans"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "py-24",
+      "py-16"
+    ],
+    "container_max": [
+      "max-w-4xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-3xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

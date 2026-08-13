@@ -1,0 +1,106 @@
+{
+  "slug": "finex-finance",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-center text-5xl md:text-7xl leading-[1.1] max-w-4xl mx-auto font-oswald font-light tracking-tight scroll-item scroll-blur-in delay-100",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl"
+    ],
+    "cta_classes": "transition-transform hover:scale-[1.02] text-sm font-semibold text-black bg-[#ffffff] rounded-full px-8 py-2.5 shadow-[0_0_15px_rgba(14,165,233,0.3)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-40",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-5xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "bar-grow",
+      "beam-spin",
+      "blurIn",
+      "draw-path-loop",
+      "fade-in-up-loop",
+      "fadeInUp",
+      "lines-slide",
+      "progress-loop",
+      "scale-in-loop",
+      "spin-slow",
+      "spin-slow-reverse",
+      "tooltip-fade",
+      "width-grow-loop"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }",
+      "@keyframes blurIn { 0% { opacity: 0; filter: blur(15px); transform: scale(0.95); } 100% { opacity: 1; filter: blur(0); transform: scale(1); } }",
+      "@keyframes beam-spin { to { transform: rotate(360deg); } }"
+    ],
+    "animate_classes": [
+      "animate-[bounce_6s_infinite]",
+      "animate-[bounce_7s_infinite]",
+      "animate-[bounce_8s_infinite]",
+      "animate-[pulse_4s_infinite]",
+      "animate-[pulse_5s_infinite]",
+      "animate-[pulse_6s_infinite]",
+      "animate-[spin-slow-reverse_15s_linear_infinite]",
+      "animate-[spin-slow_20s_linear_infinite]",
+      "animate-draw",
+      "animate-fade-up",
+      "animate-pulse",
+      "animate-scale",
+      "animate-width"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

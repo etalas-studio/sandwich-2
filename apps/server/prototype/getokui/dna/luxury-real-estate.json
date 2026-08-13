@@ -1,0 +1,77 @@
+{
+  "slug": "luxury-real-estate",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl sm:text-6xl lg:text-7xl tracking-tight font-normal leading-[1.1] text-stone-800",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "flex items-center gap-2 bg-stone-900 text-stone-50 px-5 py-2.5 rounded-full text-sm font-normal hover:bg-stone-800 transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_3s_linear_infinite]",
+      "animate-marquee"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes"
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "slug": "subline-saas",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl tracking-tight text-center leading-[1.1] max-w-4xl font-geist font-light",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl"
+    ],
+    "cta_classes": "flex items-center gap-2 bg-gradient-to-b from-[#2a2c31] to-[#1c1d21] border border-[#3e3e42] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.4)] px-3 py-1.5 rounded-full text-xs font-medium text-white hover:brightness-110 transition-all active:scale-95 cursor-pointer font-geist"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-2xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "py-24",
+      "py-32"
+    ],
+    "container_max": [
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "build-seq-1",
+      "build-seq-2",
+      "build-seq-3",
+      "marquee-scroll",
+      "marqueeUp",
+      "pulseBorder",
+      "scaleRight",
+      "slideInMsg1",
+      "slideInMsg2",
+      "slideInMsg3",
+      "sweep-flow",
+      "typewriter"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes slideInMsg1 { 0%, 5% { opacity: 0; transform: translateY(20px); max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; } 10% { max-height: 150px; margin-top: 1.5rem; opacity: 0; transform: translateY(10px); } 15%, 85% { opacity: 1; transform: translateY(0); max-height: 150px; margin-top: 1.5rem; } 90% { opacity: 0; transform: translateY(-10px); max-height: 150px; margin-top: 1.5rem; } 95%, 100% { opacity: 0; transform: translateY(-20px); max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; } }",
+      "@keyframes slideInMsg2 { 0%, 18% { opacity: 0; transform: translateY(20px); max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; } 23% { max-height: 150px; margin-top: 1.5rem; opacity: 0; transform: translateY(10px); } 28%, 85% { opacity: 1; transform: translateY(0); max-height: 150px; margin-top: 1.5rem; } 90% { opacity: 0; transform: translateY(-10px); max-height: 150px; margin-top: 1.5rem; } 95%, 100% { opacity: 0; transform: translateY(-20px); max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; } }"
+    ],
+    "animate_classes": [
+      "animate-bar-1",
+      "animate-bar-2",
+      "animate-bar-3",
+      "animate-marquee-1",
+      "animate-marquee-2",
+      "animate-marquee-infinite",
+      "animate-msg-1",
+      "animate-msg-2",
+      "animate-msg-3",
+      "animate-ping",
+      "animate-pulse",
+      "animate-spin",
+      "animate-typewriter",
+      "animate-typing"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

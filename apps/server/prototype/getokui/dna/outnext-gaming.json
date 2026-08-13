@@ -1,0 +1,66 @@
+{
+  "slug": "outnext-gaming",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-[clamp(3.5rem,9vw,8rem)] leading-[0.9] tracking-tighter font-medium max-w-[85rem] mx-auto hero-title uppercase",
+    "h1_sizes": [],
+    "cta_classes": "bg-white text-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest font-medium hover:bg-gray-200 transition"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-40",
+      "py-32",
+      "pt-32"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-6",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-xl",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes"
+  ]
+}

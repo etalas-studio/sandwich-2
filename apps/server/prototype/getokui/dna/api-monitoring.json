@@ -1,0 +1,91 @@
+{
+  "slug": "api-monitoring",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl md:text-6xl lg:text-7xl tracking-tighter text-white leading-[0.9] font-manrope font-medium",
+    "h1_sizes": [
+      "text-4xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "px-5 py-2 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-sm"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-20"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-md"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "vertical-text",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "heroGlowShift",
+      "neutralFloat"
+    ],
+    "keyframes_css": [
+      "@keyframes neutralFloat { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -12px, 0); } }",
+      "@keyframes heroGlowShift { 0%, 100% { opacity: 0.4; transform: translate3d(0, 0, 0) scale(1); } 50% { opacity: 0.7; transform: translate3d(0, -12px, 0) scale(1.04); } }"
+    ],
+    "animate_classes": [
+      "animate-[pulse_1.2s_ease-in-out_infinite]",
+      "animate-[pulse_1.4s_ease-in-out_infinite]",
+      "animate-[pulse_1.5s_ease-in-out_infinite]",
+      "animate-[pulse_1.6s_ease-in-out_infinite]",
+      "animate-[pulse_1.8s_ease-in-out_infinite]",
+      "animate-[pulse_2s_ease-in-out_infinite]",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

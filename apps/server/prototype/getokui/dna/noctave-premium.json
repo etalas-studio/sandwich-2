@@ -1,0 +1,76 @@
+{
+  "slug": "noctave-premium",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] leading-[0.85] tracking-tight lowercase font-aboreto font-normal",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "hidden sm:inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-[#F05E16] text-[#2A2018] transition-all duration-300 hover:bg-[#EFE7DA] hover:scale-[1.03] active:scale-95 font-sans"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "py-28",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-5"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius"
+  ]
+}

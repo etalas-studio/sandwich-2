@@ -1,0 +1,81 @@
+{
+  "slug": "atmos-weather",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl font-medium tracking-tight text-white mb-6 leading-[1.1] drop-shadow-md",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl"
+    ],
+    "cta_classes": "w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-slate-900 font-medium hover:bg-slate-100 transition-all shadow-lg hover:-translate-y-0.5"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-lg"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-40",
+      "pt-32",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-2xl",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_15s_linear_infinite_reverse]",
+      "animate-[spin_3s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "slug": "loopra-ai-automation",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-7xl bg-clip-text text-5xl text-transparent tracking-tight font-geist bg-gradient-to-b from-white via-white to-white/60 max-w-2xl mb-6 pb-2",
+    "h1_sizes": [
+      "text-7xl",
+      "text-5xl"
+    ],
+    "cta_classes": "group relative inline-flex min-w-[140px] cursor-pointer transition-all duration-[500ms] hover:-translate-y-[1px] hover:text-white shadow-lg overflow-hidden font-medium text-neutral-400 tracking-tight bg-zinc-900/50 border-zinc-700/50 border rounded-full py-3 px-6 items-center justify-center backdrop-blur-sm"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "aura-scroll-down",
+      "beam-flow",
+      "orbit",
+      "orbit-reverse",
+      "pulse-glow"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes beam-flow { 0% { stroke-dashoffset: 600; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }",
+      "@keyframes orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"
+    ],
+    "animate_classes": [
+      "animate-[bounce_1s_infinite]",
+      "animate-[bounce_1s_infinite_0.2s]",
+      "animate-[bounce_1s_infinite_0.4s]",
+      "animate-[ping_3s_ease-out_1s_infinite]",
+      "animate-[ping_3s_ease-out_infinite]",
+      "animate-beam-path",
+      "animate-bounce",
+      "animate-col-down",
+      "animate-col-up",
+      "animate-on-scroll",
+      "animate-pulse",
+      "animate-pulse-logo"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

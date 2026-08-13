@@ -1,0 +1,71 @@
+{
+  "slug": "auralis",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-[25vw] leading-[0.8] font-medium tracking-tight text-white/5 uppercase mix-blend-overlay gs-bg-text",
+    "h1_sizes": [],
+    "cta_classes": "bg-white text-[#020617] px-5 py-2 rounded-full text-xs font-medium uppercase flex items-center gap-3 hover:bg-[#D4D4D4] transition-all shadow-sm"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-6xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-8",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "slug": "berry-pay",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-7xl lg:text-8xl font-bold uppercase tracking-tighter leading-[0.85] text-slate-800 animate-slide-in delay-100",
+    "h1_sizes": [
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "inline-flex items-center gap-2 bg-slate-900 hover:bg-[#5423E7] text-white px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-lg hover:shadow-indigo-500/30"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blurIn",
+      "fadeIn",
+      "slideIn"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }",
+      "@keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }",
+      "@keyframes blurIn { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }"
+    ],
+    "animate_classes": [
+      "animate-blob",
+      "animate-blur-in",
+      "animate-fade-in",
+      "animate-in",
+      "animate-ping",
+      "animate-pulse",
+      "animate-slide-in"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "slug": "ai-creative-platform",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight text-white mb-8 leading-[1.05] emerald-text-glow transition-all duration-500 pointer-events-auto",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "px-5 py-2.5 rounded-full bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "py-32",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "barPulse",
+      "blink-caret",
+      "emerald-glow",
+      "energy-wave",
+      "float",
+      "float-reverse",
+      "flowLine",
+      "frameScan",
+      "logicBarPulse",
+      "logicOrbit",
+      "logicSquarePulse",
+      "logicWave",
+      "marquee",
+      "particle-rise",
+      "ping-slow",
+      "progressSweep",
+      "pulse-bar",
+      "pulse-bar-2",
+      "pulse-bar-3",
+      "pulseDot",
+      "ripple",
+      "scan-light",
+      "scroll-probe",
+      "testimonialBars",
+      "testimonialFloat",
+      "testimonialOrb",
+      "testimonialPulse",
+      "testimonialScan",
+      "typing"
+    ],
+    "keyframes_css": [
+      "@keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }",
+      "@keyframes float-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(20px) rotate(-2deg); } }",
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-[energy-wave_10s_ease-in-out_infinite_4s]",
+      "animate-[energy-wave_12s_ease-in-out_infinite_2s]",
+      "animate-[energy-wave_8s_ease-in-out_infinite]",
+      "animate-[particle-rise_5s_linear_infinite]",
+      "animate-[particle-rise_6s_linear_infinite_2s]",
+      "animate-[particle-rise_7s_linear_infinite_1s]",
+      "animate-[particle-rise_8s_linear_infinite_3s]",
+      "animate-[particle-rise_9s_linear_infinite_0.5s]",
+      "animate-[ping-slow_5s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[ping-slow_5s_cubic-bezier(0,0,0.2,1)_infinite_2.5s]",
+      "animate-[pulse-bar-2_2.2s_ease-in-out_infinite]",
+      "animate-[pulse-bar-2_2.5s_ease-in-out_infinite]",
+      "animate-[pulse-bar-3_1.8s_ease-in-out_infinite]",
+      "animate-[pulse-bar_2s_ease-in-out_infinite]",
+      "animate-[pulse-bar_3s_ease-in-out_infinite]",
+      "animate-[pulse_6s_ease-in-out_infinite_alternate]",
+      "animate-[scroll-probe_1.5s_ease-in-out_infinite]",
+      "animate-[spin_15s_linear_infinite]",
+      "animate-[spin_25s_linear_infinite_reverse]",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

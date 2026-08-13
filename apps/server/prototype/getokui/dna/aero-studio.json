@@ -1,0 +1,84 @@
+{
+  "slug": "aero-studio",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-8xl uppercase leading-none text-5xl font-thin tracking-tight",
+    "h1_sizes": [
+      "text-8xl",
+      "text-5xl"
+    ],
+    "cta_classes": "group inline-flex shrink-0 items-center gap-2.5 rounded-full bg-neutral-100 px-5 py-2.5 text-sm font-light text-black transition-all duration-300 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] focus:outline-none"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-sm"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "pt-32",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-inner",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

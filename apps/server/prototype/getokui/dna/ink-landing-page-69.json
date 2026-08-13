@@ -1,0 +1,57 @@
+{
+  "slug": "ink-landing-page-69",
+  "extraction": "partial",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": null,
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blink",
+      "demoDrift",
+      "grain"
+    ],
+    "keyframes_css": [
+      "@keyframes grain{ 0%{transform:translate(0,0)} 50%{transform:translate(-6%,4%)} 100%{transform:translate(3%,-5%)} }",
+      "@keyframes blink{ 0%,100%{opacity:.45} 50%{opacity:1} }",
+      "@keyframes demoDrift{ 0%{ transform:scale(1.15) translate(-2%,-1%) rotate(0deg);} 50%{ transform:scale(1.3) translate(3%,2%) rotate(5deg);} 100%{ transform:scale(1.16) translate(-1%,1%) rotate(-4deg);} }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

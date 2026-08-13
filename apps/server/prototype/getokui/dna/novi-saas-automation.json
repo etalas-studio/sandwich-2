@@ -1,0 +1,59 @@
+{
+  "slug": "novi-saas-automation",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "mt-5 text-5xl leading-[1.08] tracking-tight text-white md:text-6xl",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "group inline-flex items-center justify-center gap-5 bg-[#00e5ff] px-7 py-3 font-mono text-xs text-black transition-all duration-300 hover:bg-white hover:shadow-[0_0_24px_rgba(0,229,255,0.35)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-10"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": []
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

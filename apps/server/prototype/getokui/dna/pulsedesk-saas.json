@@ -1,0 +1,84 @@
+{
+  "slug": "pulsedesk-saas",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "sm:text-6xl lg:text-7xl text-5xl font-medium text-white tracking-tighter font-jakarta max-w-4xl",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl",
+      "text-5xl"
+    ],
+    "cta_classes": "hidden rounded-full border border-cyan-200/20 bg-cyan-100 px-4 py-2 text-sm font-medium text-slate-950 shadow-lg shadow-cyan-950/20 transition duration-300 ease-out hover:scale-[1.03] hover:border-cyan-200/35 hover:bg-cyan-50 hover:shadow-cyan-900/25 sm:inline-flex font-geist"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-4xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-5"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "progress-shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes progress-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }"
+    ],
+    "animate_classes": [
+      "animate-float-3d",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

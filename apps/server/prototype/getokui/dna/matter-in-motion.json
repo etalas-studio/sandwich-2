@@ -1,0 +1,61 @@
+{
+  "slug": "matter-in-motion",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "cueLine",
+      "finalPulse",
+      "grainMove",
+      "memoryDrift",
+      "orbitPulse",
+      "programRotate",
+      "roomDrift",
+      "traceFloat"
+    ],
+    "keyframes_css": [
+      "@keyframes grainMove { 0% { transform: translate(0, 0); } 50% { transform: translate(-3%, 2%); } 100% { transform: translate(2%, -3%); } }",
+      "@keyframes cueLine { 0%, 100% { transform: scaleY(0.45); opacity: 0.35; } 50% { transform: scaleY(1); opacity: 1; } }",
+      "@keyframes roomDrift { 0% { transform: scale(1) translate(-2%, -1%) rotate(0deg); } 50% { transform: scale(1.08) translate(2%, 2%) rotate(3deg); } 100% { transform: scale(1.04) translate(-1%, 2%) rotate(-2deg); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

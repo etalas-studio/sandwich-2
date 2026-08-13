@@ -1,0 +1,107 @@
+{
+  "slug": "vyral",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "lg:text-9xl leading-[0.8] text-brand-sky text-glow text-7xl font-bold mb-6 font-hand",
+    "h1_sizes": [
+      "text-9xl",
+      "text-7xl"
+    ],
+    "cta_classes": "group relative px-9 py-4 rounded-full bg-brand-text/10 text-brand-text font-semibold text-sm transition-all duration-300 hover:bg-brand-text/15 flex items-center gap-3 overflow-hidden tracking-tight border border-brand-text/10"
+  },
+  "type_scale": {
+    "h1": "text-9xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "pt-32",
+      "py-16"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "border-spin",
+      "breathe",
+      "marquee",
+      "shimmer",
+      "sonar-wave"
+    ],
+    "keyframes_css": [
+      "@keyframes sonar-wave { 0% { r: 10px; opacity: 0.8; stroke-width: 1px; } 100% { r: 80px; opacity: 0; stroke-width: 0px; } }",
+      "@keyframes border-spin { to { --gradient-angle: 360deg; } }",
+      "@keyframes shimmer { to { transform: translate(-50%, -50%) rotate(360deg);} }"
+    ],
+    "animate_classes": [
+      "animate-[beam_3s_linear_infinite]",
+      "animate-[beam_4s_linear_infinite]",
+      "animate-[fadeIn_1s_ease-out]",
+      "animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[pulse_2s_infinite]",
+      "animate-[spin_15s_linear_infinite]",
+      "animate-[spin_20s_linear_infinite_reverse]",
+      "animate-[spin_30s_linear_infinite]",
+      "animate-[spin_40s_linear_infinite]",
+      "animate-beam",
+      "animate-bounce",
+      "animate-marquee",
+      "animate-ping",
+      "animate-pulse",
+      "animate-pulse-fast",
+      "animate-sonar",
+      "animate-spin-slow",
+      "animate-spin-slow-reverse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

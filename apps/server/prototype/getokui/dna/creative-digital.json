@@ -1,0 +1,91 @@
+{
+  "slug": "creative-digital",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "[animation:fadeSlideIn_1s_ease-out_1s_both] animate-on-scroll animate flex flex-wrap justify-center gap-x-[0.25em] gap-y-2 leading-[1.1] md:text-8xl cursor-default text-6xl font-medium tracking-tighter font-manrope mb-8",
+    "h1_sizes": [
+      "text-8xl",
+      "text-6xl"
+    ],
+    "cta_classes": "px-4 py-1.5 bg-zinc-700 text-white text-xs font-semibold font-sans rounded-sm shadow-sm transition-all"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-sm",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "border-spin",
+      "breathe",
+      "columnReveal",
+      "fadeSlideIn",
+      "infinite-scroll",
+      "shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeSlideIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes columnReveal { 0% { clip-path: inset(0 0 100% 0); opacity: 0; } 100% { clip-path: inset(0 0 0% 0); opacity: 1; } }",
+      "@keyframes border-spin { to { --gradient-angle: 360deg; } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_3s_linear_infinite]",
+      "animate-infinite-scroll",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

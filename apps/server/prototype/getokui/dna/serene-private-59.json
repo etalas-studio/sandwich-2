@@ -1,0 +1,50 @@
+{
+  "slug": "serene-private-59",
+  "extraction": "fallback",
+  "css_fallback": {
+    "css_hero_font_size": "3rem",
+    "css_radius": "2px",
+    "css_has_shadow": false
+  },
+  "hero": {
+    "h1_classes": null,
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [
+    "2px"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "blend-modes"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "blend-modes"
+  ]
+}

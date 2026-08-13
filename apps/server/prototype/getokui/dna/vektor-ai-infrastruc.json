@@ -1,0 +1,75 @@
+{
+  "slug": "vektor-ai-infrastruc",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-headline",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "horizontal-scroll",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "arc-draw",
+      "bar-grow",
+      "beam-sweep",
+      "bento-scan-down",
+      "blink",
+      "col-scroll-down",
+      "col-scroll-up",
+      "digit-roll",
+      "donut-spin",
+      "fade-up",
+      "flow-pulse",
+      "hint-slide",
+      "marquee-scroll",
+      "orb-drift",
+      "path-draw",
+      "pulse-dot",
+      "pulse-out",
+      "quote-pop",
+      "spark-bounce",
+      "tape-scroll"
+    ],
+    "keyframes_css": [
+      "@keyframes fade-up{to{opacity:1;transform:translateY(0)}}",
+      "@keyframes marquee-scroll{to{transform:translateX(-50%)}}",
+      "@keyframes bar-grow{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1);transform-origin:bottom}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

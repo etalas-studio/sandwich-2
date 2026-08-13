@@ -1,0 +1,50 @@
+{
+  "slug": "synthara-ai-music-27",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero__h",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "cs",
+      "tkm",
+      "tr"
+    ],
+    "keyframes_css": [
+      "@keyframes tkm { 0% { transform: translateX(0) } 100% { transform: translateX(-25%) } }",
+      "@keyframes cs { 0%, 22% { transform: translateY(0) } 28%, 47% { transform: translateY(-25%) } 53%, 72% { transform: translateY(-50%) } 78%, 100% { transform: translateY(-75%) } }",
+      "@keyframes tr { 0% { transform: translateX(0) } 100% { transform: translateX(-25%) } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

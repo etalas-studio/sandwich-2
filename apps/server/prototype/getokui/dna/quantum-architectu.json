@@ -1,0 +1,99 @@
+{
+  "slug": "quantum-architectu",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "",
+    "h1_sizes": [],
+    "cta_classes": "cta-btn relative flex items-center justify-center mx-auto px-8 md:px-14 py-4 md:py-5 rounded-full bg-white/5 text-white font-light text-base md:text-lg border border-white/10 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:bg-[#00e5ff]/10 hover:border-[#00e5ff]/60 hover:shadow-[0_0_30px_rgba(0,229,255,0.3),inset_0_0_15px_rgba(0,229,255,0.15)] group/btn"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-3xl"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "dashMove",
+      "float-y",
+      "loading",
+      "packetSpin",
+      "pulse",
+      "pulse-ring",
+      "scaleX",
+      "scan",
+      "spin",
+      "spotlight-breathe",
+      "spotlight-core-breathe",
+      "translateX"
+    ],
+    "keyframes_css": [
+      "@keyframes pulse { 0%, 100% { opacity: 0.3; transform: translate(-50%, 0); } 50% { opacity: 0.8; transform: translate(-50%, 5px); } }",
+      "@keyframes spin { 100% { transform: rotate(360deg); } }",
+      "@keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }"
+    ],
+    "animate_classes": [
+      "animate-[loading_2s_ease-in-out_infinite]",
+      "animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[pulse_2.5s_infinite]",
+      "animate-[pulse_3s_infinite]",
+      "animate-[pulse_4s_infinite]",
+      "animate-[pulse_5s_infinite]",
+      "animate-[scaleX_1s_ease-out_0.2s_forwards]",
+      "animate-[scaleX_1s_ease-out_forwards]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-[translateX_2s_ease-in-out_infinite]",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

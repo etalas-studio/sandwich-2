@@ -1,0 +1,57 @@
+{
+  "slug": "altitude-mtl",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "reveal-line flex flex-wrap items-center gap-x-4 gap-y-1 pb-4 font-light uppercase leading-[0.85] tracking-tighter text-[4rem] sm:text-[6rem] md:text-[8rem] lg:text-[11rem]",
+    "h1_sizes": [],
+    "cta_classes": "group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#1a1a1a] px-7 py-3 text-sm font-medium uppercase tracking-[0.14em] text-[#e8e6df] transition duration-500 hover:-translate-y-1 hover:bg-[#1a1a1a]/85 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a] focus:ring-offset-2 focus:ring-offset-[#e8e6df]"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "py-16"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius"
+  ]
+}

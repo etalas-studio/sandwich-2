@@ -1,0 +1,118 @@
+{
+  "slug": "ai-telemetry",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-5xl lg:text-6xl leading-[1.1] [animation:animationIn_0.8s_ease-out_0.3s_both] text-4xl text-neutral-50 tracking-tight font-geist text-center max-w-[800px] z-10 mb-6 relative",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-4xl"
+    ],
+    "cta_classes": "text-sm font-medium bg-neutral-100 px-5 py-2 rounded-full shadow-sm transition-transform duration-200 hover:-translate-y-[0.5px] font-geist hover:bg-white text-neutral-950"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-24",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-md",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-md",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "barPulse1",
+      "barPulse2",
+      "barPulse3",
+      "barPulse4",
+      "dash",
+      "drawLine",
+      "drawPath",
+      "float-node",
+      "lineDrawIn",
+      "micro-draw-line1",
+      "micro-draw-line2",
+      "micro-draw-spike",
+      "micro-eq1",
+      "micro-eq2",
+      "micro-eq3",
+      "micro-log-seq1",
+      "micro-log-seq2",
+      "micro-log-seq3",
+      "micro-prog1",
+      "micro-prog2",
+      "micro-prog3",
+      "micro-spike-dot",
+      "pulseNode",
+      "pulseSoft",
+      "sweep",
+      "tooltipFadeInFloat",
+      "tooltipFloat"
+    ],
+    "keyframes_css": [
+      "@keyframes sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }",
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes tooltipFadeInFloat { 0% { opacity: 0; transform: translate(-50%, 8px); } 100% { opacity: 1; transform: translate(-50%, -4px); } }"
+    ],
+    "animate_classes": [
+      "animate-[dash_15s_linear_infinite]",
+      "animate-[dash_20s_linear_infinite]",
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}
