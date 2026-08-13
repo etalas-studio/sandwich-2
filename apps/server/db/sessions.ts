@@ -6,14 +6,14 @@ import type { Database } from "./connection.js";
 export interface Session {
   token: string;
   userId: string;
-  createdAt: string;
-  expiresAt: string;
+  createdAt: Date;
+  expiresAt: Date;
 }
 
 export async function createSession(db: Database, userId: string, expiresAt: string): Promise<Session> {
   const token = randomBytes(32).toString("hex");
-  const createdAt = new Date().toISOString();
-  await db.insert(sessions).values({ token, userId, createdAt, expiresAt });
+  const createdAt = new Date();
+  await db.insert(sessions).values({ token, userId, createdAt, expiresAt: new Date(expiresAt) });
   return (await getSessionByToken(db, token))!;
 }
 

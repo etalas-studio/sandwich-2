@@ -9,8 +9,11 @@ import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
-import { registerTicketRoutes } from "./routes/tickets.js";
-import { registerTicketRunRoutes } from "./routes/ticket-run.js";
+import { registerConversationRoutes } from "./routes/conversations.js";
+import { registerConversationRunRoutes } from "./routes/conversation-run.js";
+import { registerAttachmentRoutes } from "./routes/attachments.js";
+import { registerUsageRoutes } from "./routes/usage.js";
+import { registerShareRoutes } from "./routes/share.js";
 import { registerPurgeRoute } from "./routes/purge.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
@@ -55,7 +58,8 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     const url = req.url ?? "/";
     const path = url.split("?")[0] ?? "/";
     const isApiPath = path === "/api" || path.startsWith("/api/");
-    if (isApiPath && !PUBLIC_API_PATHS.has(path)) {
+    const isPublicShare = path.startsWith("/api/share/");
+    if (isApiPath && !isPublicShare && !PUBLIC_API_PATHS.has(path)) {
       if (!(await authenticateRequest(db, req))) {
         sendJson(res, 401, { error: "unauthorized" });
         return false;
@@ -65,8 +69,11 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
 
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerIntegrationRoutes(router);
-  registerTicketRoutes(router, db);
-  registerTicketRunRoutes(router, db);
+  registerConversationRoutes(router, db);
+  registerConversationRunRoutes(router, db);
+  registerAttachmentRoutes(router, db);
+  registerUsageRoutes(router, db);
+  registerShareRoutes(router, db);
   registerPurgeRoute(router, db);
   registerSettingsRoutes(router, db);
   registerMidtransRoutes(router, db);

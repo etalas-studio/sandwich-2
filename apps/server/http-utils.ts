@@ -1,6 +1,4 @@
-import { existsSync, statSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { join, isAbsolute } from "node:path";
 import { AuthError } from "./auth/service.js";
 
 export const MIME: Record<string, string> = {
@@ -42,7 +40,7 @@ export function sendCaughtError(res: ServerResponse, err: unknown, context: stri
 
 /**
  * `decodeURIComponent` throws `URIError` on malformed percent-encoding
- * (e.g. `/api/tickets/%E0%A4%A/artifacts`). Inside the request listener an
+ * (e.g. `/api/conversations/%E0%A4%A/artifacts`). Inside the request listener an
  * uncaught throw kills the whole process — including any in-flight
  * runPipeline call, orphaning a real agent subprocess — so every call site
  * goes through this and answers 400 instead.
@@ -101,33 +99,4 @@ export function readJsonBody(req: IncomingMessage): Promise<unknown> {
       reject(err);
     });
   });
-}
-
-/**
- * Validates a human-supplied project folder before storing it as the
- * first-run repo path: must be an absolute path, must exist, must be a
- * directory, and must actually be a git repo (has a .git entry) — a
- * pipeline run against a non-repo directory would fail confusingly deep
- * inside git.ts instead of here, at the point the human chose it.
- */
-export function validateRepoPath(
-  candidate: unknown,
-): { ok: true; repoPath: string } | { ok: false; error: string } {
-  if (typeof candidate !== "string" || candidate.trim().length === 0) {
-    return { ok: false, error: "repoPath is required" };
-  }
-  const repoPath = candidate.trim();
-  if (!isAbsolute(repoPath)) {
-    return { ok: false, error: "repoPath must be an absolute path" };
-  }
-  if (!existsSync(repoPath)) {
-    return { ok: false, error: `no such directory: ${repoPath}` };
-  }
-  if (!statSync(repoPath).isDirectory()) {
-    return { ok: false, error: `not a directory: ${repoPath}` };
-  }
-  if (!existsSync(join(repoPath, ".git"))) {
-    return { ok: false, error: `not a git repository (no .git found in ${repoPath})` };
-  }
-  return { ok: true, repoPath };
 }
