@@ -235,8 +235,12 @@ async function runWithOpenCode(
     modelsPath: null,
   });
 
-  const model = modelRuntime.getModel("opencode-go", "gpt-5.1"); // defaults to latest
-  if (!model) throw new Error("OpenCode model not available");
+  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
+  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
+  const model = modelRuntime.getModel(provider, modelId);
+  if (!model) {
+    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+  }
 
   const { session } = await pi.createAgentSession({
     cwd: process.cwd(),
