@@ -35,7 +35,11 @@ export default function AuthGate() {
   if (location.pathname === '/') {
     return (
       <LandingPage
-        onGoToApp={(plan) => navigate(plan ? `/checkout?plan=${plan}` : '/checkout')}
+        onGoToApp={(plan) => {
+          if (plan) navigate(`/checkout?plan=${plan}`)
+          else if (state.status === 'authenticated') navigate('/dashboard')
+          else navigate('/checkout')
+        }}
       />
     )
   }

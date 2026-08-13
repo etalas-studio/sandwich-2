@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
@@ -47,12 +47,6 @@ const FAQS = [
   },
 ]
 
-interface AttachedFile {
-  name: string
-  type: string
-  dataUrl: string
-}
-
 export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
@@ -72,12 +66,9 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
   const [activeType, setActiveType] = useState<ConversationType>('general')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const activeSectionRef = useRef<string>('')
   const [activeSectionState, setActiveSectionState] = useState<string>('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (window.location.hash === '#pricing') {
@@ -105,25 +96,11 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     return () => observers.forEach((obs) => obs?.disconnect())
   }, [])
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    files.forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        setAttachments((prev) => [...prev, { name: file.name, type: file.type, dataUrl: reader.result as string }])
-      }
-      reader.readAsDataURL(file)
-    })
-    e.target.value = ''
-  }, [])
-
-  const removeAttachment = (idx: number) => setAttachments((prev) => prev.filter((_, i) => i !== idx))
-
   const handleSubmit = async () => {
     if (!prompt.trim()) return
     if (authState.status !== 'authenticated') {
       try {
-        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType }))
+        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType }))
       } catch { /* best-effort draft save, e.g. storage quota */ }
       onGoToApp()
       return
@@ -142,7 +119,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') {
         // No active plan — stash the draft and send them to checkout.
-        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType })) } catch { /* ignore */ }
+        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType })) } catch { /* ignore */ }
         onGoToApp()
         return
       }
@@ -252,8 +229,6 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
         {/* prompt box */}
         <div className="w-full max-w-xl mx-auto mt-0 z-10">
           <>
-              <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
-              <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
 
               <div
                 className="relative rounded-xl overflow-hidden shadow-lg"
@@ -286,32 +261,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                   className="w-full resize-none bg-transparent text-white text-sm outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-white/30"
                 />
 
-                {attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 px-5 pb-3">
-                    {attachments.map((a, i) => (
-                      <div key={i} className="relative group flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
-                        {a.type.startsWith('image/') ? (
-                          <img src={a.dataUrl} className="w-5 h-5 rounded object-cover" />
-                        ) : (
-                          <iconify-icon icon="solar:document-linear" width="14" />
-                        )}
-                        <span className="max-w-[120px] truncate">{a.name}</span>
-                        <button onClick={() => removeAttachment(i)} className="ml-0.5 opacity-40 hover:opacity-100 transition-opacity">
-                          <iconify-icon icon="solar:close-circle-bold" width="13" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between px-4 pb-4 pt-1">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => imageInputRef.current?.click()} title="Attach image" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                      <iconify-icon icon="solar:gallery-linear" width="16" />
-                    </button>
-                    <button onClick={() => fileInputRef.current?.click()} title="Attach file" className="p-1.5 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                      <iconify-icon icon="solar:paperclip-linear" width="16" />
-                    </button>
                     <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
                   </div>
                   <div className="flex items-center gap-2">
