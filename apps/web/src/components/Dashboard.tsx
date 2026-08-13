@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
@@ -10,6 +9,7 @@ import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import PrototypeList from './PrototypeList'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { CHIPS } from '../lib/promptChips'
 import { useLanguage, type StringKey } from '../lib/i18n'
@@ -29,7 +29,7 @@ const bowlby = "'Bowlby One', system-ui"
 const inter = "'Inter', sans-serif"
 
 const NAV = [
-  { label: 'Prototype', icon: 'solar:widget-linear', id: 'prototype' },
+  { label: 'Prototype', icon: 'solar:widget-linear', id: 'prototypes' },
 ]
 
 const QUICK_TYPES = [
@@ -1323,7 +1323,6 @@ function Drawer({ conversation, onClose, onDelete }: { conversation: LocalConver
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const { t: tr } = useLanguage()
-  const navigate = useNavigate()
   const [conversations, setConversations] = useState<LocalConversation[]>([])
   const [selected, setSelected] = useState<LocalConversation | null>(null)
   const [activeNav, setActiveNav] = useState('home')
@@ -1497,6 +1496,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
+    if (activeNav === 'prototypes') return <PrototypeList />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1620,10 +1620,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               const isActive = activeNav === item.id
               const count = byType(PIPELINE_MAP[item.id]?.type ?? 'general' as ConversationType).length
               return (
-                <button key={item.id} onClick={() => {
-                    if (item.id === 'prototype') { navigate('/prototype'); return }
-                    setActiveNav(item.id); setChatState(null); setCreatingNew(false); if (window.innerWidth < 768) setSidebarOpen(false)
-                  }}
+                <button key={item.id} onClick={() => { setActiveNav(item.id); setChatState(null); setCreatingNew(false); if (window.innerWidth < 768) setSidebarOpen(false) }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
                   style={isActive ? { backgroundColor: '#f91814', color: '#ffffff', fontWeight: 500 } : { color: 'rgba(255,255,255,0.5)' }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
@@ -1631,7 +1628,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 >
                   <iconify-icon icon={item.icon} width="15" />
                   {item.label}
-                  {item.id !== 'prototype' && count > 0 && (
+                  {item.id !== 'prototypes' && count > 0 && (
                     <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>{count}</span>
                   )}
                 </button>
