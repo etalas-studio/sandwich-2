@@ -9,6 +9,9 @@ const ALLOWED_EXTENSIONS = new Set([
   ".html", ".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".json", ".ico",
 ]);
 
+// Prototype generation writes many files — give it a generous but bounded window.
+const ENGINE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
 function listFilesRecursive(dir: string): string[] {
   const results: string[] = [];
   for (const entry of readdirSync(dir)) {
@@ -73,7 +76,14 @@ export async function generatePrototype(
     });
 
     try {
-      await session.prompt(systemPrompt);
+      const promptPromise = session.prompt(systemPrompt);
+      promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
+      await Promise.race([
+        promptPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Prototype generation timed out")), ENGINE_TIMEOUT_MS),
+        ),
+      ]);
       // Small delay for agent_end event to propagate
       await new Promise((r) => setTimeout(r, 500));
       session.dispose();

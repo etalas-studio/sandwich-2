@@ -135,22 +135,24 @@ function usePrototypeStatus(id: string | null, onDone: () => void) {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const poll = async () => {
-      const res = await fetch(apiUrl(`/api/prototypes/${id}`), { credentials: "include" });
-      if (!res.ok) return;
-      const p = (await res.json()) as Prototype;
-      if (cancelled) return;
-      if (p.status === "done") {
-        onDone();
-      } else if (p.status === "failed") {
-        // stop polling on failure
-        return;
-      } else {
-        setTimeout(poll, 2000);
+      try {
+        const res = await fetch(apiUrl(`/api/prototypes/${id}`), { credentials: "include" });
+        if (!res.ok) { timer = setTimeout(poll, 2000); return; }
+        const p = (await res.json()) as Prototype;
+        if (cancelled) return;
+        if (p.status === "done" || p.status === "failed") {
+          onDone();
+        } else {
+          timer = setTimeout(poll, 2000);
+        }
+      } catch {
+        timer = setTimeout(poll, 2000);
       }
     };
     poll();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [id, onDone]);
 }
 
@@ -216,6 +218,18 @@ export default function PrototypeView() {
                 <div className="text-center">
                   <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-3" style={{ borderColor: "#f91814", borderTopColor: "transparent" }} />
                   <p className="text-sm" style={{ color: "#111827" }}>Generating prototype…</p>
+                </div>
+              </div>
+            )}
+            {active.status === "failed" && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: "rgba(244,235,225,0.95)" }}>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "#fee2e2" }}>
+                    <iconify-icon icon="solar:danger-triangle-bold" width="24" style={{ color: "#dc2626" }} />
+                  </div>
+                  <p className="text-sm font-semibold" style={{ color: "#111827" }}>Prototype generation failed</p>
+                  <p className="text-xs mt-1" style={{ color: "#6b7280" }}>Try again with a clearer brief, or go back and start over.</p>
+                  <button onClick={() => setActive(null)} className="mt-4 px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: "#111827" }}>← Back</button>
                 </div>
               </div>
             )}
