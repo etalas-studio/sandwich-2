@@ -7,8 +7,10 @@ import {
   createMessage,
   getMessages,
   getMessageHistory,
+  getMessagesForPrompt,
   deleteMessage,
 } from "../db/repo/chat-messages.js";
+import { getPendingAttachmentIds } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
@@ -312,6 +314,52 @@ async function runWithOpenCode(
   }
 }
 
+function closeInFlight(conversationId: string): void {
+  inFlight.delete(conversationId);
+  const clients = sseClients.get(conversationId);
+  if (clients) {
+    for (const client of clients) {
+      try {
+        client.end();
+      } catch {
+        /* ignore */
+      }
+    }
+    sseClients.delete(conversationId);
+  }
+}
+
+async function waitForExtraction(
+  db: Database,
+  conversationId: string,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const pending = await getPendingAttachmentIds(db, conversationId);
+    if (pending.length === 0) return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
+function enrichMessageContent(m: {
+  role: string;
+  content: string;
+  attachments: {
+    filename: string;
+    mimeType: string;
+    extractedText: string | null;
+    extractStatus: string;
+  }[];
+}): string {
+  if (m.role !== "user") return m.content;
+  const blocks = m.attachments
+    .filter((a) => a.extractStatus === "done" && a.extractedText)
+    .map((a) => `[attachment: ${a.filename}]\n${a.extractedText}`);
+  if (blocks.length === 0) return m.content;
+  return `${m.content}\n\n${blocks.join("\n\n")}`;
+}
+
 export function registerConversationRunRoutes(
   router: Router,
   db: Database,
@@ -382,12 +430,11 @@ export function registerConversationRunRoutes(
 
     // For a regenerate, drop the previous assistant reply so we re-run the
     // last user turn cleanly instead of double-stacking assistant messages.
-    let history = await getMessageHistory(db, conversationId);
-    if (body?.regenerate && history.length > 0) {
-      const last = history[history.length - 1]!;
-      if (last.role === "assistant") {
+    if (body?.regenerate) {
+      const history = await getMessageHistory(db, conversationId);
+      const last = history[history.length - 1];
+      if (last && last.role === "assistant") {
         await deleteMessage(db, last.id);
-        history = history.slice(0, -1);
       }
     }
 
@@ -416,94 +463,101 @@ export function registerConversationRunRoutes(
       }
     };
 
-    broadcast({
-      type: "stage_start",
-      stage: "generate",
-      conversation: (await getConversation(db, conversationId))!,
-    });
-    await updateConversation(db, conversationId, {
-      status: "in_progress",
-      stage: "generate",
-    });
+    // Respond immediately so the SSE stream (connecting ~100ms later) sees
+    // that a run is in flight instead of closing instantly.
+    sendJson(res, 200, { conversationId, started: true });
 
-    const turns: ConversationTurn[] = history.map((m) => ({
-      role: m.role as Role,
-      content: m.content,
-    }));
+    void (async () => {
+      try {
+        // Wait for attachment extraction (image/audio/pdf/docx -> text) so
+        // the prompt includes their content.
+        await waitForExtraction(db, conversationId, 30_000);
 
-    const useOpenCode = engine === "opencode";
-    const hasGroqFallback = !!process.env.GROQ_API_KEY;
+        const messages = await getMessagesForPrompt(db, conversationId);
+        const turns: ConversationTurn[] = messages.map((m) => ({
+          role: m.role as Role,
+          content: enrichMessageContent(m),
+        }));
 
-    const run = useOpenCode
-      ? () =>
-          runWithOpenCode(turns, controller.signal).catch((err) => {
-            if (hasGroqFallback) {
-              console.log(
-                `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-              );
-              return runWithGroq(turns, controller.signal);
-            }
-            throw err;
-          })
-      : () => runWithGroq(turns, controller.signal);
-
-    run()
-      .then(async (output) => {
-        if (!output) {
-          await updateConversation(db, conversationId, {
-            status: "backlog",
-            stage: null,
-          });
-          broadcast({
-            type: "error",
-            conversation: (await getConversation(db, conversationId))!,
-            text: "Model returned no response. Try again.",
-          });
-          return;
-        }
-        await updateConversation(db, conversationId, {
-          status: "done",
-          stage: null,
-          output,
-        });
-        await addChatMessage(db, {
-          conversationId,
-          role: "assistant",
-          content: output,
-        });
         broadcast({
-          type: "done",
+          type: "stage_start",
+          stage: "generate",
           conversation: (await getConversation(db, conversationId))!,
         });
-      })
-      .catch(async (err) => {
-        const msg = err instanceof Error ? err.message : "generation failed";
         await updateConversation(db, conversationId, {
-          status: "backlog",
-          stage: null,
+          status: "in_progress",
+          stage: "generate",
         });
+
+        const useOpenCode = engine === "opencode";
+        const hasGroqFallback = !!process.env.GROQ_API_KEY;
+
+        const run = useOpenCode
+          ? () =>
+              runWithOpenCode(turns, controller.signal).catch((err) => {
+                if (hasGroqFallback) {
+                  console.log(
+                    `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
+                  );
+                  return runWithGroq(turns, controller.signal);
+                }
+                throw err;
+              })
+          : () => runWithGroq(turns, controller.signal);
+
+        run()
+          .then(async (output) => {
+            if (!output) {
+              await updateConversation(db, conversationId, {
+                status: "backlog",
+                stage: null,
+              });
+              broadcast({
+                type: "error",
+                conversation: (await getConversation(db, conversationId))!,
+                text: "Model returned no response. Try again.",
+              });
+              return;
+            }
+            await updateConversation(db, conversationId, {
+              status: "done",
+              stage: null,
+              output,
+            });
+            await addChatMessage(db, {
+              conversationId,
+              role: "assistant",
+              content: output,
+            });
+            broadcast({
+              type: "done",
+              conversation: (await getConversation(db, conversationId))!,
+            });
+          })
+          .catch(async (err) => {
+            const msg = err instanceof Error ? err.message : "generation failed";
+            await updateConversation(db, conversationId, {
+              status: "backlog",
+              stage: null,
+            });
+            broadcast({
+              type: "error",
+              conversation: (await getConversation(db, conversationId))!,
+              text: msg,
+            });
+          })
+          .finally(() => closeInFlight(conversationId));
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "generation setup failed";
         broadcast({
           type: "error",
           conversation: (await getConversation(db, conversationId))!,
           text: msg,
         });
-      })
-      .finally(() => {
-        inFlight.delete(conversationId);
-        const clients = sseClients.get(conversationId);
-        if (clients) {
-          for (const client of clients) {
-            try {
-              client.end();
-            } catch {
-              /* ignore */
-            }
-          }
-          sseClients.delete(conversationId);
-        }
-      });
-
-    sendJson(res, 200, { conversationId, started: true });
+        closeInFlight(conversationId);
+      }
+    })();
   });
 
   // Message history (with attachments).

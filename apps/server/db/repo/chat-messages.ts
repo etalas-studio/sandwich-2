@@ -155,6 +155,55 @@ export async function getMessageHistory(
   return rows.map((m) => ({ id: m.id, role: m.role, content: m.content }));
 }
 
+/** Message history with attachment extraction metadata (no URL signing). */
+export async function getMessagesForPrompt(
+  db: Database,
+  conversationId: string,
+): Promise<
+  {
+    id: number;
+    role: string;
+    content: string;
+    attachments: {
+      filename: string;
+      mimeType: string;
+      extractedText: string | null;
+      extractStatus: string;
+    }[];
+  }[]
+> {
+  const msgs = await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.conversationId, conversationId))
+    .orderBy(asc(chatMessages.createdAt));
+
+  const atts = await db
+    .select()
+    .from(attachments)
+    .where(eq(attachments.conversationId, conversationId));
+
+  const byMessage = new Map<number, typeof atts>();
+  for (const a of atts) {
+    if (a.messageId == null) continue;
+    const list = byMessage.get(a.messageId) ?? [];
+    list.push(a);
+    byMessage.set(a.messageId, list);
+  }
+
+  return msgs.map((m) => ({
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    attachments: (byMessage.get(m.id) ?? []).map((a) => ({
+      filename: a.filename,
+      mimeType: a.mimeType,
+      extractedText: a.extractedText,
+      extractStatus: a.extractStatus,
+    })),
+  }));
+}
+
 export async function deleteMessage(db: Database, id: number): Promise<void> {
   await db.delete(chatMessages).where(eq(chatMessages.id, id));
 }
