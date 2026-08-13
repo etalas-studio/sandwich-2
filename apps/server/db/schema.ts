@@ -130,6 +130,9 @@ export const payments = pgTable("payments", {
   fraudStatus: text("fraud_status"),
   snapToken: text("snap_token"),
   redirectUrl: text("redirect_url"),
+  // Raw (verified) notification payload JSON — persisted so pending
+  // payments (VA number / QR / payment code) can be recovered after refresh.
+  providerData: text("provider_data"),
   expiresAt: ts("expires_at"),
   createdAt: ts("created_at").notNull().defaultNow(),
   updatedAt: ts("updated_at").notNull().defaultNow(),

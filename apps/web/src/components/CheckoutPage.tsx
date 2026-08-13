@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
+import { useSubscription } from '../hooks/useSubscription'
 
 const bowlby = "'Bowlby One', system-ui"
 
@@ -124,14 +125,39 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const paramPlan = searchParams.get('plan')
+  const expired = searchParams.get('expired') === '1'
+  const { data: sub } = useSubscription()
 
-  // No plan selected yet — show picker
-  if (!paramPlan) return <PlanPicker />
+  const notice = expired
+    ? tr('checkout_expired_banner')
+    : sub?.planSlug
+      ? tr('checkout_current_plan').replace('{plan}', sub.planSlug)
+      : null
+
+  const noticeBar = notice ? (
+    <div className="w-full text-center px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: '#111827', color: '#ffffff' }}>
+      {notice}
+    </div>
+  ) : null
+
+  if (!paramPlan) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#F4EBE1' }}>
+        {noticeBar}
+        <PlanPicker />
+      </div>
+    )
+  }
 
   const planSlug = paramPlan
   const plan = PLAN_DETAILS[planSlug] ?? PLAN_DETAILS.starter
 
-  return <PaymentTrigger planSlug={planSlug} plan={plan} tr={tr} navigate={navigate} />
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#F4EBE1' }}>
+      {noticeBar}
+      <PaymentTrigger planSlug={planSlug} plan={plan} tr={tr} navigate={navigate} />
+    </div>
+  )
 }
 
 function PaymentTrigger({

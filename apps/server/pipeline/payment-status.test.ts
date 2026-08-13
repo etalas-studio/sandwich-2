@@ -24,9 +24,9 @@ describe("mapTransactionStatus", () => {
     assert.equal(mapTransactionStatus("failure", null), "failed");
   });
 
-  it("maps refund and partial_refund to refunded", () => {
+  it("maps refund and partial_refund to distinct states", () => {
     assert.equal(mapTransactionStatus("refund", null), "refunded");
-    assert.equal(mapTransactionStatus("partial_refund", null), "refunded");
+    assert.equal(mapTransactionStatus("partial_refund", null), "partially_refunded");
   });
 
   it("maps unknown statuses to awaiting_payment (never fatal)", () => {
@@ -68,5 +68,12 @@ describe("shouldTransition (monotonic guard)", () => {
   it("allows a late settlement to win over a stale failure", () => {
     assert.equal(shouldTransition("failed", "paid"), true);
     assert.equal(shouldTransition("expired", "paid"), true);
+  });
+
+  it("moves refunds forward only", () => {
+    assert.equal(shouldTransition("paid", "partially_refunded"), true);
+    assert.equal(shouldTransition("partially_refunded", "refunded"), true);
+    assert.equal(shouldTransition("partially_refunded", "paid"), false);
+    assert.equal(shouldTransition("paid", "refunded"), true);
   });
 });

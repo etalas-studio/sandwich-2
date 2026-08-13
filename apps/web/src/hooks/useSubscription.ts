@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiUrl } from "../api/base";
 
-interface SubscriptionStatus {
+export interface SubscriptionStatus {
   planSlug: string | null;
   status?: string;
   startedAt?: string;
+  expiresAt?: string | null;
+  expired?: boolean;
 }
 
 async function fetchSubscription(): Promise<SubscriptionStatus> {
@@ -19,7 +21,9 @@ export function useSubscription() {
   return useQuery({
     queryKey: ["subscription"],
     queryFn: fetchSubscription,
-    staleTime: 5 * 60 * 1000, // 5 min cache
-    retry: false,
+    // Expiry is time-sensitive — keep the cache short and refresh on focus.
+    staleTime: 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: true,
   });
 }

@@ -91,3 +91,13 @@ export async function activateSubscription(
 
   return (await getSubscriptionForUser(db, input.userId))!;
 }
+
+/**
+ * Revoke access (e.g. after a full refund). Cancelled subscriptions are not
+ * returned by getActiveSubscription, so the user is immediately gated out.
+ */
+export async function cancelSubscription(db: Database, userId: string): Promise<void> {
+  await db.update(subscriptions)
+    .set({ status: "cancelled", updatedAt: new Date() })
+    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")));
+}

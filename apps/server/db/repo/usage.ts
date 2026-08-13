@@ -2,9 +2,14 @@ import { eq, and } from "drizzle-orm";
 import { usage } from "../schema.js";
 import type { Database } from "../connection.js";
 
-export async function incrementUsage(db: Database, userId: string): Promise<number> {
+/** "YYYY-MM" (1-indexed, zero-padded month) — stable sortable key. */
+function currentYearMonth(): string {
   const now = new Date();
-  const yearMonth = `${now.getFullYear()}-${now.getMonth()}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export async function incrementUsage(db: Database, userId: string): Promise<number> {
+  const yearMonth = currentYearMonth();
 
   const existing = await db.select().from(usage)
     .where(and(eq(usage.userId, userId), eq(usage.yearMonth, yearMonth)))
@@ -23,8 +28,7 @@ export async function incrementUsage(db: Database, userId: string): Promise<numb
 }
 
 export async function getMonthlyUsage(db: Database, userId: string): Promise<number> {
-  const now = new Date();
-  const yearMonth = `${now.getFullYear()}-${now.getMonth()}`;
+  const yearMonth = currentYearMonth();
   const rows = await db.select().from(usage)
     .where(and(eq(usage.userId, userId), eq(usage.yearMonth, yearMonth)))
     .limit(1);

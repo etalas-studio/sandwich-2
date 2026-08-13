@@ -20,6 +20,7 @@ import { registerMidtransRoutes } from "./routes/midtrans.js";
 import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 import { registerPreferenceRoutes } from "./routes/preferences.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
+import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./pipeline/extract.js";
 import { registerPrototypeRoutes, registerPrototypePublicRoutes } from "./prototype/routes.js";
 
@@ -53,6 +54,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   const { port, webRoot } = options;
   const db = await openDb(process.env.DATABASE_URL!);
   await resetStaleExtractions(db);
+  await expireStalePayments(db);
   // Re-process attachments that were left pending (e.g. uploaded before the
   // extraction pipeline existed, or the server restarted mid-extraction).
   const pending = await listAttachmentsByStatus(db, "pending");

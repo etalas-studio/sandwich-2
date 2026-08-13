@@ -1,6 +1,6 @@
 import type { Router } from "../router.js";
 import { authenticateRequest } from "../auth/middleware.js";
-import { getActiveSubscription } from "../db/repo/subscriptions.js";
+import { getActiveSubscription, getSubscriptionForUser } from "../db/repo/subscriptions.js";
 import { sendJson } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
 
@@ -16,7 +16,10 @@ export function registerSubscriptionRoutes(router: Router, db: Database): void {
 
     const sub = await getActiveSubscription(db, auth.userId);
     if (!sub) {
-      sendJson(res, 200, { planSlug: null });
+      // Distinguish "never subscribed" from "plan expired/cancelled" so the
+      // frontend can show the right message.
+      const any = await getSubscriptionForUser(db, auth.userId);
+      sendJson(res, 200, { planSlug: null, expired: !!any });
       return;
     }
     sendJson(res, 200, {
@@ -24,6 +27,7 @@ export function registerSubscriptionRoutes(router: Router, db: Database): void {
       status: sub.status,
       startedAt: sub.startedAt,
       expiresAt: sub.expiresAt,
+      expired: false,
     });
   });
 }

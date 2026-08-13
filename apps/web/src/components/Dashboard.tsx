@@ -707,7 +707,10 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
       setAttachments([])
       onSuccess(local)
     } catch (err) {
-      setError(err instanceof Error ? err.message : tr('dash_generic_error'))
+      const msg = err instanceof Error ? err.message : ''
+      if (msg === 'active subscription required') setError(tr('dash_expired_error'))
+      else if (msg === 'monthly quota reached') setError(tr('plan_limit_desc'))
+      else setError(msg || tr('dash_generic_error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -1010,6 +1013,14 @@ function HomeOverview({
             </button>
           </div>
         </div>
+
+        {/* Expiry notice — proactive + mid-session */}
+        {(sub?.expired || (sub?.expiresAt && new Date(sub.expiresAt).getTime() - now < 24 * 60 * 60 * 1000)) && (
+          <a href="/checkout?expired=1" className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-sm font-semibold" style={{ backgroundColor: 'rgba(249,24,20,0.1)', color: '#f91814', border: '1px solid rgba(249,24,20,0.25)' }}>
+            <span>{sub?.expired ? tr('dash_expired_banner') : tr('dash_expiring_banner')}</span>
+            <span className="shrink-0">{tr('plan_limit_upgrade')}</span>
+          </a>
+        )}
 
         {/* Prompt box */}
         <PromptBox onSuccess={onSuccess} usage={usage} />

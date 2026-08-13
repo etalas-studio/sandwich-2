@@ -157,6 +157,9 @@ const STRINGS = {
   plan_limit_title: { en: "You've hit your Starter limit", id: 'Kamu sudah mencapai batas Starter' },
   plan_limit_desc: { en: '5 briefs / month used. Upgrade to Pro for unlimited.', id: '5 brief / bulan sudah terpakai. Upgrade ke Pro untuk unlimited.' },
   plan_limit_upgrade: { en: 'Upgrade to Pro', id: 'Upgrade ke Pro' },
+  dash_expired_banner: { en: 'Your plan has expired. Renew to continue.', id: 'Plan kamu sudah habis. Perpanjang untuk lanjut.' },
+  dash_expiring_banner: { en: 'Your plan expires soon. Renew to avoid interruption.', id: 'Plan kamu segera habis. Perpanjang agar tidak terputus.' },
+  dash_expired_error: { en: 'Your subscription is no longer active. Renew to continue.', id: 'Langganan kamu sudah tidak aktif. Perpanjang untuk lanjut.' },
 
   // ── Auth shared ──
   auth_back: { en: 'Back', id: 'Kembali' },
@@ -192,6 +195,9 @@ const STRINGS = {
   checkout_retry: { en: 'Check again', id: 'Cek lagi' },
   checkout_failed_title: { en: 'Payment failed', id: 'Pembayaran gagal' },
   checkout_failed_note: { en: 'Your payment did not complete. Please try again.', id: 'Pembayaran kamu tidak selesai. Silakan coba lagi.' },
+  checkout_instructions: { en: 'Payment instructions', id: 'Instruksi pembayaran' },
+  checkout_expired_banner: { en: 'Your plan has expired. Renew to continue.', id: 'Plan kamu sudah habis. Perpanjang untuk lanjut.' },
+  checkout_current_plan: { en: 'You are currently on the {plan} plan.', id: 'Kamu sedang berada di paket {plan}.' },
   checkout_success_cta: { en: 'Go to Dashboard', id: 'Lanjut ke Dashboard' },
   checkout_price_per_month: { en: '/ month', id: '/ bulan' },
   checkout_plan_active: { en: 'plan is now active.', id: 'kamu aktif.' },

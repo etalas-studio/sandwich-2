@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
 import { payments } from "./schema.js";
 import type { Database } from "./connection.js";
 import type { LocalPaymentStatus } from "../pipeline/payment-status.js";
@@ -15,6 +15,7 @@ export interface Payment {
   fraudStatus: string | null;
   snapToken: string | null;
   redirectUrl: string | null;
+  providerData: string | null;
   expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -61,6 +62,7 @@ export interface PaymentPatch {
   fraudStatus?: string | null;
   snapToken?: string | null;
   redirectUrl?: string | null;
+  providerData?: string | null;
   expiresAt?: Date | null;
   updatedAt?: Date;
 }
@@ -71,4 +73,24 @@ export async function updatePayment(
   patch: PaymentPatch,
 ): Promise<void> {
   await db.update(payments).set({ ...patch, updatedAt: new Date() }).where(eq(payments.orderId, orderId));
+}
+
+/**
+ * Local safety net for rows that never received a terminal notification:
+ * - `creating_payment` stuck > 1h → failed (provider call never produced a token)
+ * - `awaiting_payment` stuck > 48h → expired (async method abandoned)
+ * A later `paid` notification still wins via the monotonic guard.
+ */
+export async function expireStalePayments(db: Database): Promise<void> {
+  const now = new Date();
+  const creatingCutoff = new Date(now.getTime() - 60 * 60 * 1000);
+  const awaitingCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+  await db.update(payments)
+    .set({ localStatus: "failed", updatedAt: now })
+    .where(and(eq(payments.localStatus, "creating_payment"), lt(payments.createdAt, creatingCutoff)));
+
+  await db.update(payments)
+    .set({ localStatus: "expired", updatedAt: now })
+    .where(and(eq(payments.localStatus, "awaiting_payment"), lt(payments.createdAt, awaitingCutoff)));
 }

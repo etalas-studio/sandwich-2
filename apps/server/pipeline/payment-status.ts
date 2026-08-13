@@ -8,15 +8,16 @@ export type LocalPaymentStatus =
   | "creating_payment"
   | "awaiting_payment"
   | "paid"
+  | "partially_refunded"
+  | "refunded"
   | "failed"
   | "cancelled"
-  | "expired"
-  | "refunded";
+  | "expired";
 
 /**
  * Map Midtrans `transaction_status` (+ `fraud_status` for capture) to our
  * local state. Deny/cancel/expire/failure are terminal failures; refund
- * states map to refunded.
+ * states map to partially_refunded / refunded.
  */
 export function mapTransactionStatus(
   transactionStatus: string,
@@ -40,8 +41,9 @@ export function mapTransactionStatus(
     case "failure":
       return "failed";
     case "refund":
-    case "partial_refund":
       return "refunded";
+    case "partial_refund":
+      return "partially_refunded";
     default:
       return "awaiting_payment";
   }
@@ -50,8 +52,8 @@ export function mapTransactionStatus(
 /**
  * Monotonic ordering — a callback must never regress local state.
  * `paid` outranks the failure states (a late settlement after a stale
- * failure still fulfills), but a `pending`/`cancel`/`expire` must never
- * overwrite `paid`, and `refunded` is final.
+ * failure still fulfills), while refund states only move forward and
+ * `refunded` is terminal.
  */
 const RANK: Record<LocalPaymentStatus, number> = {
   creating_payment: 0,
@@ -60,7 +62,8 @@ const RANK: Record<LocalPaymentStatus, number> = {
   cancelled: 2,
   expired: 2,
   paid: 3,
-  refunded: 4,
+  partially_refunded: 4,
+  refunded: 5,
 };
 
 export function shouldTransition(
@@ -68,7 +71,5 @@ export function shouldTransition(
   incoming: LocalPaymentStatus,
 ): boolean {
   if (incoming === current) return false; // no-op, preserves idempotency
-  if (current === "refunded") return false; // terminal
-  if (current === "paid" && incoming !== "refunded") return false;
   return RANK[incoming] >= RANK[current];
 }

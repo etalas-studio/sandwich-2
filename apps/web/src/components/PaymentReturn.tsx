@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
+import { getPayment } from '../api/payments'
+import { extractInstructions, type PaymentInstruction } from '../lib/paymentInstructions'
 
 const bowlby = "'Bowlby One', system-ui"
 
@@ -16,32 +18,51 @@ export default function PaymentReturn() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'success' | 'pending'>('loading')
-
+  const orderId = searchParams.get('order_id')
   const displayedStatus = searchParams.get('transaction_status')
+  const [status, setStatus] = useState<'loading' | 'success' | 'pending'>('loading')
+  const [instructions, setInstructions] = useState<PaymentInstruction[]>([])
 
-  const poll = React.useCallback(async () => {
+  const refresh = React.useCallback(async () => {
     setStatus('loading')
+
+    // 1) Subscription state is the source of truth for fulfillment.
+    let active = false
     for (let i = 0; i < 12; i++) {
       try {
         const res = await fetch(apiUrl('/api/subscriptions/active'), { credentials: 'include' })
         if (res.ok) {
           const s = await res.json() as { planSlug: string | null }
           if (s.planSlug) {
-            queryClient.invalidateQueries({ queryKey: ['subscription'] })
-            setStatus('success')
-            return
+            active = true
+            break
           }
         }
       } catch { /* transient */ }
       await new Promise((r) => setTimeout(r, 1500))
     }
-    setStatus('pending')
-  }, [queryClient])
+
+    // 2) Recover pending payment instructions (VA number / QR / payment code).
+    if (orderId) {
+      try {
+        const payment = await getPayment(orderId)
+        setInstructions(extractInstructions(payment.providerData))
+      } catch {
+        setInstructions([])
+      }
+    }
+
+    if (active) {
+      queryClient.invalidateQueries({ queryKey: ['subscription'] })
+      setStatus('success')
+    } else {
+      setStatus('pending')
+    }
+  }, [orderId, queryClient])
 
   React.useEffect(() => {
-    void poll()
-  }, [poll])
+    void refresh()
+  }, [refresh])
 
   const wrapperStyle = {
     minHeight: '100vh',
@@ -84,7 +105,7 @@ export default function PaymentReturn() {
   // Pending / not-yet-confirmed (or failed) — never trust the URL param for fulfillment.
   const failed = displayedStatus === 'deny' || displayedStatus === 'cancel' || displayedStatus === 'expire' || displayedStatus === 'failure'
   return (
-    <div className="min-h-screen flex items-center justify-center antialiased px-4" style={wrapperStyle}>
+    <div className="min-h-screen flex items-center justify-center antialiased px-4 py-10" style={wrapperStyle}>
       <div className="w-full max-w-sm text-center">
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: failed ? '#f91814' : '#111827' }}>
@@ -94,13 +115,28 @@ export default function PaymentReturn() {
         <h1 className="text-2xl tracking-tight mb-2" style={{ fontFamily: bowlby, color: '#111827' }}>
           {failed ? tr('checkout_failed_title') : tr('checkout_pending_title')}
         </h1>
-        <p className="text-sm text-zinc-500 mb-8">
+        <p className="text-sm text-zinc-500 mb-6">
           {failed ? tr('checkout_failed_note') : tr('checkout_pending_note')}
         </p>
+
+        {!failed && instructions.length > 0 && (
+          <div className="text-left rounded-2xl p-4 mb-6" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#f91814' }}>{tr('checkout_instructions')}</p>
+            <div className="flex flex-col gap-2">
+              {instructions.map((ins) => (
+                <div key={ins.label + ins.value} className="flex items-center justify-between gap-3">
+                  <span className="text-xs" style={{ color: '#9ca3af' }}>{ins.label}</span>
+                  <span className="text-sm font-mono font-semibold break-all text-right" style={{ color: '#111827' }}>{ins.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
           {!failed && (
             <button
-              onClick={() => void poll()}
+              onClick={() => void refresh()}
               className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#111827' }}
             >

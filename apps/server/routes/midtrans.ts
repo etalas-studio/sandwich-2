@@ -13,21 +13,13 @@ import {
 } from "../pipeline/payment-status.js";
 import { getPlan, generateOrderId } from "../pipeline/plans.js";
 import { createPayment, getPayment, updatePayment } from "../db/payments.js";
-import { activateSubscription } from "../db/repo/subscriptions.js";
+import {
+  activateSubscription,
+  cancelSubscription,
+} from "../db/repo/subscriptions.js";
 import type { Database } from "../db/connection.js";
 
 export function registerMidtransRoutes(router: Router, db: Database): void {
-  router.get("/api/midtrans/config", (_req, res) => {
-    const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
-    sendJson(res, 200, {
-      clientKey: process.env.MIDTRANS_CLIENT_KEY ?? "",
-      isProduction,
-      // Whether a server key is present drives whether the app can talk to
-      // Midtrans at all (false ⇒ dev simulation path).
-      configured: !!process.env.MIDTRANS_SERVER_KEY,
-    });
-  });
-
   router.post("/api/midtrans/transaction", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
@@ -46,10 +38,6 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
 
     // Server-side order id + price (never trust client amounts).
     const orderId = generateOrderId(plan.slug, auth.userId);
-    // Snap config travels with the transaction response so the frontend never
-    // needs a separate (auth-dependent) config round trip.
-    const clientKey = process.env.MIDTRANS_CLIENT_KEY ?? "";
-    const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 
     try {
       // Persist `creating_payment` BEFORE any provider call.
@@ -79,8 +67,6 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
           redirectUrl: null,
           orderId,
           simulated: true,
-          clientKey,
-          isProduction,
         });
         return;
       }
@@ -104,13 +90,45 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
         redirectUrl: result.redirectUrl,
         orderId,
         simulated: false,
-        clientKey,
-        isProduction,
       });
     } catch (err) {
       // Row stays in `creating_payment`, so the attempt is recoverable.
       sendCaughtError(res, err, "midtrans create transaction");
     }
+  });
+
+  // Owner-scoped payment lookup — used to recover pending payment
+  // instructions (VA number / QR / payment code) after a redirect back.
+  router.get("/api/payments/:orderId", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthenticated" });
+      return;
+    }
+    const payment = await getPayment(db, params.orderId!);
+    if (!payment || payment.userId !== auth.userId) {
+      sendJson(res, 404, { error: "payment not found" });
+      return;
+    }
+    let providerData: unknown = {};
+    if (payment.providerData) {
+      try {
+        providerData = JSON.parse(payment.providerData);
+      } catch {
+        providerData = {};
+      }
+    }
+    sendJson(res, 200, {
+      orderId: payment.orderId,
+      localStatus: payment.localStatus,
+      transactionStatus: payment.transactionStatus,
+      grossAmount: payment.grossAmount,
+      paymentType: payment.paymentType,
+      fraudStatus: payment.fraudStatus,
+      providerData,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+    });
   });
 
   router.post("/api/midtrans/notification", async (req, res) => {
@@ -176,6 +194,9 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
           typeof body.payment_type === "string" ? body.payment_type : null,
         fraudStatus:
           typeof body.fraud_status === "string" ? body.fraud_status : null,
+        // Persist the verified payload so pending instructions (VA number,
+        // QR, payment code) survive a page refresh.
+        providerData: JSON.stringify(body),
       });
 
       // Fulfill only on the verified transition into `paid`, server-side.
@@ -184,6 +205,11 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
           userId: payment.userId,
           planSlug: payment.planSlug,
         });
+      }
+
+      // Full refund revokes access; partial refund only records the state.
+      if (incoming === "refunded" && payment.userId) {
+        await cancelSubscription(db, payment.userId);
       }
     } catch (err) {
       // 500 so Midtrans retries; the notification was not safely accepted.
