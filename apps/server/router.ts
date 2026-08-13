@@ -155,17 +155,38 @@ export class Router {
 
       for (const route of this.routes) {
         if (route.method !== method) continue;
-        if (route.segments.length !== reqSegs.length) continue;
         const params: Record<string, string> = {};
         let match = true;
-        for (let i = 0; i < route.segments.length; i++) {
-          const rSeg = route.segments[i]!;
-          const qSeg = reqSegs[i]!;
-          if (rSeg.startsWith(":")) {
-            params[rSeg.slice(1)] = decodeSafe(qSeg);
-          } else if (rSeg.toLowerCase() !== qSeg.toLowerCase()) {
-            match = false;
-            break;
+
+        // Wildcard support: a segment starting with * captures the rest
+        if (route.segments.some((s) => s.startsWith("*"))) {
+          for (let i = 0; i < route.segments.length; i++) {
+            const rSeg = route.segments[i]!;
+            if (rSeg.startsWith("*")) {
+              // Capture the rest of the path (may be empty)
+              params[rSeg.slice(1)] = reqSegs.slice(i).join("/");
+              break;
+            }
+            if (i >= reqSegs.length) { match = false; break; }
+            const qSeg = reqSegs[i]!;
+            if (rSeg.startsWith(":")) {
+              params[rSeg.slice(1)] = decodeSafe(qSeg);
+            } else if (rSeg.toLowerCase() !== qSeg.toLowerCase()) {
+              match = false;
+              break;
+            }
+          }
+        } else {
+          if (route.segments.length !== reqSegs.length) continue;
+          for (let i = 0; i < route.segments.length; i++) {
+            const rSeg = route.segments[i]!;
+            const qSeg = reqSegs[i]!;
+            if (rSeg.startsWith(":")) {
+              params[rSeg.slice(1)] = decodeSafe(qSeg);
+            } else if (rSeg.toLowerCase() !== qSeg.toLowerCase()) {
+              match = false;
+              break;
+            }
           }
         }
         if (!match) continue;

@@ -171,3 +171,37 @@ export const userPreferences = pgTable(
     ),
   }),
 );
+
+export const prototypes = pgTable("prototypes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  shareId: text("share_id").notNull().unique(),
+  name: text("name").notNull(),
+  brief: text("brief").notNull(),
+  logoData: text("logo_data"),
+  palette: text("palette"),
+  status: text("status").notNull().default("generating"),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+});
+
+export const prototypeFiles = pgTable(
+  "prototype_files",
+  {
+    id: serial("id").primaryKey(),
+    prototypeId: text("prototype_id")
+      .notNull()
+      .references(() => prototypes.id),
+    path: text("path").notNull(),
+    content: text("content").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    uniquePath: uniqueIndex("idx_prototype_files_path").on(
+      table.prototypeId,
+      table.path,
+    ),
+  }),
+);
