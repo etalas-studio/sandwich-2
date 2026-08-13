@@ -3,12 +3,13 @@ import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { getConversations, loadConversations, createConversationLocal, updateLocalConversation, deleteLocalConversation, type LocalConversation, type ConversationType } from '../lib/conversations'
-import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, type Attachment } from '../api/conversations'
+import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, exportUrl, type Attachment } from '../api/conversations'
 import { useUsage } from '../hooks/useUsage'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import { ExportMenu } from './ExportMenu'
 import PrototypeList from './PrototypeList'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { CHIPS } from '../lib/promptChips'
@@ -531,7 +532,13 @@ function ChatView({
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output) return (
-                    <div key={i} className="group">
+                    <div key={i} className="group relative">
+                      <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <ExportMenu
+                          url={(f) => exportUrl(conversationId, f)}
+                          onDownloaded={(f) => { if (f === 'md') localStorage.setItem(EXPORTED_MD_KEY, '1') }}
+                        />
+                      </div>
                       <div className="text-sm break-words sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                         dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
                       {/* SANDWICH logo + hover actions */}
@@ -1476,20 +1483,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setTimeout(() => setShareCopied(false), 1500)
   }
 
-  const handleExportMarkdown = () => {
-    if (!currentConversation) return
-    setShowMoreMenu(false)
-    const md = currentConversation.content ?? currentConversation.description
-    const blob = new Blob([md], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${currentConversation.summary.slice(0, 60).replace(/[^\w\- ]/g, '').trim() || 'sandwich'}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-    localStorage.setItem(EXPORTED_MD_KEY, '1')
-  }
-
   const byType = (type: ConversationType) => conversations.filter(t => t.type === type)
   const isHomePage = activeNav === 'home'
 
@@ -1934,14 +1927,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                       style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
                       onClick={e => e.stopPropagation()}>
                       <div className="p-1.5">
-                        <button onClick={handleExportMarkdown}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.7)' }}
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
-                          <iconify-icon icon="solar:download-minimalistic-linear" width="15" />
-                          Download Markdown
-                        </button>
                         <button onClick={() => { setShowMoreMenu(false); setActiveNav('settings'); setChatState(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
                           style={{ color: 'rgba(255,255,255,0.7)' }}
