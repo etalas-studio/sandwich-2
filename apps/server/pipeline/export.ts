@@ -1,6 +1,6 @@
 import { marked } from "marked";
 import PDFDocument from "pdfkit";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell } from "docx";
 
 export type ExportFormat = "pdf" | "md" | "doc";
 
@@ -116,7 +116,7 @@ export async function exportDocument(
     return { buffer: await renderPdf(tokens), mimeType: MIME.pdf, extension: EXT.pdf };
   }
 
-  throw new Error("not implemented");
+  return { buffer: await renderDocx(tokens), mimeType: MIME.doc, extension: EXT.doc };
 }
 
 function addPdfRuns(
@@ -209,4 +209,98 @@ function renderPdf(tokens: any[]): Promise<Buffer> {
 
   doc.end();
   return done.then(() => Buffer.concat(chunks));
+}
+
+const HEADING_LEVELS = [
+  HeadingLevel.HEADING_1,
+  HeadingLevel.HEADING_2,
+  HeadingLevel.HEADING_3,
+  HeadingLevel.HEADING_4,
+  HeadingLevel.HEADING_5,
+  HeadingLevel.HEADING_6,
+];
+
+function inlineToTextRuns(tokens: any[] | undefined): TextRun[] {
+  return flattenInline(tokens).map(
+    (r) =>
+      new TextRun({
+        text: r.text,
+        bold: r.bold || undefined,
+        italics: r.italic || undefined,
+        font: r.code ? "Courier New" : undefined,
+      }),
+  );
+}
+
+async function renderDocx(tokens: any[]): Promise<Buffer> {
+  const children: any[] = [];
+
+  for (const token of tokens) {
+    if (token.type === "heading") {
+      const depth = Math.min(6, Math.max(1, token.depth ?? 1)) - 1;
+      children.push(
+        new Paragraph({
+          heading: HEADING_LEVELS[depth],
+          children: inlineToTextRuns(token.tokens),
+        }),
+      );
+    } else if (token.type === "paragraph") {
+      children.push(new Paragraph({ children: inlineToTextRuns(token.tokens) }));
+    } else if (token.type === "list") {
+      let index = 1;
+      for (const item of token.items ?? []) {
+        if (token.ordered) {
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${index}. `, bold: true }),
+                ...inlineToTextRuns(item.tokens),
+              ],
+            }),
+          );
+          index += 1;
+        } else {
+          children.push(
+            new Paragraph({ bullet: { level: 0 }, children: inlineToTextRuns(item.tokens) }),
+          );
+        }
+      }
+    } else if (token.type === "code") {
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: typeof token.text === "string" ? token.text : "", font: "Courier New" })],
+        }),
+      );
+    } else if (token.type === "blockquote") {
+      children.push(
+        new Paragraph({
+          indent: { left: 720 },
+          children: inlineToTextRuns(token.tokens),
+        }),
+      );
+    } else if (token.type === "table") {
+      const rows = token.rows ?? [];
+      children.push(
+        new Table({
+          rows: rows.map(
+            (row: any[]) =>
+              new TableRow({
+                children: row.map(
+                  (cell) =>
+                    new TableCell({
+                      children: [new Paragraph({ children: inlineToTextRuns(cell?.tokens) })],
+                    }),
+                ),
+              }),
+          ),
+        }),
+      );
+    } else if (token.type === "hr") {
+      children.push(new Paragraph({ children: [new TextRun({ text: "---" })] }));
+    }
+  }
+
+  const doc = new Document({ sections: [{ children }] });
+  const buffer = await Packer.toBuffer(doc);
+  return Buffer.from(buffer);
 }

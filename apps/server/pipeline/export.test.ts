@@ -128,3 +128,15 @@ describe("exportDocument (pdf)", () => {
     assert.equal(result.buffer.subarray(0, 4).toString("ascii"), "%PDF");
   });
 });
+
+describe("exportDocument (doc)", () => {
+  const markdown = "# Title\n\nParagraph with **bold**.\n\n- item one\n\n1. first\n";
+
+  it("returns a DOCX buffer with the zip magic bytes", async () => {
+    const result = await exportDocument(markdown, "doc");
+    assert.equal(result.extension, "docx");
+    assert.equal(result.mimeType, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    assert.ok(result.buffer.length > 500, `expected substantial DOCX, got ${result.buffer.length} bytes`);
+    assert.equal(result.buffer.subarray(0, 2).toString("ascii"), "PK");
+  });
+});
