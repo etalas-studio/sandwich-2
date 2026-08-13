@@ -19,6 +19,8 @@ import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
 import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 import { registerPreferenceRoutes } from "./routes/preferences.js";
+import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
+import { processExtraction } from "./pipeline/extract.js";
 
 export interface WebServerOptions {
   port: number;
@@ -49,6 +51,13 @@ const PUBLIC_API_PATHS = new Set([
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { port, webRoot } = options;
   const db = await openDb(process.env.DATABASE_URL!);
+  await resetStaleExtractions(db);
+  // Re-process attachments that were left pending (e.g. uploaded before the
+  // extraction pipeline existed, or the server restarted mid-extraction).
+  const pending = await listAttachmentsByStatus(db, "pending");
+  for (const a of pending) {
+    void processExtraction(db, a);
+  }
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 

@@ -12,6 +12,7 @@ import {
   MAX_UPLOAD_BYTES,
 } from "../storage/r2.js";
 import { createAttachment, listAttachments } from "../db/repo/attachments.js";
+import { processExtraction } from "../pipeline/extract.js";
 
 interface UploadedFile {
   filename: string;
@@ -122,6 +123,14 @@ export function registerAttachmentRoutes(router: Router, db: Database): void {
         filename: parsed.file.filename,
         mimeType: parsed.file.mimeType,
         sizeBytes: parsed.file.buffer.length,
+      });
+
+      // Extract content in the background (image/audio/pdf/docx -> text).
+      void processExtraction(db, {
+        id: attachment.id,
+        storageKey,
+        filename: parsed.file.filename,
+        mimeType: parsed.file.mimeType,
       });
 
       sendJson(res, 201, attachment);

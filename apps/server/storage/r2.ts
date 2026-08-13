@@ -77,6 +77,14 @@ export async function uploadToStorage(
   );
 }
 
+export async function downloadFromStorage(key: string): Promise<Buffer> {
+  const res = await getClient().send(
+    new GetObjectCommand({ Bucket: process.env.R2_BUCKET_NAME, Key: key }),
+  );
+  if (!res.Body) throw new Error(`R2 object is empty: ${key}`);
+  return Buffer.from(await res.Body.transformToByteArray());
+}
+
 export async function getAttachmentUrl(key: string): Promise<string> {
   const publicUrl = process.env.R2_PUBLIC_URL;
   if (publicUrl) {

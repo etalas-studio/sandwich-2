@@ -15,3 +15,7 @@ web/vite.config.d.ts
 .env
 .gstack/
 vite.config.js\nvite.config.d.ts
+
+# tesseract.js OCR cache
+*.traineddata
+.tesseract-cache/
