@@ -132,6 +132,12 @@ function PrototypeForm({ onCreated }: { onCreated: (p: Prototype) => void }) {
 }
 
 function usePrototypeStatus(id: string | null, onDone: () => void) {
+  // Keep the callback in a ref so the polling effect does not re-run on every
+  // render (an inline callback would loop once status is "done": onDone →
+  // setState → re-render → new callback → effect re-runs → onDone again).
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
@@ -143,7 +149,7 @@ function usePrototypeStatus(id: string | null, onDone: () => void) {
         const p = (await res.json()) as Prototype;
         if (cancelled) return;
         if (p.status === "done" || p.status === "failed") {
-          onDone();
+          onDoneRef.current();
         } else {
           timer = setTimeout(poll, 2000);
         }
@@ -153,7 +159,7 @@ function usePrototypeStatus(id: string | null, onDone: () => void) {
     };
     poll();
     return () => { cancelled = true; if (timer) clearTimeout(timer); };
-  }, [id, onDone]);
+  }, [id]);
 }
 
 export default function PrototypeView() {
