@@ -113,8 +113,100 @@ export async function exportDocument(
   const tokens = marked.lexer(content) as unknown as any[];
 
   if (format === "pdf") {
-    throw new Error("not implemented");
+    return { buffer: await renderPdf(tokens), mimeType: MIME.pdf, extension: EXT.pdf };
   }
 
   throw new Error("not implemented");
+}
+
+function addPdfRuns(
+  doc: InstanceType<typeof PDFDocument>,
+  runs: InlineRun[],
+  baseFont = "Helvetica",
+  baseSize = 11,
+): void {
+  for (const run of runs) {
+    let font = baseFont;
+    if (run.code) font = "Courier";
+    else if (run.bold && run.italic) font = "Helvetica-BoldOblique";
+    else if (run.bold) font = "Helvetica-Bold";
+    else if (run.italic) font = "Helvetica-Oblique";
+    doc.font(font).fontSize(baseSize).text(run.text, { continued: true });
+  }
+  doc.text("");
+}
+
+function blockToText(tokens: any[]): string {
+  const parts: string[] = [];
+  for (const t of tokens) {
+    if (t.type === "paragraph" || t.type === "heading") {
+      parts.push(plainText(flattenInline(t.tokens)));
+    } else if (t.type === "list") {
+      for (const item of t.items ?? []) parts.push(plainText(flattenInline(item.tokens)));
+    } else if (t.type === "code") {
+      parts.push(typeof t.text === "string" ? t.text : "");
+    } else if (t.type === "text") {
+      parts.push(typeof t.text === "string" ? t.text : "");
+    } else if (Array.isArray(t.tokens)) {
+      parts.push(blockToText(t.tokens));
+    } else if (typeof t.text === "string") {
+      parts.push(t.text);
+    }
+  }
+  return parts.join(" ");
+}
+
+function renderPdf(tokens: any[]): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  const doc = new PDFDocument({ size: "A4", margin: 48 });
+  doc.on("data", (c: Buffer) => chunks.push(c));
+  const done = new Promise<void>((resolve) => doc.on("end", resolve));
+
+  for (const token of tokens) {
+    if (token.type === "heading") {
+      const depth = token.depth ?? 1;
+      const size = depth <= 1 ? 20 : depth === 2 ? 16 : 14;
+      doc.moveDown(0.5);
+      doc.font("Helvetica-Bold").fontSize(size);
+      doc.text(plainText(flattenInline(token.tokens)), { lineGap: 4 });
+    } else if (token.type === "paragraph") {
+      doc.moveDown(0.3);
+      addPdfRuns(doc, flattenInline(token.tokens));
+    } else if (token.type === "list") {
+      doc.moveDown(0.3);
+      let index = 1;
+      for (const item of token.items ?? []) {
+        const marker = token.ordered ? `${index}. ` : "\u2022 ";
+        index += 1;
+        doc.font("Helvetica").fontSize(11);
+        doc.text(marker + plainText(flattenInline(item.tokens)), {
+          indent: 12,
+          lineGap: 2,
+        });
+      }
+    } else if (token.type === "code") {
+      doc.moveDown(0.3);
+      doc.font("Courier").fontSize(9);
+      doc.text(typeof token.text === "string" ? token.text : "", { lineGap: 2 });
+    } else if (token.type === "blockquote") {
+      doc.moveDown(0.3);
+      doc.font("Helvetica-Oblique").fontSize(11);
+      doc.text(blockToText(token.tokens ?? []), { indent: 16, lineGap: 2 });
+    } else if (token.type === "hr") {
+      doc.moveDown(0.5);
+      doc.moveTo(48, doc.y).lineTo(doc.page.width - 48, doc.y).stroke();
+      doc.moveDown(0.5);
+    } else if (token.type === "table") {
+      doc.moveDown(0.3);
+      doc.font("Helvetica").fontSize(10);
+      const rows = token.rows ?? [];
+      for (const row of rows) {
+        const cells = (row as any[]).map((c) => plainText(flattenInline(c?.tokens)));
+        doc.text(cells.join("  |  "), { lineGap: 2 });
+      }
+    }
+  }
+
+  doc.end();
+  return done.then(() => Buffer.concat(chunks));
 }

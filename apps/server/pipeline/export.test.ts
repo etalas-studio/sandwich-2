@@ -95,3 +95,36 @@ describe("exportDocument (md)", () => {
     assert.equal(result.buffer.toString("utf-8"), md);
   });
 });
+
+describe("exportDocument (pdf)", () => {
+  const markdown = [
+    "# Title",
+    "",
+    "Paragraph with **bold**, *italic*, and `code`.",
+    "",
+    "- item one",
+    "- item two",
+    "",
+    "1. first",
+    "2. second",
+    "",
+    "| Col A | Col B |",
+    "|-------|-------|",
+    "| 1     | 2     |",
+    "",
+    "> a quoted note",
+  ].join("\n");
+
+  it("returns a PDF buffer with the PDF magic bytes", async () => {
+    const result = await exportDocument(markdown, "pdf");
+    assert.equal(result.extension, "pdf");
+    assert.equal(result.mimeType, "application/pdf");
+    assert.ok(result.buffer.length > 500, `expected substantial PDF, got ${result.buffer.length} bytes`);
+    assert.equal(result.buffer.subarray(0, 4).toString("ascii"), "%PDF");
+  });
+
+  it("does not throw on empty content", async () => {
+    const result = await exportDocument("", "pdf");
+    assert.equal(result.buffer.subarray(0, 4).toString("ascii"), "%PDF");
+  });
+});
