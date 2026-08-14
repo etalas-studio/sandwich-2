@@ -15,6 +15,15 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../pipeline/plans.js";
+import { stageInstruction, detectDeliverableType, type PipelineStage } from "../pipeline/orchestrate.js";
+import {
+  createDocument,
+  createDocumentVersion,
+  getNextVersionNo,
+  linkConversationDocument,
+  listConversationDocuments,
+  type DocumentType,
+} from "../db/documents.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -129,71 +138,59 @@ export interface ConversationRunEvent {
 type Role = "system" | "user" | "assistant";
 type ConversationTurn = { role: Role; content: string };
 
-function buildMessages(history: ConversationTurn[], docType: string | null): ConversationTurn[] {
-  const brief = history
-    .filter((m) => m.role === "user")
-    .map((m) => m.content)
-    .join("\n")
-    .toLowerCase();
+const SANDWICH_SPECS_GUIDE = `
+## Specs & Feature Queue (Sandwich methodology)
+Produce a prioritized feature queue plus one spec per feature:
+1. Feature Queue — a table listing every feature: ID (F-001, F-002, ...), title, impact (1-10), effort (1-10), risk (1-10), priority score.
+2. Per-feature specs — for each feature: scope (what is in/out) and an acceptance-criteria checklist.
 
-  // Keyword fallback — word-boundary only, used when the conversation has no
-  // explicit type. "ui" must be a standalone word, not a substring of
-  // "require"/"build"/"guide".
-  const isFlow = /\buser flow\b/.test(brief) || /\balur\b/.test(brief);
-  const isTech = /\btechnical\b/.test(brief) || /\bteknis\b/.test(brief) || /\bspecs?\b/.test(brief);
-  const isQuotation = /\bquotation\b/.test(brief) || /\bquote\b/.test(brief) || /\bpenawaran\b/.test(brief) || /\bharga\b/.test(brief);
-  const isPrototype = /\bprototype\b/.test(brief) || /\blanding\b/.test(brief) || /\bui\b/.test(brief) || /\bdesign\b/.test(brief) || /\bhtml\b/.test(brief);
+Rules:
+- Base everything strictly on the brief — do not invent features.
+- Keep the client's language.
+`;
 
-  // Explicit conversation type wins; keyword matching is only the fallback.
-  const guideKind =
-    docType === "prototype"
-      ? "prototype"
-      : docType === "quotation"
-        ? "quotation"
-        : docType === "specs" || docType === "workflow"
-          ? "tech"
-          : docType === "prd" || docType === "mom"
-            ? "prd"
-            : isPrototype
-              ? "prototype"
-              : isQuotation
-                ? "quotation"
-                : isFlow
-                  ? "flow"
-                  : isTech
-                    ? "tech"
-                    : "prd";
+function buildMessages(
+  history: ConversationTurn[],
+  stage: PipelineStage,
+  pendingType: DocumentType | null,
+): ConversationTurn[] {
+  const instruction = stageInstruction(stage, pendingType);
 
-  const docGuide =
-    guideKind === "prototype"
-      ? GETOKUI_PROTOTYPE_GUIDE
-      : guideKind === "quotation"
-        ? SANDWICH_QUOTATION_GUIDE
-        : guideKind === "flow"
-          ? SANDWICH_USERFLOWS_GUIDE
-          : guideKind === "tech"
-            ? SANDWICH_TECHNICAL_GUIDE
-            : SANDWICH_PRD_GUIDE;
-
-  const outputInstruction =
-    guideKind === "prototype"
-      ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
-      : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
-
-  const system = [
+  const base = [
     `You are SANDWICH, an expert product consultant AI built by Etalas.`,
     `You help clients turn ideas and briefs into structured product documents.`,
     `Reply in the same language as the client (Indonesian or English).`,
-    ``,
-    `## Your process:`,
-    `1. When the client first sends a brief, ALWAYS ask 3-5 focused clarifying questions before generating any document. Your questions should fill the most critical gaps (target users, core features, integrations, timeline, constraints).`,
-    `2. Once you have enough context from the client's answers, generate the document following the guidelines below.`,
-    `3. Never generate a document on the first message — always ask questions first.`,
-    ``,
-    docGuide,
-    ``,
-    outputInstruction,
-  ].join("\n");
+  ];
+
+  let system: string;
+  if (stage === "generating" && pendingType) {
+    const guideKind: "prototype" | "quotation" | "specs" | "prd" =
+      pendingType === "prototype"
+        ? "prototype"
+        : pendingType === "quotation"
+          ? "quotation"
+          : pendingType === "specs"
+            ? "specs"
+            : "prd";
+
+    const docGuide =
+      guideKind === "prototype"
+        ? GETOKUI_PROTOTYPE_GUIDE
+        : guideKind === "quotation"
+          ? SANDWICH_QUOTATION_GUIDE
+          : guideKind === "specs"
+            ? SANDWICH_SPECS_GUIDE
+            : SANDWICH_PRD_GUIDE;
+
+    const outputInstruction =
+      guideKind === "prototype"
+        ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
+        : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
+
+    system = [...base, ``, instruction, ``, docGuide, ``, outputInstruction].join("\n");
+  } else {
+    system = [...base, ``, instruction].join("\n");
+  }
 
   return [{ role: "system", content: system }, ...history];
 }
@@ -216,7 +213,8 @@ const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engi
 async function runWithGroq(
   history: ConversationTurn[],
   signal: AbortSignal,
-  docType: string | null,
+  stage: PipelineStage,
+  pendingType: DocumentType | null,
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY!;
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -227,7 +225,7 @@ async function runWithGroq(
     },
     body: JSON.stringify({
       model: "qwen/qwen3.6-27b",
-      messages: buildMessages(history, docType),
+      messages: buildMessages(history, stage, pendingType),
       max_tokens: 4000,
       reasoning_effort: "none",
       temperature: 0.7,
@@ -248,7 +246,8 @@ async function runWithGroq(
 async function runWithOpenCode(
   history: ConversationTurn[],
   signal: AbortSignal,
-  docType: string | null,
+  stage: PipelineStage,
+  pendingType: DocumentType | null,
 ): Promise<string> {
   // Dynamic import Pi SDK — only loaded when OpenCode is configured
   const pi = await import("@earendil-works/pi-coding-agent");
@@ -317,7 +316,7 @@ async function runWithOpenCode(
     }
   });
 
-  const messages = buildMessages(history, docType);
+  const messages = buildMessages(history, stage, pendingType);
   const prompt = messages
     .map((m) => {
       if (m.role === "system") return m.content;
@@ -538,22 +537,43 @@ export function registerConversationRunRoutes(
           stage: "generate",
         });
 
+        // ── Model-driven orchestration ────────────────────────────────────
+        const lastUserMessage =
+          [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+        let stage = conversation.pipelineStage as PipelineStage;
+        let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
+
+        if (stage === "choosing_deliverable") {
+          const detected = detectDeliverableType(lastUserMessage);
+          if (detected) {
+            pendingType = detected;
+            stage = "clarifying";
+          }
+        } else if (stage === "clarifying") {
+          stage = "generating";
+        } else if (stage === "awaiting_next") {
+          const detected = detectDeliverableType(lastUserMessage);
+          if (detected) {
+            pendingType = detected;
+            stage = "clarifying";
+          }
+        }
+
         const useOpenCode = engine === "opencode";
         const hasGroqFallback = !!process.env.GROQ_API_KEY;
-        const docType = conversation.type;
 
         const run = useOpenCode
           ? () =>
-              runWithOpenCode(turns, controller.signal, docType).catch((err) => {
+              runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
                 if (hasGroqFallback) {
                   console.log(
                     `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
                   );
-                  return runWithGroq(turns, controller.signal, docType);
+                  return runWithGroq(turns, controller.signal, stage, pendingType);
                 }
                 throw err;
               })
-          : () => runWithGroq(turns, controller.signal, docType);
+          : () => runWithGroq(turns, controller.signal, stage, pendingType);
 
         run()
           .then(async (output) => {
@@ -569,10 +589,50 @@ export function registerConversationRunRoutes(
               });
               return;
             }
+
+            let nextStage: PipelineStage = stage;
+            if (stage === "generating" && pendingType) {
+              // Persist the deliverable as a versioned document.
+              const title =
+                conversation.title.trim() || `${pendingType.toUpperCase()} document`;
+              const existing = await listConversationDocuments(db, conversationId);
+              const existingDoc = existing.find((d) => d.type === pendingType);
+              if (existingDoc) {
+                const versionNo = await getNextVersionNo(db, existingDoc.id);
+                await createDocumentVersion(db, {
+                  documentId: existingDoc.id,
+                  versionNo,
+                  content: output,
+                  promptUsed: lastUserMessage,
+                });
+              } else {
+                const doc = await createDocument(db, {
+                  userId: auth.userId,
+                  type: pendingType,
+                  title,
+                });
+                await createDocumentVersion(db, {
+                  documentId: doc.id,
+                  versionNo: 1,
+                  content: output,
+                  promptUsed: lastUserMessage,
+                });
+                await linkConversationDocument(db, conversationId, doc.id);
+              }
+              nextStage = "awaiting_next";
+              pendingType = null;
+            } else if (stage === "intake") {
+              nextStage = "choosing_deliverable";
+            } else if (stage === "clarifying") {
+              nextStage = "generating";
+            }
+
             await updateConversation(db, conversationId, {
               status: "done",
               stage: null,
               output,
+              pipelineStage: nextStage,
+              pendingType,
             });
             await addChatMessage(db, {
               conversationId,

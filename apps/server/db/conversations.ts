@@ -23,6 +23,8 @@ export interface Conversation {
   status: string;
   stage: string | null;
   output: string | null;
+  pipelineStage: string;
+  pendingType: string | null;
   feedback: string | null;
   pinned: boolean;
   unread: boolean;
@@ -46,6 +48,8 @@ export interface UpdateConversationInput {
   status?: string;
   stage?: string | null;
   output?: string | null;
+  pipelineStage?: string;
+  pendingType?: string | null;
   feedback?: string | null;
   pinned?: boolean;
   unread?: boolean;
@@ -65,6 +69,8 @@ function normaliseConversation(
     status: row.status,
     stage: row.stage,
     output: row.output,
+    pipelineStage: row.pipelineStage,
+    pendingType: row.pendingType,
     feedback: row.feedback,
     pinned: row.pinned,
     unread: row.unread,
@@ -141,6 +147,8 @@ export async function updateConversation(
   if (input.status !== undefined) sets.status = input.status;
   if (input.stage !== undefined) sets.stage = input.stage;
   if (input.output !== undefined) sets.output = input.output;
+  if (input.pipelineStage !== undefined) sets.pipelineStage = input.pipelineStage;
+  if (input.pendingType !== undefined) sets.pendingType = input.pendingType;
   if (input.feedback !== undefined) sets.feedback = input.feedback;
   if (input.pinned !== undefined) sets.pinned = input.pinned;
   if (input.unread !== undefined) sets.unread = input.unread;
