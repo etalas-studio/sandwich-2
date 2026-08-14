@@ -57,7 +57,12 @@ export async function generatePrototypeDocument(
     const urls = findReferenceUrls(input.brief);
     if (urls.length > 0) {
       try {
-        const fetched = await fetchReferenceStyles(urls);
+        const fetched = await Promise.race([
+          fetchReferenceStyles(urls),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("reference enrichment timed out")), 60_000),
+          ),
+        ]);
         styles.push(...fetched);
         if (styles.length > 0) writeReferencesToWorkspace(workspace, styles);
       } catch {
