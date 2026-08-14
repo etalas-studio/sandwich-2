@@ -1,0 +1,66 @@
+{
+  "slug": "noirframefashion",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title font-serif text-[18vw] leading-[.78] text-[#f7efe4] drop-shadow-[0_20px_70px_rgba(0,0,0,.75)] md:text-[11vw] lg:text-[162px]",
+    "h1_sizes": [],
+    "cta_classes": "group inline-flex items-center gap-3 border hairline-border bg-white px-4 py-2.5 text-[10px] font-medium uppercase tracking-[.16em] text-black transition hover:bg-[#f7efe4]"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-28",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-screen-2xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

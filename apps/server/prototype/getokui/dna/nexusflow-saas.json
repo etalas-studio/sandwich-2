@@ -1,0 +1,111 @@
+{
+  "slug": "nexusflow-saas",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-white mb-6 leading-[1.05]",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "px-6 py-2.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-base font-normal shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:from-orange-400 hover:to-orange-500 border border-orange-400/50 transition-all"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "py-32",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blurSharp",
+      "borderPulse",
+      "card-shine",
+      "driftGlow",
+      "float-slow",
+      "highlightRow1",
+      "highlightRow2",
+      "highlightRow3",
+      "nodeFloat",
+      "nodeFloatCenter",
+      "panImage",
+      "ping",
+      "pulse-glow",
+      "pulseSweep",
+      "ring-spin",
+      "scrollMarquee",
+      "subtleRock",
+      "subtleSweep"
+    ],
+    "keyframes_css": [
+      "@keyframes driftGlow { 0% { transform: scale(1) translate(0, 0); opacity: 0.1; } 33% { transform: scale(1.1) translate(3%, 3%); opacity: 0.15; } 66% { transform: scale(0.9) translate(-2%, -4%); opacity: 0.12; } 100% { transform: scale(1) translate(0, 0); opacity: 0.1; } }",
+      "@keyframes float-slow { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.02); } }",
+      "@keyframes nodeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }"
+    ],
+    "animate_classes": [
+      "animate-[pulse_2s_ease-in-out_infinite]",
+      "animate-[spin_12s_linear_infinite_reverse]",
+      "animate-[spin_8s_linear_infinite]",
+      "animate-float-fast",
+      "animate-float-med",
+      "animate-float-slow",
+      "animate-infinite-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

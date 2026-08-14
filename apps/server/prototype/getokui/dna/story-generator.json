@@ -1,0 +1,79 @@
+{
+  "slug": "story-generator",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl md:text-6xl font-medium tracking-tight text-slate-100 mb-6 max-w-4xl mx-auto leading-tight drop-shadow-md relative z-10",
+    "h1_sizes": [
+      "text-4xl",
+      "text-6xl"
+    ],
+    "cta_classes": "bg-gradient-to-b border-t shadow-[0_2px_10px_-2px_rgba(6,182,212,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] active:translate-y-[1px] text-white px-5 py-2 rounded text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 border-amber-400/20"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-sm"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-20",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-inner",
+    "shadow-sm",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

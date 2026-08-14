@@ -1,0 +1,85 @@
+{
+  "slug": "strata",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-display text-[3.55rem] uppercase leading-[0.88] tracking-[0.005em] text-[#0A0A0A] sm:text-[4.5rem] md:text-[5.6rem] lg:text-[6.3rem]",
+    "h1_sizes": [],
+    "cta_classes": "inline-flex h-10 items-center justify-center rounded-xl border border-[#1A2130] bg-[#10141B] px-4 text-[11px] uppercase tracking-[0.16em] text-[#F5F5F2] transition-all hover:bg-[#17202B] hover:shadow-[0_0_0_1px_rgba(77,163,255,0.22),0_8px_24px_rgba(77,163,255,0.12)] md:px-5"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-28",
+      "pt-16",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-md"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-inner",
+    "shadow-md"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "proof-marquee",
+      "topo-dash",
+      "topo-dash-rev"
+    ],
+    "keyframes_css": [
+      "@keyframes topo-dash { to { stroke-dashoffset: -40; } }",
+      "@keyframes topo-dash-rev { to { stroke-dashoffset: 40; } }",
+      "@keyframes proof-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite_1.5s]",
+      "animate-[pulse_1.5s_ease-in-out_infinite]",
+      "animate-[spin_40s_linear_infinite_reverse]",
+      "animate-[spin_60s_linear_infinite]",
+      "animate-ping",
+      "animate-pulse",
+      "animate-spin"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

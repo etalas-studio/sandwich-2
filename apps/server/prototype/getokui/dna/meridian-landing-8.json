@@ -1,0 +1,76 @@
+{
+  "slug": "meridian-landing-8",
+  "extraction": "partial",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": null,
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": false,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "alertPulse",
+      "blobDrift1",
+      "blobDrift2",
+      "blobDrift3",
+      "borderSweep",
+      "chartScan",
+      "curBlink",
+      "ePulse",
+      "eRing",
+      "fadeArea",
+      "flipWord",
+      "livePulse",
+      "meshDash",
+      "meteorFall",
+      "morphBlob",
+      "nodeGlow",
+      "pShimmer",
+      "rippleAnim",
+      "scorePulse",
+      "scrollMarquee",
+      "scrollMetrics",
+      "secScan",
+      "shieldPulse",
+      "shimmerText",
+      "spinBorder",
+      "warnGlow"
+    ],
+    "keyframes_css": [
+      "@keyframes rippleAnim{to{transform:scale(4);opacity:0}}",
+      "@keyframes blobDrift1{0%{transform:translate(0,0)}50%{transform:translate(8%,12%)}100%{transform:translate(-5%,6%)}}",
+      "@keyframes blobDrift2{0%{transform:translate(0,0)}50%{transform:translate(-10%,-8%)}100%{transform:translate(6%,-12%)}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

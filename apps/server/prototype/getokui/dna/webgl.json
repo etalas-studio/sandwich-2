@@ -1,0 +1,72 @@
+{
+  "slug": "webgl",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-reveal text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.9] text-white glitch-target",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "group flex items-center gap-2 px-4 py-2 border border-neutral-800 rounded-lg hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all duration-300"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-sm",
+    "rounded-full",
+    "rounded-lg"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "glitch-anim",
+      "shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes glitch-anim { 0% { transform: translate(0); text-shadow: none; } 20% { transform: translate(-2px, 1px) skewX(-2deg); text-shadow: 2px 0 rgba(34, 211, 238, 0.3), -2px 0 rgba(255, 0, 170, 0.3); } 40% { transform: translate(2px, -1px) skewX(2deg); text-shadow: -2px 0 rgba(34, 211, 238, 0.3), 2px 0 rgba(255, 0, 170, 0.3); } 60% { transform: translate(-1px, 2px); } 100% { transform: translate(0); text-shadow: none; } }",
+      "@keyframes shimmer { 100% { transform: translateX(100%); } }"
+    ],
+    "animate_classes": [
+      "animate-[shimmer_1.5s_infinite]"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

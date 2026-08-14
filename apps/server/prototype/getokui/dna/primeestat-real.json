@@ -1,0 +1,74 @@
+{
+  "slug": "primeestat-real",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl lg:text-8xl tracking-tight leading-[1.02] mb-8 text-reveal",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "inline-flex items-center justify-between gap-4 border border-neutral-300 px-5 py-4 text-sm font-medium hover:bg-white transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "pt-16"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-md"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "prime-testimonial-marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes prime-testimonial-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

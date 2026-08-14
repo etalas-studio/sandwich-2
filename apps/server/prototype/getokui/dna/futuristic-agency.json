@@ -1,0 +1,109 @@
+{
+  "slug": "futuristic-agency",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-8xl lg:text-9xl leading-[0.9] bg-clip-text text-6xl font-normal text-transparent tracking-tight bg-gradient-to-b from-white via-white to-neutral-600 mb-8 transition-all duration-700 ease-out",
+    "h1_sizes": [
+      "text-8xl",
+      "text-9xl",
+      "text-6xl"
+    ],
+    "cta_classes": "px-5 py-2.5 bg-white text-black text-sm font-medium rounded-full flex items-center gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 pointer-events-auto hover:bg-neutral-200"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "py-32",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "beam-horz",
+      "beam-vert",
+      "float",
+      "pulse-glow",
+      "scan",
+      "ticker"
+    ],
+    "keyframes_css": [
+      "@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }",
+      "@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { top: 110%; opacity: 0; } }"
+    ],
+    "animate_classes": [
+      "animate-[float_5s_ease-in-out_infinite_1.5s]",
+      "animate-[scan_3s_ease-in-out_infinite]",
+      "animate-[spin_12s_linear_infinite]",
+      "animate-[spin_16s_linear_infinite_reverse]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_3s_linear_infinite]",
+      "animate-[spin_3s_linear_infinite_reverse]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-[spin_60s_linear_infinite]",
+      "animate-[spin_6s_linear_infinite_reverse]",
+      "animate-[spin_8s_linear_infinite]",
+      "animate-[spin_8s_linear_infinite_reverse]",
+      "animate-float",
+      "animate-ping",
+      "animate-pulse",
+      "animate-scan",
+      "animate-spin",
+      "animate-ticker"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

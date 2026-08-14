@@ -1,0 +1,50 @@
+{
+  "slug": "asagiri-38matcha",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "serif",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "vertical-text",
+      "blend-modes"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "run"
+    ],
+    "keyframes_css": [
+      "@keyframes run{0%{transform:translateX(-100%)}100%{transform:translateX(280%)}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "blend-modes"
+  ]
+}

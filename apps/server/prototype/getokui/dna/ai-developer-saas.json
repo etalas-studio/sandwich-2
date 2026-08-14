@@ -1,0 +1,94 @@
+{
+  "slug": "ai-developer-saas",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "[text-wrap:balance] leading-[1] text-[10vw] sm:text-5xl md:text-6xl lg:text-[85px] xl:text-[95px] font-semibold text-neutral-100 tracking-tight",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "group relative inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-base font-semibold text-black transition-all hover:bg-neutral-200 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "pt-20",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-2xl",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "horizontal-scroll",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blinkCaret",
+      "cursorBlink",
+      "fadeInUpLoop",
+      "float",
+      "floatInfinite",
+      "progressFillLoop",
+      "progressLoop",
+      "pulseSoft",
+      "revealText",
+      "streamCode",
+      "ticker",
+      "typeLine",
+      "typePrompt"
+    ],
+    "keyframes_css": [
+      "@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }",
+      "@keyframes typePrompt { 0%, 15% { width: 0; } 45%, 90% { width: 100%; } 95%, 100% { width: 0; } }"
+    ],
+    "animate_classes": [
+      "animate-bounce",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

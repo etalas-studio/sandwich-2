@@ -1,0 +1,84 @@
+{
+  "slug": "aura-assistant",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-[4rem] md:text-[5.2rem] lg:text-[6.4rem] font-light tracking-[-0.075em] leading-[0.92] text-slate-950",
+    "h1_sizes": [],
+    "cta_classes": "w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 bg-gradient-to-b from-blue-500 to-blue-600 border border-blue-700 text-white text-sm font-normal shadow-[0_10px_24px_rgba(59,130,246,0.26),inset_0_1px_0_rgba(255,255,255,0.35)] hover:from-blue-400 hover:to-blue-500 hover:-translate-y-0.5 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.18)] transition-all duration-300"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-2xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "pt-32",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-5xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "aura-bubble-in",
+      "aura-card-in",
+      "aura-float-soft",
+      "auraAmbientDriftOne",
+      "auraAmbientDriftThree",
+      "auraAmbientDriftTwo",
+      "auraConnectionFlow",
+      "auraDotDrift",
+      "auraFinalFloatOne",
+      "auraFinalFloatTwo"
+    ],
+    "keyframes_css": [
+      "@keyframes auraAmbientDriftOne { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 35% { transform: translate3d(4vw, 3vh, 0) scale(1.06); } 70% { transform: translate3d(-2vw, 5vh, 0) scale(0.98); } }",
+      "@keyframes auraAmbientDriftTwo { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 40% { transform: translate3d(-4vw, -3vh, 0) scale(1.08); } 75% { transform: translate3d(3vw, -5vh, 0) scale(0.96); } }",
+      "@keyframes auraAmbientDriftThree { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(2vw, -4vh, 0) scale(1.05); } }"
+    ],
+    "animate_classes": [
+      "animate-[auraConnectionFlow_4.5s_linear_infinite]",
+      "animate-[auraFinalFloatOne_5.5s_ease-in-out_infinite]",
+      "animate-[auraFinalFloatTwo_6.25s_ease-in-out_infinite]"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

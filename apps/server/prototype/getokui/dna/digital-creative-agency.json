@@ -1,0 +1,104 @@
+{
+  "slug": "digital-creative-agency",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-8xl lg:text-9xl leading-[0.9] text-6xl font-semibold tracking-tighter mb-10 text-[#0f0f0f]",
+    "h1_sizes": [
+      "text-8xl",
+      "text-9xl",
+      "text-6xl"
+    ],
+    "cta_classes": "relative inline-flex items-center justify-center gap-2 overflow-hidden transition-all duration-300 hover:ring-sky-400/60 hover:shadow-[0_0_0_1px_rgba(56,189,248,0.35),0_40px_80px_rgba(56,189,248,0.18)] group ring-[#ffffff]/30 ring-1 text-base font-semibold text-white tracking-tight bg-neutral-950/95 rounded-full pt-3 pr-6 pb-3 pl-6 shadow-[0_0_0_1px_rgba(56,189,248,0.25),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-20",
+      "py-32",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "cms-shimmer",
+      "electric-draw",
+      "electric-flash",
+      "fadeDown",
+      "fadeUp",
+      "floatUp",
+      "marquee-down",
+      "marquee-up",
+      "orbit-counter-rotate",
+      "orbit-rotate",
+      "scroll-vertical",
+      "spin"
+    ],
+    "keyframes_css": [
+      "@keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5) rotate(var(--rotation)); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1) rotate(var(--rotation)); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -150%) scale(0.8) rotate(calc(var(--rotation) + 45deg)); opacity: 0; } }",
+      "@keyframes floatUp { 0% { transform: translateY(20px) rotate(var(--rotation)); opacity: 0; } 20% { opacity: 0.4; } 100% { transform: translateY(-100px) rotate(var(--rotation)); opacity: 0; } }",
+      "@keyframes cms-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }"
+    ],
+    "animate_classes": [
+      "animate-[fadeDown_0.8s_ease-out_0.1s_both]",
+      "animate-[fadeUp_0.8s_ease-out_0.5s_both]",
+      "animate-[fadeUp_0.8s_ease-out_0.7s_both]",
+      "animate-[fadeUp_0.8s_ease-out_0.9s_both]",
+      "animate-[fadeUp_0.8s_ease-out_1.1s_both]",
+      "animate-[fadeUp_1s_ease-out_1.3s_both]",
+      "animate-[spin_12s_linear_infinite]",
+      "animate-marquee-down",
+      "animate-marquee-up",
+      "animate-pulse",
+      "animate-scroll-vertical"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

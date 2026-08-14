@@ -1,0 +1,65 @@
+{
+  "slug": "brutalist-creative-agency",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-[20vw] md:text-[18vw] leading-[0.75] uppercase font-semibold tracking-tighter w-full text-left hero-text",
+    "h1_sizes": [],
+    "cta_classes": "w-full md:w-auto self-center mt-4 px-16 py-5 border border-white text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors duration-500 rounded-full group"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-7xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "pt-20",
+      "py-20"
+    ],
+    "container_max": [
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-8",
+      "gap-16"
+    ]
+  },
+  "radius": [
+    "rounded-full"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "gradient-text",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

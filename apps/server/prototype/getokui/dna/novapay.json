@@ -1,0 +1,79 @@
+{
+  "slug": "novapay",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl lg:text-7xl font-semibold tracking-tight text-white mb-8 leading-[1.1]",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "bg-gradient-to-b from-[#ffffff] to-[#f4f4f5] text-[#18181b] rounded-xl py-3 px-6 text-sm font-light transition-all active:scale-[0.98] inline-flex items-center gap-2 mb-10 shadow-[inset_0_1px_1px_#fff,0_5px_15px_-5px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.06)]"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-48",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "dash-line-anim",
+      "float-card-elements"
+    ],
+    "keyframes_css": [
+      "@keyframes float-card-elements { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(1deg); } }",
+      "@keyframes dash-line-anim { to { stroke-dashoffset: -1000; } }"
+    ],
+    "animate_classes": [
+      "animate-float",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

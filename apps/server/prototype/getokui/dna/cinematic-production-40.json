@@ -1,0 +1,73 @@
+{
+  "slug": "cinematic-production-40",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-line text-[14vw] leading-[0.8] font-bold tracking-tighter mix-blend-screen text-white",
+    "h1_sizes": [],
+    "cta_classes": "btn-lab px-5 py-2 rounded-full text-xs"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-6xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "slideLeft",
+      "slideRight"
+    ],
+    "keyframes_css": [
+      "@keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }"
+    ],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

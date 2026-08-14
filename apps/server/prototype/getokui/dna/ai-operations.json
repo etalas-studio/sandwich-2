@@ -1,0 +1,88 @@
+{
+  "slug": "ai-operations",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl sm:text-6xl md:text-7xl font-medium tracking-tight text-white/90 leading-tight max-w-4xl drop-shadow-sm",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "w-full sm:w-auto text-sm font-semibold text-white px-6 py-2.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-b from-[#14d4b1] to-[#00a386] border border-[#008a71] shadow-[0_6px_16px_-4px_rgba(0,163,134,0.5),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_-3px_0_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-6px_rgba(0,163,134,0.6),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-3px_0_rgba(0,0,0,0.15)] hover:brightness-110 active:translate-y-1 active:shadow-[0_2px_4px_-2px_rgba(0,163,134,0.5),inset_0_3px_6px_rgba(0,0,0,0.25)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-16",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-5xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[pulse_2s_ease-in-out_infinite]",
+      "animate-[pulse_3s_infinite]",
+      "animate-[spin_3s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-on-scroll",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

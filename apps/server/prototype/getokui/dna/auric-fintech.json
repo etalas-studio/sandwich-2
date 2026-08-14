@@ -1,0 +1,77 @@
+{
+  "slug": "auric-fintech",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "max-w-5xl text-5xl leading-[0.98] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl font-dotgothic16 font-normal",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "group inline-flex items-center gap-3 rounded-full bg-[#F2F0EB] px-7 py-4 text-sm font-medium text-[#1C1917] transition-all duration-500 hover:scale-[1.03] hover:bg-white font-geist"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "pt-28",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-10"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "beam-spin",
+      "dots-move"
+    ],
+    "keyframes_css": [
+      "@keyframes beam-spin { to { transform: rotate(360deg); } }",
+      "@keyframes dots-move { 0% { background-position: 0 0; } 100% { background-position: 24px 24px; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes"
+  ]
+}

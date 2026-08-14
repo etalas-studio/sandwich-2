@@ -1,0 +1,47 @@
+{
+  "slug": "aether-architectu-60",
+  "extraction": "fallback",
+  "css_fallback": {
+    "css_hero_font_size": "2rem",
+    "css_radius": null,
+    "css_has_shadow": true
+  },
+  "hero": {
+    "h1_classes": null,
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [
+    "(custom box-shadow — see template CSS)"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "transitions"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

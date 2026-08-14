@@ -1,0 +1,88 @@
+{
+  "slug": "design-system-playground",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl md:text-[56px] leading-[1.1] font-semibold tracking-tight text-neutral-900 mt-8 mb-6 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200",
+    "h1_sizes": [
+      "text-4xl"
+    ],
+    "cta_classes": "bg-neutral-900 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-neutral-800 transition-colors shadow-sm"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "py-24",
+      "py-20"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded",
+    "rounded-full",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "vertical-text",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_12s_linear_infinite]",
+      "animate-[spin_15s_linear_infinite_reverse]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_20s_linear_infinite_reverse]",
+      "animate-[spin_30s_linear_infinite]",
+      "animate-bounce",
+      "animate-in",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

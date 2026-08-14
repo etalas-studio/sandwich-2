@@ -1,0 +1,56 @@
+{
+  "slug": "forge-platform-42",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-headline",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "accentPulse",
+      "floatMetric",
+      "glitch-r",
+      "meshDrift",
+      "navGlow",
+      "pulse-dot",
+      "underlineShimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes navGlow { 0%, 100% { box-shadow: 0 0 12px rgba(249,115,22,0.1); } 50% { box-shadow: 0 0 20px rgba(249,115,22,0.2); } }",
+      "@keyframes glitch-r { 0%, 90%, 100% { text-shadow: none; } 91% { text-shadow: -3px 0 rgba(249,115,22,0.9), 3px 0 rgba(59,130,246,0.7); } 93% { text-shadow: 3px 0 rgba(249,115,22,0.9), -3px 0 rgba(59,130,246,0.7); } 95% { text-shadow: -2px 0 rgba(253,186,116,0.8), 2px 0 rgba(234,88,12,0.8); } 97% { text-shadow: none; } }",
+      "@keyframes meshDrift { 0% { background-position: 0% 50%, 100% 0%, 50% 50%; } 33% { background-position: 50% 0%, 0% 100%, 30% 70%; } 66% { background-position: 100% 50%, 50% 0%, 70% 30%; } 100% { background-position: 0% 50%, 100% 0%, 50% 50%; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

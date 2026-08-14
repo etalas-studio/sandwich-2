@@ -1,0 +1,114 @@
+{
+  "slug": "futuristic-infrastructure",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-7xl sm:text-8xl md:text-[10rem] leading-none font-medium tracking-tighter text-white",
+    "h1_sizes": [
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "bg-white text-black px-4 py-2 rounded-full font-normal hover:bg-white/90 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-7xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "py-24",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-inner",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "bar-1",
+      "bar-2",
+      "bar-3",
+      "bar-4",
+      "circle-click",
+      "circle-wave",
+      "counter-spin",
+      "dash-move",
+      "float-erratic-1",
+      "float-erratic-2",
+      "float-erratic-3",
+      "float-slow",
+      "flow-bar",
+      "flow-down",
+      "flow-right",
+      "flow-x",
+      "scanline",
+      "terminal-type",
+      "ui-float"
+    ],
+    "keyframes_css": [
+      "@keyframes scanline { 0% { transform: translateY(-100%); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(1000%); opacity: 0; } }",
+      "@keyframes flow-x { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }",
+      "@keyframes dash-move { to { stroke-dashoffset: -40; } }"
+    ],
+    "animate_classes": [
+      "animate-[pulse_3s_ease-in-out_infinite]",
+      "animate-[scanline_3s_linear_infinite]",
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_15s_linear_infinite_reverse]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_3s_linear_infinite_reverse]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-bounce",
+      "animate-dash",
+      "animate-ping",
+      "animate-pulse",
+      "animate-scanline",
+      "animate-spin"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

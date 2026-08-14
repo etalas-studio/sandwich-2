@@ -1,0 +1,95 @@
+{
+  "slug": "prism-saas-landing",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "leading-[1.1] md:text-5xl lg:text-7xl text-4xl text-slate-900 font-newsreader text-center max-w-4xl mr-auto mb-8 ml-auto pr-4 pl-4 aura-animate-fade-up delay-200",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-4xl"
+    ],
+    "cta_classes": "group inline-flex items-center gap-2 bg-[#0F172A] text-white px-8 py-4 rounded-full hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-900/20 font-sans font-medium"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-2xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-40"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "aura-gradient-move",
+      "auraFadeIn",
+      "auraFadeInUp",
+      "drawLine",
+      "fadeInArea",
+      "vertical-loop",
+      "vertical-loop-scroll",
+      "widgetSwap1",
+      "widgetSwap2"
+    ],
+    "keyframes_css": [
+      "@keyframes auraFadeInUp { 0% { opacity: 0; transform: translateY(20px) scale(0.96); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }",
+      "@keyframes auraFadeIn { 0% { opacity: 0; filter: blur(4px); } 100% { opacity: 1; filter: blur(0); } }",
+      "@keyframes aura-gradient-move{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}"
+    ],
+    "animate_classes": [
+      "animate-area",
+      "animate-float-slow",
+      "animate-pulse",
+      "animate-stroke",
+      "animate-vertical-loop",
+      "animate-vertical-loop-scroll",
+      "animate-widget-1",
+      "animate-widget-2"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

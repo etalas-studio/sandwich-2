@@ -1,0 +1,89 @@
+{
+  "slug": "vertex-saas-task",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight leading-[1.1] text-white mb-6",
+    "h1_sizes": [
+      "text-4xl",
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "px-4 py-2 text-xs text-white bg-gradient-to-b from-[#3a3a3a] to-[#1a1a1a] hover:from-[#444] hover:to-[#222] rounded-lg border border-white/[0.1] transition-colors font-light shadow-lg flex items-center gap-2"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-16",
+      "pt-40",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-lg",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "center-beam",
+      "core-pulse",
+      "ray-sweep",
+      "ray-sweep-2"
+    ],
+    "keyframes_css": [
+      "@keyframes ray-sweep { 0%, 100% { transform: rotate(35deg) scaleY(1); opacity: 0.4; } 50% { transform: rotate(30deg) scaleY(1.4); opacity: 0.8; } }",
+      "@keyframes ray-sweep-2 { 0%, 100% { transform: rotate(25deg) translateY(0); opacity: 0.5; } 50% { transform: rotate(28deg) translateY(3vh) scale(1.1); opacity: 1; } }",
+      "@keyframes core-pulse { 0%, 100% { transform: rotate(25deg) scaleX(0.9); opacity: 0.4; } 50% { transform: rotate(25deg) scaleX(1.1); opacity: 1; } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_6s_linear_infinite]",
+      "animate-pulse",
+      "animate-spin"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

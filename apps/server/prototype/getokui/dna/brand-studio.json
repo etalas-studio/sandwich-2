@@ -1,0 +1,101 @@
+{
+  "slug": "brand-studio",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-8xl leading-[1] overflow-visible text-5xl font-semibold text-[#1d1d1f] tracking-tight font-display mb-6",
+    "h1_sizes": [
+      "text-8xl",
+      "text-5xl"
+    ],
+    "cta_classes": "group relative inline-flex items-center justify-center gap-2 bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-white/5"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-lg",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blurIn",
+      "chartGrow",
+      "fadeUp",
+      "growBar",
+      "marquee",
+      "revealImage",
+      "rotateUpDashboard",
+      "scaleReveal",
+      "slideInUp",
+      "slideUpKey",
+      "staggerSlide",
+      "textGlitch",
+      "textPulse",
+      "textShimmer",
+      "zoomInSmooth"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeUp { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }",
+      "@keyframes zoomInSmooth { from { opacity: 0; transform: scale(0.98); filter: blur(5px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }",
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-marquee",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

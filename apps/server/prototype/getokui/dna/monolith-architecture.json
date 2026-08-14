@@ -1,0 +1,73 @@
+{
+  "slug": "monolith-architecture",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "block w-full py-3 px-4 text-center text-xs font-bold uppercase tracking-widest bg-[#ff4500] text-black hover:bg-[#ff6633] transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "pulse",
+      "scrollPulse"
+    ],
+    "keyframes_css": [
+      "@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }",
+      "@keyframes scrollPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_10s_linear_infinite]",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

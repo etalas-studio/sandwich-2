@@ -1,0 +1,85 @@
+{
+  "slug": "nebula-real-time",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "reveal",
+    "h1_sizes": [],
+    "cta_classes": "w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-center text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "py-20"
+    ],
+    "container_max": [
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-sm",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blink",
+      "flowmove",
+      "march",
+      "pipeline-flow",
+      "pulsem",
+      "scrollx",
+      "tlblink"
+    ],
+    "keyframes_css": [
+      "@keyframes scrollx{to{transform:translateX(-50%)}}",
+      "@keyframes tlblink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,209,224,.5)}50%{opacity:.45;box-shadow:0 0 0 7px rgba(79,209,224,0)}}",
+      "@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,209,224,.5)}50%{opacity:.4;box-shadow:0 0 0 6px rgba(79,209,224,0)}}"
+    ],
+    "animate_classes": [
+      "animate-ping",
+      "animate-pulse",
+      "animate-spin"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

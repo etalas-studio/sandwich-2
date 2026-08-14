@@ -1,0 +1,64 @@
+{
+  "slug": "lumina-creative",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl lg:text-7xl xl:text-8xl font-serif text-[#43436A] leading-[1.1] tracking-tight",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "px-8 py-4 rounded-full border border-[#FF7F66] text-[#43436A] font-medium text-xs tracking-widest uppercase hover:bg-[#FF7F66] hover:text-white transition-colors flex items-center gap-3"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "py-24",
+      "pt-24"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-sm",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions"
+    ]
+  },
+  "signature": [
+    "big-radius"
+  ]
+}

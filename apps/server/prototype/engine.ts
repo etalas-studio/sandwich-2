@@ -1,30 +1,14 @@
-import { mkdtempSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { buildPrototypeSystemPrompt } from "./prompts.js";
+import { copyReferencesTo, readPrototypeFiles } from "./references.js";
+import { polishWorkspace } from "./glowup.js";
 import { savePrototypeFile, updatePrototypeStatus, type Prototype } from "./storage.js";
 import type { Database } from "../db/connection.js";
 
-const ALLOWED_EXTENSIONS = new Set([
-  ".html", ".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".json", ".ico",
-]);
-
 // Prototype generation writes many files — give it a generous but bounded window.
 const ENGINE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
-
-function listFilesRecursive(dir: string): string[] {
-  const results: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) {
-      results.push(...listFilesRecursive(full));
-    } else {
-      results.push(full);
-    }
-  }
-  return results;
-}
 
 export async function generatePrototype(
   db: Database,
@@ -94,19 +78,25 @@ export async function generatePrototype(
       throw err;
     }
 
-    // Read all generated files from workspace
-    const files = listFilesRecursive(workspace);
-    console.log("[prototype] workspace files:", files.map((f) => relative(workspace, f)));
+    // Read pass-1 files (snapshot kept as fallback if glowup fails)
+    let files = readPrototypeFiles(workspace);
+    console.log("[prototype] generated files:", files.map((f) => f.path));
     console.log("[prototype] agent response (first 500 chars):", responseText.slice(0, 500));
     if (files.length === 0) throw new Error("no files generated");
 
-    for (const fullPath of files) {
-      const relPath = relative(workspace, fullPath).split("\\").join("/");
-      const dot = relPath.lastIndexOf(".");
-      const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
-      if (!ALLOWED_EXTENSIONS.has(ext)) continue;
-      const content = readFileSync(fullPath, "utf-8");
-      await savePrototypeFile(db, prototype.id, relPath, content);
+    // Design polish pass (getokui glowup). Non-destructive: on failure, keep pass-1 files.
+    try {
+      copyReferencesTo(workspace);
+      await polishWorkspace(workspace, prototype.brief, signal);
+      const polished = readPrototypeFiles(workspace);
+      if (polished.length > 0) files = polished;
+      console.log("[prototype] glowup complete");
+    } catch (err) {
+      console.error("[prototype] glowup failed, keeping original files:", err);
+    }
+
+    for (const file of files) {
+      await savePrototypeFile(db, prototype.id, file.path, file.content);
     }
 
     await updatePrototypeStatus(db, prototype.id, "done");

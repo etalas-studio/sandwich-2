@@ -1,0 +1,63 @@
+{
+  "slug": "cadence-landing-19",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "bar-shimmer",
+      "bc-shimmer-sweep",
+      "hero-orb-drift",
+      "hero-star-shoot",
+      "logo-scroll",
+      "metrics-scroll",
+      "orbit-spin-1",
+      "orbit-spin-2",
+      "orbit-spin-3",
+      "panel-shimmer",
+      "pill-sweep",
+      "pulse-dot",
+      "spin-border"
+    ],
+    "keyframes_css": [
+      "@keyframes hero-orb-drift { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -20px) scale(1.05); } 66% { transform: translate(-20px, 15px) scale(0.97); } 100% { transform: translate(15px, -10px) scale(1.02); } }",
+      "@keyframes hero-star-shoot { 0% { translate: 0 0; opacity: 0; } 5% { opacity: 1; } 60% { opacity: 0.6; } 100% { translate: 420px 420px; opacity: 0; } }",
+      "@keyframes orbit-spin-1 { to { transform: translateX(-50%) rotate(360deg); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

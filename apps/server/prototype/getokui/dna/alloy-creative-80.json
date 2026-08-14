@@ -1,0 +1,63 @@
+{
+  "slug": "alloy-creative-80",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "c_h1",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "a",
+      "alloy-link-reveal",
+      "alloy-mark-a-draw",
+      "alloy-mark-arc-orbit",
+      "alloy-mark-dot-pop",
+      "alloy-mark-ring-draw",
+      "alloy-mark-rotate-slow",
+      "alloyHeroGrad",
+      "b"
+    ],
+    "keyframes_css": [
+      "@keyframes a{0%{transform:rotate(0deg)}to{transform:rotate(1turn)}}",
+      "@keyframes b{0%{transform:translateX(0)}to{transform:translateX(-100%)}}",
+      "@keyframes alloyHeroGrad { 0% { background-position: 0% 50%; } 25% { background-position: 100% 0%; } 50% { background-position: 100% 100%; } 75% { background-position: 0% 100%; } 100% { background-position: 0% 50%; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-attr",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

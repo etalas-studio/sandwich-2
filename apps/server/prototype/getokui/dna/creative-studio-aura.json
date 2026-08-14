@@ -1,0 +1,76 @@
+{
+  "slug": "creative-studio-aura",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-3xl md:text-5xl lg:text-6xl font-thin tracking-tight text-white/95 leading-tight",
+    "h1_sizes": [
+      "text-3xl",
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "px-8 py-4 rounded-full bg-neutral-900 text-white hover:bg-neutral-800 text-xs md:text-sm font-medium transition-colors shadow-lg shadow-neutral-900/20 flex items-center justify-center gap-2 group"
+  },
+  "type_scale": {
+    "h1": "text-3xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "py-16",
+      "py-32"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "vertical-text",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

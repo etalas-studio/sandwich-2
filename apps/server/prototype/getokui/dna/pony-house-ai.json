@@ -1,0 +1,85 @@
+{
+  "slug": "pony-house-ai",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl md:text-8xl font-bold tracking-tight mb-6 leading-[1.1] drop-shadow-2xl",
+    "h1_sizes": [
+      "text-6xl",
+      "text-8xl"
+    ],
+    "cta_classes": "h-12 px-8 bg-accent hover:bg-accentGlow text-white text-sm font-medium rounded-full transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "py-28",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-5",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "beam",
+      "pulseSeq",
+      "scanX",
+      "scanY",
+      "spin"
+    ],
+    "keyframes_css": [
+      "@keyframes beam { 0% { stroke-dashoffset: 480; } 100% { stroke-dashoffset: 0; } }",
+      "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes pulseSeq { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }"
+    ],
+    "animate_classes": [
+      "animate-bounce",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

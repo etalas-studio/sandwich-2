@@ -1,0 +1,60 @@
+{
+  "slug": "mango",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "flex items-center gap-2 text-xl font-semibold text-white tracking-tight",
+    "h1_sizes": [
+      "text-xl"
+    ],
+    "cta_classes": "px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-sm font-medium text-white shadow-lg shadow-cyan-500/20 flex items-center gap-2 hover:shadow-cyan-500/30 transition-all"
+  },
+  "type_scale": {
+    "h1": "text-xl",
+    "h2": "text-base"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "horizontal-scroll",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}
