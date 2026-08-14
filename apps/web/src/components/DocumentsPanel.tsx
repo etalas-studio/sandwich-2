@@ -9,6 +9,7 @@ interface DocumentItem {
   title: string
   currentVersionId: string | null
   latestVersionNo: number | null
+  currentVersionNo: number | null
   previewUrl: string | null
   updatedAt: string
 }
@@ -20,17 +21,34 @@ const TYPE_LABEL: Record<string, string> = {
   specs: 'Specs',
 }
 
-function PrototypeCard({ doc }: { doc: DocumentItem }) {
+function PrototypeCard({ doc, onChanged }: { doc: DocumentItem; onChanged: () => void }) {
   const latest = doc.latestVersionNo ?? 1
-  const [version, setVersion] = useState(latest)
+  const current = doc.currentVersionNo ?? latest
+  const [version, setVersion] = useState(current)
+  const [setting, setSetting] = useState(false)
   const base = doc.previewUrl?.replace(/\/$/, '') ?? ''
   const previewUrl = base ? `${base}/v/${version}/` : null
+
+  const setCurrent = async () => {
+    setSetting(true)
+    try {
+      await fetch(apiUrl(`/api/documents/${doc.id}/rollback`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ versionNo: version }),
+      })
+      onChanged()
+    } finally {
+      setSetting(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
       <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>Prototype</span>
       <span className="font-semibold truncate" style={{ color: '#111827' }}>{doc.title}</span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {previewUrl && (
           <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#2563eb' }}>
             Preview
@@ -43,9 +61,19 @@ function PrototypeCard({ doc }: { doc: DocumentItem }) {
           style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#111827' }}
         >
           {Array.from({ length: latest }, (_, i) => latest - i).map((v) => (
-            <option key={v} value={v}>v{v}</option>
+            <option key={v} value={v}>v{v}{v === current ? ' (current)' : ''}</option>
           ))}
         </select>
+        {version !== current && (
+          <button
+            onClick={() => void setCurrent()}
+            disabled={setting}
+            className="text-xs px-2 py-1 rounded border"
+            style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#111827', opacity: setting ? 0.5 : 1 }}
+          >
+            {setting ? 'Setting…' : 'Set as current'}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -81,7 +109,7 @@ export default function DocumentsPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.slice().reverse().map((d) => (
               d.type === 'prototype' ? (
-                <PrototypeCard key={d.id} doc={d} />
+                <PrototypeCard key={d.id} doc={d} onChanged={load} />
               ) : (
                 <div key={d.id} className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
                   <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>

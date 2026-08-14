@@ -13,8 +13,10 @@ import {
   findDocumentByTitle,
   getDocument,
   getLatestVersion,
+  getVersion,
   listDocuments,
   listVersions,
+  setDocumentCurrentVersion,
   updateDocumentTitle,
   type Document,
 } from "../db/documents.js";
@@ -37,7 +39,16 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
     const docs = await listDocuments(db, auth.userId);
     const withMeta = await Promise.all(docs.map(async (doc) => {
       const latest = await getLatestVersion(db, doc.id);
-      return { ...withPreviewUrl(doc), latestVersionNo: latest?.versionNo ?? null };
+      let currentVersionNo = latest?.versionNo ?? null;
+      if (doc.currentVersionId) {
+        const current = await getVersion(db, doc.currentVersionId);
+        if (current) currentVersionNo = current.versionNo;
+      }
+      return {
+        ...withPreviewUrl(doc),
+        latestVersionNo: latest?.versionNo ?? null,
+        currentVersionNo,
+      };
     }));
     sendJson(res, 200, withMeta);
   });
@@ -105,6 +116,33 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
     } catch (err) {
       sendJson(res, 500, { error: "export failed" });
     }
+  });
+
+  // Set a specific version as the active/current version (rollback).
+  router.post("/api/documents/:id/rollback", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthenticated" });
+      return;
+    }
+    const doc = await getDocument(db, params.id!);
+    if (!doc || doc.userId !== auth.userId) {
+      sendJson(res, 404, { error: "document not found" });
+      return;
+    }
+    const body = (await readJsonBody(req).catch(() => null)) as { versionNo?: number } | null;
+    if (typeof body?.versionNo !== "number") {
+      sendJson(res, 400, { error: "versionNo is required" });
+      return;
+    }
+    const versions = await listVersions(db, doc.id);
+    const target = versions.find((v) => v.versionNo === body.versionNo);
+    if (!target) {
+      sendJson(res, 404, { error: "version not found" });
+      return;
+    }
+    await setDocumentCurrentVersion(db, doc.id, target.id);
+    sendJson(res, 200, { currentVersionNo: target.versionNo });
   });
 
   // Rename a document title (title is the retrieval key).
