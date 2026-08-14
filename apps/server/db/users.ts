@@ -42,6 +42,12 @@ export async function getUserByUsername(db: Database, username: string): Promise
   return mapUser(rows[0]!);
 }
 
+export async function getUserByEmail(db: Database, email: string): Promise<User | null> {
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (rows.length === 0) return null;
+  return mapUser(rows[0]!);
+}
+
 export async function updatePassword(db: Database, userId: string, newPasswordHash: string): Promise<void> {
   const result = await db.update(users)
     .set({ passwordHash: newPasswordHash })
