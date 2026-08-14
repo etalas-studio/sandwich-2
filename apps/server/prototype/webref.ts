@@ -1,3 +1,8 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { isIP } from "node:net";
+import { lookup } from "node:dns/promises";
+
 export interface CssTokens {
   colors: string[];
   fonts: string[];
@@ -68,4 +73,70 @@ export function isPrivateIp(ip: string): boolean {
   if (a === 192 && b === 168) return true;
   if (a === 0 || a >= 224) return true;
   return false;
+}
+
+export async function isPrivateHost(hostname: string): Promise<boolean> {
+  const lower = hostname.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost")) return true;
+  if (lower === "169.254.169.254") return true;
+  if (isIP(hostname)) return isPrivateIp(hostname);
+  try {
+    const addrs = await lookup(hostname, { all: true });
+    return addrs.some((a) => isPrivateIp(a.address));
+  } catch {
+    return false; // unresolved → let fetch decide
+  }
+}
+
+export async function fetchReferenceStyle(url: string): Promise<ReferenceStyle | null> {
+  try {
+    const parsed = new URL(url);
+    if (await isPrivateHost(parsed.hostname)) {
+      console.warn("[webref] blocked private host:", parsed.hostname);
+      return null;
+    }
+
+    const res = await fetch(parsed, { signal: AbortSignal.timeout(10_000), redirect: "follow" });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/html")) return null;
+
+    let html = (await res.text()).slice(0, 500_000);
+
+    let css = "";
+    for (const m of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) {
+      css += m[1] + "\n";
+    }
+
+    const linkTags = Array.from(html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi), (m) => m[0]);
+    let fetchedSheets = 0;
+    for (const tag of linkTags) {
+      if (fetchedSheets >= 5) break;
+      const href = /href=["']([^"']+)["']/.exec(tag)?.[1];
+      if (!href) continue;
+      try {
+        const sheetUrl = new URL(href, parsed).toString();
+        const sres = await fetch(sheetUrl, { signal: AbortSignal.timeout(10_000) });
+        if (sres.ok) {
+          css += await sres.text();
+          css += "\n";
+          fetchedSheets++;
+        }
+      } catch {
+        // best-effort: ignore individual stylesheet failures
+      }
+    }
+
+    return { url, html, tokens: extractCssTokens(css) };
+  } catch {
+    return null;
+  }
+}
+
+export function writeReferenceToWorkspace(workspace: string, style: ReferenceStyle): string {
+  const dir = join(workspace, ".reference");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "style.json"), JSON.stringify({ url: style.url, tokens: style.tokens }, null, 2));
+  writeFileSync(join(dir, "page.html"), style.html);
+  return dir;
 }
