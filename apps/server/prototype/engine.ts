@@ -1,7 +1,8 @@
 import { mkdtempSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { buildPrototypeSystemPrompt } from "./prompts.js";
+import { buildPrototypeSystemPrompt, buildReferenceContext } from "./prompts.js";
+import { findReferenceUrls, fetchReferenceStyles, writeReferencesToWorkspace } from "./webref.js";
 import { savePrototypeFile, updatePrototypeStatus, type Prototype } from "./storage.js";
 import type { Database } from "../db/connection.js";
 
@@ -32,6 +33,24 @@ export async function generatePrototype(
   signal?: AbortSignal,
 ): Promise<void> {
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
+
+  // Reference-style enrichment — best-effort, never blocks generation.
+  let referenceContext = "";
+  try {
+    const urls = findReferenceUrls(prototype.brief);
+    if (urls.length > 0) {
+      const styles = await fetchReferenceStyles(urls);
+      if (styles.length > 0) {
+        writeReferencesToWorkspace(workspace, styles);
+        referenceContext = buildReferenceContext(styles);
+      }
+    }
+  } catch (err) {
+    console.warn(
+      "[prototype] reference enrichment failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   try {
     const pi = await import("@earendil-works/pi-coding-agent");
@@ -73,6 +92,7 @@ export async function generatePrototype(
       brief: prototype.brief,
       palette: prototype.palette,
       logoData: prototype.logoData,
+      ...(referenceContext ? { referenceContext } : {}),
     });
 
     try {

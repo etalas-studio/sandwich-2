@@ -1,7 +1,30 @@
+import type { ReferenceStyle } from "./webref.js";
+
 export interface PrototypePromptInput {
   brief: string;
   palette: string | null;
   logoData: string | null;
+  referenceContext?: string;
+}
+
+/** Build a prompt section summarizing extracted reference styles (no raw HTML). */
+export function buildReferenceContext(styles: ReferenceStyle[]): string {
+  if (styles.length === 0) return "";
+  const sections = styles.map((s, i) => {
+    const lines = [`### Reference ${i + 1}: ${s.url}`];
+    if (s.tokens.colors.length) lines.push(`- Colors: ${s.tokens.colors.join(", ")}`);
+    if (s.tokens.fonts.length) lines.push(`- Fonts: ${s.tokens.fonts.join(", ")}`);
+    if (s.tokens.spacings.length) lines.push(`- Spacings: ${s.tokens.spacings.join(", ")}`);
+    if (s.tokens.radii.length) lines.push(`- Border radii: ${s.tokens.radii.join(", ")}`);
+    if (s.visualDescription) lines.push(`- Visual style: ${s.visualDescription}`);
+    return lines.join("\n");
+  });
+  return [
+    `## Reference Style`,
+    `The client referenced the following website(s) for style inspiration. Apply their visual style (colors, typography, spacing, aesthetic) to the prototype — do NOT copy their content or assets.`,
+    ``,
+    sections.join("\n\n"),
+  ].join("\n");
 }
 
 export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string {
@@ -22,6 +45,10 @@ export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string 
     return `## Logo (client description)\nThe client described their logo as: ${input.logoData}\nCreate a matching logo placeholder in the header and favicon.\n`;
   })();
 
+  const referenceSection = input.referenceContext
+    ? `${input.referenceContext}\n`
+    : "";
+
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
@@ -32,6 +59,7 @@ export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string 
     ``,
     logoSection,
     ``,
+    referenceSection,
     `## Required Pages`,
     `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,
     ``,
