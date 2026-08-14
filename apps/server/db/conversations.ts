@@ -2,6 +2,7 @@ import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { conversations, chatMessages, attachments } from "./schema.js";
 import type { Database } from "./connection.js";
+import type { DocumentType } from "./documents.js";
 
 export type ConversationType =
   | "prd"
@@ -17,12 +18,10 @@ export type ConversationStatus = "backlog" | "in_progress" | "done";
 export interface Conversation {
   id: string;
   userId: string;
-  type: string;
   title: string;
   prompt: string;
-  status: string;
-  stage: string | null;
-  output: string | null;
+  pipelineStage: string;
+  pendingType: string | null;
   feedback: string | null;
   pinned: boolean;
   unread: boolean;
@@ -34,18 +33,17 @@ export interface Conversation {
 
 export interface CreateConversationInput {
   id?: string;
-  type?: ConversationType;
   title: string;
   prompt: string;
+  // Pre-selected deliverable (dropdown). Skips straight to clarifying.
+  pendingType?: DocumentType;
 }
 
 export interface UpdateConversationInput {
-  type?: string | null;
   title?: string;
   prompt?: string;
-  status?: string;
-  stage?: string | null;
-  output?: string | null;
+  pipelineStage?: string;
+  pendingType?: string | null;
   feedback?: string | null;
   pinned?: boolean;
   unread?: boolean;
@@ -59,12 +57,10 @@ function normaliseConversation(
   return {
     id: row.id,
     userId: row.userId,
-    type: row.type,
     title: row.title,
     prompt: row.prompt,
-    status: row.status,
-    stage: row.stage,
-    output: row.output,
+    pipelineStage: row.pipelineStage,
+    pendingType: row.pendingType,
     feedback: row.feedback,
     pinned: row.pinned,
     unread: row.unread,
@@ -85,10 +81,10 @@ export async function createConversation(
   await db.insert(conversations).values({
     id,
     userId,
-    type: input.type ?? "general",
     title: input.title,
     prompt: input.prompt,
-    status: "backlog",
+    pipelineStage: input.pendingType ? "clarifying" : "intake",
+    pendingType: input.pendingType ?? null,
     createdAt: now,
     updatedAt: now,
   });
@@ -135,12 +131,10 @@ export async function updateConversation(
   const now = new Date();
   const sets: Record<string, unknown> = { updatedAt: now };
 
-  if (input.type !== undefined) sets.type = input.type;
   if (input.title !== undefined) sets.title = input.title;
   if (input.prompt !== undefined) sets.prompt = input.prompt;
-  if (input.status !== undefined) sets.status = input.status;
-  if (input.stage !== undefined) sets.stage = input.stage;
-  if (input.output !== undefined) sets.output = input.output;
+  if (input.pipelineStage !== undefined) sets.pipelineStage = input.pipelineStage;
+  if (input.pendingType !== undefined) sets.pendingType = input.pendingType;
   if (input.feedback !== undefined) sets.feedback = input.feedback;
   if (input.pinned !== undefined) sets.pinned = input.pinned;
   if (input.unread !== undefined) sets.unread = input.unread;

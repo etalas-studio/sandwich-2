@@ -72,11 +72,13 @@ export async function createConversationLocal(input: {
   type: ConversationType
   summary: string
   description: string
+  pendingType?: string
 }): Promise<LocalConversation> {
   const conversation = await createConversation({
     type: input.type,
     title: input.summary,
     prompt: input.description,
+    pendingType: input.pendingType,
   })
   const local = toLocal(conversation)
   cache = [local, ...cache.filter((t) => t.id !== local.id)]

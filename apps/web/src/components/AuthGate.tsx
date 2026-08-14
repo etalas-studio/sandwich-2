@@ -6,6 +6,9 @@ import SetupForm from './SetupForm'
 import LoginForm from './LoginForm'
 import App from '../App'
 import LandingPage from './LandingPage'
+import ForgotPasswordPage from './ForgotPasswordPage'
+import ResetPasswordPage from './ResetPasswordPage'
+import VerifyEmailPage from './VerifyEmailPage'
 
 export default function AuthGate() {
   const {
@@ -44,6 +47,18 @@ export default function AuthGate() {
     )
   }
 
+  if (location.pathname.startsWith('/forgot-password')) {
+    return <ForgotPasswordPage onBack={() => navigate('/')} />
+  }
+
+  if (location.pathname.startsWith('/reset-password')) {
+    return <ResetPasswordPage onBack={() => navigate('/')} />
+  }
+
+  if (location.pathname.startsWith('/verify-email')) {
+    return <VerifyEmailPage />
+  }
+
   if (isLoading) {
     return <div className="ds-bg min-h-screen" />
   }
@@ -52,7 +67,7 @@ export default function AuthGate() {
   if (location.pathname.startsWith('/dashboard')) {
     if (state.status === 'unauthenticated') {
       if (forceView === 'login') {
-        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} />
+        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} onForgotPassword={() => navigate('/forgot-password')} />
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
@@ -76,7 +91,7 @@ export default function AuthGate() {
   if (location.pathname.startsWith('/checkout')) {
     if (state.status === 'unauthenticated') {
       if (forceView === 'login') {
-        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} />
+        return <LoginForm onSubmit={login} error={loginError} isPending={loginPending} onBack={() => navigate('/')} onSwitchToRegister={() => setForceView(null)} onForgotPassword={() => navigate('/forgot-password')} />
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
@@ -93,6 +108,7 @@ export default function AuthGate() {
         isPending={loginPending}
         onBack={() => navigate('/')}
         onSwitchToRegister={() => setForceView(null)}
+        onForgotPassword={() => navigate('/forgot-password')}
       />
     )
   }

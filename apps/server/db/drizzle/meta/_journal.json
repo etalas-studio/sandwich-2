@@ -50,6 +50,55 @@
       "when": 1786603729859,
       "tag": "0006_brave_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786679950362,
+      "tag": "0007_brainy_darkstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786680303535,
+      "tag": "0008_cloudy_human_torch",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786681100359,
+      "tag": "0009_melted_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786689902180,
+      "tag": "0010_perfect_marvel_zombies",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786691997327,
+      "tag": "0011_tearful_peter_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1786676409182,
+      "tag": "0012_foamy_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786678790187,
+      "tag": "0013_real_doctor_strange",
+      "breakpoints": true
     }
   ]
 }

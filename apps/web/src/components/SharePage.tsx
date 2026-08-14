@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { marked } from 'marked'
 import { apiUrl } from '../api/base'
-import { ExportMenu } from './ExportMenu'
 
 interface SharedConversation {
   id: string
-  type: string
   title: string
   prompt: string
-  output: string | null
   createdAt: string
 }
 
@@ -65,18 +61,7 @@ export default function SharePage() {
             </p>
             <h1 className="text-2xl font-semibold" style={{ color: '#111827' }}>{conversation.title}</h1>
           </div>
-          <ExportMenu url={(f) => apiUrl(`/api/share/${encodeURIComponent(token ?? '')}/export?format=${f}`)} />
         </div>
-
-        {conversation.output ? (
-          <div
-            className="text-sm leading-relaxed sandwich-output"
-            style={{ color: 'rgba(0,0,0,0.8)' }}
-            dangerouslySetInnerHTML={{ __html: marked.parse(conversation.output) as string }}
-          />
-        ) : (
-          <p className="text-sm" style={{ color: '#9ca3af' }}>No generated output for this brief yet.</p>
-        )}
 
         {attachments.length > 0 && (
           <div className="mt-8">

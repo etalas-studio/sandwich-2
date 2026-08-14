@@ -51,3 +51,19 @@ export async function postRegister(
 export async function postLogout(): Promise<void> {
   await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' })
 }
+
+export async function postForgotPassword(email: string): Promise<void> {
+  await postJson(apiUrl('/api/auth/forgot-password'), { email })
+}
+
+export async function postResetPassword(token: string, newPassword: string): Promise<void> {
+  await postJson(apiUrl('/api/auth/reset-password'), { token, newPassword })
+}
+
+export async function postVerifyEmail(token: string): Promise<void> {
+  await postJson(apiUrl('/api/auth/verify-email'), { token })
+}
+
+export async function postResendVerification(email: string): Promise<void> {
+  await postJson(apiUrl('/api/auth/resend-verification'), { email })
+}
