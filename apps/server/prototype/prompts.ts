@@ -1,18 +1,30 @@
-export interface ReferenceStyleTokens {
-  colors: string[];
-  fonts: string[];
-  spacings: string[];
-  radii: string[];
-  shadows: string[];
+import type { ReferenceStyle } from "./webref.js";
+
+/** Build a prompt section summarizing extracted reference styles (no raw HTML). */
+export function buildReferenceContext(styles: ReferenceStyle[]): string {
+  if (styles.length === 0) return "";
+  const sections = styles.map((s, i) => {
+    const lines = [`### Reference ${i + 1}: ${s.url}`];
+    if (s.tokens.colors.length) lines.push(`- Colors: ${s.tokens.colors.join(", ")}`);
+    if (s.tokens.fonts.length) lines.push(`- Fonts: ${s.tokens.fonts.join(", ")}`);
+    if (s.tokens.spacings.length) lines.push(`- Spacings: ${s.tokens.spacings.join(", ")}`);
+    if (s.tokens.radii.length) lines.push(`- Border radii: ${s.tokens.radii.join(", ")}`);
+    if (s.visualDescription) lines.push(`- Visual style: ${s.visualDescription}`);
+    return lines.join("\n");
+  });
+  return [
+    `## Reference Style`,
+    `The client referenced the following website(s) for style inspiration. Apply their visual style (colors, typography, spacing, aesthetic) to the prototype — do NOT copy their content or assets.`,
+    ``,
+    sections.join("\n\n"),
+  ].join("\n");
 }
 
 export function buildPrototypeSystemPrompt(
   brief: string,
-  reference?: { url: string; tokens: ReferenceStyleTokens } | null,
+  styles: ReferenceStyle[] = [],
 ): string {
-  const referenceSection = reference
-    ? `## Reference Style (client-provided URL)\nThe client wants the visual style to match ${reference.url}.\nExtracted tokens are in .reference/style.json and the reference page HTML is in .reference/page.html.\nRead both and apply the extracted colors/fonts/spacing/radius/shadow to the prototype. Match the STYLE only — never copy the reference's content, copy, brand names, or images.`
-    : "";
+  const referenceSection = buildReferenceContext(styles);
 
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,

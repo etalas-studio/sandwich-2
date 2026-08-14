@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
+import { captureVisualStyle } from "./screenshot.js";
 
 export interface CssTokens {
   colors: string[];
@@ -15,6 +16,7 @@ export interface ReferenceStyle {
   url: string;
   html: string;
   tokens: CssTokens;
+  visualDescription?: string;
 }
 
 function uniqueCap(items: string[], cap: number): string[] {
@@ -30,10 +32,23 @@ function uniqueCap(items: string[], cap: number): string[] {
   return out;
 }
 
+/** Returns every unique http(s) URL found in the brief (in order). */
+export function findReferenceUrls(brief: string): string[] {
+  const matches = brief.match(/https?:\/\/[^\s"'<>]+/g) ?? [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of matches) {
+    const url = raw.replace(/[),.;!?\]]+$/, "");
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    out.push(url);
+  }
+  return out;
+}
+
+/** Backwards-compatible helper: returns the first URL, or null. */
 export function findReferenceUrl(brief: string): string | null {
-  const match = /https?:\/\/[^\s"'<>]+/.exec(brief);
-  if (!match) return null;
-  return match[0].replace(/[),.;!?\]]+$/, "");
+  return findReferenceUrls(brief)[0] ?? null;
 }
 
 export function extractCssTokens(css: string): CssTokens {
@@ -127,7 +142,13 @@ export async function fetchReferenceStyle(url: string): Promise<ReferenceStyle |
       }
     }
 
-    return { url, html, tokens: extractCssTokens(css) };
+    const visualDescription = await captureVisualStyle(url).catch(() => null);
+    return {
+      url,
+      html,
+      tokens: extractCssTokens(css),
+      ...(visualDescription ? { visualDescription } : {}),
+    };
   } catch {
     return null;
   }
@@ -136,7 +157,45 @@ export async function fetchReferenceStyle(url: string): Promise<ReferenceStyle |
 export function writeReferenceToWorkspace(workspace: string, style: ReferenceStyle): string {
   const dir = join(workspace, ".reference");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "style.json"), JSON.stringify({ url: style.url, tokens: style.tokens }, null, 2));
+  writeFileSync(
+    join(dir, "style.json"),
+    JSON.stringify(
+      { url: style.url, tokens: style.tokens, ...(style.visualDescription ? { visualDescription: style.visualDescription } : {}) },
+      null,
+      2,
+    ),
+  );
   writeFileSync(join(dir, "page.html"), style.html);
+  return dir;
+}
+
+/** Fetch all reference URLs (best-effort — failed/unusable ones are skipped). */
+export async function fetchReferenceStyles(urls: string[]): Promise<ReferenceStyle[]> {
+  const styles: ReferenceStyle[] = [];
+  for (const url of urls) {
+    const style = await fetchReferenceStyle(url);
+    if (style) styles.push(style);
+  }
+  return styles;
+}
+
+/** Write multiple references into `.reference/<i>/` plus an `index.json`. */
+export function writeReferencesToWorkspace(workspace: string, styles: ReferenceStyle[]): string {
+  const dir = join(workspace, ".reference");
+  mkdirSync(dir, { recursive: true });
+  styles.forEach((style, i) => {
+    const subdir = join(dir, String(i));
+    mkdirSync(subdir, { recursive: true });
+    writeFileSync(
+      join(subdir, "style.json"),
+      JSON.stringify(
+        { url: style.url, tokens: style.tokens, ...(style.visualDescription ? { visualDescription: style.visualDescription } : {}) },
+        null,
+        2,
+      ),
+    );
+    writeFileSync(join(subdir, "page.html"), style.html);
+  });
+  writeFileSync(join(dir, "index.json"), JSON.stringify(styles.map((s) => s.url), null, 2));
   return dir;
 }
