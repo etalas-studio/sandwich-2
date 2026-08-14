@@ -10,9 +10,10 @@ interface LoginFormProps {
   isPending: boolean
   onBack: () => void
   onSwitchToRegister?: () => void
+  onForgotPassword?: () => void
 }
 
-export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitchToRegister }: LoginFormProps) {
+export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitchToRegister, onForgotPassword }: LoginFormProps) {
   const { t: tr } = useLanguage()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -69,6 +70,14 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               <iconify-icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width="18" />
             </button>
           </div>
+
+          {onForgotPassword && (
+            <div className="flex justify-end -mt-1">
+              <button type="button" onClick={onForgotPassword} className="text-xs font-semibold underline" style={{ color: '#f91814' }}>
+                {tr('login_forgot_password')}
+              </button>
+            </div>
+          )}
 
           {error && (
             <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>

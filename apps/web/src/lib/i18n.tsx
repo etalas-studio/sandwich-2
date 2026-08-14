@@ -169,6 +169,21 @@ const STRINGS = {
   login_cta: { en: 'Log in', id: 'Masuk' },
   login_pending: { en: 'Logging in…', id: 'Masuk...' },
   login_demo: { en: 'Try demo account', id: 'Coba pakai akun demo' },
+  login_forgot_password: { en: 'Forgot password?', id: 'Lupa password?' },
+
+  // ── Forgot / Reset password ──
+  forgot_title: { en: 'Reset password', id: 'Reset password' },
+  forgot_subtitle: { en: "Enter your email and we'll send a reset link.", id: 'Masukkan email kamu dan kami kirim link reset.' },
+  forgot_email_placeholder: { en: 'Email', id: 'Email' },
+  forgot_submit: { en: 'Send reset link', id: 'Kirim link reset' },
+  forgot_success: { en: 'If that email is registered, a reset link has been sent.', id: 'Kalau email itu terdaftar, link reset sudah dikirim.' },
+  reset_title: { en: 'Set new password', id: 'Atur password baru' },
+  reset_subtitle: { en: 'Choose a new password for your account.', id: 'Pilih password baru untuk akun kamu.' },
+  reset_new_password: { en: 'New password', id: 'Password baru' },
+  reset_confirm_password: { en: 'Confirm password', id: 'Konfirmasi password' },
+  reset_submit: { en: 'Update password', id: 'Perbarui password' },
+  reset_success: { en: 'Password updated. You can now log in.', id: 'Password diperbarui. Kamu bisa login sekarang.' },
+  reset_mismatch: { en: 'Passwords do not match', id: 'Password tidak cocok' },
 
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },
