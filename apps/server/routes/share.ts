@@ -70,10 +70,8 @@ export function registerShareRoutes(router: Router, db: Database): void {
     sendJson(res, 200, {
       conversation: {
         id: conversation.id,
-        type: conversation.type,
         title: conversation.title,
         prompt: conversation.prompt,
-        output: conversation.output,
         createdAt: conversation.createdAt,
       },
       messages: messages.map((m) => ({

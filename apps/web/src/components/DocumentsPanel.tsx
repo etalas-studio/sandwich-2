@@ -91,6 +91,7 @@ export default function DocumentsPanel() {
                   {d.latestVersionNo != null && (
                     <span className="text-xs" style={{ color: '#9ca3af' }}>v{d.latestVersionNo}</span>
                   )}
+                  <a href={apiUrl(`/api/documents/${d.id}/export?format=md`)} className="text-xs underline" style={{ color: '#2563eb' }}>Download MD</a>
                 </div>
               )
             ))}

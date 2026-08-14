@@ -6,7 +6,6 @@ import {
   deleteConversation,
   getConversation,
   type UpdateConversationInput,
-  type ConversationType,
 } from "../db/conversations.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
@@ -17,14 +16,8 @@ import { PLANS } from "../pipeline/plans.js";
 
 function parseUpdateInput(candidate: Record<string, unknown>): UpdateConversationInput {
   const input: UpdateConversationInput = {};
-  if (typeof candidate.type === "string") input.type = candidate.type;
   if (typeof candidate.title === "string") input.title = candidate.title.trim();
   if (typeof candidate.prompt === "string") input.prompt = candidate.prompt.trim();
-  if (typeof candidate.status === "string") input.status = candidate.status;
-  if (candidate.stage === null || typeof candidate.stage === "string")
-    input.stage = candidate.stage;
-  if (candidate.output === null || typeof candidate.output === "string")
-    input.output = candidate.output;
   if (candidate.feedback === null || typeof candidate.feedback === "string")
     input.feedback = candidate.feedback;
   if (typeof candidate.pinned === "boolean") input.pinned = candidate.pinned;
@@ -50,7 +43,6 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     }
 
     const id = typeof body.id === "string" ? body.id.trim() : "";
-    const type = typeof body.type === "string" ? body.type : undefined;
     const rawPendingType = typeof body.pendingType === "string" ? body.pendingType : undefined;
     const pendingType =
       rawPendingType === "prd" || rawPendingType === "quotation" ||
@@ -80,12 +72,9 @@ export function registerConversationRoutes(router: Router, db: Database): void {
       return;
     }
 
-    const conversationType = (type as ConversationType) ?? "general";
-
     try {
       const conversation = await createConversation(db, auth.userId, {
         id: id || undefined,
-        type: conversationType,
         title: title ?? prompt,
         prompt,
         pendingType,

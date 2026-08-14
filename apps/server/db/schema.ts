@@ -49,16 +49,8 @@ export const conversations = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
-    // prd | mom | quotation | specs | prototype | workflow | general
-    type: text("type").notNull().default("general"),
     title: text("title").notNull(),
     prompt: text("prompt").notNull(),
-    // backlog | in_progress | done
-    status: text("status").notNull().default("backlog"),
-    // transient pipeline stage (used for streaming progress)
-    stage: text("stage"),
-    // generated document (markdown or HTML for prototypes)
-    output: text("output"),
     // Guided-pipeline state machine (model-driven):
     // intake → choosing_deliverable → clarifying → generating → awaiting_next
     pipelineStage: text("pipeline_stage").notNull().default("intake"),

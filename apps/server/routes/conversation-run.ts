@@ -533,10 +533,6 @@ export function registerConversationRunRoutes(
           stage: "generate",
           conversation: (await getConversation(db, conversationId))!,
         });
-        await updateConversation(db, conversationId, {
-          status: "in_progress",
-          stage: "generate",
-        });
 
         // ── Model-driven orchestration ────────────────────────────────────
         const lastUserMessage =
@@ -615,10 +611,6 @@ export function registerConversationRunRoutes(
         run()
           .then(async (output) => {
             if (!output) {
-              await updateConversation(db, conversationId, {
-                status: "backlog",
-                stage: null,
-              });
               broadcast({
                 type: "error",
                 conversation: (await getConversation(db, conversationId))!,
@@ -669,9 +661,6 @@ export function registerConversationRunRoutes(
             }
 
             await updateConversation(db, conversationId, {
-              status: "done",
-              stage: null,
-              output,
               pipelineStage: nextStage,
               pendingType,
             });
@@ -682,15 +671,12 @@ export function registerConversationRunRoutes(
             });
             broadcast({
               type: "done",
+              text: output,
               conversation: (await getConversation(db, conversationId))!,
             });
           })
           .catch(async (err) => {
             const msg = err instanceof Error ? err.message : "generation failed";
-            await updateConversation(db, conversationId, {
-              status: "backlog",
-              stage: null,
-            });
             broadcast({
               type: "error",
               conversation: (await getConversation(db, conversationId))!,

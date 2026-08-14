@@ -213,8 +213,3 @@ export async function getUsage(): Promise<Usage> {
   return json<Usage>(res)
 }
 
-export type ExportFormat = 'pdf' | 'md' | 'doc'
-
-export function exportUrl(conversationId: string, format: ExportFormat): string {
-  return apiUrl(`/api/conversations/${encodeURIComponent(conversationId)}/export?format=${format}`)
-}

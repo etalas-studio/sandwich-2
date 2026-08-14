@@ -11,7 +11,6 @@ import { registerAuthRoutes } from "./routes/auth.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
 import { registerConversationRunRoutes } from "./routes/conversation-run.js";
-import { registerExportRoutes } from "./routes/export.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
 import { registerUsageRoutes } from "./routes/usage.js";
 import { registerShareRoutes } from "./routes/share.js";
@@ -85,7 +84,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerIntegrationRoutes(router);
   registerConversationRoutes(router, db);
   registerConversationRunRoutes(router, db);
-  registerExportRoutes(router, db);
   registerAttachmentRoutes(router, db);
   registerUsageRoutes(router, db);
   registerShareRoutes(router, db);
