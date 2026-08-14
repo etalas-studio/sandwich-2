@@ -1,6 +1,9 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { findReferenceUrl, extractCssTokens, isPrivateIp } from "./webref.js";
+import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { findReferenceUrl, extractCssTokens, isPrivateIp, fetchReferenceStyle, writeReferenceToWorkspace } from "./webref.js";
 
 describe("findReferenceUrl", () => {
   it("finds an http(s) url in a brief", () => {
@@ -60,5 +63,52 @@ describe("isPrivateIp", () => {
     assert.equal(isPrivateIp("8.8.8.8"), false);
     assert.equal(isPrivateIp("1.1.1.1"), false);
     assert.equal(isPrivateIp("2606:4700:4700::1111"), false);
+  });
+});
+
+describe("fetchReferenceStyle", () => {
+  it("returns null on fetch failure", async () => {
+    globalThis.fetch = (async () => {
+      throw new Error("network down");
+    }) as any;
+    assert.equal(await fetchReferenceStyle("https://example.com"), null);
+  });
+
+  it("returns null for non-html responses", async () => {
+    globalThis.fetch = (async () => new Response("{}", { headers: { "content-type": "application/json" } })) as any;
+    assert.equal(await fetchReferenceStyle("https://example.com"), null);
+  });
+
+  it("extracts tokens from html", async () => {
+    globalThis.fetch = (async () =>
+      new Response(
+        "<html><style>body{color:#111;font-family:Inter;padding:20px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.2)}</style></html>",
+        { headers: { "content-type": "text/html" } },
+      )) as any;
+    const r = await fetchReferenceStyle("https://example.com");
+    assert.ok(r);
+    assert.ok(r.tokens.colors.includes("#111"));
+    assert.ok(r.tokens.fonts.includes("Inter"));
+    assert.ok(r.tokens.radii.includes("8px"));
+  });
+});
+
+describe("writeReferenceToWorkspace", () => {
+  it("writes style.json and page.html into .reference/", () => {
+    const ws = mkdtempSync(join(tmpdir(), "ref-"));
+    try {
+      const dir = writeReferenceToWorkspace(ws, {
+        url: "https://example.com",
+        html: "<h1>hi</h1>",
+        tokens: { colors: ["#111"], fonts: ["Inter"], spacings: [], radii: [], shadows: [] },
+      });
+      assert.equal(dir, join(ws, ".reference"));
+      assert.ok(existsSync(join(dir, "style.json")));
+      assert.ok(existsSync(join(dir, "page.html")));
+      const json = JSON.parse(readFileSync(join(dir, "style.json"), "utf-8"));
+      assert.equal(json.url, "https://example.com");
+    } finally {
+      rmSync(ws, { recursive: true, force: true });
+    }
   });
 });
