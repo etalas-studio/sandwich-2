@@ -24,6 +24,7 @@ import {
   listConversationDocuments,
   type DocumentType,
 } from "../db/documents.js";
+import { generatePrototypeDocument } from "../prototype/engine.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -570,21 +571,44 @@ export function registerConversationRunRoutes(
           }
         }
 
+        // For a prototype, create (or reuse) the document up front so the
+        // prototype engine has a document id to write files under.
+        let prototypeDocId: string | null = null;
+        if (stage === "generating" && pendingType === "prototype") {
+          const title = conversation.title.trim() || "Prototype";
+          const existing = await listConversationDocuments(db, conversationId);
+          const existingDoc = existing.find((d) => d.type === "prototype");
+          if (existingDoc) {
+            prototypeDocId = existingDoc.id;
+          } else {
+            const doc = await createDocument(db, { userId: auth.userId, type: "prototype", title });
+            await linkConversationDocument(db, conversationId, doc.id);
+            prototypeDocId = doc.id;
+          }
+        }
+
         const useOpenCode = engine === "opencode";
         const hasGroqFallback = !!process.env.GROQ_API_KEY;
 
-        const run = useOpenCode
-          ? () =>
-              runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
-                if (hasGroqFallback) {
-                  console.log(
-                    `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-                  );
-                  return runWithGroq(turns, controller.signal, stage, pendingType);
-                }
-                throw err;
-              })
-          : () => runWithGroq(turns, controller.signal, stage, pendingType);
+        const run = prototypeDocId
+          ? async () =>
+              (await generatePrototypeDocument(
+                db,
+                { documentId: prototypeDocId!, brief: lastUserMessage },
+                controller.signal,
+              )).summary
+          : useOpenCode
+            ? () =>
+                runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
+                  if (hasGroqFallback) {
+                    console.log(
+                      `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
+                    );
+                    return runWithGroq(turns, controller.signal, stage, pendingType);
+                  }
+                  throw err;
+                })
+            : () => runWithGroq(turns, controller.signal, stage, pendingType);
 
         run()
           .then(async (output) => {

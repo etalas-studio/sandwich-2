@@ -1,36 +1,9 @@
-export interface PrototypePromptInput {
-  brief: string;
-  palette: string | null;
-  logoData: string | null;
-}
-
-export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string {
-  const paletteSection = input.palette
-    ? `## Color Palette (client-provided)\nUse these exact colors as CSS variables in styles.css:\n${input.palette}\n`
-    : `## Color Palette\nChoose a professional palette that fits the brief. Define them as CSS variables in styles.css.\n`;
-
-  const logoSection = (() => {
-    if (!input.logoData) {
-      return `## Logo\nCreate a simple text-based logo placeholder that fits the brand.\n`;
-    }
-    if (input.logoData.startsWith("data:")) {
-      return `## Logo (client-uploaded)\nThe client logo image is saved at: assets/logo.png\nReference it in the header and favicon using: <img src="assets/logo.png" alt="logo">\n`;
-    }
-    if (/^https?:\/\//.test(input.logoData)) {
-      return `## Logo (client-provided URL)\nThe client logo is at: ${input.logoData}\nReference it in the header and favicon.\n`;
-    }
-    return `## Logo (client description)\nThe client described their logo as: ${input.logoData}\nCreate a matching logo placeholder in the header and favicon.\n`;
-  })();
-
+export function buildPrototypeSystemPrompt(brief: string): string {
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
     `## Client Brief`,
-    input.brief,
-    ``,
-    paletteSection,
-    ``,
-    logoSection,
+    brief,
     ``,
     `## Required Pages`,
     `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,
