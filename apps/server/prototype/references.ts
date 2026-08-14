@@ -33,7 +33,7 @@ export function copyReferencesTo(workspace: string, sourceDir = getokuiSourceDir
 }
 
 export function isPrototypeFile(relPath: string): boolean {
-  if (relPath === ".getokui" || relPath.startsWith(".getokui/")) return false;
+  if (relPath.split("/").some((seg) => seg.startsWith("."))) return false;
   const dot = relPath.lastIndexOf(".");
   const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
   return ALLOWED_EXTENSIONS.has(ext);

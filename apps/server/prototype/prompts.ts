@@ -2,6 +2,7 @@ export interface PrototypePromptInput {
   brief: string;
   palette: string | null;
   logoData: string | null;
+  referenceUrl?: string | null;
 }
 
 export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string {
@@ -22,6 +23,18 @@ export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string 
     return `## Logo (client description)\nThe client described their logo as: ${input.logoData}\nCreate a matching logo placeholder in the header and favicon.\n`;
   })();
 
+  const referenceSection = input.referenceUrl
+    ? [
+        `## Reference Website (client-provided style)`,
+        `The client wants this prototype to follow the visual style of this reference site: ${input.referenceUrl}`,
+        `- Read .reference/style.json for the exact colors, fonts, spacing, radius, and shadow tokens.`,
+        `- Read .reference/page.html to understand its hero layout, component shapes, and section rhythm.`,
+        `- Use those as your style source (translate Tailwind-like values to plain CSS as needed).`,
+        `- KEEP your own content: the brief's product, copy, and data. NEVER copy the reference's headlines, logo, photos, or illustrations.`,
+        ``,
+      ]
+    : [];
+
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
@@ -32,6 +45,7 @@ export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string 
     ``,
     logoSection,
     ``,
+    ...referenceSection,
     `## Required Pages`,
     `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,
     ``,

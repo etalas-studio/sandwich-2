@@ -60,3 +60,12 @@ describe("buildGlowupSystemPrompt", () => {
     assert.ok(prompt.includes("DONE"));
   });
 });
+
+describe("buildGlowupSystemPrompt with reference", () => {
+  const p = buildGlowupSystemPrompt({ brief: "x", referenceUrl: "https://example.com" });
+  it("points at the reference, not getokui", () => {
+    assert.ok(p.includes(".reference/style.json"));
+    assert.ok(p.includes("https://example.com"));
+    assert.ok(!p.includes("pick 1–3 references"));
+  });
+});

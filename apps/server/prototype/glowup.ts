@@ -1,5 +1,6 @@
 export interface GlowupPromptInput {
   brief: string;
+  referenceUrl?: string | null;
 }
 
 export function glowupModelId(): string {
@@ -7,21 +8,43 @@ export function glowupModelId(): string {
 }
 
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
+  const hasReference = !!input.referenceUrl;
+
+  const tasteSection = hasReference
+    ? [
+        `## Style Target (client-provided reference website)`,
+        `The client wants this prototype styled like: ${input.referenceUrl}`,
+        `Read .reference/style.json (exact colors/fonts/spacing/radius/shadow) and .reference/page.html (hero layout, component shapes, section rhythm).`,
+        `Apply those tokens to index.html and styles.css, while keeping the hard floors/anti-slop/contrast/icon/motion doctrine below.`,
+        ``,
+      ]
+    : [
+        `## The Taste Library (getokui)`,
+        `A curated design-reference library is already copied into this workspace at .getokui/.`,
+        `- .getokui/index.json — metadata for 213 templates (slug, category, tags, description, colors, fonts, sections).`,
+        `- .getokui/dna/<slug>.json — pre-extracted "Design DNA" for each template (real class strings, spacing, radius, shadow, layout, motion).`,
+        ``,
+      ];
+
+  const processStep2 = hasReference
+    ? `2. Read .reference/style.json and .reference/page.html and extract the concrete style tokens (colors, fonts, spacing, radius, shadow, hero layout, component shapes).`
+    : `2. Read .getokui/index.json and pick 1–3 references whose category/tags/description best match the brief's vertical and mood.`;
+
+  const processStep3 = hasReference
+    ? `3. Map those tokens onto index.html and styles.css (translate any Tailwind-like values to plain CSS).`
+    : `3. Read those references' .getokui/dna/<slug>.json files. Extract concrete tokens (layout.hero_layout, hero.h1_classes, hero.cta_classes, spacing.section_padding, radius, shadow, motion.keyframes_css, layout.composition_techniques).`;
+
   return [
     `You are SANDWICH's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
     ``,
     `## Client Brief (for reference matching)`,
     input.brief,
     ``,
-    `## The Taste Library (getokui)`,
-    `A curated design-reference library is already copied into this workspace at .getokui/.`,
-    `- .getokui/index.json — metadata for 213 templates (slug, category, tags, description, colors, fonts, sections).`,
-    `- .getokui/dna/<slug>.json — pre-extracted "Design DNA" for each template (real class strings, spacing, radius, shadow, layout, motion).`,
-    ``,
+    ...tasteSection,
     `## Your Process`,
     `1. Read ONLY index.html and styles.css (the landing page and the shared stylesheet). Do NOT read or edit dashboard.html, module pages, or script.js.`,
-    `2. Read .getokui/index.json and pick 1–3 references whose category/tags/description best match the brief's vertical and mood.`,
-    `3. Read those references' .getokui/dna/<slug>.json files. Extract concrete tokens (layout.hero_layout, hero.h1_classes, hero.cta_classes, spacing.section_padding, radius, shadow, motion.keyframes_css, layout.composition_techniques).`,
+    processStep2,
+    processStep3,
     `4. Apply those tokens to index.html and styles.css IN PLACE (edit, don't recreate). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
     ``,
     `## STYLE, NOT CONTENT (MANDATORY)`,
@@ -69,6 +92,7 @@ const GLOWUP_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 export async function polishWorkspace(
   workspace: string,
   brief: string,
+  referenceUrl: string | null = null,
   signal?: AbortSignal,
 ): Promise<void> {
   const pi = await import("@earendil-works/pi-coding-agent");
@@ -102,7 +126,7 @@ export async function polishWorkspace(
   });
 
   try {
-    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief }));
+    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief, referenceUrl }));
     promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
     await Promise.race([
       promptPromise,

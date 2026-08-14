@@ -51,6 +51,8 @@ describe("isPrototypeFile", () => {
   it("rejects getokui references and disallowed extensions", () => {
     assert.equal(isPrototypeFile(".getokui/index.json"), false);
     assert.equal(isPrototypeFile(".getokui/dna/aero-studio.json"), false);
+    assert.equal(isPrototypeFile(".reference/style.json"), false);
+    assert.equal(isPrototypeFile(".reference/page.html"), false);
     assert.equal(isPrototypeFile("readme.md"), false);
     assert.equal(isPrototypeFile("notes.txt"), false);
   });
