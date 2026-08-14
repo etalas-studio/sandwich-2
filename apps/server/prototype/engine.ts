@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { buildPrototypeSystemPrompt } from "./prompts.js";
 import { copyReferencesTo, readPrototypeFiles } from "./references.js";
 import { polishWorkspace } from "./glowup.js";
+import { findReferenceUrl, fetchReferenceStyle, writeReferenceToWorkspace, type ReferenceStyle } from "./webref.js";
 import { savePrototypeFile, updatePrototypeStatus, type Prototype } from "./storage.js";
 import type { Database } from "../db/connection.js";
 
@@ -18,6 +19,24 @@ export async function generatePrototype(
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
+    // Optional client reference website (style source). Best-effort; fallback to getokui on failure.
+    const referenceUrl = findReferenceUrl(prototype.brief);
+    let referenceStyle: ReferenceStyle | null = null;
+    if (referenceUrl) {
+      try {
+        referenceStyle = await fetchReferenceStyle(referenceUrl);
+        if (referenceStyle) {
+          writeReferenceToWorkspace(workspace, referenceStyle);
+          console.log("[prototype] reference style extracted:", referenceUrl);
+        } else {
+          console.warn("[prototype] reference fetch failed, using getokui:", referenceUrl);
+        }
+      } catch (err) {
+        console.warn("[prototype] reference extraction failed, using getokui:", err);
+        referenceStyle = null;
+      }
+    }
+
     const pi = await import("@earendil-works/pi-coding-agent");
 
     const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
@@ -57,6 +76,7 @@ export async function generatePrototype(
       brief: prototype.brief,
       palette: prototype.palette,
       logoData: prototype.logoData,
+      referenceUrl: referenceStyle?.url ?? null,
     });
 
     try {
@@ -87,7 +107,7 @@ export async function generatePrototype(
     // Design polish pass (getokui glowup). Non-destructive: on failure, keep pass-1 files.
     try {
       copyReferencesTo(workspace);
-      await polishWorkspace(workspace, prototype.brief, signal);
+      await polishWorkspace(workspace, prototype.brief, referenceStyle?.url ?? null, signal);
       const polished = readPrototypeFiles(workspace);
       if (polished.length > 0) files = polished;
       console.log("[prototype] glowup complete");
