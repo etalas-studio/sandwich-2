@@ -11,6 +11,8 @@ const DESIGN_PROMPT =
   "layout structure, spacing, UI components, and overall aesthetic. Focus on design " +
   "decisions, not page content. Be specific and concise.";
 
+const VISION_TIMEOUT_MS = 30_000;
+
 let modelRuntimePromise: Promise<any> | null = null;
 function getModelRuntime(): Promise<any> {
   if (!modelRuntimePromise) {
@@ -58,7 +60,13 @@ export async function describeVisual(buffer: Buffer): Promise<string | null> {
       ],
     });
 
-    const assistant = await stream.result();
+    const assistant = await Promise.race([
+      stream.result(),
+      new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error("vision timed out")), VISION_TIMEOUT_MS),
+      ),
+    ]);
+    if (assistant === null) return null;
     if (assistant.stopReason === "error") return null;
     const text = (assistant?.content ?? [])
       .filter((c: any) => c.type === "text")

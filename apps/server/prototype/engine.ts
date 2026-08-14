@@ -39,10 +39,24 @@ export async function generatePrototype(
   try {
     const urls = findReferenceUrls(prototype.brief);
     if (urls.length > 0) {
-      const styles = await fetchReferenceStyles(urls);
-      if (styles.length > 0) {
-        writeReferencesToWorkspace(workspace, styles);
-        referenceContext = buildReferenceContext(styles);
+      const enrichment = (async () => {
+        const styles = await fetchReferenceStyles(urls);
+        if (styles.length > 0) {
+          writeReferencesToWorkspace(workspace, styles);
+          return buildReferenceContext(styles);
+        }
+        return "";
+      })();
+      referenceContext = await Promise.race([
+        enrichment,
+        new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error("reference enrichment timed out")), 60_000),
+        ),
+      ]);
+      if (referenceContext) {
+        console.log(
+          `[prototype] reference enrichment: ${urls.length} url(s) → ${referenceContext.length} chars of style context`,
+        );
       }
     }
   } catch (err) {
