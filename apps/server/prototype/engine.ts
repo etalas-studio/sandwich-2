@@ -37,7 +37,7 @@ export interface PrototypeGenerationResult {
  */
 export async function generatePrototypeDocument(
   db: Database,
-  input: { documentId: string; brief: string },
+  input: { documentId: string; versionNo: number; brief: string },
   signal?: AbortSignal,
 ): Promise<PrototypeGenerationResult> {
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
@@ -99,7 +99,7 @@ export async function generatePrototypeDocument(
       const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
       if (!ALLOWED_EXTENSIONS.has(ext)) continue;
       const content = readFileSync(fullPath, "utf-8");
-      await saveDocumentFile(db, input.documentId, relPath, content);
+      await saveDocumentFile(db, input.documentId, input.versionNo, relPath, content);
       saved.push(relPath);
     }
 

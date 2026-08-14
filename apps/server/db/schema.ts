@@ -278,13 +278,15 @@ export const documentFiles = pgTable(
     documentId: text("document_id")
       .notNull()
       .references(() => documents.id),
+    versionNo: integer("version_no").notNull().default(1),
     path: text("path").notNull(),
     content: text("content").notNull(),
     createdAt: ts("created_at").notNull(),
   },
   (table) => ({
-    uniquePath: uniqueIndex("idx_document_files_path").on(
+    uniqueVersionPath: uniqueIndex("idx_document_files_version_path").on(
       table.documentId,
+      table.versionNo,
       table.path,
     ),
   }),

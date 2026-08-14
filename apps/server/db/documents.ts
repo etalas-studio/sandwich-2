@@ -32,6 +32,7 @@ export interface DocumentVersion {
 export interface DocumentFile {
   id: number;
   documentId: string;
+  versionNo: number;
   path: string;
   content: string;
   createdAt: Date;
@@ -152,27 +153,38 @@ export async function listConversationDocuments(db: Database, conversationId: st
 export async function saveDocumentFile(
   db: Database,
   documentId: string,
+  versionNo: number,
   path: string,
   content: string,
 ): Promise<void> {
-  await db.insert(documentFiles).values({ documentId, path, content, createdAt: new Date() })
+  await db.insert(documentFiles).values({ documentId, versionNo, path, content, createdAt: new Date() })
     .onConflictDoUpdate({
-      target: [documentFiles.documentId, documentFiles.path],
+      target: [documentFiles.documentId, documentFiles.versionNo, documentFiles.path],
       set: { content, createdAt: new Date() },
     });
 }
 
-export async function getDocumentFiles(db: Database, documentId: string): Promise<DocumentFile[]> {
-  return db.select().from(documentFiles).where(eq(documentFiles.documentId, documentId));
+export async function getDocumentFiles(
+  db: Database,
+  documentId: string,
+  versionNo: number,
+): Promise<DocumentFile[]> {
+  return db.select().from(documentFiles)
+    .where(and(eq(documentFiles.documentId, documentId), eq(documentFiles.versionNo, versionNo)));
 }
 
 export async function getDocumentFile(
   db: Database,
   documentId: string,
+  versionNo: number,
   path: string,
 ): Promise<DocumentFile | null> {
   const rows = await db.select().from(documentFiles)
-    .where(and(eq(documentFiles.documentId, documentId), eq(documentFiles.path, path)))
+    .where(and(
+      eq(documentFiles.documentId, documentId),
+      eq(documentFiles.versionNo, versionNo),
+      eq(documentFiles.path, path),
+    ))
     .limit(1);
   return rows[0] ?? null;
 }

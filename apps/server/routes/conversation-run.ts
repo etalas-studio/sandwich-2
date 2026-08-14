@@ -574,6 +574,7 @@ export function registerConversationRunRoutes(
         // For a prototype, create (or reuse) the document up front so the
         // prototype engine has a document id to write files under.
         let prototypeDocId: string | null = null;
+        let prototypeVersionNo: number | null = null;
         if (stage === "generating" && pendingType === "prototype") {
           const title = conversation.title.trim() || "Prototype";
           const existing = await listConversationDocuments(db, conversationId);
@@ -585,6 +586,7 @@ export function registerConversationRunRoutes(
             await linkConversationDocument(db, conversationId, doc.id);
             prototypeDocId = doc.id;
           }
+          prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
         }
 
         const useOpenCode = engine === "opencode";
@@ -594,7 +596,7 @@ export function registerConversationRunRoutes(
           ? async () =>
               (await generatePrototypeDocument(
                 db,
-                { documentId: prototypeDocId!, brief: lastUserMessage },
+                { documentId: prototypeDocId!, versionNo: prototypeVersionNo!, brief: lastUserMessage },
                 controller.signal,
               )).summary
           : useOpenCode
@@ -633,7 +635,7 @@ export function registerConversationRunRoutes(
               const existing = await listConversationDocuments(db, conversationId);
               const existingDoc = existing.find((d) => d.type === pendingType);
               if (existingDoc) {
-                const versionNo = await getNextVersionNo(db, existingDoc.id);
+                const versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
                 await createDocumentVersion(db, {
                   documentId: existingDoc.id,
                   versionNo,
@@ -646,9 +648,10 @@ export function registerConversationRunRoutes(
                   type: pendingType,
                   title,
                 });
+                const versionNo = prototypeVersionNo ?? 1;
                 await createDocumentVersion(db, {
                   documentId: doc.id,
-                  versionNo: 1,
+                  versionNo,
                   content: output,
                   promptUsed: lastUserMessage,
                 });
