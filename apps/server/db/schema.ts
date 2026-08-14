@@ -5,6 +5,7 @@ import {
   integer,
   boolean,
   timestamp,
+  jsonb,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -202,6 +203,7 @@ export const prototypes = pgTable("prototypes", {
   logoData: text("logo_data"),
   palette: text("palette"),
   status: text("status").notNull().default("generating"),
+  currentVersion: integer("current_version").notNull().default(1),
   createdAt: ts("created_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
 });
@@ -221,6 +223,25 @@ export const prototypeFiles = pgTable(
     uniquePath: uniqueIndex("idx_prototype_files_path").on(
       table.prototypeId,
       table.path,
+    ),
+  }),
+);
+
+export const prototypeVersions = pgTable(
+  "prototype_versions",
+  {
+    id: serial("id").primaryKey(),
+    prototypeId: text("prototype_id")
+      .notNull()
+      .references(() => prototypes.id),
+    version: integer("version").notNull(),
+    files: jsonb("files").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    uniqueVersion: uniqueIndex("idx_prototype_versions_version").on(
+      table.prototypeId,
+      table.version,
     ),
   }),
 );
