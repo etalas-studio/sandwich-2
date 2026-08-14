@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { marked } from 'marked'
 import { apiUrl } from '../api/base'
+import { ExportMenu } from './ExportMenu'
 
 interface SharedConversation {
   id: string
@@ -57,11 +58,14 @@ export default function SharePage() {
   return (
     <div className="min-h-screen px-6 py-12" style={{ backgroundColor: '#F4EBE1', fontFamily: inter }}>
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#f91814' }}>
-            SANDWICH · shared brief
-          </p>
-          <h1 className="text-2xl font-semibold" style={{ color: '#111827' }}>{conversation.title}</h1>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#f91814' }}>
+              SANDWICH · shared brief
+            </p>
+            <h1 className="text-2xl font-semibold" style={{ color: '#111827' }}>{conversation.title}</h1>
+          </div>
+          <ExportMenu url={(f) => apiUrl(`/api/share/${encodeURIComponent(token ?? '')}/export?format=${f}`)} />
         </div>
 
         {conversation.output ? (

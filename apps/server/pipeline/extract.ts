@@ -21,7 +21,7 @@ const pdfParse = require("pdf-parse") as (
  *
  *   image → OpenCode Gemini vision (read text + describe layout),
  *           falling back to local OCR (tesseract.js)
- *   audio → Groq Whisper transcription
+ *   audio/video → not supported (transcription removed)
  *   pdf   → pdf-parse (text-based PDFs only)
  *   docx  → mammoth
  *   txt/md/json → raw utf-8
@@ -30,9 +30,6 @@ const pdfParse = require("pdf-parse") as (
  * resulting text.
  */
 
-const GROQ_BASE = "https://api.groq.com/openai/v1";
-const TRANSCRIPTION_MODEL =
-  process.env.GROQ_TRANSCRIPTION_MODEL ?? "whisper-large-v3";
 // Vision runs through the user's OpenCode subscription (Gemini flash-lite);
 // if it fails or OpenCode isn't configured, fall back to local OCR.
 const OPENCODE_VISION_PROVIDER =
@@ -54,12 +51,6 @@ function getModelRuntime(): Promise<any> {
   return modelRuntimePromise;
 }
 
-function groqKey(): string {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error("GROQ_API_KEY is not configured");
-  return key;
-}
-
 export interface ExtractResult {
   text: string;
 }
@@ -75,7 +66,9 @@ export async function extractAttachmentText(input: {
     return { text: await extractImage(storageKey, mimeType) };
   }
   if (mimeType.startsWith("audio/") || mimeType.startsWith("video/")) {
-    return { text: await transcribeAudio(storageKey, filename, mimeType) };
+    throw new Error(
+      `Audio/video transcription is not available (${filename})`,
+    );
   }
   if (mimeType === "application/pdf") {
     return { text: await extractPdf(storageKey) };
@@ -172,31 +165,6 @@ async function extractImage(
     );
     return await extractImageWithOcr(buffer);
   }
-}
-
-async function transcribeAudio(
-  storageKey: string,
-  filename: string,
-  mimeType: string,
-): Promise<string> {
-  const buffer = await downloadFromStorage(storageKey);
-  const fd = new FormData();
-  fd.append("file", new Blob([buffer], { type: mimeType }), filename);
-  fd.append("model", TRANSCRIPTION_MODEL);
-  fd.append("response_format", "json");
-
-  const res = await fetch(`${GROQ_BASE}/audio/transcriptions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${groqKey()}` },
-    body: fd,
-  });
-  if (!res.ok) {
-    throw new Error(
-      `Groq transcription ${res.status}: ${await res.text().catch(() => "")}`,
-    );
-  }
-  const json = (await res.json()) as { text?: string };
-  return json.text ?? "";
 }
 
 async function extractPdf(storageKey: string): Promise<string> {

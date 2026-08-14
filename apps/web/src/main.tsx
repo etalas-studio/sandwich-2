@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthGate from "./components/AuthGate";
 import { LanguageProvider } from "./lib/i18n";
+import "@fontsource-variable/geist";
 import "./index.css";
 
 const queryClient = new QueryClient();
