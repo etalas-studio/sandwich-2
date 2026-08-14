@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { randomUUID, randomBytes } from "node:crypto";
-import { prototypes, prototypeFiles } from "./schema.js";
+import { prototypes, prototypeFiles, prototypeVersions } from "./schema.js";
 import type { Database } from "../db/connection.js";
 
 export interface Prototype {
@@ -12,6 +12,7 @@ export interface Prototype {
   logoData: string | null;
   palette: string | null;
   status: string;
+  currentVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -97,4 +98,64 @@ export async function getPrototypeFile(db: Database, prototypeId: string, path: 
     .where(and(eq(prototypeFiles.prototypeId, prototypeId), eq(prototypeFiles.path, path)))
     .limit(1);
   return rows.length > 0 ? rows[0]! : null;
+}
+
+export interface PrototypeVersion {
+  id: number;
+  prototypeId: string;
+  version: number;
+  files: Record<string, string>;
+  createdAt: Date;
+}
+
+export async function snapshotVersion(
+  db: Database,
+  prototypeId: string,
+  files: { path: string; content: string }[],
+): Promise<number> {
+  const rows = await db.select().from(prototypeVersions).where(eq(prototypeVersions.prototypeId, prototypeId));
+  const maxVersion = rows.reduce((m, r) => Math.max(m, r.version), 0);
+  const version = maxVersion + 1;
+  const filesObj: Record<string, string> = {};
+  for (const f of files) filesObj[f.path] = f.content;
+  const now = new Date();
+  await db.insert(prototypeVersions).values({
+    prototypeId,
+    version,
+    files: filesObj,
+    createdAt: now,
+  });
+  await db.update(prototypes).set({ currentVersion: version, updatedAt: now }).where(eq(prototypes.id, prototypeId));
+  return version;
+}
+
+export async function getLatestVersion(db: Database, prototypeId: string): Promise<number | null> {
+  const rows = await db.select().from(prototypeVersions).where(eq(prototypeVersions.prototypeId, prototypeId));
+  if (rows.length === 0) return null;
+  return rows.reduce((m, r) => Math.max(m, r.version), 0);
+}
+
+export async function getVersionFiles(
+  db: Database,
+  prototypeId: string,
+  version: number,
+): Promise<{ path: string; content: string }[] | null> {
+  const rows = await db
+    .select()
+    .from(prototypeVersions)
+    .where(and(eq(prototypeVersions.prototypeId, prototypeId), eq(prototypeVersions.version, version)))
+    .limit(1);
+  if (rows.length === 0) return null;
+  const files = rows[0]!.files as Record<string, string>;
+  return Object.entries(files).map(([path, content]) => ({ path, content: String(content) }));
+}
+
+export async function restoreVersion(db: Database, prototypeId: string, version: number): Promise<number> {
+  const files = await getVersionFiles(db, prototypeId, version);
+  if (!files) throw new Error(`prototype version ${version} not found`);
+  for (const f of files) {
+    await savePrototypeFile(db, prototypeId, f.path, f.content);
+  }
+  await db.update(prototypes).set({ currentVersion: version, updatedAt: new Date() }).where(eq(prototypes.id, prototypeId));
+  return version;
 }

@@ -1,1 +1,1 @@
-export { prototypes, prototypeFiles } from "../db/schema.js";
+export { prototypes, prototypeFiles, prototypeVersions } from "../db/schema.js";
