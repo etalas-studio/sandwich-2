@@ -27,6 +27,10 @@ export async function deleteSession(db: Database, token: string): Promise<void> 
   await db.delete(sessions).where(eq(sessions.token, token));
 }
 
+export async function deleteSessionsForUser(db: Database, userId: string): Promise<void> {
+  await db.delete(sessions).where(eq(sessions.userId, userId));
+}
+
 function mapSession(row: typeof sessions.$inferSelect): Session {
   return {
     token: row.token,

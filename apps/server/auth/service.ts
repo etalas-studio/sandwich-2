@@ -34,7 +34,7 @@ function getDummyHash(): Promise<string> {
   return dummyHashPromise;
 }
 
-export async function register(db: Database, input: RegisterInput): Promise<AuthResult> {
+export async function register(db: Database, input: RegisterInput): Promise<{ user: User }> {
   const passwordHash = await hashPassword(input.password);
 
   let user: User;
@@ -53,8 +53,7 @@ export async function register(db: Database, input: RegisterInput): Promise<Auth
     }
     throw err;
   }
-  const session = await createSession(db, user.id, sessionExpiryIso());
-  return { user: { username: user.username, email: user.email }, session };
+  return { user };
 }
 
 export async function login(db: Database, input: Credentials): Promise<AuthResult> {
@@ -67,6 +66,10 @@ export async function login(db: Database, input: Credentials): Promise<AuthResul
   const valid = await verifyPassword(input.password, user.passwordHash);
   if (!valid) {
     throw new AuthError(401, "invalid username or password");
+  }
+
+  if (!user.emailVerified) {
+    throw new AuthError(403, "email not verified");
   }
 
   const session = await createSession(db, user.id, sessionExpiryIso());

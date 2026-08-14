@@ -8,6 +8,7 @@ export interface User {
   username: string;
   email: string;
   passwordHash: string;
+  emailVerified: boolean;
   createdAt: Date;
 }
 
@@ -42,11 +43,25 @@ export async function getUserByUsername(db: Database, username: string): Promise
   return mapUser(rows[0]!);
 }
 
+export async function getUserByEmail(db: Database, email: string): Promise<User | null> {
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (rows.length === 0) return null;
+  return mapUser(rows[0]!);
+}
+
 export async function updatePassword(db: Database, userId: string, newPasswordHash: string): Promise<void> {
   const result = await db.update(users)
     .set({ passwordHash: newPasswordHash })
     .where(eq(users.id, userId));
   if (result.rowCount === 0) throw new Error("user not found");
+}
+
+export async function markEmailVerified(db: Database, userId: string): Promise<void> {
+  await db.update(users).set({ emailVerified: true }).where(eq(users.id, userId));
+}
+
+export async function deleteUser(db: Database, userId: string): Promise<void> {
+  await db.delete(users).where(eq(users.id, userId));
 }
 
 function mapUser(row: typeof users.$inferSelect): User {
@@ -55,6 +70,7 @@ function mapUser(row: typeof users.$inferSelect): User {
     username: row.username,
     email: row.email,
     passwordHash: row.passwordHash,
+    emailVerified: row.emailVerified,
     createdAt: row.createdAt,
   };
 }
