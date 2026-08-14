@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findReferenceUrl, extractCssTokens, isPrivateIp, fetchReferenceStyle, writeReferenceToWorkspace } from "./webref.js";
+import { findReferenceUrl, findReferenceUrls, extractCssTokens, isPrivateIp, fetchReferenceStyle, fetchReferenceStyles, writeReferenceToWorkspace, writeReferencesToWorkspace } from "./webref.js";
 
 describe("findReferenceUrl", () => {
   it("finds an http(s) url in a brief", () => {
@@ -22,6 +22,26 @@ describe("findReferenceUrl", () => {
       findReferenceUrl("liat https://a.com dan https://b.com)."),
       "https://a.com",
     );
+  });
+});
+
+describe("findReferenceUrls", () => {
+  it("returns every unique url in order", () => {
+    assert.deepEqual(
+      findReferenceUrls("liat https://a.com, https://b.com, dan https://a.com lagi"),
+      ["https://a.com", "https://b.com"],
+    );
+  });
+
+  it("trims trailing punctuation from each url", () => {
+    assert.deepEqual(
+      findReferenceUrls("contoh: (https://a.com) dan https://b.com)."),
+      ["https://a.com", "https://b.com"],
+    );
+  });
+
+  it("returns an empty array when there are no urls", () => {
+    assert.deepEqual(findReferenceUrls("nggak ada link"), []);
   });
 });
 
@@ -107,6 +127,42 @@ describe("writeReferenceToWorkspace", () => {
       assert.ok(existsSync(join(dir, "page.html")));
       const json = JSON.parse(readFileSync(join(dir, "style.json"), "utf-8"));
       assert.equal(json.url, "https://example.com");
+    } finally {
+      rmSync(ws, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("fetchReferenceStyles", () => {
+  it("fetches all urls and skips failed ones", async () => {
+    globalThis.fetch = (async (input: any) => {
+      const url = String(input);
+      if (url.includes("fail")) throw new Error("boom");
+      return new Response(
+        `<html><style>body{color:#111}</style></html>`,
+        { headers: { "content-type": "text/html" } },
+      );
+    }) as any;
+    const styles = await fetchReferenceStyles(["https://ok.com", "https://fail.com"]);
+    assert.equal(styles.length, 1);
+    assert.equal(styles[0]!.url, "https://ok.com");
+    assert.ok(styles[0]!.tokens.colors.includes("#111"));
+  });
+});
+
+describe("writeReferencesToWorkspace", () => {
+  it("writes each reference into a numbered subdir plus index.json", () => {
+    const ws = mkdtempSync(join(tmpdir(), "refs-"));
+    try {
+      const dir = writeReferencesToWorkspace(ws, [
+        { url: "https://a.com", html: "<h1>a</h1>", tokens: { colors: ["#111"], fonts: [], spacings: [], radii: [], shadows: [] } },
+        { url: "https://b.com", html: "<h1>b</h1>", tokens: { colors: ["#222"], fonts: [], spacings: [], radii: [], shadows: [] } },
+      ]);
+      assert.equal(dir, join(ws, ".reference"));
+      assert.ok(existsSync(join(dir, "0", "style.json")));
+      assert.ok(existsSync(join(dir, "1", "page.html")));
+      const index = JSON.parse(readFileSync(join(dir, "index.json"), "utf-8"));
+      assert.deepEqual(index, ["https://a.com", "https://b.com"]);
     } finally {
       rmSync(ws, { recursive: true, force: true });
     }

@@ -4,9 +4,10 @@ import { join, relative } from "node:path";
 import { buildPrototypeSystemPrompt } from "./prompts.js";
 import { saveDocumentFile } from "../db/documents.js";
 import {
-  findReferenceUrl,
-  fetchReferenceStyle,
-  writeReferenceToWorkspace,
+  fetchReferenceStyles,
+  findReferenceUrls,
+  writeReferencesToWorkspace,
+  type ReferenceStyle,
 } from "./webref.js";
 import { copyReferencesTo } from "./references.js";
 import { polishWorkspace } from "./glowup.js";
@@ -50,16 +51,15 @@ export async function generatePrototypeDocument(
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
-    // Reference URL style (best-effort). Writes .reference/ into the workspace.
-    let reference: { url: string; tokens: import("./webref.js").CssTokens } | null = null;
-    const refUrl = findReferenceUrl(input.brief);
-    if (refUrl) {
+    // Reference URL style (best-effort, multiple URLs + screenshot vision).
+    // Writes .reference/<i>/ + index.json into the workspace.
+    const styles: ReferenceStyle[] = [];
+    const urls = findReferenceUrls(input.brief);
+    if (urls.length > 0) {
       try {
-        const style = await fetchReferenceStyle(refUrl);
-        if (style) {
-          writeReferenceToWorkspace(workspace, style);
-          reference = { url: style.url, tokens: style.tokens };
-        }
+        const fetched = await fetchReferenceStyles(urls);
+        styles.push(...fetched);
+        if (styles.length > 0) writeReferencesToWorkspace(workspace, styles);
       } catch {
         // ignore reference failures — fall back to the getokui library
       }
@@ -92,7 +92,7 @@ export async function generatePrototypeDocument(
       }
     });
 
-    const systemPrompt = buildPrototypeSystemPrompt(input.brief, reference);
+    const systemPrompt = buildPrototypeSystemPrompt(input.brief, styles);
 
     try {
       const promptPromise = session.prompt(systemPrompt);
