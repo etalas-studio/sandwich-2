@@ -224,3 +224,97 @@ export const prototypeFiles = pgTable(
     ),
   }),
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Document model (chat-based, versioned deliverables). Documents are
+// user-scoped and title-scoped; a conversation is a thread that can generate
+// or reference many documents.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** prd | quotation | prototype | specs */
+export const documents = pgTable(
+  "documents",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    currentVersionId: text("current_version_id"),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index("idx_documents_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+    userTitleIdx: index("idx_documents_user_title").on(
+      table.userId,
+      table.title,
+    ),
+  }),
+);
+
+/** Immutable snapshot of a document (one per generation/revision). */
+export const documentVersions = pgTable(
+  "document_versions",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    versionNo: integer("version_no").notNull(),
+    content: text("content").notNull(),
+    promptUsed: text("prompt_used"),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    docVersionIdx: index("idx_document_versions_doc").on(
+      table.documentId,
+      table.versionNo,
+    ),
+  }),
+);
+
+/** Links a conversation (thread) to documents it generated or opened. */
+export const conversationDocuments = pgTable(
+  "conversation_documents",
+  {
+    id: serial("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversations.id),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    uniqueConvDoc: uniqueIndex("idx_conversation_documents_conv_doc").on(
+      table.conversationId,
+      table.documentId,
+    ),
+  }),
+);
+
+/** Files of a multi-file document (prototype HTML/CSS/JS). */
+export const documentFiles = pgTable(
+  "document_files",
+  {
+    id: serial("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    path: text("path").notNull(),
+    content: text("content").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    uniquePath: uniqueIndex("idx_document_files_path").on(
+      table.documentId,
+      table.path,
+    ),
+  }),
+);
