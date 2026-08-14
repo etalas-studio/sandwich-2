@@ -8,6 +8,7 @@ import { authenticateRequest } from "./auth/middleware.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
+import { registerPasswordResetRoutes } from "./routes/password-reset.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
 import { registerConversationRunRoutes } from "./routes/conversation-run.js";
@@ -47,6 +48,8 @@ const PUBLIC_API_PATHS = new Set([
   "/api/auth/register",
   "/api/auth/login",
   "/api/auth/logout",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
   "/api/midtrans/notification",
 ]);
 
@@ -80,6 +83,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   });
 
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
+  registerPasswordResetRoutes(router, db);
   registerIntegrationRoutes(router);
   registerConversationRoutes(router, db);
   registerConversationRunRoutes(router, db);
