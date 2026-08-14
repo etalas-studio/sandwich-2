@@ -688,3 +688,24 @@ git commit -m "feat: wire getokui glowup pass into prototype pipeline with fallb
 - **Spec coverage:** vendoring (Task 1), reference/workspace helpers (Task 2), glowup prompt with hard floors + anti-slop + contrast + icons + motion + Tailwind→CSS translation + style-not-content + stack preservation (Task 3), agent pass + engine wiring + fallback + skip `.getokui/` (Task 4). All user decisions covered: post-processing pass (not touching the build prompt), index+dna only (no 25 MB templates), agent picks references itself (prompt instructs it to match brief).
 - **Placeholder scan:** none — every step has concrete code/commands.
 - **Type consistency:** `copyReferencesTo(workspace, sourceDir?)`, `readPrototypeFiles(workspace)`, `buildGlowupSystemPrompt({ brief })`, `polishWorkspace(workspace, brief, signal?)` — signatures consistent across tasks; `engine.ts` imports match the exported names.
+
+---
+
+## Post-implementation changes (after live e2e)
+
+Live e2e revealed the glowup pass timed out at 10 min on `deepseek-v4-pro`
+(the slow reasoning model) while reading 7+ files + the 159 KB `index.json`.
+Two fixes, verified by a second live e2e run:
+
+1. **Fast glowup model** — `polishWorkspace` now uses `glowupModelId()`
+   (`process.env.GLOWUP_MODEL`, default `deepseek-v4-flash`); the build pass
+   still uses `OPENCODE_MODEL`.
+2. **Landing-only scope** — the glowup prompt now edits ONLY `index.html` and
+   `styles.css` (the landing page + shared stylesheet), skipping dashboard/module
+   pages and `script.js`. `styles.css` is shared, so its polish still applies
+   everywhere; CRUD/Chart.js behavior is untouched.
+
+Result of the second run: glowup completed (no timeout), `index.html` had 0
+emoji + Lucide icons + a `clamp(3.25rem, 5.6vw, 5rem)` hero, and `styles.css`
+gained 6 `@keyframes` and `clamp(5rem…7.5rem)` section padding.
+
