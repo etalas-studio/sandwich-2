@@ -189,15 +189,15 @@ export default function PrototypeView() {
     loadPrototypes();
   });
 
-  const regenerate = async () => {
-    if (!active || !instruction.trim()) return;
+  const submitInstruction = async (raw: string) => {
+    if (!active || !raw.trim()) return;
     setRefreshing(true);
     try {
       const res = await fetch(apiUrl(`/api/prototypes/${active.id}/regenerate`), {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ instruction: instruction.trim() }),
+        body: JSON.stringify({ instruction: raw.trim() }),
       });
       const data = await res.json();
       if (data.action === "rollback") {
@@ -213,6 +213,10 @@ export default function PrototypeView() {
       setRefreshing(false);
     }
   };
+
+  const regenerate = () => submitInstruction(instruction);
+  const rollback = (target: "previous" | "latest") =>
+    submitInstruction(target === "previous" ? "rollback" : "latest");
 
   if (active) {
     const isGenerating = active.status === "generating";
@@ -276,6 +280,26 @@ export default function PrototypeView() {
             >
               {refreshing || isGenerating ? "Applying..." : "Apply Change"}
             </button>
+            {active.status === "done" && (
+              <div className="flex flex-col gap-2 mt-3">
+                <button
+                  onClick={() => rollback("previous")}
+                  disabled={refreshing || isGenerating}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium text-left"
+                  style={{ color: "#111827", backgroundColor: "#fff", opacity: (refreshing || isGenerating) ? 0.5 : 1 }}
+                >
+                  ↩ Rollback versi sebelumnya
+                </button>
+                <button
+                  onClick={() => rollback("latest")}
+                  disabled={refreshing || isGenerating}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium text-left"
+                  style={{ color: "#111827", backgroundColor: "#fff", opacity: (refreshing || isGenerating) ? 0.5 : 1 }}
+                >
+                  ↩ Rollback versi terbaru
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
