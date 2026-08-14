@@ -9,6 +9,7 @@ import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPasswordResetRoutes } from "./routes/password-reset.js";
+import { registerEmailVerificationRoutes } from "./routes/email-verification.js";
 import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
 import { registerConversationRunRoutes } from "./routes/conversation-run.js";
@@ -50,6 +51,8 @@ const PUBLIC_API_PATHS = new Set([
   "/api/auth/logout",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
+  "/api/auth/verify-email",
+  "/api/auth/resend-verification",
   "/api/midtrans/notification",
 ]);
 
@@ -84,6 +87,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
 
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerPasswordResetRoutes(router, db);
+  registerEmailVerificationRoutes(router, db);
   registerIntegrationRoutes(router);
   registerConversationRoutes(router, db);
   registerConversationRunRoutes(router, db);
