@@ -2,6 +2,7 @@ import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { conversations, chatMessages, attachments } from "./schema.js";
 import type { Database } from "./connection.js";
+import type { DocumentType } from "./documents.js";
 
 export type ConversationType =
   | "prd"
@@ -39,6 +40,8 @@ export interface CreateConversationInput {
   type?: ConversationType;
   title: string;
   prompt: string;
+  // Pre-selected deliverable (dropdown). Skips straight to clarifying.
+  pendingType?: DocumentType;
 }
 
 export interface UpdateConversationInput {
@@ -95,6 +98,8 @@ export async function createConversation(
     title: input.title,
     prompt: input.prompt,
     status: "backlog",
+    pipelineStage: input.pendingType ? "clarifying" : "intake",
+    pendingType: input.pendingType ?? null,
     createdAt: now,
     updatedAt: now,
   });

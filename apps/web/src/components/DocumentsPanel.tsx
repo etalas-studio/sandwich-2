@@ -8,6 +8,7 @@ interface DocumentItem {
   type: string
   title: string
   currentVersionId: string | null
+  latestVersionNo: number | null
   previewUrl: string | null
   updatedAt: string
 }
@@ -17,6 +18,37 @@ const TYPE_LABEL: Record<string, string> = {
   quotation: 'Quotation',
   prototype: 'Prototype',
   specs: 'Specs',
+}
+
+function PrototypeCard({ doc }: { doc: DocumentItem }) {
+  const latest = doc.latestVersionNo ?? 1
+  const [version, setVersion] = useState(latest)
+  const base = doc.previewUrl?.replace(/\/$/, '') ?? ''
+  const previewUrl = base ? `${base}/v/${version}/` : null
+
+  return (
+    <div className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
+      <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>Prototype</span>
+      <span className="font-semibold truncate" style={{ color: '#111827' }}>{doc.title}</span>
+      <div className="flex items-center gap-2">
+        {previewUrl && (
+          <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#2563eb' }}>
+            Preview
+          </a>
+        )}
+        <select
+          value={version}
+          onChange={(e) => setVersion(Number(e.target.value))}
+          className="text-xs px-2 py-1 rounded border"
+          style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#111827' }}
+        >
+          {Array.from({ length: latest }, (_, i) => latest - i).map((v) => (
+            <option key={v} value={v}>v{v}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
 }
 
 export default function DocumentsPanel() {
@@ -48,17 +80,19 @@ export default function DocumentsPanel() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.slice().reverse().map((d) => (
-              <div key={d.id} className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
-                <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>
-                  {TYPE_LABEL[d.type] ?? d.type}
-                </span>
-                <span className="font-semibold truncate" style={{ color: '#111827' }}>{d.title}</span>
-                {d.previewUrl && (
-                  <a href={d.previewUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#2563eb' }}>
-                    Preview
-                  </a>
-                )}
-              </div>
+              d.type === 'prototype' ? (
+                <PrototypeCard key={d.id} doc={d} />
+              ) : (
+                <div key={d.id} className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
+                  <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>
+                    {TYPE_LABEL[d.type] ?? d.type}
+                  </span>
+                  <span className="font-semibold truncate" style={{ color: '#111827' }}>{d.title}</span>
+                  {d.latestVersionNo != null && (
+                    <span className="text-xs" style={{ color: '#9ca3af' }}>v{d.latestVersionNo}</span>
+                  )}
+                </div>
+              )
             ))}
           </div>
         )}

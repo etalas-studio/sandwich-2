@@ -2,10 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
-import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { useAuth } from '../hooks/useAuth'
-import { CHIPS } from '../lib/promptChips'
-import type { ConversationType } from '../lib/conversations'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
 
@@ -63,7 +60,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     oldPrice: p.oldPrice,
   }))
   const [prompt, setPrompt] = useState('')
-  const [activeType, setActiveType] = useState<ConversationType>('general')
+  const [pendingType, setPendingType] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -100,7 +97,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     if (!prompt.trim()) return
     if (authState.status !== 'authenticated') {
       try {
-        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType }))
+        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
       } catch { /* best-effort draft save, e.g. storage quota */ }
       onGoToApp()
       return
@@ -108,7 +105,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
+      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
       await createMessage(local.id, { content: prompt.trim() })
       // Hand off to the dashboard with the new session already auto-running.
       try {
@@ -119,7 +116,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') {
         // No active plan — stash the draft and send them to checkout.
-        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType })) } catch { /* ignore */ }
+        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
         onGoToApp()
         return
       }
@@ -234,22 +231,20 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 className="relative rounded-xl overflow-hidden shadow-lg"
                 style={{ backgroundColor: '#111113' }}
               >
-                {/* chips */}
-                <div className="flex flex-wrap gap-2 px-5 pt-5 pb-2">
-                  {CHIPS.map((chip) => (
-                    <button
-                      key={chip.labelKey}
-                      onClick={() => { setActiveType(chip.type); setPrompt(randomPrompt(chip.type as PromptChipType)) }}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-70"
-                      style={activeType === chip.type
-                        ? { backgroundColor: '#f91814', color: '#ffffff', border: '1px solid #f91814' }
-                        : { backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }
-                      }
-                    >
-                      <iconify-icon icon={chip.icon} width="12" />
-                      {t(chip.labelKey)}
-                    </button>
-                  ))}
+                {/* deliverable selector */}
+                <div className="flex items-center gap-2 px-5 pt-5 pb-2">
+                  <select
+                    value={pendingType}
+                    onChange={(e) => setPendingType(e.target.value)}
+                    className="text-xs px-3 py-1.5 rounded-full"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
+                  >
+                    <option value="">Auto — let SANDWICH ask</option>
+                    <option value="prd">PRD</option>
+                    <option value="quotation">Quotation</option>
+                    <option value="prototype">Prototype</option>
+                    <option value="specs">Specs</option>
+                  </select>
                 </div>
 
                 <textarea

@@ -51,6 +51,12 @@ export function registerConversationRoutes(router: Router, db: Database): void {
 
     const id = typeof body.id === "string" ? body.id.trim() : "";
     const type = typeof body.type === "string" ? body.type : undefined;
+    const rawPendingType = typeof body.pendingType === "string" ? body.pendingType : undefined;
+    const pendingType =
+      rawPendingType === "prd" || rawPendingType === "quotation" ||
+      rawPendingType === "prototype" || rawPendingType === "specs"
+        ? rawPendingType
+        : undefined;
     const title =
       typeof body.title === "string" && body.title.trim() !== ""
         ? body.title.trim()
@@ -82,6 +88,7 @@ export function registerConversationRoutes(router: Router, db: Database): void {
         type: conversationType,
         title: title ?? prompt,
         prompt,
+        pendingType,
       });
       sendJson(res, 201, conversation);
     } catch (err) {

@@ -11,8 +11,6 @@ import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 import { ExportMenu } from './ExportMenu'
 import DocumentsPanel from './DocumentsPanel'
-import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
-import { CHIPS } from '../lib/promptChips'
 import { useLanguage, type StringKey } from '../lib/i18n'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
@@ -678,19 +676,13 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
   const { t: tr } = useLanguage()
   const [draft] = useState(loadDraft)
   const [prompt, setPrompt] = useState(draft.prompt)
-  const [activeType, setActiveType] = useState<ConversationType>(draft.activeType ?? defaultType)
+  const [pendingType, setPendingType] = useState<string>(draft.activeType ?? (defaultType === 'general' ? '' : defaultType))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<AttachedFile[]>(draft.attachments)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const atLimit = isAtLimit(usage)
-
-  const skipNextTypeReset = useRef(draft.activeType !== null)
-  useEffect(() => {
-    if (skipNextTypeReset.current) { skipNextTypeReset.current = false; return }
-    setActiveType(defaultType)
-  }, [defaultType])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(e.target.files ?? []).forEach(file => {
@@ -707,7 +699,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
     setIsSubmitting(true)
     setError(null)
     try {
-      const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
+      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
       const uploaded: Attachment[] = []
       for (const a of attachments) {
         try {
@@ -743,25 +735,23 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
           </a>
         </div>
       )}
-      {defaultType === 'general' && (
-        <div className="flex items-center gap-2 px-4 pt-4 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {CHIPS.map(c => (
-            <button key={c.labelKey}
-              onClick={() => { setActiveType(c.type); setPrompt(randomPrompt(c.type as PromptChipType)) }}
-              className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-              style={activeType === c.type
-                ? { backgroundColor: '#f91814', color: '#ffffff', border: '1px solid #f91814' }
-                : { backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }
-              }>
-              <iconify-icon icon={c.icon} width="12" />
-              {tr(c.labelKey)}
-            </button>
-          ))}
-          {!usage.isPro && !atLimit && (
-            <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
-          )}
-        </div>
-      )}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+        <select
+          value={pendingType}
+          onChange={(e) => setPendingType(e.target.value)}
+          className="text-xs px-3 py-1.5 rounded-full"
+          style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }}
+        >
+          <option value="">Auto — let SANDWICH ask</option>
+          <option value="prd">PRD</option>
+          <option value="quotation">Quotation</option>
+          <option value="prototype">Prototype</option>
+          <option value="specs">Specs</option>
+        </select>
+        {!usage.isPro && !atLimit && (
+          <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
+        )}
+      </div>
 
       <textarea
         value={prompt}

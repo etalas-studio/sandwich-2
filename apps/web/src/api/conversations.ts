@@ -79,6 +79,7 @@ export async function createConversation(input: {
   type?: ConversationType
   title: string
   prompt: string
+  pendingType?: string
 }): Promise<Conversation> {
   const res = await fetch(apiUrl('/api/conversations'), {
     method: 'POST',

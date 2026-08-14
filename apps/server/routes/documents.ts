@@ -35,7 +35,11 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       return;
     }
     const docs = await listDocuments(db, auth.userId);
-    sendJson(res, 200, docs.map(withPreviewUrl));
+    const withMeta = await Promise.all(docs.map(async (doc) => {
+      const latest = await getLatestVersion(db, doc.id);
+      return { ...withPreviewUrl(doc), latestVersionNo: latest?.versionNo ?? null };
+    }));
+    sendJson(res, 200, withMeta);
   });
 
   // Look up a document by exact title ("buka PRD X").
