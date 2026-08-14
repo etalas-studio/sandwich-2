@@ -59,6 +59,11 @@ export const conversations = pgTable(
     stage: text("stage"),
     // generated document (markdown or HTML for prototypes)
     output: text("output"),
+    // Guided-pipeline state machine (model-driven):
+    // intake → choosing_deliverable → clarifying → generating → awaiting_next
+    pipelineStage: text("pipeline_stage").notNull().default("intake"),
+    // Deliverable being worked on (prd | quotation | prototype | specs).
+    pendingType: text("pending_type"),
     // like | dislike | null
     feedback: text("feedback"),
     pinned: boolean("pinned").notNull().default(false),
