@@ -153,6 +153,17 @@ export async function getVersionFiles(
 export async function restoreVersion(db: Database, prototypeId: string, version: number): Promise<number> {
   const files = await getVersionFiles(db, prototypeId, version);
   if (!files) throw new Error(`prototype version ${version} not found`);
+  // Remove files that exist in the current version but not in the target version
+  // (otherwise rolling back leaves stale files that the target version didn't have).
+  const targetPaths = new Set(files.map((f) => f.path));
+  const current = await getPrototypeFiles(db, prototypeId);
+  for (const f of current) {
+    if (!targetPaths.has(f.path)) {
+      await db
+        .delete(prototypeFiles)
+        .where(and(eq(prototypeFiles.prototypeId, prototypeId), eq(prototypeFiles.path, f.path)));
+    }
+  }
   for (const f of files) {
     await savePrototypeFile(db, prototypeId, f.path, f.content);
   }
