@@ -9,7 +9,10 @@ import {
   updatePrototypeBrief,
   getPrototypeFile,
   savePrototypeFile,
+  getLatestVersion,
+  restoreVersion,
 } from "./storage.js";
+import { parseRollbackIntent } from "./rollback.js";
 import { generatePrototype } from "./engine.js";
 import type { Database } from "../db/connection.js";
 
@@ -145,6 +148,29 @@ export function registerPrototypeRoutes(router: Router, db: Database): void {
     const body = (await readJsonBody(req).catch(() => null)) as {
       instruction?: string;
     } | null;
+
+    const intent = parseRollbackIntent(body?.instruction ?? "");
+    if (intent === "previous") {
+      const latest = await getLatestVersion(db, proto.id);
+      if (!latest) {
+        sendJson(res, 200, { action: "rollback", version: null, message: "no versions yet" });
+        return;
+      }
+      const target = Math.max(1, proto.currentVersion - 1);
+      await restoreVersion(db, proto.id, target);
+      sendJson(res, 200, { action: "rollback", version: target });
+      return;
+    }
+    if (intent === "latest") {
+      const latest = await getLatestVersion(db, proto.id);
+      if (!latest) {
+        sendJson(res, 200, { action: "rollback", version: null, message: "no versions yet" });
+        return;
+      }
+      await restoreVersion(db, proto.id, latest);
+      sendJson(res, 200, { action: "rollback", version: latest });
+      return;
+    }
 
     const updatedBrief = body?.instruction
       ? `${proto.brief}\n\n## Revision Request\n${body.instruction}`

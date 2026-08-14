@@ -5,7 +5,7 @@ import { buildPrototypeSystemPrompt } from "./prompts.js";
 import { copyReferencesTo, readPrototypeFiles } from "./references.js";
 import { polishWorkspace } from "./glowup.js";
 import { findReferenceUrl, fetchReferenceStyle, writeReferenceToWorkspace, type ReferenceStyle } from "./webref.js";
-import { savePrototypeFile, updatePrototypeStatus, type Prototype } from "./storage.js";
+import { savePrototypeFile, snapshotVersion, updatePrototypeStatus, type Prototype } from "./storage.js";
 import type { Database } from "../db/connection.js";
 
 // Prototype generation writes many files — give it a generous but bounded window.
@@ -118,6 +118,8 @@ export async function generatePrototype(
     for (const file of files) {
       await savePrototypeFile(db, prototype.id, file.path, file.content);
     }
+
+    await snapshotVersion(db, prototype.id, files);
 
     await updatePrototypeStatus(db, prototype.id, "done");
   } catch (err) {
