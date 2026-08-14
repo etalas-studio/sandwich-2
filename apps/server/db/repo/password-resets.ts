@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { passwordResetTokens } from "../schema.js";
+import { hashToken } from "../../auth/token.js";
 import type { Database } from "../connection.js";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -17,7 +18,7 @@ export async function createResetToken(db: Database, userId: string): Promise<st
   const token = randomBytes(32).toString("base64url");
   const now = new Date();
   await db.insert(passwordResetTokens).values({
-    token,
+    token: hashToken(token),
     userId,
     expiresAt: new Date(now.getTime() + RESET_TOKEN_TTL_MS),
     createdAt: now,
@@ -32,7 +33,7 @@ export async function getValidResetToken(
   const rows = await db
     .select()
     .from(passwordResetTokens)
-    .where(eq(passwordResetTokens.token, token))
+    .where(eq(passwordResetTokens.token, hashToken(token)))
     .limit(1);
   if (rows.length === 0) return null;
   const row = rows[0]!;
@@ -51,5 +52,5 @@ export async function markResetTokenUsed(db: Database, token: string): Promise<v
   await db
     .update(passwordResetTokens)
     .set({ usedAt: new Date() })
-    .where(eq(passwordResetTokens.token, token));
+    .where(eq(passwordResetTokens.token, hashToken(token)));
 }

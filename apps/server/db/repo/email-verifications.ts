@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { emailVerificationTokens } from "../schema.js";
+import { hashToken } from "../../auth/token.js";
 import type { Database } from "../connection.js";
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -17,7 +18,7 @@ export async function createVerificationToken(db: Database, userId: string): Pro
   const token = randomBytes(32).toString("base64url");
   const now = new Date();
   await db.insert(emailVerificationTokens).values({
-    token,
+    token: hashToken(token),
     userId,
     expiresAt: new Date(now.getTime() + VERIFICATION_TOKEN_TTL_MS),
     createdAt: now,
@@ -32,7 +33,7 @@ export async function getValidVerificationToken(
   const rows = await db
     .select()
     .from(emailVerificationTokens)
-    .where(eq(emailVerificationTokens.token, token))
+    .where(eq(emailVerificationTokens.token, hashToken(token)))
     .limit(1);
   if (rows.length === 0) return null;
   const row = rows[0]!;
@@ -51,5 +52,5 @@ export async function markVerificationTokenUsed(db: Database, token: string): Pr
   await db
     .update(emailVerificationTokens)
     .set({ usedAt: new Date() })
-    .where(eq(emailVerificationTokens.token, token));
+    .where(eq(emailVerificationTokens.token, hashToken(token)));
 }
