@@ -124,6 +124,44 @@ export async function getNextVersionNo(db: Database, documentId: string): Promis
   return (latest?.versionNo ?? 0) + 1;
 }
 
+export async function setDocumentCurrentVersion(
+  db: Database,
+  documentId: string,
+  versionId: string,
+): Promise<void> {
+  await db.update(documents)
+    .set({ currentVersionId: versionId, updatedAt: new Date() })
+    .where(eq(documents.id, documentId));
+}
+
+/** Move the active version pointer (rollback). Does not delete history. */
+export async function rollbackDocument(
+  db: Database,
+  documentId: string,
+  intent: "previous" | "latest",
+): Promise<DocumentVersion | null> {
+  const versions = await listVersions(db, documentId); // descending version_no
+  if (versions.length === 0) return null;
+  const doc = await getDocument(db, documentId);
+  const current = doc?.currentVersionId
+    ? versions.find((v) => v.id === doc.currentVersionId) ?? versions[0]!
+    : versions[0]!;
+
+  let target: DocumentVersion | null = null;
+  if (intent === "latest") {
+    target = versions[0]!;
+  } else {
+    const targetNo = current.versionNo - 1;
+    target = versions.find((v) => v.versionNo === targetNo) ?? null;
+  }
+
+  if (target && target.id !== current.id) {
+    await setDocumentCurrentVersion(db, documentId, target.id);
+    return target;
+  }
+  return null;
+}
+
 // ── conversation ↔ document link ──────────────────────────────────────────────
 
 export async function linkConversationDocument(

@@ -1,9 +1,26 @@
-export function buildPrototypeSystemPrompt(brief: string): string {
+export interface ReferenceStyleTokens {
+  colors: string[];
+  fonts: string[];
+  spacings: string[];
+  radii: string[];
+  shadows: string[];
+}
+
+export function buildPrototypeSystemPrompt(
+  brief: string,
+  reference?: { url: string; tokens: ReferenceStyleTokens } | null,
+): string {
+  const referenceSection = reference
+    ? `## Reference Style (client-provided URL)\nThe client wants the visual style to match ${reference.url}.\nExtracted tokens are in .reference/style.json and the reference page HTML is in .reference/page.html.\nRead both and apply the extracted colors/fonts/spacing/radius/shadow to the prototype. Match the STYLE only — never copy the reference's content, copy, brand names, or images.`
+    : "";
+
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
     `## Client Brief`,
     brief,
+    ``,
+    referenceSection,
     ``,
     `## Required Pages`,
     `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,

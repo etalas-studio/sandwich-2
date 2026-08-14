@@ -22,9 +22,11 @@ import {
   getNextVersionNo,
   linkConversationDocument,
   listConversationDocuments,
+  rollbackDocument,
   type DocumentType,
 } from "../db/documents.js";
 import { generatePrototypeDocument } from "../prototype/engine.js";
+import { parseRollbackIntent } from "../prototype/rollback.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 // ── Sandwich methodology (from sandwich plugin) ──────────────────────────────
@@ -537,6 +539,31 @@ export function registerConversationRunRoutes(
         // ── Model-driven orchestration ────────────────────────────────────
         const lastUserMessage =
           [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+
+        // Rollback intent — DB-only, no AI call.
+        const rollbackIntent = parseRollbackIntent(lastUserMessage);
+        if (rollbackIntent) {
+          const protoDocs = (await listConversationDocuments(db, conversationId))
+            .filter((d) => d.type === "prototype");
+          const protoDoc = protoDocs[0];
+          if (protoDoc) {
+            const rolledBack = await rollbackDocument(db, protoDoc.id, rollbackIntent);
+            const msg = rolledBack
+              ? `Prototype di-rollback ke versi v${rolledBack.versionNo}.`
+              : rollbackIntent === "latest"
+                ? "Prototype sudah di versi terbaru."
+                : "Tidak ada versi sebelumnya untuk di-rollback.";
+            await addChatMessage(db, { conversationId, role: "assistant", content: msg });
+            broadcast({
+              type: "done",
+              text: msg,
+              conversation: (await getConversation(db, conversationId))!,
+            });
+            closeInFlight(conversationId);
+            return;
+          }
+        }
+
         let stage = conversation.pipelineStage as PipelineStage;
         let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
 

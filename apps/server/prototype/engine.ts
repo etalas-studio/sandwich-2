@@ -3,6 +3,13 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { buildPrototypeSystemPrompt } from "./prompts.js";
 import { saveDocumentFile } from "../db/documents.js";
+import {
+  findReferenceUrl,
+  fetchReferenceStyle,
+  writeReferenceToWorkspace,
+} from "./webref.js";
+import { copyReferencesTo } from "./references.js";
+import { polishWorkspace } from "./glowup.js";
 import type { Database } from "../db/connection.js";
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -43,6 +50,21 @@ export async function generatePrototypeDocument(
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
+    // Reference URL style (best-effort). Writes .reference/ into the workspace.
+    let reference: { url: string; tokens: import("./webref.js").CssTokens } | null = null;
+    const refUrl = findReferenceUrl(input.brief);
+    if (refUrl) {
+      try {
+        const style = await fetchReferenceStyle(refUrl);
+        if (style) {
+          writeReferenceToWorkspace(workspace, style);
+          reference = { url: style.url, tokens: style.tokens };
+        }
+      } catch {
+        // ignore reference failures — fall back to the getokui library
+      }
+    }
+
     const pi = await import("@earendil-works/pi-coding-agent");
 
     const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
@@ -70,7 +92,7 @@ export async function generatePrototypeDocument(
       }
     });
 
-    const systemPrompt = buildPrototypeSystemPrompt(input.brief);
+    const systemPrompt = buildPrototypeSystemPrompt(input.brief, reference);
 
     try {
       const promptPromise = session.prompt(systemPrompt);
@@ -89,12 +111,21 @@ export async function generatePrototypeDocument(
       throw err;
     }
 
+    // Glowup pass (best-effort, non-destructive): polish index.html + styles.css.
+    try {
+      copyReferencesTo(workspace);
+      await polishWorkspace(workspace, input.brief, signal);
+    } catch (err) {
+      console.warn("[prototype] glowup failed, keeping pass-1 output:", err instanceof Error ? err.message : err);
+    }
+
     const files = listFilesRecursive(workspace);
     if (files.length === 0) throw new Error("no files generated");
 
     const saved: string[] = [];
     for (const fullPath of files) {
       const relPath = relative(workspace, fullPath).split("\\").join("/");
+      if (relPath.startsWith(".")) continue; // skip .reference / .getokui
       const dot = relPath.lastIndexOf(".");
       const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
       if (!ALLOWED_EXTENSIONS.has(ext)) continue;

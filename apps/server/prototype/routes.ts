@@ -1,6 +1,6 @@
 import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
-import { getDocument, getDocumentFile, getLatestVersion } from "../db/documents.js";
+import { getDocument, getDocumentFile, getLatestVersion, getVersion } from "../db/documents.js";
 import type { Database } from "../db/connection.js";
 
 const MIME: Record<string, string> = {
@@ -29,6 +29,12 @@ async function resolveVersionNo(
   if (versionStr) {
     const n = Number.parseInt(versionStr, 10);
     return Number.isFinite(n) ? n : null;
+  }
+  // Serve the active (current) version, falling back to latest.
+  const doc = await getDocument(db, documentId);
+  if (doc?.currentVersionId) {
+    const current = await getVersion(db, doc.currentVersionId);
+    if (current) return current.versionNo;
   }
   const latest = await getLatestVersion(db, documentId);
   return latest?.versionNo ?? null;
