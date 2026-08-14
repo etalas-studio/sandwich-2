@@ -1,6 +1,23 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { buildGlowupSystemPrompt } from "./glowup.js";
+import { buildGlowupSystemPrompt, glowupModelId } from "./glowup.js";
+
+describe("glowupModelId", () => {
+  it("defaults to deepseek-v4-flash", () => {
+    const prev = process.env.GLOWUP_MODEL;
+    delete process.env.GLOWUP_MODEL;
+    assert.equal(glowupModelId(), "deepseek-v4-flash");
+    if (prev !== undefined) process.env.GLOWUP_MODEL = prev;
+  });
+
+  it("honors GLOWUP_MODEL override", () => {
+    const prev = process.env.GLOWUP_MODEL;
+    process.env.GLOWUP_MODEL = "deepseek-v4-pro";
+    assert.equal(glowupModelId(), "deepseek-v4-pro");
+    if (prev !== undefined) process.env.GLOWUP_MODEL = prev;
+    else delete process.env.GLOWUP_MODEL;
+  });
+});
 
 describe("buildGlowupSystemPrompt", () => {
   const prompt = buildGlowupSystemPrompt({ brief: "A SaaS for warehouse inventory" });
@@ -32,6 +49,11 @@ describe("buildGlowupSystemPrompt", () => {
     assert.ok(prompt.includes("centered-hero-of-doom"));
     assert.ok(prompt.includes("layout.hero_layout"));
     assert.ok(prompt.includes("composition_techniques"));
+  });
+
+  it("scopes edits to the landing page only", () => {
+    assert.ok(prompt.includes("ONLY index.html and styles.css"));
+    assert.ok(prompt.includes("Do NOT touch dashboard.html, module pages, or script.js"));
   });
 
   it("ends with the DONE protocol", () => {

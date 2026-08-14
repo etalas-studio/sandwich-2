@@ -2,6 +2,10 @@ export interface GlowupPromptInput {
   brief: string;
 }
 
+export function glowupModelId(): string {
+  return process.env.GLOWUP_MODEL ?? "deepseek-v4-flash";
+}
+
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
   return [
     `You are SANDWICH's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
@@ -15,10 +19,10 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     `- .getokui/dna/<slug>.json — pre-extracted "Design DNA" for each template (real class strings, spacing, radius, shadow, layout, motion).`,
     ``,
     `## Your Process`,
-    `1. List the workspace files (index.html, dashboard.html, styles.css, script.js, and module pages) and read each one.`,
+    `1. Read ONLY index.html and styles.css (the landing page and the shared stylesheet). Do NOT read or edit dashboard.html, module pages, or script.js.`,
     `2. Read .getokui/index.json and pick 1–3 references whose category/tags/description best match the brief's vertical and mood.`,
     `3. Read those references' .getokui/dna/<slug>.json files. Extract concrete tokens (layout.hero_layout, hero.h1_classes, hero.cta_classes, spacing.section_padding, radius, shadow, motion.keyframes_css, layout.composition_techniques).`,
-    `4. Apply those tokens to the existing files IN PLACE (edit, don't recreate).`,
+    `4. Apply those tokens to index.html and styles.css IN PLACE (edit, don't recreate). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
     ``,
     `## STYLE, NOT CONTENT (MANDATORY)`,
     `- Keep every headline, paragraph, table row, form label, chart, and piece of demo data exactly as it is. Restyle, never rewrite copy.`,
@@ -28,7 +32,7 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     `## Preserve the Existing Stack & Structure (MANDATORY)`,
     `- The prototype is plain static HTML + CSS + JS (no Tailwind, no bundler). Keep it that way.`,
     `- Keep the same files and paths. Keep styles.css as the single stylesheet and script.js as the single script. Keep all CRUD interactions (localStorage) and Chart.js usage working.`,
-    `- Do NOT add new files unless strictly necessary (e.g. an asset). Do NOT rename or reorganize files.`,
+    `- Edit ONLY index.html and styles.css. Do NOT touch dashboard.html, module pages, or script.js. Do NOT add new files unless strictly necessary. Do NOT rename or reorganize files.`,
     ``,
     `## Tailwind → CSS Translation (the DNA speaks Tailwind)`,
     `The DNA files express values as Tailwind utility classes. Translate them into equivalent plain CSS in styles.css. Common mapping:`,
@@ -56,7 +60,7 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     `- Vary section rhythm (some full-bleed, some contained).`,
     ``,
     `## Output`,
-    `Edit the files in place with the write/edit tool. After finishing, respond with ONLY the text "DONE".`,
+    `Edit only index.html and styles.css in place with the write/edit tool. After finishing, respond with ONLY the text "DONE".`,
   ].join("\n");
 }
 
@@ -71,7 +75,7 @@ export async function polishWorkspace(
 
   const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
   const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
+  const modelId = glowupModelId();
   const model = modelRuntime.getModel(provider, modelId);
   if (!model) {
     throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
