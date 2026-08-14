@@ -8,6 +8,7 @@ export interface User {
   username: string;
   email: string;
   passwordHash: string;
+  emailVerified: boolean;
   createdAt: Date;
 }
 
@@ -55,12 +56,17 @@ export async function updatePassword(db: Database, userId: string, newPasswordHa
   if (result.rowCount === 0) throw new Error("user not found");
 }
 
+export async function markEmailVerified(db: Database, userId: string): Promise<void> {
+  await db.update(users).set({ emailVerified: true }).where(eq(users.id, userId));
+}
+
 function mapUser(row: typeof users.$inferSelect): User {
   return {
     id: row.id,
     username: row.username,
     email: row.email,
     passwordHash: row.passwordHash,
+    emailVerified: row.emailVerified,
     createdAt: row.createdAt,
   };
 }
