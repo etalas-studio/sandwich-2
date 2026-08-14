@@ -559,6 +559,17 @@ export function registerConversationRunRoutes(
           }
         }
 
+        // Enforce the PRD document quota before generating.
+        if (stage === "generating" && pendingType === "prd") {
+          const sub = await getActiveSubscription(db, auth.userId);
+          const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
+          if (!plan) throw new Error("active subscription required");
+          if (plan.limit !== null) {
+            const used = await getMonthlyUsage(db, auth.userId, "prd");
+            if (used >= plan.limit) throw new Error("monthly quota reached");
+          }
+        }
+
         const useOpenCode = engine === "opencode";
         const hasGroqFallback = !!process.env.GROQ_API_KEY;
 
@@ -618,6 +629,9 @@ export function registerConversationRunRoutes(
                   promptUsed: lastUserMessage,
                 });
                 await linkConversationDocument(db, conversationId, doc.id);
+              }
+              if (pendingType === "prd") {
+                await incrementUsage(db, auth.userId, "prd");
               }
               nextStage = "awaiting_next";
               pendingType = null;

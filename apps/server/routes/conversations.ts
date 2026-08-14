@@ -66,23 +66,15 @@ export function registerConversationRoutes(router: Router, db: Database): void {
       return;
     }
 
-    // Every document type still requires an active subscription, but only
-    // PRD-type briefs consume the monthly document quota.
+    // A conversation is just a thread; the document quota is enforced when a
+    // PRD document is actually generated (see the orchestration in generate).
     const sub = await getActiveSubscription(db, auth.userId);
-    const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
-    if (!plan) {
+    if (!sub) {
       sendJson(res, 403, { error: "active subscription required" });
       return;
     }
 
     const conversationType = (type as ConversationType) ?? "general";
-    if (conversationType === "prd" && plan.limit !== null) {
-      const used = await getMonthlyUsage(db, auth.userId, "prd");
-      if (used >= plan.limit) {
-        sendJson(res, 403, { error: "monthly quota reached" });
-        return;
-      }
-    }
 
     try {
       const conversation = await createConversation(db, auth.userId, {
@@ -91,9 +83,6 @@ export function registerConversationRoutes(router: Router, db: Database): void {
         title: title ?? prompt,
         prompt,
       });
-      if (conversationType === "prd") {
-        await incrementUsage(db, auth.userId, "prd");
-      }
       sendJson(res, 201, conversation);
     } catch (err) {
       sendCaughtError(res, err, "conversation creation");
