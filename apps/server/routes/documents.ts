@@ -1,6 +1,14 @@
 import type { Router } from "../router.js";
+import type { ServerResponse } from "node:http";
 import { authenticateRequest } from "../auth/middleware.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
+import {
+  exportDocument,
+  normalizeFormat,
+  sanitizeFilename,
+  parseQueryParam,
+  type ExportResult,
+} from "../pipeline/export.js";
 import {
   findDocumentByTitle,
   getDocument,
@@ -8,8 +16,15 @@ import {
   listDocuments,
   listVersions,
   updateDocumentTitle,
+  type Document,
 } from "../db/documents.js";
 import type { Database } from "../db/connection.js";
+
+function withPreviewUrl(doc: Document) {
+  if (doc.type !== "prototype") return { ...doc, previewUrl: null };
+  const domain = process.env.PREVIEW_DOMAIN;
+  return { ...doc, previewUrl: domain ? `https://${domain}/p/${doc.id}/` : `/p/${doc.id}/` };
+}
 
 export function registerDocumentRoutes(router: Router, db: Database): void {
   // List the user's documents (title-scoped registry).
@@ -19,7 +34,8 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    sendJson(res, 200, await listDocuments(db, auth.userId));
+    const docs = await listDocuments(db, auth.userId);
+    sendJson(res, 200, docs.map(withPreviewUrl));
   });
 
   // Look up a document by exact title ("buka PRD X").
@@ -51,7 +67,40 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
     }
     const latest = await getLatestVersion(db, doc.id);
     const versions = await listVersions(db, doc.id);
-    sendJson(res, 200, { ...doc, latestVersion: latest, versions });
+    sendJson(res, 200, { ...withPreviewUrl(doc), latestVersion: latest, versions });
+  });
+
+  // Export the latest version of a document as PDF/MD/DOC.
+  router.get("/api/documents/:id/export", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthenticated" });
+      return;
+    }
+    const doc = await getDocument(db, params.id!);
+    if (!doc || doc.userId !== auth.userId) {
+      sendJson(res, 404, { error: "document not found" });
+      return;
+    }
+    const latest = await getLatestVersion(db, doc.id);
+    if (!latest) {
+      sendJson(res, 400, { error: "document has no content yet" });
+      return;
+    }
+    const format = normalizeFormat(parseQueryParam(req.url, "format"));
+    try {
+      const result: ExportResult = await exportDocument(latest.content, format);
+      const filename = sanitizeFilename(doc.title, result.extension);
+      res.writeHead(200, {
+        "content-type": result.mimeType,
+        "content-length": result.buffer.length,
+        "content-disposition": `attachment; filename="${filename}"`,
+        "cache-control": "no-store",
+      });
+      res.end(result.buffer);
+    } catch (err) {
+      sendJson(res, 500, { error: "export failed" });
+    }
   });
 
   // Rename a document title (title is the retrieval key).

@@ -10,7 +10,7 @@ import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 import { ExportMenu } from './ExportMenu'
-import PrototypeList from './PrototypeList'
+import DocumentsPanel from './DocumentsPanel'
 import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
 import { CHIPS } from '../lib/promptChips'
 import { useLanguage, type StringKey } from '../lib/i18n'
@@ -30,7 +30,7 @@ const bowlby = "'Bowlby One', system-ui"
 const inter = "'Inter', sans-serif"
 
 const NAV = [
-  { label: 'Prototype', icon: 'solar:widget-linear', id: 'prototypes' },
+  { label: 'Documents', icon: 'solar:folder-linear', id: 'documents' },
 ]
 
 const QUICK_TYPES = [
@@ -1489,7 +1489,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'prototypes') return <PrototypeList />
+    if (activeNav === 'documents') return <DocumentsPanel />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1621,7 +1621,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 >
                   <iconify-icon icon={item.icon} width="15" />
                   {item.label}
-                  {item.id !== 'prototypes' && count > 0 && (
+                  {item.id !== 'documents' && count > 0 && (
                     <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>{count}</span>
                   )}
                 </button>
