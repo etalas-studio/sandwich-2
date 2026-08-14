@@ -8,6 +8,7 @@ interface Prototype {
   brief: string;
   status: string;
   createdAt: string;
+  currentVersion?: number;
   previewUrl?: string;
 }
 
@@ -192,12 +193,20 @@ export default function PrototypeView() {
     if (!active || !instruction.trim()) return;
     setRefreshing(true);
     try {
-      await fetch(apiUrl(`/api/prototypes/${active.id}/regenerate`), {
+      const res = await fetch(apiUrl(`/api/prototypes/${active.id}/regenerate`), {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ instruction: instruction.trim() }),
       });
+      const data = await res.json();
+      if (data.action === "rollback") {
+        setInstruction("");
+        setRefreshing(false);
+        setIframeKey((k) => k + 1);
+        setActive({ ...active, currentVersion: data.version ?? 1 });
+        return;
+      }
       setInstruction("");
       setActive({ ...active, status: "generating" });
     } catch {
@@ -214,6 +223,9 @@ export default function PrototypeView() {
           <span className="font-semibold">{active.name}</span>
           <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: active.status === "done" ? "#dcfce7" : active.status === "failed" ? "#fee2e2" : "#fef3c7", color: active.status === "done" ? "#16a34a" : active.status === "failed" ? "#dc2626" : "#b45309" }}>
             {active.status}
+          </span>
+          <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: "#e0e7ff", color: "#4338ca" }}>
+            v{active.currentVersion ?? 1}
           </span>
           <a href={active.previewUrl ?? `/p/${active.shareId}/`} target="_blank" rel="noreferrer" className="text-sm underline ml-auto">Share link</a>
         </div>
