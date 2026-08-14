@@ -9,6 +9,9 @@ import {
   parseCookies,
 } from "../auth/cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import { createVerificationToken } from "../db/repo/email-verifications.js";
+import { sendEmail } from "../pipeline/email.js";
+import { verificationLink } from "./email-verification.js";
 import type { Database } from "../db/connection.js";
 
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
@@ -54,9 +57,26 @@ export function registerAuthRoutes(
       if (!body.username || !body.email || !body.password) {
         throw new AuthError(400, "username, email, and password are required");
       }
-      handleAuthRequest(res, () =>
-        register(db, { username: body.username!, email: body.email!, password: body.password! }),
-      );
+
+      const { user } = await register(db, {
+        username: body.username!,
+        email: body.email!,
+        password: body.password!,
+      });
+
+      const token = await createVerificationToken(db, user.id);
+      const link = verificationLink(token);
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your email — SANDWICH",
+        text: `Verifikasi email kamu: ${link}`,
+        html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
+      });
+
+      sendJson(res, 201, {
+        user: { username: user.username, email: user.email },
+        verificationPending: true,
+      });
     } catch (err) {
       sendCaughtError(res, err, "register");
     }
