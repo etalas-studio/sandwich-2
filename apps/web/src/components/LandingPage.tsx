@@ -239,7 +239,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                     className="text-xs px-3 py-1.5 rounded-full"
                     style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
                   >
-                    <option value="">Auto — let SANDWICH ask</option>
+                    <option value="">Auto</option>
                     <option value="prd">PRD</option>
                     <option value="quotation">Quotation</option>
                     <option value="prototype">Prototype</option>
