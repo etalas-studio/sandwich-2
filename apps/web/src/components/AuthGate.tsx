@@ -8,6 +8,7 @@ import App from '../App'
 import LandingPage from './LandingPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import ResetPasswordPage from './ResetPasswordPage'
+import VerifyEmailPage from './VerifyEmailPage'
 
 export default function AuthGate() {
   const {
@@ -52,6 +53,10 @@ export default function AuthGate() {
 
   if (location.pathname.startsWith('/reset-password')) {
     return <ResetPasswordPage onBack={() => navigate('/')} />
+  }
+
+  if (location.pathname.startsWith('/verify-email')) {
+    return <VerifyEmailPage />
   }
 
   if (isLoading) {

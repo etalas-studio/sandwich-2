@@ -184,6 +184,14 @@ const STRINGS = {
   reset_submit: { en: 'Update password', id: 'Perbarui password' },
   reset_success: { en: 'Password updated. You can now log in.', id: 'Password diperbarui. Kamu bisa login sekarang.' },
   reset_mismatch: { en: 'Passwords do not match', id: 'Password tidak cocok' },
+  setup_verify_sent_title: { en: 'Check your email', id: 'Cek email kamu' },
+  setup_verify_sent_desc: { en: 'We sent a verification link. Click it to activate your account.', id: 'Kami kirim link verifikasi. Klik untuk aktivasi akun kamu.' },
+  verify_title: { en: 'Verify email', id: 'Verifikasi email' },
+  verify_success: { en: 'Your email is verified. You can log in now.', id: 'Email kamu terverifikasi. Kamu bisa login sekarang.' },
+  verify_invalid: { en: 'This link is invalid or expired.', id: 'Link ini tidak valid atau sudah kadaluarsa.' },
+  login_email_not_verified: { en: 'Email not verified yet. Check your inbox or resend.', id: 'Email belum terverifikasi. Cek inbox atau kirim ulang.' },
+  login_resend: { en: 'Resend verification', id: 'Kirim ulang verifikasi' },
+  resend_success: { en: 'If that email is registered and unverified, a new link has been sent.', id: 'Kalau email itu terdaftar & belum terverifikasi, link baru sudah dikirim.' },
 
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },

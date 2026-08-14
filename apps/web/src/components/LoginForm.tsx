@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLanguage } from '../lib/i18n'
+import { postResendVerification } from '../api/auth'
 
 const bowlby = "'Bowlby One', system-ui"
 
@@ -18,11 +19,27 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [resendEmail, setResendEmail] = useState('')
+  const [resendSent, setResendSent] = useState(false)
+  const [resending, setResending] = useState(false)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (isPending) return
     void onSubmit(username, password)
+  }
+
+  const handleResend = async () => {
+    if (!resendEmail.trim() || resending) return
+    setResending(true)
+    try {
+      await postResendVerification(resendEmail.trim())
+      setResendSent(true)
+    } catch {
+      /* ignore */
+    } finally {
+      setResending(false)
+    }
   }
 
   return (
@@ -79,10 +96,33 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
             </div>
           )}
 
-          {error && (
-            <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>
-              {error}
-            </p>
+          {error === 'email not verified' ? (
+            <div className="flex flex-col gap-2 text-xs rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(249,24,20,0.08)' }}>
+              <p style={{ color: '#f91814' }}>{tr('login_email_not_verified')}</p>
+              {resendSent ? (
+                <p style={{ color: '#16a34a' }}>{tr('resend_success')}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="email"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    placeholder={tr('forgot_email_placeholder')}
+                    className="flex-1 bg-white rounded-lg px-2 py-1.5 outline-none"
+                    style={{ color: '#111827', border: '1px solid rgba(0,0,0,0.1)' }}
+                  />
+                  <button type="button" onClick={handleResend} disabled={resending} className="shrink-0 px-2.5 py-1.5 rounded-lg font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>
+                    {tr('login_resend')}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            error && (
+              <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>
+                {error}
+              </p>
+            )
           )}
 
           <button

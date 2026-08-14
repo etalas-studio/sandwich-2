@@ -5,7 +5,7 @@ import { useLanguage } from "../lib/i18n";
 const bowlby = "'Bowlby One', system-ui";
 
 interface SetupFormProps {
-  onSubmit: (username: string, email: string, password: string) => void;
+  onSubmit: (username: string, email: string, password: string) => Promise<unknown>;
   error: string | null;
   isPending: boolean;
   onBack: () => void;
@@ -24,13 +24,45 @@ export default function SetupForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (isPending) return;
     if (!username.trim() || !email.trim() || !password.trim()) return;
-    onSubmit(username.trim(), email.trim(), password);
+    try {
+      await onSubmit(username.trim(), email.trim(), password);
+      setRegistered(true);
+    } catch {
+      /* error surfaced via error prop */
+    }
   };
+
+  if (registered) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10"
+        style={{ fontFamily: "'Inter', sans-serif", backgroundColor: "#F4EBE1" }}
+      >
+        <div
+          className="w-full max-w-sm rounded-3xl p-8"
+          style={{ backgroundColor: "#ffffff", boxShadow: "0 20px 50px rgba(0,0,0,0.08)" }}
+        >
+          <h1 className="text-2xl text-center tracking-tight mb-1.5" style={{ fontFamily: bowlby, color: "#111827" }}>
+            {tr("setup_verify_sent_title")}
+          </h1>
+          <p className="text-sm text-zinc-500 text-center mb-6">{tr("setup_verify_sent_desc")}</p>
+          <button
+            onClick={onBack}
+            className="w-full py-3 rounded-full text-sm font-semibold text-white"
+            style={{ backgroundColor: "#0a0a0a" }}
+          >
+            {tr("auth_back")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
