@@ -1,0 +1,82 @@
+{
+  "slug": "ai-sales-platform",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.1] mb-8 font-geist font-light tracking-tighter reveal-on-scroll",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "px-4 py-1.5 text-xs font-medium text-black bg-[#c6f91f] rounded font-geist reveal-on-scroll"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-16",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-screen-2xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-lg"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee-scroll",
+      "reveal"
+    ],
+    "keyframes_css": [
+      "@keyframes reveal { from { opacity: 0; transform: translateY(20px); filter: blur(8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }",
+      "@keyframes marquee-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_4s_linear_infinite]",
+      "animate-marquee",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

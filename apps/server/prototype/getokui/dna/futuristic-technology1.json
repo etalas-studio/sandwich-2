@@ -1,0 +1,82 @@
+{
+  "slug": "futuristic-technology1",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "mb-6 text-center text-5xl font-light leading-[1.1] tracking-tighter drop-shadow-2xl md:text-6xl lg:text-7xl",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "block rounded-full bg-white px-5 py-1.5 text-sm font-semibold text-black transition-all hover:bg-gray-200 outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-40",
+      "pt-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "vertical-text",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "dropBeam"
+    ],
+    "keyframes_css": [
+      "@keyframes dropBeam { 0% { transform: translateY(-100%); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(100vh); opacity: 0; } }"
+    ],
+    "animate_classes": [
+      "animate-on-scroll",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

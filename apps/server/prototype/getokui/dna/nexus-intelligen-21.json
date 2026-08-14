@@ -1,0 +1,50 @@
+{
+  "slug": "nexus-intelligen-21",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero__title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "glowSpin",
+      "logoScroll",
+      "pulse"
+    ],
+    "keyframes_css": [
+      "@keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }",
+      "@keyframes logoScroll { to { transform: translateX(-50%); } }",
+      "@keyframes glowSpin { to { --glow-angle: 360deg; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": []
+}

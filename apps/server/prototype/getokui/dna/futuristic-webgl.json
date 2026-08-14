@@ -1,0 +1,80 @@
+{
+  "slug": "futuristic-webgl",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-orbitron text-white uppercase leading-[1.1] tracking-tight text-4xl md:text-6xl lg:text-7xl drop-shadow-[0_0_30px_rgba(0,255,255,0.15)] kinetic-heading in-view",
+    "h1_sizes": [
+      "text-4xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "group relative inline-flex items-center gap-3 border border-cyan-400 bg-cyan-400/10 text-cyan-400 font-orbitron font-medium text-xs uppercase tracking-[0.2em] px-8 py-4 transition-all duration-300 hover:bg-cyan-400 hover:text-black hover:shadow-[0_0_40px_rgba(0,255,255,0.4)] rounded-none"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "py-32",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "split",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "hero-rise",
+      "scan-horizontal"
+    ],
+    "keyframes_css": [
+      "@keyframes scan-horizontal { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }",
+      "@keyframes hero-rise { 0% { opacity: 0; transform: translate3d(0, 24px, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }"
+    ],
+    "animate_classes": [
+      "animate-hero-rise",
+      "animate-pulse",
+      "animate-scan-line"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

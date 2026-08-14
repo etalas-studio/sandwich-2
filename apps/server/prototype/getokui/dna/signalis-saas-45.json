@@ -1,0 +1,72 @@
+{
+  "slug": "signalis-saas-45",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero__title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "badge-glow",
+      "bar-grow",
+      "btn-shimmer",
+      "draw-line",
+      "fade-in",
+      "float-particle",
+      "hero-btn-breathe",
+      "line-travel",
+      "orb-float",
+      "pulse-appear",
+      "pulse-dot",
+      "ring-pulse",
+      "ring-pulse-center",
+      "slide-t",
+      "spark-grow",
+      "spin-angle",
+      "ticker",
+      "trace-grow",
+      "type-in",
+      "wave"
+    ],
+    "keyframes_css": [
+      "@keyframes spin-angle{to{--angle:360deg}}",
+      "@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 3px rgba(99,102,241,.2),0 0 12px rgba(99,102,241,.6)}50%{box-shadow:0 0 0 6px rgba(99,102,241,.1),0 0 24px rgba(99,102,241,.8)}}",
+      "@keyframes badge-glow{0%,100%{box-shadow:0 0 16px rgba(99,102,241,.15)}50%{box-shadow:0 0 28px rgba(99,102,241,.35)}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

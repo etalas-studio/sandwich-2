@@ -1,0 +1,86 @@
+{
+  "slug": "clawos-ai-interface",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-reveal text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] text-white glitch-target mix-blend-difference",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "bg-transparent border border-black text-black px-8 py-3 rounded-full text-sm font-medium hover:bg-black hover:text-lime-300 transition-all"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "pt-20",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "flicker",
+      "glitch-anim",
+      "letter-anim",
+      "shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes glitch-anim { 0% { transform: translate(0); text-shadow: none; } 20% { transform: translate(-2px, 1px) skewX(-2deg); text-shadow: 2px 0 rgba(163, 230, 53, 0.3), -2px 0 rgba(255, 255, 255, 0.3); } 40% { transform: translate(2px, -1px) skewX(2deg); text-shadow: -2px 0 rgba(163, 230, 53, 0.3), 2px 0 rgba(255, 255, 255, 0.3); } 60% { transform: translate(-1px, 2px); } 100% { transform: translate(0); text-shadow: none; } }",
+      "@keyframes shimmer { 100% { transform: translateX(100%); } }",
+      "@keyframes letter-anim{50%{text-shadow:0 0 3px #ffffff88;color:#fff}}"
+    ],
+    "animate_classes": [
+      "animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[shimmer_1.5s_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "slug": "vellum-architecture",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "display hero-title smoke-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "mq",
+      "ping"
+    ],
+    "keyframes_css": [
+      "@keyframes ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }",
+      "@keyframes mq { from { transform: translateX(0); } to { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "scroll-reveal-attr",
+      "custom-keyframes"
+    ]
+  },
+  "signature": []
+}

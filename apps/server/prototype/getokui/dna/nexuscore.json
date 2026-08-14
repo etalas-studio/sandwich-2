@@ -1,0 +1,67 @@
+{
+  "slug": "nexuscore",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl sm:text-5xl lg:text-6xl uppercase leading-none text-white mb-6 tracking-tighter relative z-10",
+    "h1_sizes": [
+      "text-4xl",
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "bg-[#00e5ff] hover:bg-[#00cce5] text-black px-6 py-3.5 rounded uppercase font-mono text-xs font-normal tracking-widest transition-all flex items-center gap-2 w-full sm:w-auto justify-center shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)]"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded",
+    "rounded-full",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": false,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

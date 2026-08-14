@@ -1,0 +1,53 @@
+{
+  "slug": "project-management-99",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "seq-el",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "cat1FadeSlideUp",
+      "cat7blink"
+    ],
+    "keyframes_css": [
+      "@keyframes cat1FadeSlideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }",
+      "@keyframes cat7blink { 50% { opacity: 0; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

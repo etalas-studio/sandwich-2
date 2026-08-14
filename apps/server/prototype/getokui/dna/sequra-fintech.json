@@ -1,0 +1,79 @@
+{
+  "slug": "sequra-fintech",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-serif tracking-tight text-[clamp(2.5rem,6.5vw,6rem)] leading-[0.9] text-brand-cream mb-10 select-none",
+    "h1_sizes": [],
+    "cta_classes": "mt-auto group flex items-center justify-between rounded bg-brand-cream text-brand-bg px-5 py-3 hover:bg-white transition-all duration-300"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-28",
+      "py-16"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-6xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-2xl"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "auraFadeUp",
+      "auraWordIn",
+      "heroBeamFadeIn",
+      "heroBeamFlow"
+    ],
+    "keyframes_css": [
+      "@keyframes auraFadeUp{from{opacity:0;transform:translateY(28px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}",
+      "@keyframes auraWordIn{from{opacity:0;transform:translateY(0.5em) rotate(2deg);filter:blur(6px)}to{opacity:1;transform:translateY(0) rotate(0);filter:blur(0)}}",
+      "@keyframes heroBeamFlow{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}"
+    ],
+    "animate_classes": [
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

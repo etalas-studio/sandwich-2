@@ -1,0 +1,120 @@
+{
+  "slug": "nova-ui-spatial",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl lg:text-[84px] font-semibold tracking-tighter text-slate-100 leading-[1.05] mb-8 flex flex-wrap gap-x-[0.2em] gap-y-2 hero-heading",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl"
+    ],
+    "cta_classes": "w-full sm:w-auto bg-slate-100 text-slate-950 px-8 py-4 rounded-full text-sm font-medium hover:bg-white transition-all duration-300 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-xl",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blink",
+      "countUp",
+      "dash-move",
+      "dashMove",
+      "drawChart",
+      "fadeChart",
+      "float-up",
+      "float1",
+      "float2",
+      "globe-spin",
+      "marqueeLeft",
+      "marqueeRight",
+      "price-pop-anim",
+      "pulseGlow",
+      "scroll-logos",
+      "typingText",
+      "viz-fade-in"
+    ],
+    "keyframes_css": [
+      "@keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes globe-spin { 0% { transform: rotateX(15deg) rotateY(0deg); } 100% { transform: rotateX(15deg) rotateY(360deg); } }",
+      "@keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }"
+    ],
+    "animate_classes": [
+      "animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[spin_10s_linear_infinite_reverse]",
+      "animate-[spin_15s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-blink",
+      "animate-counter",
+      "animate-dash",
+      "animate-dash-move",
+      "animate-draw-chart",
+      "animate-fade-chart",
+      "animate-float",
+      "animate-float-1",
+      "animate-float-2",
+      "animate-globe",
+      "animate-marquee-left",
+      "animate-marquee-right",
+      "animate-pulse",
+      "animate-pulse-glow",
+      "animate-scroll-logos",
+      "animate-typing",
+      "animate-viz-fade-in"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

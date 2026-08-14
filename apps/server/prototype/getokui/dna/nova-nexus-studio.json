@@ -1,0 +1,70 @@
+{
+  "slug": "nova-nexus-studio",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title mb-8 leading-none",
+    "h1_sizes": [],
+    "cta_classes": "btn-gold hidden md:inline-flex rounded-full px-6 py-3 text-xs"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-3xl"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "fadeInScale",
+      "slideUp",
+      "sweep"
+    ],
+    "keyframes_css": [
+      "@keyframes sweep { 0% {opacity: 0; transform: translateY(-10px)} 100% {opacity: 1; transform: translateY(0)} }",
+      "@keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }",
+      "@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-[slideUp_1.4s_ease_forwards]",
+      "animate-[slideUp_1s_ease_forwards]"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius"
+  ]
+}

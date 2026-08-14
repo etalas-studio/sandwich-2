@@ -45,7 +45,10 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
       passwordHash,
     });
   } catch (err) {
-    if (err instanceof Error && "code" in err && err.code === "23505") {
+    const code =
+      (err as { code?: string })?.code ??
+      (err as { cause?: { code?: string } })?.cause?.code;
+    if (code === "23505") {
       throw new AuthError(409, "username or email already taken");
     }
     throw err;

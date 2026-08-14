@@ -1,0 +1,77 @@
+{
+  "slug": "forest-resort",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl md:text-8xl lg:text-9xl text-white leading-[0.9] tracking-tighter mb-8 font-oswald font-normal [animation:animationIn_0.8s_ease-out_0.1s_both] animate-on-scroll",
+    "h1_sizes": [
+      "text-6xl",
+      "text-8xl",
+      "text-9xl"
+    ],
+    "cta_classes": "bg-white text-stone-900 px-8 py-4 rounded-full text-sm font-medium hover:bg-stone-200 transition-colors flex items-center gap-2 font-sans"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "py-20",
+      "pt-24"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-8",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "bento-grid",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }"
+    ],
+    "animate_classes": [
+      "animate-[pulse_10s_ease-in-out_infinite]",
+      "animate-on-scroll",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

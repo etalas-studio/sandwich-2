@@ -1,0 +1,99 @@
+{
+  "slug": "futuristic-technology",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-6xl lg:text-7xl mb-6 max-w-4xl mx-auto leading-[1.05] drop-shadow-2xl tracking-tight font-extralight text-white gsap-reveal",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "inline-flex px-7 py-3 bg-white text-black rounded-xl text-base font-normal hover:bg-gray-200 transition-colors shadow-sm"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "py-24",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-4xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-sm",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blink-caret",
+      "flashlight-move",
+      "reverse-spin",
+      "sonar-ripple",
+      "typing"
+    ],
+    "keyframes_css": [
+      "@keyframes typing { 0% { max-width: 0; opacity: 0; } 1% { opacity: 1; } 100% { max-width: 100%; opacity: 1; } }",
+      "@keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #10b981; } }",
+      "@keyframes reverse-spin { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_2s_linear_infinite]",
+      "animate-[spin_3s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-reverse-spin",
+      "animate-sonar",
+      "animate-type-1",
+      "animate-type-2",
+      "animate-type-3",
+      "animate-type-4",
+      "animate-type-5",
+      "animate-type-6",
+      "animate-type-7"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

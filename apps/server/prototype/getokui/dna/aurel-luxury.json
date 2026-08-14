@@ -1,0 +1,81 @@
+{
+  "slug": "aurel-luxury",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "max-w-5xl text-5xl tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl font-gloock font-normal aura-words",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "group inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-semibold text-neutral-950 shadow-2xl shadow-black/25 transition duration-300 hover:-translate-y-1 hover:bg-amber-50 font-manrope aura-reveal"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "pt-28"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-5",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "aura-testimonials-marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes aura-testimonials-marquee { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(calc(-50% - 0.5rem), 0, 0); } }"
+    ],
+    "animate_classes": [
+      "animate-ping"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

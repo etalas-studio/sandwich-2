@@ -9,9 +9,7 @@ import { apiUrl } from '../api/base'
 import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
-import PrototypeList from './PrototypeList'
-import { randomPrompt, type PromptChipType } from '../lib/promptTemplates'
-import { CHIPS } from '../lib/promptChips'
+import DocumentsPanel from './DocumentsPanel'
 import { useLanguage, type StringKey } from '../lib/i18n'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
@@ -29,7 +27,7 @@ const bowlby = "'Bowlby One', system-ui"
 const inter = "'Inter', sans-serif"
 
 const NAV = [
-  { label: 'Prototype', icon: 'solar:widget-linear', id: 'prototypes' },
+  { label: 'Documents', icon: 'solar:folder-linear', id: 'documents' },
 ]
 
 const QUICK_TYPES = [
@@ -124,7 +122,7 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
               if (ev.type === 'stage_start' && ev.stage) {
                 setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
               } else if (ev.type === 'done') {
-                const output = ev.conversation?.output ?? ''
+                const output = ev.text ?? ''
                 setMessages(m => [...m, { role: 'ai', isDone: true, output }])
                 setStreaming(false)
                 onDone?.(output)
@@ -531,7 +529,9 @@ function ChatView({
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output) return (
-                    <div key={i} className="group">
+                    <div key={i} className="group relative">
+                      <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      </div>
                       <div className="text-sm break-words sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                         dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
                       {/* SANDWICH logo + hover actions */}
@@ -671,19 +671,13 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
   const { t: tr } = useLanguage()
   const [draft] = useState(loadDraft)
   const [prompt, setPrompt] = useState(draft.prompt)
-  const [activeType, setActiveType] = useState<ConversationType>(draft.activeType ?? defaultType)
+  const [pendingType, setPendingType] = useState<string>(draft.activeType ?? (defaultType === 'general' ? '' : defaultType))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<AttachedFile[]>(draft.attachments)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const atLimit = isAtLimit(usage)
-
-  const skipNextTypeReset = useRef(draft.activeType !== null)
-  useEffect(() => {
-    if (skipNextTypeReset.current) { skipNextTypeReset.current = false; return }
-    setActiveType(defaultType)
-  }, [defaultType])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(e.target.files ?? []).forEach(file => {
@@ -700,7 +694,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
     setIsSubmitting(true)
     setError(null)
     try {
-      const local = await createConversationLocal({ type: activeType, summary: prompt.trim(), description: prompt.trim() })
+      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
       const uploaded: Attachment[] = []
       for (const a of attachments) {
         try {
@@ -736,25 +730,23 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
           </a>
         </div>
       )}
-      {defaultType === 'general' && (
-        <div className="flex items-center gap-2 px-4 pt-4 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {CHIPS.map(c => (
-            <button key={c.labelKey}
-              onClick={() => { setActiveType(c.type); setPrompt(randomPrompt(c.type as PromptChipType)) }}
-              className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-              style={activeType === c.type
-                ? { backgroundColor: '#f91814', color: '#ffffff', border: '1px solid #f91814' }
-                : { backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }
-              }>
-              <iconify-icon icon={c.icon} width="12" />
-              {tr(c.labelKey)}
-            </button>
-          ))}
-          {!usage.isPro && !atLimit && (
-            <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
-          )}
-        </div>
-      )}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+        <select
+          value={pendingType}
+          onChange={(e) => setPendingType(e.target.value)}
+          className="text-xs px-3 py-1.5 rounded-full"
+          style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }}
+        >
+          <option value="">Auto — let SANDWICH ask</option>
+          <option value="prd">PRD</option>
+          <option value="quotation">Quotation</option>
+          <option value="prototype">Prototype</option>
+          <option value="specs">Specs</option>
+        </select>
+        {!usage.isPro && !atLimit && (
+          <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
+        )}
+      </div>
 
       <textarea
         value={prompt}
@@ -808,69 +800,6 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
           >
             <iconify-icon icon={isSubmitting ? 'solar:refresh-linear' : 'solar:arrow-up-linear'} width="15" style={{ color: '#ffffff' }} />
           </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Artifact Grid (prototype cards) ─────────────────────────────────────────────
-function ArtifactGrid({
-  title,
-  items,
-  onOpen,
-  onNew,
-}: {
-  title: string
-  items: LocalConversation[]
-  onOpen: (t: LocalConversation) => void
-  onNew: () => void
-}) {
-  const { t: tr } = useLanguage()
-  return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>{title.toUpperCase()}</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{items.length} {tr('dash_prototypes_saved')}</p>
-          </div>
-          <button
-            onClick={onNew}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ backgroundColor: '#f91814', color: '#ffffff' }}
-          >
-            <iconify-icon icon="solar:add-circle-linear" width="15" />
-            {tr('dash_new_prototype')}
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.slice().reverse().map(t => {
-            const meta = TYPE_META[t.type] ?? TYPE_META.general
-            return (
-              <button
-                key={t.id}
-                onClick={() => onOpen(t)}
-                className="flex flex-col rounded-2xl overflow-hidden text-left border transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}
-              >
-                <div className="h-28 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
-                  <iconify-icon icon={meta.icon} width="28" style={{ color: meta.ic }} />
-                </div>
-                <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
-                  <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{t.summary}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full" style={{
-                      backgroundColor: t.status === 'done' ? '#dcfce7' : '#f3f4f6',
-                      color: t.status === 'done' ? '#16a34a' : '#9ca3af',
-                    }}>{t.status === 'done' ? 'Done' : t.status === 'processing' ? tr('dash_status_processing') : 'Draft'}</span>
-                    <span className="text-[11px]" style={{ color: '#9ca3af' }}>{timeAgo(t.createdAt, tr)}</span>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
         </div>
       </div>
     </div>
@@ -1335,7 +1264,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       return { prompt: parsed.prompt, conversationId: parsed.conversationId, autoRun: parsed.autoRun === true }
     } catch { return null }
   })
-  const [creatingNew, setCreatingNew] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [showChatMenu, setShowChatMenu] = useState(false)
   const [renamingTitle, setRenamingTitle] = useState(false)
@@ -1366,7 +1294,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     refresh()
     usageQuery.invalidate()
     setChatState({ prompt: t.summary, conversationId: t.id, autoRun: true })
-    setCreatingNew(false)
   }
 
   const handleDelete = (id: string) => {
@@ -1476,27 +1403,13 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setTimeout(() => setShareCopied(false), 1500)
   }
 
-  const handleExportMarkdown = () => {
-    if (!currentConversation) return
-    setShowMoreMenu(false)
-    const md = currentConversation.content ?? currentConversation.description
-    const blob = new Blob([md], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${currentConversation.summary.slice(0, 60).replace(/[^\w\- ]/g, '').trim() || 'sandwich'}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-    localStorage.setItem(EXPORTED_MD_KEY, '1')
-  }
-
   const byType = (type: ConversationType) => conversations.filter(t => t.type === type)
   const isHomePage = activeNav === 'home'
 
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'prototypes') return <PrototypeList />
+    if (activeNav === 'documents') return <DocumentsPanel />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1510,71 +1423,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       </div>
     )
 
-    if (activeNav === 'templates') return (
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl tracking-tighter" style={{ color: '#111827', fontFamily: bowlby }}>TEMPLATES</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>{tr('dash_templates_sub')}</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {QUICK_TYPES.map(t => (
-              <button key={t.label}
-                onClick={() => { setActiveNav(t.type === 'workflow' ? 'home' : t.type); }}
-                className="flex items-start gap-4 p-5 rounded-2xl border text-left transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(0,0,0,0.08)' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.95)')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.7)')}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: t.color }}>
-                  <iconify-icon icon={t.icon} width="18" style={{ color: t.iconColor }} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#111827' }}>{t.label}</p>
-                  <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>{tr('dash_click_to_start')}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-
-    const pp = PIPELINE_MAP[activeNav]
-    if (!pp) return null
-
-    const items = byType(pp.type)
-
-    if (items.length > 0 && !creatingNew) {
-      return (
-        <ArtifactGrid
-          title={pp.title}
-          items={items}
-          onOpen={(t) => setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })}
-          onNew={() => setCreatingNew(true)}
-        />
-      )
-    }
-
-    return (
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10">
-        {items.length > 0 && (
-          <button
-            onClick={() => setCreatingNew(false)}
-            className="flex items-center gap-1.5 text-xs font-medium mb-6 transition-colors"
-            style={{ color: 'rgba(0,0,0,0.4)' }}
-          >
-            <iconify-icon icon="solar:arrow-left-linear" width="13" />
-            {tr('dash_back_to_list')}
-          </button>
-        )}
-        <h1 className="text-2xl md:text-3xl text-center mb-8 tracking-tighter" style={{ color: '#111827', fontFamily: bowlby, maxWidth: '560px' }}>
-          {tr('dash_home_headline_pipeline')}
-        </h1>
-        <div className="w-full max-w-2xl">
-          <PromptBox defaultType={pp.type} onSuccess={handleSuccess} usage={usage} />
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -1620,7 +1469,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               const isActive = activeNav === item.id
               const count = byType(PIPELINE_MAP[item.id]?.type ?? 'general' as ConversationType).length
               return (
-                <button key={item.id} onClick={() => { setActiveNav(item.id); setChatState(null); setCreatingNew(false); if (window.innerWidth < 768) setSidebarOpen(false) }}
+                <button key={item.id} onClick={() => { setActiveNav(item.id); setChatState(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
                   style={isActive ? { backgroundColor: '#f91814', color: '#ffffff', fontWeight: 500 } : { color: 'rgba(255,255,255,0.5)' }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
@@ -1628,7 +1477,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 >
                   <iconify-icon icon={item.icon} width="15" />
                   {item.label}
-                  {item.id !== 'prototypes' && count > 0 && (
+                  {item.id !== 'documents' && count > 0 && (
                     <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>{count}</span>
                   )}
                 </button>
@@ -1934,14 +1783,6 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                       style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
                       onClick={e => e.stopPropagation()}>
                       <div className="p-1.5">
-                        <button onClick={handleExportMarkdown}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.7)' }}
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
-                          <iconify-icon icon="solar:download-minimalistic-linear" width="15" />
-                          Download Markdown
-                        </button>
                         <button onClick={() => { setShowMoreMenu(false); setActiveNav('settings'); setChatState(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
                           style={{ color: 'rgba(255,255,255,0.7)' }}
@@ -1985,9 +1826,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             usage={usage}
             onSuccess={handleSuccess}
             onOpenConversation={(t) => setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })}
-            onGoTemplates={() => setActiveNav('templates')}
+            onGoTemplates={() => setActiveNav('documents')}
             onGoBriefs={() => setActiveNav('briefs')}
-            onGoType={(type) => setActiveNav(type === 'workflow' ? 'home' : type)}
+            onGoType={() => setActiveNav('home')}
           />
         ) : renderPage()}
       </main>

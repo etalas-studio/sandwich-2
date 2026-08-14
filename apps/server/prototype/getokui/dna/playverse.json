@@ -1,0 +1,78 @@
+{
+  "slug": "playverse",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "leading-[0.95] lg:text-[5rem] text-5xl font-normal text-[#0D0C22] tracking-tight mb-8 font-brand",
+    "h1_sizes": [
+      "text-5xl"
+    ],
+    "cta_classes": "bg-white border border-gray-200 shadow-sm text-[#0D0C22] text-base font-medium px-6 py-3 rounded-full flex items-center gap-2 hover:bg-gray-50 transition-all"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-md"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-lg",
+    "shadow-md"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-ping"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

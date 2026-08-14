@@ -1,0 +1,80 @@
+{
+  "slug": "nexus-arcade",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "nexus-hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [
+      "max-w-4xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-5"
+    ]
+  },
+  "radius": [
+    "rounded-full"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "nexusCoreMeter",
+      "nexusCoreOrbit",
+      "nexusCubeRotate",
+      "nexusMiniFall",
+      "nexusS2CorePulse",
+      "nexusS2Meter",
+      "nexusS2PixelFlow",
+      "nexusS3Meter",
+      "nexusS4CorePulse",
+      "nexusS4Ring",
+      "nexusS4Signal",
+      "nexusS5Dot",
+      "nexusS5Progress",
+      "nexusS5Pulse",
+      "nexusS6Chip",
+      "nexusS6Cursor",
+      "nexusS6Meter",
+      "nexusS7Ring",
+      "nexusS7Spin"
+    ],
+    "keyframes_css": [
+      "@keyframes nexusS4Ring { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes nexusCubeRotate { 0% { transform: rotateX(-18deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(-18deg) rotateY(360deg) rotateZ(0deg); } }",
+      "@keyframes nexusCoreOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius",
+    "texture-grain",
+    "blend-modes"
+  ]
+}

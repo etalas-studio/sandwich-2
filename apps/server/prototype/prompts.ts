@@ -1,36 +1,26 @@
-export interface PrototypePromptInput {
-  brief: string;
-  palette: string | null;
-  logoData: string | null;
+export interface ReferenceStyleTokens {
+  colors: string[];
+  fonts: string[];
+  spacings: string[];
+  radii: string[];
+  shadows: string[];
 }
 
-export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string {
-  const paletteSection = input.palette
-    ? `## Color Palette (client-provided)\nUse these exact colors as CSS variables in styles.css:\n${input.palette}\n`
-    : `## Color Palette\nChoose a professional palette that fits the brief. Define them as CSS variables in styles.css.\n`;
-
-  const logoSection = (() => {
-    if (!input.logoData) {
-      return `## Logo\nCreate a simple text-based logo placeholder that fits the brand.\n`;
-    }
-    if (input.logoData.startsWith("data:")) {
-      return `## Logo (client-uploaded)\nThe client logo image is saved at: assets/logo.png\nReference it in the header and favicon using: <img src="assets/logo.png" alt="logo">\n`;
-    }
-    if (/^https?:\/\//.test(input.logoData)) {
-      return `## Logo (client-provided URL)\nThe client logo is at: ${input.logoData}\nReference it in the header and favicon.\n`;
-    }
-    return `## Logo (client description)\nThe client described their logo as: ${input.logoData}\nCreate a matching logo placeholder in the header and favicon.\n`;
-  })();
+export function buildPrototypeSystemPrompt(
+  brief: string,
+  reference?: { url: string; tokens: ReferenceStyleTokens } | null,
+): string {
+  const referenceSection = reference
+    ? `## Reference Style (client-provided URL)\nThe client wants the visual style to match ${reference.url}.\nExtracted tokens are in .reference/style.json and the reference page HTML is in .reference/page.html.\nRead both and apply the extracted colors/fonts/spacing/radius/shadow to the prototype. Match the STYLE only — never copy the reference's content, copy, brand names, or images.`
+    : "";
 
   return [
     `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
     `## Client Brief`,
-    input.brief,
+    brief,
     ``,
-    paletteSection,
-    ``,
-    logoSection,
+    referenceSection,
     ``,
     `## Required Pages`,
     `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,

@@ -1,0 +1,71 @@
+{
+  "slug": "ai-cloud-platform-82",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "bar-grow",
+      "borderSpin",
+      "counter-pulse",
+      "fadeInLine",
+      "float",
+      "glow-pulse",
+      "line-shimmer",
+      "marquee",
+      "node-pulse",
+      "popIn",
+      "progress-fill",
+      "pulse-dot",
+      "regionPulse",
+      "scaleFillIn",
+      "scroll-bounce",
+      "shimmer",
+      "slideInRow",
+      "spin"
+    ],
+    "keyframes_css": [
+      "@keyframes spin { to { --angle: 360deg; } }",
+      "@keyframes borderSpin { to { --border-angle: 360deg; } }",
+      "@keyframes shimmer { to { --shimmer-pos: 200%; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

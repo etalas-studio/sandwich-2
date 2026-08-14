@@ -1,0 +1,82 @@
+{
+  "slug": "ledgerly",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "uppercase leading-[0.85] flex flex-wrap justify-center gap-x-4 md:text-9xl mdgap-x-8 text-6xl font-semibold text-[#141414] tracking-tighter mt-8 mb-0",
+    "h1_sizes": [
+      "text-9xl",
+      "text-6xl"
+    ],
+    "cta_classes": "inline-block bg-[#0F766E] text-white px-10 py-4 text-sm tracking-widest uppercase transition-colors font-geist font-semibold hover:bg-[#115E59]"
+  },
+  "type_scale": {
+    "h1": "text-9xl",
+    "h2": "text-lg"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "pt-32",
+      "pt-40"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-sm"
+  ],
+  "shadow": [
+    "shadow-lg",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "blend-modes"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "marquee",
+      "spin"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-on-scroll",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes"
+  ]
+}

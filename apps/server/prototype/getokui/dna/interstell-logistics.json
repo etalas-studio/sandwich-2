@@ -1,0 +1,106 @@
+{
+  "slug": "interstell-logistics",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-bricolage text-white leading-[0.85] tracking-tight font-semibold",
+    "h1_sizes": [],
+    "cta_classes": "filter-btn px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 bg-white text-neutral-950 shadow-lg shadow-white/5"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-24",
+      "py-24"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-sm",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "barEqualizer",
+      "cinematicEntrance",
+      "fanSlideIn",
+      "shimmerMove",
+      "slideInLeft",
+      "slideInRight",
+      "slideUpFade",
+      "spinReverse",
+      "ticker"
+    ],
+    "keyframes_css": [
+      "@keyframes cinematicEntrance { 0% { transform: scale(1.4); filter: blur(20px) grayscale(100%); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(1); filter: blur(0px) grayscale(0%); opacity: 1; } }",
+      "@keyframes slideUpFade { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }",
+      "@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-[shimmerMove_3s_ease-in-out_infinite]",
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_15s_linear_infinite_reverse]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_30s_linear_infinite]",
+      "animate-[spin_4s_linear_infinite]",
+      "animate-[spin_8s_linear_infinite]",
+      "animate-[spin_8s_linear_infinite_reverse]",
+      "animate-cinematic",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse",
+      "animate-shimmer-effect",
+      "animate-slide-up",
+      "animate-spin-slow",
+      "animate-ticker"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

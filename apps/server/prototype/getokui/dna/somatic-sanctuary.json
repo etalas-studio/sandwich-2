@@ -1,0 +1,68 @@
+{
+  "slug": "somatic-sanctuary",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tight w-full md:w-3/4 font-fraunces font-medium",
+    "h1_sizes": [
+      "text-6xl",
+      "text-7xl",
+      "text-8xl",
+      "text-9xl"
+    ],
+    "cta_classes": "mt-2 bg-[#E3E7E0] text-[#2A3324] py-4 px-6 text-xs uppercase tracking-widest hover:bg-[#C4CFC0] transition-colors flex justify-between items-center w-full group font-manrope"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-sm",
+    "rounded-full"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { to { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "big-radius"
+  ]
+}

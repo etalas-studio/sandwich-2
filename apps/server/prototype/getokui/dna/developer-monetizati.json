@@ -1,0 +1,91 @@
+{
+  "slug": "developer-monetizati",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-7xl leading-[1.1] [animation:animationIn_0.8s_ease-out_0.3s_both] text-5xl font-light text-white tracking-tight font-geist",
+    "h1_sizes": [
+      "text-7xl",
+      "text-5xl"
+    ],
+    "cta_classes": "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:brightness-110 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)] border border-emerald-400/20"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-lg",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "split-centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "barCycle",
+      "border-spin",
+      "candleCycle",
+      "fadeSlideIn",
+      "marquee-ltr",
+      "marquee-rtl"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee-rtl { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes marquee-ltr { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }",
+      "@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-[marquee-rtl_40s_linear_infinite]",
+      "animate-[slideUp_0.6s_ease-out]",
+      "animate-[slideUp_0.6s_ease-out_0.1s_both]",
+      "animate-bar-loop",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

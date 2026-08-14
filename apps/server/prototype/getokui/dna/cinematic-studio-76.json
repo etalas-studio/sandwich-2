@@ -1,0 +1,74 @@
+{
+  "slug": "cinematic-studio-76",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "mask-reveal is-visible text-6xl md:text-8xl lg:text-[7rem] leading-[0.8] font-semibold tracking-tighter text-white",
+    "h1_sizes": [
+      "text-6xl",
+      "text-8xl"
+    ],
+    "cta_classes": "inline-flex items-center justify-center text-xs font-bold tracking-wider text-white border border-white/30 px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all duration-300 hover:scale-105 group"
+  },
+  "type_scale": {
+    "h1": "text-6xl",
+    "h2": "text-xs"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-24",
+      "py-32",
+      "py-20"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-sm"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "horizontal-scroll",
+      "bento-grid",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "heroScale",
+      "scroll"
+    ],
+    "keyframes_css": [
+      "@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }",
+      "@keyframes heroScale { 0% { transform: scale(1.15); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }"
+    ],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

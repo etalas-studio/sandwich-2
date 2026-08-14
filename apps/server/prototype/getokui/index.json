@@ -1,0 +1,7335 @@
+{
+  "version": 1,
+  "count": 213,
+  "templates": [
+    {
+      "slug": "aero-studio",
+      "name": "Aero",
+      "category": "agency",
+      "tags": [
+        "aero",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#050508",
+        "#2B2A31"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aero-studio.webp"
+    },
+    {
+      "slug": "aeronet-core",
+      "name": "AeroNet Core",
+      "category": "dev-tools",
+      "tags": [
+        "aeronet",
+        "core",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#041028",
+        "#193560",
+        "#6E89AC",
+        "#011B44"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aeronet-core.webp"
+    },
+    {
+      "slug": "aether-architectu-60",
+      "name": "AETHER · Light, given form",
+      "category": "architecture",
+      "tags": [
+        "aether",
+        "architectu",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Fraunces type. Sections: hero, testimonials, cta, contact.",
+      "colors": [
+        "#414D4A",
+        "#5D6667",
+        "#7B878B",
+        "#171B12",
+        "#A9B0B5"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Fraunces",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aether-architectu-60.webp"
+    },
+    {
+      "slug": "aex",
+      "name": "AEX",
+      "category": "tech",
+      "tags": [
+        "aex",
+        "tech",
+        "light",
+        "editorial"
+      ],
+      "description": "modern tech landing page, light theme, Inter type. Sections: hero, pricing, team, cta.",
+      "colors": [
+        "#EDEEEB",
+        "#252C2A",
+        "#BEBEBD",
+        "#7C8C98",
+        "#D3D5D3"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/aex.webp"
+    },
+    {
+      "slug": "ai-builder",
+      "name": "Buildr",
+      "category": "ai-saas",
+      "tags": [
+        "builder",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Oswald type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#111113",
+        "#4F25B7",
+        "#170D42",
+        "#24136C",
+        "#3E2194"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "footer"
+      ],
+      "fonts": [
+        "Oswald",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-builder.webp"
+    },
+    {
+      "slug": "ai-cloud-platform-82",
+      "name": "Nova",
+      "category": "ai-saas",
+      "tags": [
+        "cloud",
+        "platform",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#10091C",
+        "#7E5C78",
+        "#F7C9C7",
+        "#4F3553",
+        "#694465"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Outfit",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-cloud-platform-82.webp"
+    },
+    {
+      "slug": "ai-consultant-shari",
+      "name": "Shari",
+      "category": "ai-saas",
+      "tags": [
+        "consultant",
+        "shari",
+        "ai-saas",
+        "light",
+        "editorial"
+      ],
+      "description": "AI product landing page, light theme, Inter type. Sections: hero, features, gallery, team.",
+      "colors": [
+        "#FFFFFF",
+        "#284666",
+        "#5F6874",
+        "#21334B",
+        "#171B25"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/ai-consultant-shari.webp"
+    },
+    {
+      "slug": "ai-creative-platform",
+      "name": "Velora",
+      "category": "ai-saas",
+      "tags": [
+        "creative",
+        "platform",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#052917",
+        "#185137",
+        "#040907",
+        "#54A98E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-creative-platform.webp"
+    },
+    {
+      "slug": "ai-developer",
+      "name": "DesignFlow",
+      "category": "ai-saas",
+      "tags": [
+        "developer",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#050505",
+        "#20394E",
+        "#0E1E2F",
+        "#577A91"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-developer.webp"
+    },
+    {
+      "slug": "ai-developer-saas",
+      "name": "AI Developer Saas",
+      "category": "ai-saas",
+      "tags": [
+        "developer",
+        "saas",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#151517",
+        "#5673A2",
+        "#3D495A",
+        "#242D3A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Bricolage Grotesque",
+        "Merriweather",
+        "serif"
+      ],
+      "thumbnail": "thumbs/ai-developer-saas.webp"
+    },
+    {
+      "slug": "ai-neural-saas",
+      "name": "Synthetix",
+      "category": "ai-saas",
+      "tags": [
+        "neural",
+        "saas",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#091123",
+        "#000404",
+        "#273841",
+        "#718A9A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-neural-saas.webp"
+    },
+    {
+      "slug": "ai-operations",
+      "name": "AI Command Center",
+      "category": "ai-saas",
+      "tags": [
+        "operations",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#283536",
+        "#70A69C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-operations.webp"
+    },
+    {
+      "slug": "ai-powered-saas",
+      "name": "Nexus",
+      "category": "ai-saas",
+      "tags": [
+        "powered",
+        "saas",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, AeonikPro type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0B0913",
+        "#291F51",
+        "#433C60",
+        "#D4B9E4",
+        "#6A45AF"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "AeonikPro",
+        "Inter V",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-powered-saas.webp"
+    },
+    {
+      "slug": "ai-product-studio",
+      "name": "Frame",
+      "category": "ai-saas",
+      "tags": [
+        "product",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#FFD1CA",
+        "#FFB49D",
+        "#1A1E2E",
+        "#B97855"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-product-studio.webp"
+    },
+    {
+      "slug": "ai-sales-platform",
+      "name": "Volt",
+      "category": "ai-saas",
+      "tags": [
+        "sales",
+        "platform",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, team.",
+      "colors": [
+        "#05080A",
+        "#5F6D37",
+        "#1D2315",
+        "#374021",
+        "#93B230"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-sales-platform.webp"
+    },
+    {
+      "slug": "ai-telemetry",
+      "name": "AI Telemetry Platform",
+      "category": "ai-saas",
+      "tags": [
+        "telemetry",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0A0A0A",
+        "#294544",
+        "#4D918C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-telemetry.webp"
+    },
+    {
+      "slug": "ai-video-editor",
+      "name": "CLIPPED",
+      "category": "ai-saas",
+      "tags": [
+        "video",
+        "editor",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#070707",
+        "#2D3B26",
+        "#4A3B1B",
+        "#1D1C13",
+        "#C2B384"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-video-editor.webp"
+    },
+    {
+      "slug": "ai-visual-style",
+      "name": "Nexus",
+      "category": "ai-saas",
+      "tags": [
+        "visual",
+        "style",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#F9F9F9",
+        "#555555",
+        "#E2E3E3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "DM Serif Display",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ai-visual-style.webp"
+    },
+    {
+      "slug": "aibots-education",
+      "name": "AIBots",
+      "category": "ai-saas",
+      "tags": [
+        "aibots",
+        "education",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#4F5692",
+        "#C4C8D7",
+        "#E6EAF7"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aibots-education.webp"
+    },
+    {
+      "slug": "algorithmi-trading",
+      "name": "QUANTCORE",
+      "category": "fintech",
+      "tags": [
+        "algorithmi",
+        "trading",
+        "fintech",
+        "dark"
+      ],
+      "description": "fintech / finance landing page, dark theme, Manrope type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#02040A",
+        "#091423",
+        "#6C8396"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/algorithmi-trading.webp"
+    },
+    {
+      "slug": "alloy-creative-80",
+      "name": "Creative Production & Motion Design",
+      "category": "agency",
+      "tags": [
+        "alloy",
+        "creative",
+        "agency",
+        "dark",
+        "editorial"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#070707",
+        "#434443",
+        "#211F1D",
+        "#6F716E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Poppins",
+        "serif"
+      ],
+      "thumbnail": "thumbs/alloy-creative-80.webp"
+    },
+    {
+      "slug": "altitude-mtl",
+      "name": "ALTITUDE MTL",
+      "category": "tech",
+      "tags": [
+        "altitude",
+        "mtl",
+        "tech",
+        "light"
+      ],
+      "description": "modern tech landing page, light theme, DM Sans type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#E8E6DF",
+        "#3A3334",
+        "#0E0A09",
+        "#A68C75",
+        "#231E20"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/altitude-mtl.webp"
+    },
+    {
+      "slug": "apex-creative",
+      "name": "Apex",
+      "category": "agency",
+      "tags": [
+        "apex",
+        "creative",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#080808",
+        "#1E2115",
+        "#D4DCB6",
+        "#444933"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Syncopate",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/apex-creative.webp"
+    },
+    {
+      "slug": "api-infrastructure",
+      "name": "Buildr",
+      "category": "dev-tools",
+      "tags": [
+        "api",
+        "infrastructure",
+        "dev-tools",
+        "light"
+      ],
+      "description": "developer-tools / infrastructure landing page, light theme, Oswald type. Sections: hero, pricing, testimonials, cta.",
+      "colors": [
+        "#F1F2FA",
+        "#678BE3",
+        "#88A9EC",
+        "#A9C1F1",
+        "#3D60B8"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Oswald",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/api-infrastructure.webp"
+    },
+    {
+      "slug": "api-monitoring",
+      "name": "Square",
+      "category": "dev-tools",
+      "tags": [
+        "api",
+        "monitoring",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0F0F10",
+        "#484A4A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/api-monitoring.webp"
+    },
+    {
+      "slug": "architect-studio-60",
+      "name": "Velos",
+      "category": "architecture",
+      "tags": [
+        "architect",
+        "architecture",
+        "light",
+        "editorial"
+      ],
+      "description": "architecture studio landing page, light theme, Inter type. Sections: hero, pricing, gallery, cta.",
+      "colors": [
+        "#CFCFCB",
+        "#373838",
+        "#BEBDB9",
+        "#686969",
+        "#9D9D9B"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "gallery",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Bricolage Grotesque",
+        "serif"
+      ],
+      "thumbnail": "thumbs/architect-studio-60.webp"
+    },
+    {
+      "slug": "architectu-studio",
+      "name": "OBLIQUE",
+      "category": "architecture",
+      "tags": [
+        "architectu",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Inter type. Sections: hero, features, gallery, about.",
+      "colors": [
+        "#2F3236",
+        "#19181A",
+        "#77695E",
+        "#504E4E",
+        "#9C9D9C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/architectu-studio.webp"
+    },
+    {
+      "slug": "architectu-studio-28",
+      "name": "ATELIER",
+      "category": "architecture",
+      "tags": [
+        "architectu",
+        "architecture",
+        "dark",
+        "editorial"
+      ],
+      "description": "architecture studio landing page, dark theme, Cormorant Garamond type. Sections: hero, gallery, footer, features.",
+      "colors": [
+        "#0A0A0A",
+        "#3F3F3F",
+        "#282829"
+      ],
+      "sections": [
+        "hero",
+        "gallery",
+        "footer",
+        "features",
+        "cta"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Syncopate",
+        "Inter",
+        "serif"
+      ],
+      "thumbnail": "thumbs/architectu-studio-28.webp"
+    },
+    {
+      "slug": "architecture-studio",
+      "name": "Architectural Innovations",
+      "category": "architecture",
+      "tags": [
+        "architecture",
+        "light",
+        "editorial"
+      ],
+      "description": "architecture studio landing page, light theme, Playfair Display type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#E3E7E0",
+        "#2B3738",
+        "#8D9892",
+        "#C2C6BF",
+        "#4D6160"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter",
+        "serif"
+      ],
+      "thumbnail": "thumbs/architecture-studio.webp"
+    },
+    {
+      "slug": "ares-protocol",
+      "name": "ARES Protocol // Mars Expedition",
+      "category": "crypto-web3",
+      "tags": [
+        "ares",
+        "protocol",
+        "crypto-web3",
+        "dark"
+      ],
+      "description": "crypto / web3 landing page, dark theme, Abril Fatface type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0F0F10",
+        "#A84616",
+        "#7D3311",
+        "#B46130",
+        "#CB9A6D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Abril Fatface",
+        "Syne",
+        "Space Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ares-protocol.webp"
+    },
+    {
+      "slug": "asagiri-38matcha",
+      "name": "ASAGIRI 朝霧 · Ceremonial matcha, stone",
+      "category": "restaurant",
+      "tags": [
+        "asagiri",
+        "38matcha",
+        "restaurant",
+        "light"
+      ],
+      "description": "restaurant / food landing page, light theme, Instrument Serif type. Sections: hero, pricing, testimonials, team.",
+      "colors": [
+        "#C5C0B5",
+        "#2E2D1F",
+        "#4D4F3F",
+        "#807867",
+        "#686654"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Hanken Grotesk",
+        "Shippori Mincho",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/asagiri-38matcha.webp"
+    },
+    {
+      "slug": "atelier",
+      "name": "Spatial Design Atelier",
+      "category": "tech",
+      "tags": [
+        "atelier",
+        "tech",
+        "light"
+      ],
+      "description": "modern tech landing page, light theme, Instrument Serif type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#F3EFE8",
+        "#C7C1B5",
+        "#726A5D",
+        "#DBD8D1",
+        "#918272"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Plus Jakarta Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/atelier.webp"
+    },
+    {
+      "slug": "atelier-ai",
+      "name": "ATELIER AI",
+      "category": "ai-saas",
+      "tags": [
+        "atelier",
+        "ai-saas",
+        "light",
+        "editorial"
+      ],
+      "description": "AI product landing page, light theme, Cormorant Garamond type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F7F3EF",
+        "#74614C",
+        "#E5DFD7",
+        "#5A4936",
+        "#A99E91"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Manrope",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/atelier-ai.webp"
+    },
+    {
+      "slug": "atelier-la-belle",
+      "name": "Atelier La Belle",
+      "category": "tech",
+      "tags": [
+        "atelier",
+        "belle",
+        "tech",
+        "light",
+        "editorial"
+      ],
+      "description": "modern tech landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#ECE6DD",
+        "#AD9276",
+        "#C6B198",
+        "#D8CDBE",
+        "#705A47"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/atelier-la-belle.webp"
+    },
+    {
+      "slug": "atlas-system",
+      "name": "ATLAS / Spatial Computation",
+      "category": "tech",
+      "tags": [
+        "atlas",
+        "system",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Orbitron type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#040404"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Orbitron",
+        "Sarpanch",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/atlas-system.webp"
+    },
+    {
+      "slug": "atmos-weather",
+      "name": "Atmos",
+      "category": "tech",
+      "tags": [
+        "atmos",
+        "weather",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Geist type. Sections: hero, features, cta, footer.",
+      "colors": [
+        "#271102",
+        "#1C1C1E",
+        "#070301",
+        "#623102",
+        "#86571B"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/atmos-weather.webp"
+    },
+    {
+      "slug": "aura-ai-fashion",
+      "name": "Aura",
+      "category": "ai-saas",
+      "tags": [
+        "fashion",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, about, cta.",
+      "colors": [
+        "#715C4B",
+        "#BB775E",
+        "#191511",
+        "#5C4A3B",
+        "#947865"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-ai-fashion.webp"
+    },
+    {
+      "slug": "aura-ai-landing",
+      "name": "Aura",
+      "category": "ai-saas",
+      "tags": [
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#121212",
+        "#464646",
+        "#272727",
+        "#7E7D7F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-ai-landing.webp"
+    },
+    {
+      "slug": "aura-assistant",
+      "name": "AURA",
+      "category": "ai-saas",
+      "tags": [
+        "assistant",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#6998E4",
+        "#E2EAF5",
+        "#A6C6F5",
+        "#3A61AF"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-assistant.webp"
+    },
+    {
+      "slug": "aura-generative",
+      "name": "Aura",
+      "category": "ai-saas",
+      "tags": [
+        "generative",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Gloock type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#4C8792",
+        "#4B483B",
+        "#254245",
+        "#987445",
+        "#0B110E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Gloock",
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-generative.webp"
+    },
+    {
+      "slug": "aura-sonic-e",
+      "name": "Aura",
+      "category": "music",
+      "tags": [
+        "sonic",
+        "music",
+        "dark"
+      ],
+      "description": "music / audio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#050505",
+        "#2A2A2A",
+        "#535353",
+        "#666666",
+        "#848484"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-sonic-e.webp"
+    },
+    {
+      "slug": "aura-vr-game-agency",
+      "name": "AURA",
+      "category": "gaming",
+      "tags": [
+        "game",
+        "agency",
+        "gaming",
+        "light"
+      ],
+      "description": "gaming landing page, light theme, Inter type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#C2D2D5",
+        "#708682",
+        "#4B553D",
+        "#A4BDC7",
+        "#9CAA9D"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Archivo Black",
+        "DM Serif Display",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aura-vr-game-agency.webp"
+    },
+    {
+      "slug": "auralis",
+      "name": "Auralis",
+      "category": "tech",
+      "tags": [
+        "auralis",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Geist type. Sections: hero, testimonials, team, about.",
+      "colors": [
+        "#625D72",
+        "#09090E",
+        "#362A3A",
+        "#4E4155",
+        "#ABADB8"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/auralis.webp"
+    },
+    {
+      "slug": "aurel-luxury",
+      "name": "AUREL",
+      "category": "luxury",
+      "tags": [
+        "aurel",
+        "luxury",
+        "light",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, pricing, testimonials, team.",
+      "colors": [
+        "#C9C0AB",
+        "#695844",
+        "#4E3F2F",
+        "#271E13",
+        "#A49885"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Gloock",
+        "serif"
+      ],
+      "thumbnail": "thumbs/aurel-luxury.webp"
+    },
+    {
+      "slug": "aurelia-travel",
+      "name": "Aurelia AI Travel",
+      "category": "travel",
+      "tags": [
+        "aurelia",
+        "travel",
+        "light",
+        "editorial"
+      ],
+      "description": "travel landing page, light theme, Cormorant Garamond type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#EEE5D9",
+        "#EED1A6",
+        "#A5A3A4",
+        "#C5B5A6",
+        "#463C32"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Manrope",
+        "serif"
+      ],
+      "thumbnail": "thumbs/aurelia-travel.webp"
+    },
+    {
+      "slug": "auric-fintech",
+      "name": "Auric",
+      "category": "fintech",
+      "tags": [
+        "auric",
+        "fintech",
+        "dark"
+      ],
+      "description": "fintech / finance landing page, dark theme, DM Sans type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#1D1D24",
+        "#475369",
+        "#2F3343",
+        "#636670",
+        "#060709"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/auric-fintech.webp"
+    },
+    {
+      "slug": "auriela-wine-84",
+      "name": "Maison Aurelia",
+      "category": "restaurant",
+      "tags": [
+        "auriela",
+        "wine",
+        "restaurant",
+        "dark"
+      ],
+      "description": "restaurant / food landing page, dark theme, Fraunces type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#5C5C5E",
+        "#BFBCB9",
+        "#363A30",
+        "#A5A3A2",
+        "#E4E1DD"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Fraunces",
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/auriela-wine-84.webp"
+    },
+    {
+      "slug": "author-portfolio",
+      "name": "Jane Doe",
+      "category": "portfolio",
+      "tags": [
+        "author",
+        "portfolio",
+        "light"
+      ],
+      "description": "personal portfolio site, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FAF9F6",
+        "#383635",
+        "#5B5857",
+        "#F1EADC",
+        "#E3D9C4"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/author-portfolio.webp"
+    },
+    {
+      "slug": "autonomous-systems",
+      "name": "Autonomous Systems Engine",
+      "category": "dev-tools",
+      "tags": [
+        "autonomous",
+        "systems",
+        "dev-tools",
+        "light",
+        "editorial"
+      ],
+      "description": "developer-tools / infrastructure landing page, light theme, Inter type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#F6F3EC",
+        "#9C9F89",
+        "#B1B8B4",
+        "#D4D4CE",
+        "#777856"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "JetBrains Mono",
+        "serif"
+      ],
+      "thumbnail": "thumbs/autonomous-systems.webp"
+    },
+    {
+      "slug": "aventra-figma",
+      "name": "Aventra",
+      "category": "agency",
+      "tags": [
+        "aventra",
+        "figma",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#83ADE9",
+        "#E5EFFD",
+        "#A8CAF9",
+        "#C8DAF3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/aventra-figma.webp"
+    },
+    {
+      "slug": "axiom-digital",
+      "name": "Axiom Studio",
+      "category": "agency",
+      "tags": [
+        "axiom",
+        "digital",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#12131B",
+        "#2E304B",
+        "#000000",
+        "#CDCFD7",
+        "#454667"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/axiom-digital.webp"
+    },
+    {
+      "slug": "axiom-intelligence",
+      "name": "Axiom Analytics",
+      "category": "ai-saas",
+      "tags": [
+        "axiom",
+        "intelligence",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, testimonials, about.",
+      "colors": [
+        "#010511",
+        "#1D2E3E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Rajdhani",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/axiom-intelligence.webp"
+    },
+    {
+      "slug": "axion-agent",
+      "name": "SaaS Enterprise Platform",
+      "category": "ai-saas",
+      "tags": [
+        "axion",
+        "agent",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, team.",
+      "colors": [
+        "#050505",
+        "#6E5B52"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/axion-agent.webp"
+    },
+    {
+      "slug": "axion-ai",
+      "name": "SaaS Enterprise Platform",
+      "category": "ai-saas",
+      "tags": [
+        "axion",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, about, contact.",
+      "colors": [
+        "#050505",
+        "#383133",
+        "#1D1E20",
+        "#848080"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/axion-ai.webp"
+    },
+    {
+      "slug": "axisflow-saas",
+      "name": "Axisflow Hero",
+      "category": "saas",
+      "tags": [
+        "axisflow",
+        "saas",
+        "light",
+        "editorial"
+      ],
+      "description": "SaaS product landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F2F1ED",
+        "#CFC9C5",
+        "#C97458",
+        "#33221D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/axisflow-saas.webp"
+    },
+    {
+      "slug": "axisform",
+      "name": "Axisform®",
+      "category": "tech",
+      "tags": [
+        "axisform",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#080908",
+        "#C6B6A7",
+        "#A49383",
+        "#47342A"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/axisform.webp"
+    },
+    {
+      "slug": "barbershop-landing-51",
+      "name": "BLADE & CO.",
+      "category": "tech",
+      "tags": [
+        "barbershop",
+        "tech",
+        "dark",
+        "editorial"
+      ],
+      "description": "modern tech landing page, dark theme, Playfair Display type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0A0A0A",
+        "#594D47",
+        "#3D3734",
+        "#28211D",
+        "#93887C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter",
+        "Bebas Neue",
+        "serif"
+      ],
+      "thumbnail": "thumbs/barbershop-landing-51.webp"
+    },
+    {
+      "slug": "be-consistent",
+      "name": "Sakura",
+      "category": "portfolio",
+      "tags": [
+        "consistent",
+        "portfolio",
+        "dark"
+      ],
+      "description": "personal portfolio site, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#151C32",
+        "#000000",
+        "#6485AF",
+        "#353C61",
+        "#291F52"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/be-consistent.webp"
+    },
+    {
+      "slug": "berry-pay",
+      "name": "BerryPay",
+      "category": "fintech",
+      "tags": [
+        "berry",
+        "pay",
+        "fintech",
+        "light"
+      ],
+      "description": "fintech / finance landing page, light theme, Inter type. Sections: hero, features, pricing, about.",
+      "colors": [
+        "#FFFFFF",
+        "#E4E7F0",
+        "#766BA6"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/berry-pay.webp"
+    },
+    {
+      "slug": "beyond-the-horizon",
+      "name": "Aether",
+      "category": "travel",
+      "tags": [
+        "beyond",
+        "horizon",
+        "travel",
+        "dark"
+      ],
+      "description": "travel landing page, dark theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#181614",
+        "#6F6A5F",
+        "#3C3D33",
+        "#2A2B22",
+        "#EDEDEC"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/beyond-the-horizon.webp"
+    },
+    {
+      "slug": "brand-studio",
+      "name": "BrandAppart Reimagined",
+      "category": "agency",
+      "tags": [
+        "brand",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#FFFFFF",
+        "#ECDFCC",
+        "#403F3C",
+        "#E1C294",
+        "#C79848"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/brand-studio.webp"
+    },
+    {
+      "slug": "brutalist-creative-agency",
+      "name": "Offgrid Studio.",
+      "category": "agency",
+      "tags": [
+        "brutalist",
+        "creative",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, system type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#D4D4D4",
+        "#030303",
+        "#313131",
+        "#1B1B1A",
+        "#626262"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "system",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/brutalist-creative-agency.webp"
+    },
+    {
+      "slug": "cadence-landing-19",
+      "name": "Cadence",
+      "category": "tech",
+      "tags": [
+        "cadence",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#090913",
+        "#0F2329",
+        "#2F5255"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Outfit",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/cadence-landing-19.webp"
+    },
+    {
+      "slug": "cauras-build",
+      "name": "Cauras",
+      "category": "agency",
+      "tags": [
+        "cauras",
+        "build",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#030505",
+        "#17181A",
+        "#294256",
+        "#0E2336",
+        "#7A96AA"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/cauras-build.webp"
+    },
+    {
+      "slug": "cinematic-production-40",
+      "name": "CINE",
+      "category": "cinematic",
+      "tags": [
+        "cinematic",
+        "production",
+        "dark"
+      ],
+      "description": "cinematic / production landing page, dark theme, Geist type. Sections: hero, testimonials, cta, contact.",
+      "colors": [
+        "#111111",
+        "#4F5051",
+        "#2F2F30",
+        "#E9EAEB",
+        "#7A7D81"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/cinematic-production-40.webp"
+    },
+    {
+      "slug": "cinematic-studio-76",
+      "name": "LUMIÈRE",
+      "category": "cinematic",
+      "tags": [
+        "cinematic",
+        "light"
+      ],
+      "description": "cinematic / production landing page, light theme, Geist type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#9D9E9F",
+        "#242422",
+        "#666769",
+        "#484744",
+        "#0F1112"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/cinematic-studio-76.webp"
+    },
+    {
+      "slug": "clawos-ai-interface",
+      "name": "ClawOS",
+      "category": "ai-saas",
+      "tags": [
+        "clawos",
+        "interface",
+        "ai-saas",
+        "dark",
+        "editorial"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, testimonials, cta.",
+      "colors": [
+        "#000000",
+        "#355B0E",
+        "#212C15",
+        "#79A542"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/clawos-ai-interface.webp"
+    },
+    {
+      "slug": "command-layer",
+      "name": "CommandLayer",
+      "category": "dev-tools",
+      "tags": [
+        "command",
+        "layer",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, pricing, gallery, contact.",
+      "colors": [
+        "#16181C",
+        "#34444B",
+        "#060507"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "gallery",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/command-layer.webp"
+    },
+    {
+      "slug": "creative-digital",
+      "name": "Creative",
+      "category": "agency",
+      "tags": [
+        "creative",
+        "digital",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#210609",
+        "#98445C",
+        "#892235",
+        "#450A11"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/creative-digital.webp"
+    },
+    {
+      "slug": "creative-portfolio1",
+      "name": "NOEMA.ART",
+      "category": "portfolio",
+      "tags": [
+        "creative",
+        "portfolio1",
+        "portfolio",
+        "dark"
+      ],
+      "description": "personal portfolio site, dark theme, Anton type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#4F46E5",
+        "#1F1D3C",
+        "#FBFAFF",
+        "#A7A7D3",
+        "#6B64AE"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Anton",
+        "Inter",
+        "Caveat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/creative-portfolio1.webp"
+    },
+    {
+      "slug": "creative-studio-aura",
+      "name": "Aura Studios",
+      "category": "agency",
+      "tags": [
+        "creative",
+        "agency",
+        "dark",
+        "editorial"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, cta.",
+      "colors": [
+        "#11131A",
+        "#434444",
+        "#5B5C5C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/creative-studio-aura.webp"
+    },
+    {
+      "slug": "cybersecur-infrastruc",
+      "name": "Nexus",
+      "category": "dev-tools",
+      "tags": [
+        "cybersecur",
+        "infrastruc",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#010102",
+        "#110D46",
+        "#141164",
+        "#263288",
+        "#0B0B1E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/cybersecur-infrastruc.webp"
+    },
+    {
+      "slug": "design-system-playground",
+      "name": "Design Mutation System",
+      "category": "agency",
+      "tags": [
+        "design",
+        "system",
+        "playground",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#0A0A0A",
+        "#1C1C1C",
+        "#A0A0A0"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/design-system-playground.webp"
+    },
+    {
+      "slug": "developer-monetizati",
+      "name": "Ledger",
+      "category": "dev-tools",
+      "tags": [
+        "developer",
+        "monetizati",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#1D372E",
+        "#0F1616",
+        "#1BA57E",
+        "#355D52"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/developer-monetizati.webp"
+    },
+    {
+      "slug": "digital-creative-agency",
+      "name": "CoolSite",
+      "category": "agency",
+      "tags": [
+        "digital",
+        "creative",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0C1414",
+        "#1D2D2E",
+        "#000000",
+        "#496364"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/digital-creative-agency.webp"
+    },
+    {
+      "slug": "digital-design-13",
+      "name": "FORMA",
+      "category": "agency",
+      "tags": [
+        "digital",
+        "design",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Space Grotesk type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#0A0A0A",
+        "#9E6E53",
+        "#38281F",
+        "#533727",
+        "#80563E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/digital-design-13.webp"
+    },
+    {
+      "slug": "echelon",
+      "name": "Echelon Atelier",
+      "category": "dev-tools",
+      "tags": [
+        "echelon",
+        "dev-tools",
+        "light"
+      ],
+      "description": "developer-tools / infrastructure landing page, light theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#FFFFFF",
+        "#2C1C12",
+        "#AB9F95",
+        "#F0EBE5",
+        "#725035"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/echelon.webp"
+    },
+    {
+      "slug": "elysian",
+      "name": "Editorial Motion Layout",
+      "category": "luxury",
+      "tags": [
+        "elysian",
+        "luxury",
+        "light"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#E5E0D7",
+        "#FAFAF9",
+        "#AEA694",
+        "#463C2D",
+        "#655744"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/elysian.webp"
+    },
+    {
+      "slug": "endurance-race-71",
+      "name": "Spartan",
+      "category": "tech",
+      "tags": [
+        "endurance",
+        "race",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, team.",
+      "colors": [
+        "#0A0A0A",
+        "#FAFAFA",
+        "#211919",
+        "#9A9393",
+        "#921313"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/endurance-race-71.webp"
+    },
+    {
+      "slug": "enterprise-ai-58",
+      "name": "NODEX",
+      "category": "ai-saas",
+      "tags": [
+        "enterprise",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#335066",
+        "#1C3248",
+        "#708C97",
+        "#0B192D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "Instrument Serif",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/enterprise-ai-58.webp"
+    },
+    {
+      "slug": "etheria-ai",
+      "name": "Etheria",
+      "category": "ai-saas",
+      "tags": [
+        "etheria",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, DM Sans type. Sections: hero, features, gallery, team.",
+      "colors": [
+        "#4E5050",
+        "#656766",
+        "#21201F",
+        "#7C7D7C",
+        "#373837"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/etheria-ai.webp"
+    },
+    {
+      "slug": "exoflora-luxury",
+      "name": "Exoflora",
+      "category": "luxury",
+      "tags": [
+        "exoflora",
+        "luxury",
+        "dark",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#1E4965",
+        "#497891",
+        "#13140F",
+        "#86C9E8",
+        "#77A0B3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/exoflora-luxury.webp"
+    },
+    {
+      "slug": "financeflo-fintech",
+      "name": "FinanceFlow",
+      "category": "fintech",
+      "tags": [
+        "financeflo",
+        "fintech",
+        "light"
+      ],
+      "description": "fintech / finance landing page, light theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#FACC15",
+        "#1A1914",
+        "#333020",
+        "#C1A123",
+        "#63592D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/financeflo-fintech.webp"
+    },
+    {
+      "slug": "financial-infrastruc-68",
+      "name": "Swipeeely",
+      "category": "fintech",
+      "tags": [
+        "financial",
+        "infrastruc",
+        "fintech",
+        "dark"
+      ],
+      "description": "fintech / finance landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#182A3C",
+        "#2D3E4E",
+        "#10161D",
+        "#F0F1F4",
+        "#4B5A67"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/financial-infrastruc-68.webp"
+    },
+    {
+      "slug": "finex-finance",
+      "name": "Finex",
+      "category": "fintech",
+      "tags": [
+        "finex",
+        "finance",
+        "fintech",
+        "dark",
+        "editorial"
+      ],
+      "description": "fintech / finance landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#101016",
+        "#301F67",
+        "#655789"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Newsreader",
+        "Oswald",
+        "serif"
+      ],
+      "thumbnail": "thumbs/finex-finance.webp"
+    },
+    {
+      "slug": "finex-gaming-98",
+      "name": "Finex",
+      "category": "gaming",
+      "tags": [
+        "finex",
+        "gaming",
+        "dark"
+      ],
+      "description": "gaming landing page, dark theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#010101",
+        "#2A2B2E",
+        "#131416",
+        "#8B8B8D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/finex-gaming-98.webp"
+    },
+    {
+      "slug": "fluxer",
+      "name": "Fluxer",
+      "category": "luxury",
+      "tags": [
+        "fluxer",
+        "luxury",
+        "dark"
+      ],
+      "description": "luxury brand landing page, dark theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#131316",
+        "#020101",
+        "#675852",
+        "#372A23",
+        "#BDB3B3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/fluxer.webp"
+    },
+    {
+      "slug": "forest-resort",
+      "name": "Aetheria",
+      "category": "travel",
+      "tags": [
+        "forest",
+        "resort",
+        "travel",
+        "dark",
+        "editorial"
+      ],
+      "description": "travel landing page, dark theme, Instrument Sans type. Sections: hero, features, gallery, about.",
+      "colors": [
+        "#33321D",
+        "#6F553C",
+        "#1F1C13",
+        "#837A5F",
+        "#E4E3DF"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "gallery",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Sans",
+        "Playfair Display",
+        "Oswald",
+        "serif"
+      ],
+      "thumbnail": "thumbs/forest-resort.webp"
+    },
+    {
+      "slug": "forge-platform-42",
+      "name": "Forge",
+      "category": "saas",
+      "tags": [
+        "forge",
+        "platform",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Bebas Neue type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0B0B0D",
+        "#202325",
+        "#3C4548",
+        "#8B6B56",
+        "#CAC0BA"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bebas Neue",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/forge-platform-42.webp"
+    },
+    {
+      "slug": "frontend-engineer-template",
+      "name": "Frontend Engineer Portfolio",
+      "category": "dev-tools",
+      "tags": [
+        "frontend",
+        "engineer",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#040404",
+        "#404040"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Manrope",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/frontend-engineer-template.webp"
+    },
+    {
+      "slug": "futurist-workflow",
+      "name": "Futurist Workflow Interface",
+      "category": "agency",
+      "tags": [
+        "futurist",
+        "workflow",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, team.",
+      "colors": [
+        "#256E9F",
+        "#020305",
+        "#102A42",
+        "#064975",
+        "#02151F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futurist-workflow.webp"
+    },
+    {
+      "slug": "futuristic-agency",
+      "name": "Vanguard",
+      "category": "agency",
+      "tags": [
+        "futuristic",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Instrument Serif type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#070808",
+        "#182621",
+        "#66746E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-agency.webp"
+    },
+    {
+      "slug": "futuristic-infrastruc-41",
+      "name": "OBELISK",
+      "category": "dev-tools",
+      "tags": [
+        "futuristic",
+        "infrastruc",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, var type. Sections: hero, features, pricing, contact.",
+      "colors": [
+        "#030303",
+        "#464041",
+        "#8D8A8B",
+        "#1B1B1B",
+        "#2F010C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "var",
+        "Courier New",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-infrastruc-41.webp"
+    },
+    {
+      "slug": "futuristic-infrastructure",
+      "name": "HRZN",
+      "category": "dev-tools",
+      "tags": [
+        "futuristic",
+        "infrastructure",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#56351C",
+        "#27160E",
+        "#AB9A7C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-infrastructure.webp"
+    },
+    {
+      "slug": "futuristic-space",
+      "name": "MARS // ARES Protocol",
+      "category": "travel",
+      "tags": [
+        "futuristic",
+        "space",
+        "travel",
+        "dark"
+      ],
+      "description": "travel landing page, dark theme, Abril Fatface type. Sections: hero, footer, features, cta.",
+      "colors": [
+        "#0F0F10",
+        "#8A8077",
+        "#3B3836",
+        "#6C6660"
+      ],
+      "sections": [
+        "hero",
+        "footer",
+        "features",
+        "cta"
+      ],
+      "fonts": [
+        "Abril Fatface",
+        "Syne",
+        "Space Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-space.webp"
+    },
+    {
+      "slug": "futuristic-technology",
+      "name": "Decentralized Planetary Infrastructure",
+      "category": "tech",
+      "tags": [
+        "futuristic",
+        "technology",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, DM Sans type. Sections: hero, features, pricing, faq.",
+      "colors": [
+        "#120B31",
+        "#030303",
+        "#57535F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-technology.webp"
+    },
+    {
+      "slug": "futuristic-technology1",
+      "name": "Futuristic Technology1",
+      "category": "tech",
+      "tags": [
+        "futuristic",
+        "technology1",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#030303",
+        "#104944",
+        "#0B312C",
+        "#096866",
+        "#A6B9B9"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-technology1.webp"
+    },
+    {
+      "slug": "futuristic-web3",
+      "name": "AURA",
+      "category": "crypto-web3",
+      "tags": [
+        "futuristic",
+        "web3",
+        "crypto-web3",
+        "dark"
+      ],
+      "description": "crypto / web3 landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0A0A0A",
+        "#213426",
+        "#282154",
+        "#3B4641",
+        "#868583"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-web3.webp"
+    },
+    {
+      "slug": "futuristic-webgl",
+      "name": "LAB.01",
+      "category": "tech",
+      "tags": [
+        "futuristic",
+        "webgl",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#2F3D4B",
+        "#071926",
+        "#677781"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Orbitron",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/futuristic-webgl.webp"
+    },
+    {
+      "slug": "gaqo",
+      "name": "Gaqo",
+      "category": "agency",
+      "tags": [
+        "gaqo",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, testimonials, team, cta.",
+      "colors": [
+        "#C4D4E1",
+        "#B7BCC0",
+        "#7F868F",
+        "#3F4350",
+        "#9CA8B2"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/gaqo.webp"
+    },
+    {
+      "slug": "genesis-cinematic-0",
+      "name": "GENESIS",
+      "category": "cinematic",
+      "tags": [
+        "genesis",
+        "cinematic",
+        "dark"
+      ],
+      "description": "cinematic / production landing page, dark theme, Fraunces type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#090E11",
+        "#534B5B",
+        "#392A3A",
+        "#1E1D24",
+        "#9C96AB"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Fraunces",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/genesis-cinematic-0.webp"
+    },
+    {
+      "slug": "grotesk-zero-45",
+      "name": "Grotesk Zero",
+      "category": "tech",
+      "tags": [
+        "grotesk",
+        "zero",
+        "tech",
+        "light"
+      ],
+      "description": "modern tech landing page, light theme, Archivo type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F3F0E9",
+        "#AAA8A4",
+        "#D9D8D2",
+        "#84837F",
+        "#21201E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Archivo",
+        "IBM Plex Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/grotesk-zero-45.webp"
+    },
+    {
+      "slug": "haven-interior",
+      "name": "Haven",
+      "category": "luxury",
+      "tags": [
+        "haven",
+        "interior",
+        "luxury",
+        "light",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#8C857D",
+        "#635E59",
+        "#373330",
+        "#4A4C4C",
+        "#221E1A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/haven-interior.webp"
+    },
+    {
+      "slug": "hyperbolt-digital-17",
+      "name": "Nexora Digital",
+      "category": "agency",
+      "tags": [
+        "hyperbolt",
+        "digital",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#1B1523",
+        "#6E5E8C",
+        "#4C3868",
+        "#29154D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/hyperbolt-digital-17.webp"
+    },
+    {
+      "slug": "ink-landing-page-69",
+      "name": "INK",
+      "category": "tech",
+      "tags": [
+        "ink",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Space Grotesk type. Sections: hero, pricing, testimonials, cta.",
+      "colors": [
+        "#050507",
+        "#1B1B1D",
+        "#F8F9FA",
+        "#929396",
+        "#353538"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "Instrument Serif",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ink-landing-page-69.webp"
+    },
+    {
+      "slug": "interstell-logistics",
+      "name": "ORION",
+      "category": "dev-tools",
+      "tags": [
+        "interstell",
+        "logistics",
+        "dev-tools",
+        "dark",
+        "editorial"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, pricing, gallery, cta.",
+      "colors": [
+        "#040404",
+        "#151A1C",
+        "#303A3E",
+        "#777B7C"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "gallery",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Bricolage Grotesque",
+        "serif"
+      ],
+      "thumbnail": "thumbs/interstell-logistics.webp"
+    },
+    {
+      "slug": "journey-real-estate",
+      "name": "Journey Real Estate",
+      "category": "real-estate",
+      "tags": [
+        "journey",
+        "real",
+        "estate",
+        "real-estate",
+        "dark"
+      ],
+      "description": "real-estate landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0B0514",
+        "#413148",
+        "#291E33",
+        "#675F6B"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Google Sans Flex",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/journey-real-estate.webp"
+    },
+    {
+      "slug": "kinetic-type",
+      "name": "KINETIC TYPE // OPENING SEQUENCE",
+      "category": "agency",
+      "tags": [
+        "kinetic",
+        "type",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, JetBrains Mono type. Sections: hero, footer, features, cta.",
+      "colors": [
+        "#050505",
+        "#757878",
+        "#3C4242",
+        "#171B1B",
+        "#C5D1C7"
+      ],
+      "sections": [
+        "hero",
+        "footer",
+        "features",
+        "cta"
+      ],
+      "fonts": [
+        "JetBrains Mono",
+        "Rajdhani",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/kinetic-type.webp"
+    },
+    {
+      "slug": "kinzan-omakase",
+      "name": "KINZAN",
+      "category": "restaurant",
+      "tags": [
+        "kinzan",
+        "omakase",
+        "restaurant",
+        "light",
+        "editorial"
+      ],
+      "description": "restaurant / food landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#D5C3AB",
+        "#B49E84",
+        "#FFFFFF",
+        "#978570",
+        "#6F5E4E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/kinzan-omakase.webp"
+    },
+    {
+      "slug": "ledger-saas-landingpage",
+      "name": "Ledger",
+      "category": "fintech",
+      "tags": [
+        "ledger",
+        "saas",
+        "landingpage",
+        "fintech",
+        "light"
+      ],
+      "description": "fintech / finance landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FCF4F3",
+        "#C69485",
+        "#1F1817",
+        "#E1D4D1"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Bricolage Grotesque",
+        "Google Sans Flex",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ledger-saas-landingpage.webp"
+    },
+    {
+      "slug": "ledgerly",
+      "name": "Ledgerly",
+      "category": "fintech",
+      "tags": [
+        "ledgerly",
+        "fintech",
+        "light"
+      ],
+      "description": "fintech / finance landing page, light theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FAF7F2",
+        "#4A6360",
+        "#DBDDD9",
+        "#B2B7B4"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Geist Mono",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ledgerly.webp"
+    },
+    {
+      "slug": "liora-homecare",
+      "name": "Liora Home Care",
+      "category": "wellness",
+      "tags": [
+        "liora",
+        "homecare",
+        "wellness",
+        "light",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, light theme, Urbanist type. Sections: hero, pricing, testimonials, team.",
+      "colors": [
+        "#FAF9F5",
+        "#B3B5AF",
+        "#D5D8D4",
+        "#85857D",
+        "#5A5B56"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Urbanist",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/liora-homecare.webp"
+    },
+    {
+      "slug": "loopra-ai-automation",
+      "name": "Loopra",
+      "category": "ai-saas",
+      "tags": [
+        "loopra",
+        "automation",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#143677",
+        "#06070B",
+        "#03173D",
+        "#062560",
+        "#5F7BA3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/loopra-ai-automation.webp"
+    },
+    {
+      "slug": "lumaloop-music",
+      "name": "LumaLoop",
+      "category": "music",
+      "tags": [
+        "lumaloop",
+        "music",
+        "dark"
+      ],
+      "description": "music / audio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#030303",
+        "#D0FAFE",
+        "#323433",
+        "#595C5C",
+        "#BFE6E9"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Orbitron",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/lumaloop-music.webp"
+    },
+    {
+      "slug": "lumen-portfolio",
+      "name": "LUMEN",
+      "category": "portfolio",
+      "tags": [
+        "lumen",
+        "portfolio",
+        "light"
+      ],
+      "description": "personal portfolio site, light theme, Geist type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#FAFAFA",
+        "#333333",
+        "#69696A",
+        "#212121",
+        "#050505"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/lumen-portfolio.webp"
+    },
+    {
+      "slug": "lumina-creative",
+      "name": "Lumina Creative Studio",
+      "category": "agency",
+      "tags": [
+        "lumina",
+        "creative",
+        "agency",
+        "light",
+        "editorial"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, team, cta.",
+      "colors": [
+        "#EEF3FA",
+        "#ABD8EC",
+        "#9194AC"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Geist",
+        "serif"
+      ],
+      "thumbnail": "thumbs/lumina-creative.webp"
+    },
+    {
+      "slug": "lumina-digital",
+      "name": "Lumina",
+      "category": "agency",
+      "tags": [
+        "lumina",
+        "digital",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, testimonials, gallery, about.",
+      "colors": [
+        "#FAFAFA",
+        "#A3A3A3",
+        "#B8B8B8",
+        "#646465",
+        "#868686"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "DM Sans",
+        "Quicksand",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/lumina-digital.webp"
+    },
+    {
+      "slug": "lumina-digital-canvas",
+      "name": "Lumina",
+      "category": "agency",
+      "tags": [
+        "lumina",
+        "digital",
+        "canvas",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, gallery, team, about.",
+      "colors": [
+        "#E8E6DF",
+        "#1A1A1A",
+        "#555555",
+        "#747474",
+        "#979696"
+      ],
+      "sections": [
+        "hero",
+        "gallery",
+        "team",
+        "about",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "DM Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/lumina-digital-canvas.webp"
+    },
+    {
+      "slug": "lumina-estate",
+      "name": "Lumina",
+      "category": "real-estate",
+      "tags": [
+        "lumina",
+        "estate",
+        "real-estate",
+        "light"
+      ],
+      "description": "real-estate landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#EFECE5",
+        "#A79077",
+        "#C8B7A1",
+        "#655344",
+        "#DCD7CE"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/lumina-estate.webp"
+    },
+    {
+      "slug": "luminal-studio",
+      "name": "Luminal Studio",
+      "category": "agency",
+      "tags": [
+        "luminal",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Inter type. Sections: hero, features, pricing, cta.",
+      "colors": [
+        "#040302",
+        "#8B2D14",
+        "#491202",
+        "#D0A89F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Syne",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/luminal-studio.webp"
+    },
+    {
+      "slug": "luxury-estate",
+      "name": "Lumina Estate",
+      "category": "real-estate",
+      "tags": [
+        "luxury",
+        "estate",
+        "real-estate",
+        "dark"
+      ],
+      "description": "real-estate landing page, dark theme, Geist type. Sections: hero, testimonials, about, footer.",
+      "colors": [
+        "#40312F",
+        "#998C76",
+        "#7A7263",
+        "#575049",
+        "#282022"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "about",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/luxury-estate.webp"
+    },
+    {
+      "slug": "luxury-furniture",
+      "name": "Aura",
+      "category": "luxury",
+      "tags": [
+        "luxury",
+        "furniture",
+        "light",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#F2EFEA",
+        "#CDC7C0",
+        "#726458",
+        "#423830",
+        "#AFA59A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Bricolage Grotesque",
+        "serif"
+      ],
+      "thumbnail": "thumbs/luxury-furniture.webp"
+    },
+    {
+      "slug": "luxury-interior",
+      "name": "Maison Aurum",
+      "category": "luxury",
+      "tags": [
+        "luxury",
+        "interior",
+        "dark"
+      ],
+      "description": "luxury brand landing page, dark theme, Geist Sans type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0C0B0C",
+        "#636461",
+        "#281F1A",
+        "#56514A",
+        "#3A322A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/luxury-interior.webp"
+    },
+    {
+      "slug": "luxury-real-estate",
+      "name": "Aura Estates",
+      "category": "real-estate",
+      "tags": [
+        "luxury",
+        "real",
+        "estate",
+        "real-estate",
+        "light"
+      ],
+      "description": "real-estate landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F8F7F5",
+        "#73695B",
+        "#7E96AA",
+        "#B6BABC",
+        "#E8E4DD"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/luxury-real-estate.webp"
+    },
+    {
+      "slug": "luxury-rentals",
+      "name": "NOVERA",
+      "category": "real-estate",
+      "tags": [
+        "luxury",
+        "rentals",
+        "real-estate",
+        "light",
+        "editorial"
+      ],
+      "description": "real-estate landing page, light theme, DM Sans type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#D7D3CE",
+        "#654E3B",
+        "#92806C",
+        "#AF9778",
+        "#4A382A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "team",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/luxury-rentals.webp"
+    },
+    {
+      "slug": "mango",
+      "name": "PaPaya Streaming Dashboard",
+      "category": "restaurant",
+      "tags": [
+        "mango",
+        "restaurant",
+        "dark"
+      ],
+      "description": "restaurant / food landing page, dark theme, Geist type. Sections: hero, about, cta, footer.",
+      "colors": [
+        "#0D0C12",
+        "#2F262D",
+        "#76413D",
+        "#632D2B",
+        "#746D6A"
+      ],
+      "sections": [
+        "hero",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/mango.webp"
+    },
+    {
+      "slug": "matter-in-motion",
+      "name": "Matter in Motion",
+      "category": "cinematic",
+      "tags": [
+        "matter",
+        "motion",
+        "cinematic",
+        "dark"
+      ],
+      "description": "cinematic / production landing page, dark theme, Instrument Serif type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#141519",
+        "#2E2F31"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Fraunces",
+        "Onest",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/matter-in-motion.webp"
+    },
+    {
+      "slug": "meridian-landing-8",
+      "name": "Meridian",
+      "category": "tech",
+      "tags": [
+        "meridian",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0B4453",
+        "#0B1219",
+        "#11637B",
+        "#0B2733",
+        "#2A8BA2"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/meridian-landing-8.webp"
+    },
+    {
+      "slug": "meridian-travel-36",
+      "name": "MERIDIAN",
+      "category": "travel",
+      "tags": [
+        "meridian",
+        "travel",
+        "light"
+      ],
+      "description": "travel landing page, light theme, Fraunces type. Sections: hero, testimonials, about, cta.",
+      "colors": [
+        "#877564",
+        "#15130D",
+        "#756151",
+        "#373127",
+        "#514940"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Fraunces",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/meridian-travel-36.webp"
+    },
+    {
+      "slug": "modern-presss",
+      "name": "Modern CMS Platform",
+      "category": "agency",
+      "tags": [
+        "modern",
+        "presss",
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#15131E",
+        "#000000",
+        "#245908",
+        "#719970"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/modern-presss.webp"
+    },
+    {
+      "slug": "monolith-architecture",
+      "name": "MONOLITH",
+      "category": "architecture",
+      "tags": [
+        "monolith",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0A0A0B",
+        "#342017",
+        "#916D5C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/monolith-architecture.webp"
+    },
+    {
+      "slug": "nebula-real-time",
+      "name": "Nebula",
+      "category": "tech",
+      "tags": [
+        "nebula",
+        "real",
+        "time",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#090A0C",
+        "#4C6793",
+        "#2D344D",
+        "#171B29",
+        "#3A4667"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nebula-real-time.webp"
+    },
+    {
+      "slug": "neon-oiran",
+      "name": "Neon Oiran",
+      "category": "restaurant",
+      "tags": [
+        "neon",
+        "oiran",
+        "restaurant",
+        "dark"
+      ],
+      "description": "restaurant / food landing page, dark theme, Viaoda Libre type. Sections: hero, pricing, testimonials, about.",
+      "colors": [
+        "#0A0608",
+        "#051C27",
+        "#29303F",
+        "#524A5E",
+        "#563540"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Viaoda Libre",
+        "Imprima",
+        "Bebas Neue",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/neon-oiran.webp"
+    },
+    {
+      "slug": "nereo-luxury",
+      "name": "Nereo",
+      "category": "luxury",
+      "tags": [
+        "nereo",
+        "luxury",
+        "dark",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, dark theme, Cormorant Garamond type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#050505",
+        "#3F3020",
+        "#231E16",
+        "#514437"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Montserrat",
+        "serif"
+      ],
+      "thumbnail": "thumbs/nereo-luxury.webp"
+    },
+    {
+      "slug": "neugen",
+      "name": "NeuGen",
+      "category": "tech",
+      "tags": [
+        "neugen",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#100901",
+        "#5E5239"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/neugen.webp"
+    },
+    {
+      "slug": "nexora-ai-workflow",
+      "name": "Nexora",
+      "category": "ai-saas",
+      "tags": [
+        "nexora",
+        "workflow",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#05090B",
+        "#060D32",
+        "#1B70AA",
+        "#044153",
+        "#5FC3E3"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexora-ai-workflow.webp"
+    },
+    {
+      "slug": "nexpay",
+      "name": "NexPay",
+      "category": "fintech",
+      "tags": [
+        "nexpay",
+        "fintech",
+        "light"
+      ],
+      "description": "fintech / finance landing page, light theme, Inter type. Sections: hero, pricing, testimonials, about.",
+      "colors": [
+        "#F2EFEA",
+        "#E9DAD2",
+        "#6A6560"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Plus Jakarta Sans",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexpay.webp"
+    },
+    {
+      "slug": "nexus-arcade",
+      "name": "NEXUS",
+      "category": "gaming",
+      "tags": [
+        "nexus",
+        "arcade",
+        "gaming",
+        "dark"
+      ],
+      "description": "gaming landing page, dark theme, Space Grotesk type. Sections: hero, testimonials, cta, footer.",
+      "colors": [
+        "#0A0814",
+        "#3E4253",
+        "#121D2A",
+        "#698091"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "Space Mono",
+        "VT323",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexus-arcade.webp"
+    },
+    {
+      "slug": "nexus-architecture",
+      "name": "Nexus Architecture",
+      "category": "architecture",
+      "tags": [
+        "nexus",
+        "architecture",
+        "light"
+      ],
+      "description": "architecture studio landing page, light theme, Inter type. Sections: hero, testimonials, gallery, team.",
+      "colors": [
+        "#ECE9E4",
+        "#675442",
+        "#9C8D7B",
+        "#6B94B0",
+        "#A7B5BB"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Google Sans Flex",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexus-architecture.webp"
+    },
+    {
+      "slug": "nexus-intelligen-21",
+      "name": "NEXUS",
+      "category": "ai-saas",
+      "tags": [
+        "nexus",
+        "intelligen",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Syne type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#060A09",
+        "#2FCCA5",
+        "#DBE7E4",
+        "#499B84",
+        "#316D5B"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Syne",
+        "DM Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexus-intelligen-21.webp"
+    },
+    {
+      "slug": "nexus-studio",
+      "name": "Nexus",
+      "category": "agency",
+      "tags": [
+        "nexus",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#98705C",
+        "#6A5044",
+        "#B08F7F",
+        "#3F3432"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexus-studio.webp"
+    },
+    {
+      "slug": "nexuscore",
+      "name": "Nexus Core",
+      "category": "tech",
+      "tags": [
+        "nexuscore",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Bricolage Grotesque type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#060606",
+        "#141C1D",
+        "#316A70"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "faq",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Bricolage Grotesque",
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexuscore.webp"
+    },
+    {
+      "slug": "nexusflow-saas",
+      "name": "NexusFlow",
+      "category": "saas",
+      "tags": [
+        "nexusflow",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#151515",
+        "#40342D",
+        "#A8968C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nexusflow-saas.webp"
+    },
+    {
+      "slug": "noctave-premium",
+      "name": "Noctave",
+      "category": "luxury",
+      "tags": [
+        "noctave",
+        "premium",
+        "luxury",
+        "dark"
+      ],
+      "description": "luxury brand landing page, dark theme, Poppins type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#16100B",
+        "#332318",
+        "#756558"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Poppins",
+        "Aboreto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/noctave-premium.webp"
+    },
+    {
+      "slug": "nocturne-fragrance",
+      "name": "NOCTÚRNE",
+      "category": "luxury",
+      "tags": [
+        "nocturne",
+        "fragrance",
+        "luxury",
+        "dark",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, dark theme, Cormorant Garamond type. Sections: hero, pricing, testimonials, team.",
+      "colors": [
+        "#0A0A0B",
+        "#676562",
+        "#383636",
+        "#201F20",
+        "#B4B0AB"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Inter",
+        "serif"
+      ],
+      "thumbnail": "thumbs/nocturne-fragrance.webp"
+    },
+    {
+      "slug": "noirframefashion",
+      "name": "NOIRFRAME®",
+      "category": "luxury",
+      "tags": [
+        "noirframefashion",
+        "luxury",
+        "light",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#8CA3A9",
+        "#608895",
+        "#020202",
+        "#764B39",
+        "#6B3224"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/noirframefashion.webp"
+    },
+    {
+      "slug": "norvak-spatial",
+      "name": "NORVAK®",
+      "category": "architecture",
+      "tags": [
+        "norvak",
+        "spatial",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#0A0E20",
+        "#AFB5B7",
+        "#344F59",
+        "#8C817A",
+        "#E5EAE9"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/norvak-spatial.webp"
+    },
+    {
+      "slug": "nova-nexus-studio",
+      "name": "Nova Nexus",
+      "category": "agency",
+      "tags": [
+        "nova",
+        "nexus",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Bodoni Moda type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FAF8F3",
+        "#BBB4AD",
+        "#705640",
+        "#322E29",
+        "#E3E1DF"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bodoni Moda",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nova-nexus-studio.webp"
+    },
+    {
+      "slug": "nova-ui-spatial",
+      "name": "Nova",
+      "category": "architecture",
+      "tags": [
+        "nova",
+        "spatial",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#010213",
+        "#2E3A71",
+        "#0A1238",
+        "#A9AEC1"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/nova-ui-spatial.webp"
+    },
+    {
+      "slug": "novapay",
+      "name": "NovaPay",
+      "category": "fintech",
+      "tags": [
+        "novapay",
+        "fintech",
+        "dark"
+      ],
+      "description": "fintech / finance landing page, dark theme, Inter type. Sections: hero, pricing, team, cta.",
+      "colors": [
+        "#05101E",
+        "#F5F8F9",
+        "#082B42",
+        "#4B607A",
+        "#213F52"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/novapay.webp"
+    },
+    {
+      "slug": "novastudio-agency",
+      "name": "NovaStudio",
+      "category": "agency",
+      "tags": [
+        "novastudio",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F0F0F7",
+        "#C6C7E0",
+        "#101013",
+        "#CCE1F3",
+        "#807FA1"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/novastudio-agency.webp"
+    },
+    {
+      "slug": "novi-saas-automation",
+      "name": "Novi",
+      "category": "saas",
+      "tags": [
+        "novi",
+        "saas",
+        "automation",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Bricolage Grotesque type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#020A0D",
+        "#04303B",
+        "#1C5763",
+        "#2C95A5"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bricolage Grotesque",
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/novi-saas-automation.webp"
+    },
+    {
+      "slug": "obsidian",
+      "name": "Obsidian",
+      "category": "luxury",
+      "tags": [
+        "obsidian",
+        "luxury",
+        "light"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, pricing, testimonials, team.",
+      "colors": [
+        "#E5E4DE",
+        "#FAF8F3",
+        "#867E76"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/obsidian.webp"
+    },
+    {
+      "slug": "omakase-restaurant-50",
+      "name": "鯨 KUJIRA",
+      "category": "restaurant",
+      "tags": [
+        "omakase",
+        "restaurant",
+        "dark",
+        "editorial"
+      ],
+      "description": "restaurant / food landing page, dark theme, Cormorant Garamond type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#050505",
+        "#725442"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Inter",
+        "Noto Serif JP",
+        "serif"
+      ],
+      "thumbnail": "thumbs/omakase-restaurant-50.webp"
+    },
+    {
+      "slug": "orbitdesk-saas",
+      "name": "OrbitDesk",
+      "category": "saas",
+      "tags": [
+        "orbitdesk",
+        "saas",
+        "light",
+        "editorial"
+      ],
+      "description": "SaaS product landing page, light theme, Instrument Serif type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#FAF8F1",
+        "#C4BEB4",
+        "#191C23",
+        "#DADAD6",
+        "#92897F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Inter",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/orbitdesk-saas.webp"
+    },
+    {
+      "slug": "outnext-gaming",
+      "name": "Outcrowd",
+      "category": "gaming",
+      "tags": [
+        "outnext",
+        "gaming",
+        "dark"
+      ],
+      "description": "gaming landing page, dark theme, ITC Avant Garde Std type. Sections: hero, testimonials, gallery, team.",
+      "colors": [
+        "#110D0B",
+        "#466176",
+        "#1E405D",
+        "#361D0D",
+        "#673C15"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "ITC Avant Garde Std",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/outnext-gaming.webp"
+    },
+    {
+      "slug": "parallel-worlds",
+      "name": "Designing Parallel Worlds",
+      "category": "travel",
+      "tags": [
+        "parallel",
+        "worlds",
+        "travel",
+        "dark"
+      ],
+      "description": "travel landing page, dark theme, Inter type. Sections: hero, features, cta, contact.",
+      "colors": [
+        "#000000",
+        "#264757",
+        "#081623",
+        "#97AFBD"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Michroma",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/parallel-worlds.webp"
+    },
+    {
+      "slug": "playverse",
+      "name": "Playverse",
+      "category": "gaming",
+      "tags": [
+        "playverse",
+        "gaming",
+        "light"
+      ],
+      "description": "gaming landing page, light theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#D5B7AE",
+        "#E3F0F9",
+        "#CDD6E4",
+        "#4E4653"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/playverse.webp"
+    },
+    {
+      "slug": "playwonder",
+      "name": "Play Wonder",
+      "category": "gaming",
+      "tags": [
+        "playwonder",
+        "gaming",
+        "light"
+      ],
+      "description": "gaming landing page, light theme, Inter type. Sections: hero, features, cta, footer.",
+      "colors": [
+        "#FFFFFF",
+        "#DEAAD3",
+        "#2FC8D9",
+        "#E8C6DD",
+        "#9AACCF"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Oswald",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/playwonder.webp"
+    },
+    {
+      "slug": "pony-house-ai",
+      "name": "Lumora",
+      "category": "ai-saas",
+      "tags": [
+        "pony",
+        "house",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0B0C0E",
+        "#162236"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/pony-house-ai.webp"
+    },
+    {
+      "slug": "primeestat-real",
+      "name": "PrimeEstates",
+      "category": "real-estate",
+      "tags": [
+        "primeestat",
+        "real",
+        "real-estate",
+        "dark"
+      ],
+      "description": "real-estate landing page, dark theme, Inter type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#1B1B1B",
+        "#FFFFFF",
+        "#B2B3B1",
+        "#80807E",
+        "#47443F"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Instrument Serif",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/primeestat-real.webp"
+    },
+    {
+      "slug": "prism-saas-landing",
+      "name": "Prism",
+      "category": "saas",
+      "tags": [
+        "prism",
+        "saas",
+        "light",
+        "editorial"
+      ],
+      "description": "SaaS product landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#718AEC",
+        "#EAEAF9",
+        "#CCD6F9",
+        "#A5B5EB"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/prism-saas-landing.webp"
+    },
+    {
+      "slug": "project-management-99",
+      "name": "Scroll Animation Library",
+      "category": "saas",
+      "tags": [
+        "project",
+        "management",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Cinzel type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#2E2F36",
+        "#171719",
+        "#060607",
+        "#5F5A44"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Cinzel",
+        "Manrope",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/project-management-99.webp"
+    },
+    {
+      "slug": "propvision-ai",
+      "name": "PropVision AI",
+      "category": "ai-saas",
+      "tags": [
+        "propvision",
+        "ai-saas",
+        "light"
+      ],
+      "description": "AI product landing page, light theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FDFCFB",
+        "#948778",
+        "#6A5F4E",
+        "#A89B8F",
+        "#C2BEB5"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/propvision-ai.webp"
+    },
+    {
+      "slug": "pulsedesk-saas",
+      "name": "Pulsedesk",
+      "category": "saas",
+      "tags": [
+        "pulsedesk",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Geist type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#111824",
+        "#4C6773",
+        "#25323E",
+        "#3B4754",
+        "#92ABB0"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Plus Jakarta Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/pulsedesk-saas.webp"
+    },
+    {
+      "slug": "quantum-architectu",
+      "name": "Quantum Shard Field",
+      "category": "architecture",
+      "tags": [
+        "quantum",
+        "architectu",
+        "architecture",
+        "dark"
+      ],
+      "description": "architecture studio landing page, dark theme, Outfit type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#09090B",
+        "#2F3337",
+        "#1D2024",
+        "#52595E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Outfit",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/quantum-architectu.webp"
+    },
+    {
+      "slug": "quantum-saas-42",
+      "name": "Velox",
+      "category": "saas",
+      "tags": [
+        "quantum",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0F0B21",
+        "#382D4D"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/quantum-saas-42.webp"
+    },
+    {
+      "slug": "razer",
+      "name": "Gaming Laptops",
+      "category": "gaming",
+      "tags": [
+        "razer",
+        "gaming",
+        "dark"
+      ],
+      "description": "gaming landing page, dark theme, Inter type. Sections: hero, features, about, cta.",
+      "colors": [
+        "#020501",
+        "#144929",
+        "#0D2514",
+        "#68AA81"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/razer.webp"
+    },
+    {
+      "slug": "relay-estate",
+      "name": "RelayEstate AI",
+      "category": "real-estate",
+      "tags": [
+        "relay",
+        "estate",
+        "real-estate",
+        "dark"
+      ],
+      "description": "real-estate landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#6C6D71",
+        "#EFEBE5",
+        "#474F5B",
+        "#2A2726",
+        "#1C1510"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Sora",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/relay-estate.webp"
+    },
+    {
+      "slug": "saas-messaging",
+      "name": "Dasher",
+      "category": "saas",
+      "tags": [
+        "saas",
+        "messaging",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0F0F0F",
+        "#907A71"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/saas-messaging.webp"
+    },
+    {
+      "slug": "sam-coach",
+      "name": "IRON FORGE",
+      "category": "wellness",
+      "tags": [
+        "sam",
+        "coach",
+        "wellness",
+        "dark"
+      ],
+      "description": "wellness / health landing page, dark theme, Geist type. Sections: hero, pricing, testimonials, gallery.",
+      "colors": [
+        "#050506",
+        "#1A1A1C",
+        "#4B3C3D",
+        "#BDB8B8",
+        "#472626"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/sam-coach.webp"
+    },
+    {
+      "slug": "samsara-wellness",
+      "name": "Samsara",
+      "category": "wellness",
+      "tags": [
+        "samsara",
+        "wellness",
+        "dark",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, dark theme, Gloock type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#6F5F4D",
+        "#998B79",
+        "#130E09",
+        "#524539",
+        "#3E2F21"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Gloock",
+        "Manrope",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/samsara-wellness.webp"
+    },
+    {
+      "slug": "savory-plate",
+      "name": "The Savory Plate",
+      "category": "restaurant",
+      "tags": [
+        "savory",
+        "plate",
+        "restaurant",
+        "light",
+        "editorial"
+      ],
+      "description": "restaurant / food landing page, light theme, Plus Jakarta Sans type. Sections: hero, features, testimonials, about.",
+      "colors": [
+        "#FAF9F6",
+        "#5A4432",
+        "#9C917E",
+        "#C2BFB8",
+        "#A5A399"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Plus Jakarta Sans",
+        "Playfair Display",
+        "Geist Mono",
+        "serif"
+      ],
+      "thumbnail": "thumbs/savory-plate.webp"
+    },
+    {
+      "slug": "sequra-fintech",
+      "name": "Sequra",
+      "category": "fintech",
+      "tags": [
+        "sequra",
+        "fintech",
+        "dark",
+        "editorial"
+      ],
+      "description": "fintech / finance landing page, dark theme, Cormorant Garamond type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#050505",
+        "#4D3830",
+        "#221F1E",
+        "#958679"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Inter",
+        "JetBrains Mono",
+        "serif"
+      ],
+      "thumbnail": "thumbs/sequra-fintech.webp"
+    },
+    {
+      "slug": "sequra-wealth",
+      "name": "Sequra",
+      "category": "fintech",
+      "tags": [
+        "sequra",
+        "wealth",
+        "fintech",
+        "light",
+        "editorial"
+      ],
+      "description": "fintech / finance landing page, light theme, Cormorant Garamond type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F0E9DF",
+        "#776A5C",
+        "#C5BFB7",
+        "#393631",
+        "#A39D96"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Manrope",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/sequra-wealth.webp"
+    },
+    {
+      "slug": "serene-private-59",
+      "name": "SERENE · A private island",
+      "category": "wellness",
+      "tags": [
+        "serene",
+        "private",
+        "wellness",
+        "light",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, light theme, Playfair Display type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#B9A88F",
+        "#13413E",
+        "#9F998C",
+        "#808782",
+        "#216E6F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter",
+        "serif"
+      ],
+      "thumbnail": "thumbs/serene-private-59.webp"
+    },
+    {
+      "slug": "serene-wellness",
+      "name": "Serene Wellness",
+      "category": "wellness",
+      "tags": [
+        "serene",
+        "wellness",
+        "light"
+      ],
+      "description": "wellness / health landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#8E9C99",
+        "#32211B",
+        "#7A898A",
+        "#625850",
+        "#463830"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "faq",
+        "about",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/serene-wellness.webp"
+    },
+    {
+      "slug": "signal-ai",
+      "name": "AI Sales Platform",
+      "category": "ai-saas",
+      "tags": [
+        "signal",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#030303",
+        "#181D1C",
+        "#41504B"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/signal-ai.webp"
+    },
+    {
+      "slug": "signalis-saas-45",
+      "name": "Signalis",
+      "category": "saas",
+      "tags": [
+        "signalis",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Bricolage Grotesque type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#09090F",
+        "#76769E",
+        "#1C1933",
+        "#514F79",
+        "#3F3D64"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bricolage Grotesque",
+        "Inter",
+        "Space Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/signalis-saas-45.webp"
+    },
+    {
+      "slug": "signalos",
+      "name": "SignalOS",
+      "category": "dev-tools",
+      "tags": [
+        "signalos",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#03090A",
+        "#164041",
+        "#06292A",
+        "#539997"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/signalos.webp"
+    },
+    {
+      "slug": "sixtine-design",
+      "name": "Sixtine",
+      "category": "luxury",
+      "tags": [
+        "sixtine",
+        "design",
+        "luxury",
+        "light",
+        "editorial"
+      ],
+      "description": "luxury brand landing page, light theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#EBE6E1",
+        "#030302",
+        "#A68F7C",
+        "#70503A",
+        "#D9D1CA"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/sixtine-design.webp"
+    },
+    {
+      "slug": "slides-03",
+      "name": "UI Prompting Guide",
+      "category": "tech",
+      "tags": [
+        "slides",
+        "tech",
+        "light",
+        "editorial"
+      ],
+      "description": "modern tech landing page, light theme, Inter type. Sections: hero, gallery, footer, features.",
+      "colors": [
+        "#E4E4E7",
+        "#18171C",
+        "#F9F9FA",
+        "#5A5164"
+      ],
+      "sections": [
+        "hero",
+        "gallery",
+        "footer",
+        "features",
+        "cta"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Geist",
+        "serif"
+      ],
+      "thumbnail": "thumbs/slides-03.webp"
+    },
+    {
+      "slug": "soma-yoga-studio",
+      "name": "Soma",
+      "category": "wellness",
+      "tags": [
+        "soma",
+        "yoga",
+        "wellness",
+        "dark",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, dark theme, Inter type. Sections: hero, pricing, testimonials, faq.",
+      "colors": [
+        "#111110"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "Manrope",
+        "serif"
+      ],
+      "thumbnail": "thumbs/soma-yoga-studio.webp"
+    },
+    {
+      "slug": "somatic",
+      "name": "Somatic",
+      "category": "wellness",
+      "tags": [
+        "somatic",
+        "wellness",
+        "dark"
+      ],
+      "description": "wellness / health landing page, dark theme, Google Sans Flex type. Sections: hero, pricing, testimonials, faq.",
+      "colors": [
+        "#060915",
+        "#252518",
+        "#3D3B32",
+        "#4F4E48",
+        "#B4B5B2"
+      ],
+      "sections": [
+        "hero",
+        "pricing",
+        "testimonials",
+        "faq",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Google Sans Flex",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/somatic.webp"
+    },
+    {
+      "slug": "somatic-sanctuary",
+      "name": "Somatic Sanctuary",
+      "category": "wellness",
+      "tags": [
+        "somatic",
+        "sanctuary",
+        "wellness",
+        "light",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, light theme, Playfair Display type. Sections: hero, features, testimonials, about.",
+      "colors": [
+        "#E8DDCC",
+        "#513E2B",
+        "#9B8B79",
+        "#C3B7A8"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter",
+        "Fraunces",
+        "serif"
+      ],
+      "thumbnail": "thumbs/somatic-sanctuary.webp"
+    },
+    {
+      "slug": "specialty-coffee",
+      "name": "Café Nova",
+      "category": "restaurant",
+      "tags": [
+        "specialty",
+        "coffee",
+        "restaurant",
+        "light"
+      ],
+      "description": "restaurant / food landing page, light theme, Instrument Serif type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#FAF8F1",
+        "#E5EAE0",
+        "#070605",
+        "#8E6E4E",
+        "#201813"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Serif",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/specialty-coffee.webp"
+    },
+    {
+      "slug": "stillpoint",
+      "name": "Stillpoint Recovery",
+      "category": "wellness",
+      "tags": [
+        "stillpoint",
+        "wellness",
+        "light"
+      ],
+      "description": "wellness / health landing page, light theme, Instrument Sans type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#7C6D5D",
+        "#A89E91",
+        "#1D1A18",
+        "#5E4E3E",
+        "#463B31"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Instrument Sans",
+        "Onest",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/stillpoint.webp"
+    },
+    {
+      "slug": "story-generator",
+      "name": "DreamStory",
+      "category": "ai-saas",
+      "tags": [
+        "story",
+        "generator",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#030305",
+        "#18181B",
+        "#A67F46",
+        "#443A2A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/story-generator.webp"
+    },
+    {
+      "slug": "strata",
+      "name": "Strata",
+      "category": "tech",
+      "tags": [
+        "strata",
+        "tech",
+        "light"
+      ],
+      "description": "modern tech landing page, light theme, Bebas Neue type. Sections: hero, features, team, about.",
+      "colors": [
+        "#F9F9F9",
+        "#D5E2F0"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bebas Neue",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/strata.webp"
+    },
+    {
+      "slug": "stratum-forge",
+      "name": "Engineered Control Panel",
+      "category": "dev-tools",
+      "tags": [
+        "stratum",
+        "forge",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, DM Sans type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#202023",
+        "#373437",
+        "#0D0E0F",
+        "#6C6B6E"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/stratum-forge.webp"
+    },
+    {
+      "slug": "studio",
+      "name": "Studio",
+      "category": "agency",
+      "tags": [
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Space Grotesk type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0E0F11",
+        "#8B5243",
+        "#60303B",
+        "#242328",
+        "#7E6856"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/studio.webp"
+    },
+    {
+      "slug": "studio-motion",
+      "name": "Heva",
+      "category": "cinematic",
+      "tags": [
+        "motion",
+        "cinematic",
+        "light"
+      ],
+      "description": "cinematic / production landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#C9BEB2",
+        "#F8EFE0",
+        "#644F3B",
+        "#837463",
+        "#988772"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/studio-motion.webp"
+    },
+    {
+      "slug": "subline-saas",
+      "name": "Subline",
+      "category": "saas",
+      "tags": [
+        "subline",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0C0D0F",
+        "#58A4CC",
+        "#191D25",
+        "#364B76",
+        "#0C1F60"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/subline-saas.webp"
+    },
+    {
+      "slug": "sustainabl-architectu-18",
+      "name": "VERD Studio",
+      "category": "architecture",
+      "tags": [
+        "sustainabl",
+        "architectu",
+        "architecture",
+        "dark",
+        "editorial"
+      ],
+      "description": "architecture studio landing page, dark theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#111110",
+        "#242628",
+        "#3C3D3E",
+        "#6C7178",
+        "#8A8E95"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/sustainabl-architectu-18.webp"
+    },
+    {
+      "slug": "synthara-ai-music-27",
+      "name": "AI Music Production",
+      "category": "ai-saas",
+      "tags": [
+        "synthara",
+        "music",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Space Grotesk type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#06080B",
+        "#2B2A24",
+        "#685F4A",
+        "#C7C6AD",
+        "#0E2121"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "faq",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/synthara-ai-music-27.webp"
+    },
+    {
+      "slug": "technology-landing",
+      "name": "Process Orchestration Platform",
+      "category": "tech",
+      "tags": [
+        "technology",
+        "tech",
+        "light"
+      ],
+      "description": "modern tech landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F5F4F0",
+        "#1B2A31",
+        "#080E11",
+        "#3A3C3E",
+        "#828686"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/technology-landing.webp"
+    },
+    {
+      "slug": "technology-services",
+      "name": "Nexus / Vision & Logic",
+      "category": "tech",
+      "tags": [
+        "technology",
+        "services",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, features, pricing, gallery.",
+      "colors": [
+        "#0A0A0A",
+        "#988F74",
+        "#3C3C3A"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "gallery",
+        "faq",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/technology-services.webp"
+    },
+    {
+      "slug": "traverse-railway-10",
+      "name": "Ember",
+      "category": "travel",
+      "tags": [
+        "traverse",
+        "railway",
+        "travel",
+        "light",
+        "editorial"
+      ],
+      "description": "travel landing page, light theme, Playfair Display type. Sections: hero, features, pricing, about.",
+      "colors": [
+        "#A7A9A7",
+        "#545339",
+        "#3C3F36",
+        "#282817",
+        "#0F0E09"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter",
+        "serif"
+      ],
+      "thumbnail": "thumbs/traverse-railway-10.webp"
+    },
+    {
+      "slug": "ui-ux-designer",
+      "name": "Designer Portfolio",
+      "category": "portfolio",
+      "tags": [
+        "designer",
+        "portfolio",
+        "dark"
+      ],
+      "description": "personal portfolio site, dark theme, Inter type. Sections: hero, features, testimonials, gallery.",
+      "colors": [
+        "#6D28D9",
+        "#F6F1FC",
+        "#311B50",
+        "#9A88B1",
+        "#544F67"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "Roboto",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ui-ux-designer.webp"
+    },
+    {
+      "slug": "vektor-ai-infrastruc",
+      "name": "Vektor",
+      "category": "ai-saas",
+      "tags": [
+        "vektor",
+        "infrastruc",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Bebas Neue type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#0C0C0C",
+        "#363730",
+        "#BEC98C"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Bebas Neue",
+        "Instrument Serif",
+        "IBM Plex Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/vektor-ai-infrastruc.webp"
+    },
+    {
+      "slug": "vellum-architecture",
+      "name": "Vellum Studio",
+      "category": "architecture",
+      "tags": [
+        "vellum",
+        "architecture",
+        "light"
+      ],
+      "description": "architecture studio landing page, light theme, DM Sans type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#DEE3DF",
+        "#F9FAF8",
+        "#47423D",
+        "#918475",
+        "#2F2B27"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "DM Sans",
+        "IBM Plex Mono",
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/vellum-architecture.webp"
+    },
+    {
+      "slug": "velocity-performanc",
+      "name": "CIRON",
+      "category": "tech",
+      "tags": [
+        "velocity",
+        "performanc",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Inter type. Sections: hero, testimonials, gallery, faq.",
+      "colors": [
+        "#101010",
+        "#898989"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "faq",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/velocity-performanc.webp"
+    },
+    {
+      "slug": "ventus-agency",
+      "name": "Ventus",
+      "category": "agency",
+      "tags": [
+        "ventus",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Manrope type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FDFDFC",
+        "#000000",
+        "#F1A639",
+        "#F5EEE3",
+        "#9A3420"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Manrope",
+        "Space Mono",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/ventus-agency.webp"
+    },
+    {
+      "slug": "vertex-saas-task",
+      "name": "Vertex Task Management",
+      "category": "saas",
+      "tags": [
+        "vertex",
+        "saas",
+        "task",
+        "dark",
+        "editorial"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#141415",
+        "#262627",
+        "#575757"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display",
+        "serif"
+      ],
+      "thumbnail": "thumbs/vertex-saas-task.webp"
+    },
+    {
+      "slug": "vertexa-high",
+      "name": "Vertexa",
+      "category": "saas",
+      "tags": [
+        "vertexa",
+        "high",
+        "saas",
+        "dark"
+      ],
+      "description": "SaaS product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#010408",
+        "#0D152D",
+        "#2C3446"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/vertexa-high.webp"
+    },
+    {
+      "slug": "vesper-space",
+      "name": "VESPER",
+      "category": "travel",
+      "tags": [
+        "vesper",
+        "space",
+        "travel",
+        "dark"
+      ],
+      "description": "travel landing page, dark theme, Syne type. Sections: hero, testimonials, gallery, cta.",
+      "colors": [
+        "#050507",
+        "#202124"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Syne",
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/vesper-space.webp"
+    },
+    {
+      "slug": "visual-collaborat",
+      "name": "Canvas Landing",
+      "category": "agency",
+      "tags": [
+        "visual",
+        "collaborat",
+        "agency",
+        "light"
+      ],
+      "description": "creative agency / studio landing page, light theme, Chewy type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#FFFFFF",
+        "#B0D9EB",
+        "#F8C8C7",
+        "#B8A6AC",
+        "#DAF4F1"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Chewy",
+        "Comic Neue",
+        "Patrick Hand",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/visual-collaborat.webp"
+    },
+    {
+      "slug": "vitalis-wellness",
+      "name": "Vitalis",
+      "category": "wellness",
+      "tags": [
+        "vitalis",
+        "wellness",
+        "light",
+        "editorial"
+      ],
+      "description": "wellness / health landing page, light theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#F3F1EB",
+        "#1A1F17",
+        "#D0CEC5",
+        "#B1B1A7",
+        "#8E8673"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Newsreader",
+        "serif"
+      ],
+      "thumbnail": "thumbs/vitalis-wellness.webp"
+    },
+    {
+      "slug": "vyral",
+      "name": "VYRAL Financial",
+      "category": "gaming",
+      "tags": [
+        "vyral",
+        "gaming",
+        "dark"
+      ],
+      "description": "gaming landing page, dark theme, Caveat type. Sections: hero, features, testimonials, team.",
+      "colors": [
+        "#010203",
+        "#151A21",
+        "#55828F"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "testimonials",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Caveat",
+        "Inter",
+        "Sora",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/vyral.webp"
+    },
+    {
+      "slug": "waveai-audio",
+      "name": "Obsidian AI Music",
+      "category": "ai-saas",
+      "tags": [
+        "waveai",
+        "audio",
+        "ai-saas",
+        "dark"
+      ],
+      "description": "AI product landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#28262A",
+        "#08080A",
+        "#726D70"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "team",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/waveai-audio.webp"
+    },
+    {
+      "slug": "webgl",
+      "name": "Neural Core Interface",
+      "category": "tech",
+      "tags": [
+        "webgl",
+        "tech",
+        "dark"
+      ],
+      "description": "modern tech landing page, dark theme, Space Grotesk type. Sections: hero, footer, features, cta.",
+      "colors": [
+        "#000000",
+        "#14242F",
+        "#213952",
+        "#24607C"
+      ],
+      "sections": [
+        "hero",
+        "footer",
+        "features",
+        "cta"
+      ],
+      "fonts": [
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/webgl.webp"
+    },
+    {
+      "slug": "x-studio",
+      "name": "X.Studio Portfolio",
+      "category": "agency",
+      "tags": [
+        "agency",
+        "dark"
+      ],
+      "description": "creative agency / studio landing page, dark theme, Geist type. Sections: hero, testimonials, gallery, team.",
+      "colors": [
+        "#000000",
+        "#3F6762",
+        "#22403B",
+        "#0C101D",
+        "#82A6A3"
+      ],
+      "sections": [
+        "hero",
+        "testimonials",
+        "gallery",
+        "team",
+        "about",
+        "cta",
+        "footer"
+      ],
+      "fonts": [
+        "Geist",
+        "Roboto",
+        "Montserrat",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/x-studio.webp"
+    },
+    {
+      "slug": "zero-trust-password",
+      "name": "Lumen",
+      "category": "dev-tools",
+      "tags": [
+        "zero",
+        "trust",
+        "password",
+        "dev-tools",
+        "dark"
+      ],
+      "description": "developer-tools / infrastructure landing page, dark theme, Inter type. Sections: hero, features, pricing, testimonials.",
+      "colors": [
+        "#000000",
+        "#0D1914",
+        "#2C3734",
+        "#949696"
+      ],
+      "sections": [
+        "hero",
+        "features",
+        "pricing",
+        "testimonials",
+        "gallery",
+        "team",
+        "faq",
+        "about",
+        "cta",
+        "contact",
+        "footer"
+      ],
+      "fonts": [
+        "Inter",
+        "Geist",
+        "sans-serif"
+      ],
+      "thumbnail": "thumbs/zero-trust-password.webp"
+    }
+  ]
+}

@@ -2,14 +2,20 @@ import { mkdtempSync, readFileSync, rmSync, readdirSync, statSync } from "node:f
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { buildPrototypeSystemPrompt } from "./prompts.js";
-import { savePrototypeFile, updatePrototypeStatus, type Prototype } from "./storage.js";
+import { saveDocumentFile } from "../db/documents.js";
+import {
+  findReferenceUrl,
+  fetchReferenceStyle,
+  writeReferenceToWorkspace,
+} from "./webref.js";
+import { copyReferencesTo } from "./references.js";
+import { polishWorkspace } from "./glowup.js";
 import type { Database } from "../db/connection.js";
 
 const ALLOWED_EXTENSIONS = new Set([
   ".html", ".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".json", ".ico",
 ]);
 
-// Prototype generation writes many files — give it a generous but bounded window.
 const ENGINE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 function listFilesRecursive(dir: string): string[] {
@@ -26,14 +32,39 @@ function listFilesRecursive(dir: string): string[] {
   return results;
 }
 
-export async function generatePrototype(
+export interface PrototypeGenerationResult {
+  summary: string;
+  files: string[];
+}
+
+/**
+ * Generates a multi-file prototype into a workspace and saves the files under
+ * the given document id (`document_files`). Chat-driven — the brief comes from
+ * the conversation, not a form.
+ */
+export async function generatePrototypeDocument(
   db: Database,
-  prototype: Prototype,
+  input: { documentId: string; versionNo: number; brief: string },
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<PrototypeGenerationResult> {
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
+    // Reference URL style (best-effort). Writes .reference/ into the workspace.
+    let reference: { url: string; tokens: import("./webref.js").CssTokens } | null = null;
+    const refUrl = findReferenceUrl(input.brief);
+    if (refUrl) {
+      try {
+        const style = await fetchReferenceStyle(refUrl);
+        if (style) {
+          writeReferenceToWorkspace(workspace, style);
+          reference = { url: style.url, tokens: style.tokens };
+        }
+      } catch {
+        // ignore reference failures — fall back to the getokui library
+      }
+    }
+
     const pi = await import("@earendil-works/pi-coding-agent");
 
     const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
@@ -43,6 +74,7 @@ export async function generatePrototype(
     if (!model) {
       throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
     }
+
     const { session } = await pi.createAgentSession({
       cwd: workspace,
       model: model as any,
@@ -53,27 +85,14 @@ export async function generatePrototype(
     });
 
     let errorMessage = "";
-    let finished = false;
-    let responseText = "";
-
     session.subscribe((event: any) => {
       if (signal?.aborted) return;
-      if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
-        responseText += event.assistantMessageEvent.delta;
-      }
-      if (event.type === "agent_end") {
-        finished = true;
-        if (typeof event.errorMessage === "string" && event.errorMessage) {
-          errorMessage = event.errorMessage;
-        }
+      if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
+        errorMessage = event.errorMessage;
       }
     });
 
-    const systemPrompt = buildPrototypeSystemPrompt({
-      brief: prototype.brief,
-      palette: prototype.palette,
-      logoData: prototype.logoData,
-    });
+    const systemPrompt = buildPrototypeSystemPrompt(input.brief, reference);
 
     try {
       const promptPromise = session.prompt(systemPrompt);
@@ -84,35 +103,38 @@ export async function generatePrototype(
           setTimeout(() => reject(new Error("Prototype generation timed out")), ENGINE_TIMEOUT_MS),
         ),
       ]);
-      // Small delay for agent_end event to propagate
       await new Promise((r) => setTimeout(r, 500));
       session.dispose();
-
       if (errorMessage) throw new Error(errorMessage);
     } catch (err) {
       session.dispose();
       throw err;
     }
 
-    // Read all generated files from workspace
+    // Glowup pass (best-effort, non-destructive): polish index.html + styles.css.
+    try {
+      copyReferencesTo(workspace);
+      await polishWorkspace(workspace, input.brief, signal);
+    } catch (err) {
+      console.warn("[prototype] glowup failed, keeping pass-1 output:", err instanceof Error ? err.message : err);
+    }
+
     const files = listFilesRecursive(workspace);
-    console.log("[prototype] workspace files:", files.map((f) => relative(workspace, f)));
-    console.log("[prototype] agent response (first 500 chars):", responseText.slice(0, 500));
     if (files.length === 0) throw new Error("no files generated");
 
+    const saved: string[] = [];
     for (const fullPath of files) {
       const relPath = relative(workspace, fullPath).split("\\").join("/");
+      if (relPath.startsWith(".")) continue; // skip .reference / .getokui
       const dot = relPath.lastIndexOf(".");
       const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
       if (!ALLOWED_EXTENSIONS.has(ext)) continue;
       const content = readFileSync(fullPath, "utf-8");
-      await savePrototypeFile(db, prototype.id, relPath, content);
+      await saveDocumentFile(db, input.documentId, input.versionNo, relPath, content);
+      saved.push(relPath);
     }
 
-    await updatePrototypeStatus(db, prototype.id, "done");
-  } catch (err) {
-    await updatePrototypeStatus(db, prototype.id, "failed");
-    throw err;
+    return { summary: `Generated ${saved.length} files: ${saved.join(", ")}`, files: saved };
   } finally {
     rmSync(workspace, { recursive: true, force: true });
   }

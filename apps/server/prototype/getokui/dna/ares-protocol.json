@@ -1,0 +1,74 @@
+{
+  "slug": "ares-protocol",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-display text-7xl lg:text-8xl leading-[0.9] tracking-tight",
+    "h1_sizes": [
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "px-5 py-2.5 rounded-full bg-[#C2A878] text-[#0f0f10] text-[10px] font-semibold uppercase tracking-[0.25em] hover:bg-[#d8c8b8] transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "pt-20",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl"
+  ],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "split",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "bento-grid",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee",
+      "shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }",
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain"
+  ]
+}

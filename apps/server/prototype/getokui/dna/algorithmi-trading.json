@@ -1,0 +1,123 @@
+{
+  "slug": "algorithmi-trading",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl lg:text-8xl font-normal tracking-tight text-white mb-6 leading-[1.05] brand-text-glow transition-all duration-500 pointer-events-auto",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "px-5 py-2 rounded bg-gradient-to-r from-[#4f46e5]/80 to-[#38bdf8]/80 text-white text-xs font-normal hover:from-[#4f46e5] hover:to-[#38bdf8] transition-all duration-300 shadow-[0_0_20px_rgba(56,189,248,0.3)] border border-[#38bdf8]/50 flex items-center gap-2"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-4xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-28",
+      "py-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded"
+  ],
+  "shadow": [
+    "shadow-inner",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "arch-flow-horizontal",
+      "arch-flow-vertical",
+      "blink-caret",
+      "brand-glow",
+      "confidenceGlowPulse",
+      "confidenceRingSpin",
+      "energy-wave",
+      "float",
+      "float-reverse",
+      "flow-horizontal",
+      "marquee",
+      "metricsBar1",
+      "metricsBar2",
+      "metricsBar3",
+      "metricsBar4",
+      "metricsBar5",
+      "panelFloat",
+      "particle-rise",
+      "ping-slow",
+      "progressSweep",
+      "pulse-bar",
+      "pulse-bar-2",
+      "pulse-bar-3",
+      "ripple",
+      "scan-light",
+      "scroll-probe",
+      "typing",
+      "wallScrollDown",
+      "wallScrollUp"
+    ],
+    "keyframes_css": [
+      "@keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(1deg); } }",
+      "@keyframes float-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(20px) rotate(-1deg); } }",
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [
+      "animate-[energy-wave_10s_ease-in-out_infinite_4s]",
+      "animate-[energy-wave_12s_ease-in-out_infinite_2s]",
+      "animate-[energy-wave_8s_ease-in-out_infinite]",
+      "animate-[particle-rise_5s_linear_infinite]",
+      "animate-[particle-rise_6s_linear_infinite_2s]",
+      "animate-[particle-rise_7s_linear_infinite_1s]",
+      "animate-[particle-rise_8s_linear_infinite_3s]",
+      "animate-[ping-slow_6s_cubic-bezier(0,0,0.2,1)_infinite]",
+      "animate-[ping-slow_6s_cubic-bezier(0,0,0.2,1)_infinite_3s]",
+      "animate-[pulse_6s_ease-in-out_infinite_alternate]",
+      "animate-[scroll-probe_1.5s_ease-in-out_infinite]",
+      "animate-[spin_20s_linear_infinite]",
+      "animate-[spin_30s_linear_infinite_reverse]",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}

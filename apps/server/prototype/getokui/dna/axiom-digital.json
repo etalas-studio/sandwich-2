@@ -1,0 +1,175 @@
+{
+  "slug": "axiom-digital",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-8xl leading-none text-balance font-normal text-white tracking-tighter max-w-3xl mb-6 text-5xl sm:text-6xl",
+    "h1_sizes": [
+      "text-8xl",
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "group relative font-medium text-black bg-white rounded-full transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] ml-2 border border-white/50 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-20",
+      "pt-40"
+    ],
+    "container_max": [
+      "max-w-6xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-6"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-md",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-lg",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "horizontal-scroll",
+      "bento-grid",
+      "blend-modes",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "agencyChildLift",
+      "agencyLogoSweep",
+      "agencySectionReveal",
+      "aura2FadeUp",
+      "aura2Float",
+      "aura2FloatReverse",
+      "aura2FloatSoft",
+      "beam-breathe",
+      "blink-cursor",
+      "dash-flow",
+      "dashboardFloat",
+      "fade-in-up",
+      "float-card",
+      "float-main",
+      "float-sec-1",
+      "float-sec-2",
+      "float-up",
+      "glow-line",
+      "mbCardIn",
+      "mbFadeUp",
+      "mbFloat",
+      "mbFloatSlow",
+      "mbGlowBreathe",
+      "mbPulsePlus",
+      "mbSlideInChat",
+      "panelActiveRowPulse",
+      "panelBlinkCursor",
+      "panelFloatHover",
+      "panelGlassShine",
+      "panelGodRaySway",
+      "panelKeyGlow",
+      "panelKeyPress",
+      "panelModalFloatIn",
+      "panelShimmerDot",
+      "panelTextFadeUp",
+      "progressSpin",
+      "pulse-dot",
+      "pulse-ring",
+      "pulse-soft",
+      "rim-glow",
+      "rotate-clockwise",
+      "rotate-counter",
+      "rotateBorderBeam",
+      "rowReveal",
+      "s-float",
+      "s-float-delayed",
+      "s-pulse-badge",
+      "s-pulse-ring",
+      "s-spin-slow",
+      "s-sweep",
+      "scroll-float-1",
+      "scroll-float-2",
+      "section-reveal",
+      "select-box-pulse",
+      "softGlow",
+      "tp-avatar-float",
+      "tp-fade-up",
+      "tp-float",
+      "tp-glow-breathe",
+      "tp-pulse",
+      "tp-shimmer",
+      "tp-sweep",
+      "type-writer"
+    ],
+    "keyframes_css": [
+      "@keyframes agencyLogoSweep{0%,55%{transform:translateX(-130%) rotate(18deg)}75%,100%{transform:translateX(130%) rotate(18deg)}}",
+      "@keyframes agencySectionReveal{from{opacity:.35;transform:translateY(34px) scale(.985);filter:blur(8px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}",
+      "@keyframes agencyChildLift{from{opacity:.55;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}"
+    ],
+    "animate_classes": [
+      "animate-[beam-breathe_7s_ease-in-out_infinite]",
+      "animate-[fade-in-up_0.8s_ease-out_forwards]",
+      "animate-[panelBlinkCursor_1s_infinite]",
+      "animate-[panelFloatHover_6s_ease-in-out_infinite]",
+      "animate-[panelGlassShine_6s_infinite_2s]",
+      "animate-[panelGodRaySway_8s_ease-in-out_infinite]",
+      "animate-[panelKeyGlow_4s_infinite_0s]",
+      "animate-[panelKeyGlow_5s_infinite_1s]",
+      "animate-[panelKeyGlow_6s_infinite_2.5s]",
+      "animate-[panelKeyPress_3s_infinite_0.5s]",
+      "animate-[panelKeyPress_4s_infinite_1.5s]",
+      "animate-[panelModalFloatIn_1s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards]",
+      "animate-[panelShimmerDot_4s_ease-in-out_infinite]",
+      "animate-[panelTextFadeUp_0.5s_ease-out_0.6s_forwards]",
+      "animate-[panelTextFadeUp_0.5s_ease-out_0.7s_forwards]",
+      "animate-[pulse-soft_2.8s_ease-in-out_infinite]",
+      "animate-[pulse-soft_3s_ease-in-out_infinite]",
+      "animate-[rotate-clockwise_14s_linear_infinite]",
+      "animate-[rotate-clockwise_36s_linear_infinite]",
+      "animate-[rotate-counter_24s_linear_infinite]",
+      "animate-entrance",
+      "animate-float-card",
+      "animate-ping",
+      "animate-pulse",
+      "animate-todo-bar",
+      "animate-todo-glow"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

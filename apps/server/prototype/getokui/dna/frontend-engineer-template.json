@@ -1,0 +1,96 @@
+{
+  "slug": "frontend-engineer-template",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-[12vw] lg:text-[7.5rem] leading-[0.85] flex flex-col items-start gap-4 font-medium tracking-tighter font-manrope mix-blend-exclusion select-none text-transparent bg-clip-text",
+    "h1_sizes": [],
+    "cta_classes": "group relative px-6 py-3 rounded-lg bg-white text-black text-sm font-semibold tracking-tight overflow-hidden hover:bg-neutral-100 transition-colors"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-32",
+      "pt-32",
+      "py-24"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-8"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-inner",
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "beam-flow",
+      "dash-flow",
+      "float-gentle",
+      "light-scan",
+      "pulse-glow",
+      "scroll-left-exact",
+      "scroll-right-exact",
+      "sys-drift",
+      "sys-scan"
+    ],
+    "keyframes_css": [
+      "@keyframes beam-flow { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: -200; } }",
+      "@keyframes sys-scan{0%{top:0;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:100%;opacity:0}}",
+      "@keyframes sys-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,-10px)}}"
+    ],
+    "animate_classes": [
+      "animate-[float-gentle_3s_ease-in-out_infinite]",
+      "animate-[float-gentle_4s_ease-in-out_infinite_1s]",
+      "animate-[pulse-glow_2s_infinite]",
+      "animate-beam",
+      "animate-marquee-left",
+      "animate-marquee-right",
+      "animate-ping",
+      "animate-pulse",
+      "animate-shimmer-text",
+      "animate-sys-scan"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

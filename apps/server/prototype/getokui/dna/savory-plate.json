@@ -1,0 +1,84 @@
+{
+  "slug": "savory-plate",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-4xl md:text-6xl lg:text-7xl font-serif text-white leading-[0.9] mb-6 text-balance",
+    "h1_sizes": [
+      "text-4xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "inline-flex items-center justify-center uppercase hover:bg-slate-900 hover:scale-[1.02] transition-all duration-300 shadow-brand-rose/20 text-xs font-bold text-white tracking-widest bg-slate-900 w-full rounded-xl px-6 py-4 shadow-lg"
+  },
+  "type_scale": {
+    "h1": "text-4xl",
+    "h2": "text-2xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "py-24",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-4xl",
+      "max-w-7xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-12"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-lg",
+    "shadow-xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "fadeInUp"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-enter",
+      "animate-in",
+      "animate-marquee",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "multi-stop-gradient"
+  ]
+}

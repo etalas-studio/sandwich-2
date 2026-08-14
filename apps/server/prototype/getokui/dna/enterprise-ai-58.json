@@ -1,0 +1,112 @@
+{
+  "slug": "enterprise-ai-58",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "md:text-7xl lg:text-[100px] leading-[0.95] [animation:animationIn_0.8s_ease-out_0.3s_both] text-5xl font-light text-white tracking-tighter font-manrope mb-8",
+    "h1_sizes": [
+      "text-7xl",
+      "text-5xl"
+    ],
+    "cta_classes": "relative px-8 py-4 rounded-full bg-white text-[#0B1120] text-sm font-bold tracking-wide hover:bg-slate-100 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] ring-1 ring-white/50"
+  },
+  "type_scale": {
+    "h1": "text-7xl",
+    "h2": "text-6xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-32",
+      "pt-24",
+      "pt-16"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-5xl"
+    ],
+    "gap": [
+      "gap-4",
+      "gap-16"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-lg"
+  ],
+  "shadow": [
+    "shadow-inner",
+    "shadow-md",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "animationIn",
+      "bar1",
+      "bar2",
+      "bar3",
+      "bar4",
+      "bar5",
+      "bar6",
+      "bar7",
+      "bar8",
+      "bar9",
+      "cmd1Fade",
+      "cmd2Fade",
+      "loginFade",
+      "out1Fade",
+      "out2Fade",
+      "seqDot",
+      "seqFade",
+      "seqShift",
+      "spin",
+      "ticker",
+      "typeCmd1",
+      "typeCmd2"
+    ],
+    "keyframes_css": [
+      "@keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }",
+      "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes bar1 { 0%, 100% { height: 40%; } 50% { height: 25%; } }"
+    ],
+    "animate_classes": [
+      "animate-[spin_10s_linear_infinite]",
+      "animate-[spin_15s_linear_infinite_reverse]",
+      "animate-[spin_3s_linear_infinite]",
+      "animate-in",
+      "animate-on-scroll",
+      "animate-ping",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

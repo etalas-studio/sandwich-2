@@ -1,0 +1,55 @@
+{
+  "slug": "relay-estate",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title reveal-item delay-100",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": [
+      "gap-6"
+    ]
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "diagnosticFlow",
+      "revealFlow"
+    ],
+    "keyframes_css": [
+      "@keyframes revealFlow { 0% { opacity: 0; transform: translateY(34px) scale(0.985); filter: blur(10px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }",
+      "@keyframes diagnosticFlow { 0% { top: -90px; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% + 90px); opacity: 0; } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "transitions",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

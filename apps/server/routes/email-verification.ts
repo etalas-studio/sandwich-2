@@ -7,7 +7,11 @@ import {
   markVerificationTokenUsed,
 } from "../db/repo/email-verifications.js";
 import { sendEmail } from "../pipeline/email.js";
+import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+
+const verifyLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
+const resendLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 3 });
 
 export function verificationLink(token: string): string {
   const base = process.env.APP_URL ?? "http://localhost:3000";
@@ -16,6 +20,10 @@ export function verificationLink(token: string): string {
 
 export function registerEmailVerificationRoutes(router: Router, db: Database): void {
   router.post("/api/auth/verify-email", async (req, res) => {
+    if (!verifyLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
     const body = (await readJsonBody(req).catch(() => null)) as { token?: string } | null;
     if (!body?.token) {
       sendJson(res, 400, { error: "token is required" });
@@ -34,6 +42,10 @@ export function registerEmailVerificationRoutes(router: Router, db: Database): v
   });
 
   router.post("/api/auth/resend-verification", async (req, res) => {
+    if (!resendLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
     const body = (await readJsonBody(req).catch(() => null)) as { email?: string } | null;
     if (!body?.email) {
       sendJson(res, 400, { error: "email is required" });

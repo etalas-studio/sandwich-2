@@ -1,0 +1,57 @@
+{
+  "slug": "sustainabl-architectu-18",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "fadeUp",
+      "glowRotate",
+      "heroZoom",
+      "marquee",
+      "navBorderSpin",
+      "navShimmer",
+      "shimmer"
+    ],
+    "keyframes_css": [
+      "@keyframes navBorderSpin{ from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }",
+      "@keyframes navShimmer{ 0%{left:-50%;opacity:0} 15%{opacity:1} 50%{left:120%;opacity:1} 65%{opacity:0} 100%{left:120%;opacity:0} }",
+      "@keyframes heroZoom{ 0%{transform:scale(1.15)} 100%{transform:scale(1)} }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

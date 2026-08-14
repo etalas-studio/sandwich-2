@@ -1,0 +1,76 @@
+{
+  "slug": "orbitdesk-saas",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "mx-auto mt-5 max-w-4xl text-5xl leading-none tracking-tight text-[#17191f] sm:text-6xl lg:text-7xl font-newsreader font-light",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl",
+      "text-7xl"
+    ],
+    "cta_classes": "inline-flex w-full items-center justify-center rounded-xl bg-[#17191f] px-7 py-4 text-sm font-semibold text-white shadow-xl shadow-black/15 hover:bg-black sm:w-auto font-sans"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "py-20",
+      "pt-20"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-5",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-xl",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-xl",
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "sticky-sections",
+      "bento-grid",
+      "grain-texture",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "aura-marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes aura-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "glass-backdrop-blur",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain"
+  ]
+}

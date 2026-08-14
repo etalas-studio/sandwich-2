@@ -1,0 +1,60 @@
+{
+  "slug": "futuristic-infrastruc-41",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "blinkRack",
+      "chartMove",
+      "equalizer",
+      "float",
+      "marquee",
+      "monoSpin",
+      "pulse",
+      "scan"
+    ],
+    "keyframes_css": [
+      "@keyframes scan { 0% { top: 0%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }",
+      "@keyframes monoSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }",
+      "@keyframes pulse { from { opacity: 0.5; } to { opacity: 1; box-shadow: 0 0 20px var(--accent); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain",
+    "blend-modes"
+  ]
+}

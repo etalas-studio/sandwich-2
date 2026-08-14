@@ -50,16 +50,13 @@ export const conversations = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
-    // prd | mom | quotation | specs | prototype | workflow | general
-    type: text("type").notNull().default("general"),
     title: text("title").notNull(),
     prompt: text("prompt").notNull(),
-    // backlog | in_progress | done
-    status: text("status").notNull().default("backlog"),
-    // transient pipeline stage (used for streaming progress)
-    stage: text("stage"),
-    // generated document (markdown or HTML for prototypes)
-    output: text("output"),
+    // Guided-pipeline state machine (model-driven):
+    // intake → choosing_deliverable → clarifying → generating → awaiting_next
+    pipelineStage: text("pipeline_stage").notNull().default("intake"),
+    // Deliverable being worked on (prd | quotation | prototype | specs).
+    pendingType: text("pending_type"),
     // like | dislike | null
     feedback: text("feedback"),
     pinned: boolean("pinned").notNull().default(false),
@@ -192,35 +189,97 @@ export const userPreferences = pgTable(
   }),
 );
 
-export const prototypes = pgTable("prototypes", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id),
-  shareId: text("share_id").notNull().unique(),
-  name: text("name").notNull(),
-  brief: text("brief").notNull(),
-  logoData: text("logo_data"),
-  palette: text("palette"),
-  status: text("status").notNull().default("generating"),
-  createdAt: ts("created_at").notNull(),
-  updatedAt: ts("updated_at").notNull(),
-});
+// ─────────────────────────────────────────────────────────────────────────────
+// Document model (chat-based, versioned deliverables). Documents are
+// user-scoped and title-scoped; a conversation is a thread that can generate
+// or reference many documents.
+// ─────────────────────────────────────────────────────────────────────────────
 
-export const prototypeFiles = pgTable(
-  "prototype_files",
+/** prd | quotation | prototype | specs */
+export const documents = pgTable(
+  "documents",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    currentVersionId: text("current_version_id"),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index("idx_documents_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+    userTitleIdx: index("idx_documents_user_title").on(
+      table.userId,
+      table.title,
+    ),
+  }),
+);
+
+/** Immutable snapshot of a document (one per generation/revision). */
+export const documentVersions = pgTable(
+  "document_versions",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    versionNo: integer("version_no").notNull(),
+    content: text("content").notNull(),
+    promptUsed: text("prompt_used"),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    docVersionIdx: index("idx_document_versions_doc").on(
+      table.documentId,
+      table.versionNo,
+    ),
+  }),
+);
+
+/** Links a conversation (thread) to documents it generated or opened. */
+export const conversationDocuments = pgTable(
+  "conversation_documents",
   {
     id: serial("id").primaryKey(),
-    prototypeId: text("prototype_id")
+    conversationId: text("conversation_id")
       .notNull()
-      .references(() => prototypes.id),
+      .references(() => conversations.id),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    createdAt: ts("created_at").notNull(),
+  },
+  (table) => ({
+    uniqueConvDoc: uniqueIndex("idx_conversation_documents_conv_doc").on(
+      table.conversationId,
+      table.documentId,
+    ),
+  }),
+);
+
+/** Files of a multi-file document (prototype HTML/CSS/JS). */
+export const documentFiles = pgTable(
+  "document_files",
+  {
+    id: serial("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id),
+    versionNo: integer("version_no").notNull().default(1),
     path: text("path").notNull(),
     content: text("content").notNull(),
     createdAt: ts("created_at").notNull(),
   },
   (table) => ({
-    uniquePath: uniqueIndex("idx_prototype_files_path").on(
-      table.prototypeId,
+    uniqueVersionPath: uniqueIndex("idx_document_files_version_path").on(
+      table.documentId,
+      table.versionNo,
       table.path,
     ),
   }),

@@ -24,7 +24,8 @@ import { registerPreferenceRoutes } from "./routes/preferences.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
 import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./pipeline/extract.js";
-import { registerPrototypeRoutes, registerPrototypePublicRoutes } from "./prototype/routes.js";
+import { registerPrototypePublicRoutes } from "./prototype/routes.js";
+import { registerDocumentRoutes } from "./routes/documents.js";
 
 export interface WebServerOptions {
   port: number;
@@ -99,8 +100,8 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerMidtransRoutes(router, db);
   registerSubscriptionRoutes(router, db);
   registerPreferenceRoutes(router, db);
-  registerPrototypeRoutes(router, db);
   registerPrototypePublicRoutes(router, db);
+  registerDocumentRoutes(router, db);
 
   const server = createServer((req, res) => {
     void (async () => {

@@ -1,0 +1,48 @@
+{
+  "slug": "omakase-restaurant-50",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero__japanese",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "vertical-text",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "scrollPulse"
+    ],
+    "keyframes_css": [
+      "@keyframes scrollPulse { 0%, 100% { opacity: 0.3; transform: scaleY(0.5); transform-origin: top; } 50% { opacity: 1; transform: scaleY(1); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "texture-grain"
+  ]
+}

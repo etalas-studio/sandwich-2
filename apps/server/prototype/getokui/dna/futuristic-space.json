@@ -1,0 +1,70 @@
+{
+  "slug": "futuristic-space",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-display text-8xl lg:text-9xl leading-none tracking-tight text-[#f0f0f0]",
+    "h1_sizes": [
+      "text-8xl",
+      "text-9xl"
+    ],
+    "cta_classes": "w-full py-5 bg-[#C2A878] text-[#0f0f10] text-xs font-semibold uppercase tracking-widest rounded-2xl hover:bg-[#b09665] transition-transform hover:scale-[1.02] active:scale-95"
+  },
+  "type_scale": {
+    "h1": "text-8xl",
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": [
+      "gap-8",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "split",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "grain-texture"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "fadeIn"
+    ],
+    "keyframes_css": [
+      "@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "texture-grain",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

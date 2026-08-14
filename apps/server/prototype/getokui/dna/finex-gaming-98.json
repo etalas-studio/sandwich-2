@@ -1,0 +1,84 @@
+{
+  "slug": "finex-gaming-98",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500 mb-6 max-w-5xl mx-auto leading-[1.1] aura-reveal",
+    "h1_sizes": [
+      "text-5xl",
+      "text-7xl",
+      "text-8xl"
+    ],
+    "cta_classes": "bg-white text-black px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-6xl"
+  },
+  "spacing": {
+    "section_padding": [
+      "pt-24",
+      "py-24",
+      "pt-32"
+    ],
+    "container_max": [
+      "max-w-7xl",
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-12",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-2xl",
+    "shadow-lg",
+    "shadow-inner"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "rotated-elements",
+      "bento-grid",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "aura-reveal",
+      "borderBeamRotation"
+    ],
+    "keyframes_css": [
+      "@keyframes aura-reveal { 0% { opacity: 0; transform: translateY(24px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }",
+      "@keyframes borderBeamRotation { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text",
+      "scroll-reveal-observer",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

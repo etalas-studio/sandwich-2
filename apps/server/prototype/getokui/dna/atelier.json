@@ -1,0 +1,63 @@
+{
+  "slug": "atelier",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-serif text-[#181512] tracking-[-0.045em] leading-[0.88] text-[3.1rem] sm:text-[3.9rem] md:text-[4.5rem] lg:text-[5.1rem] xl:text-[5.7rem] hero-headline",
+    "h1_sizes": [],
+    "cta_classes": "inline-flex items-center justify-center gap-3 h-14 sm:h-12 px-8 rounded-full bg-[#1d1a17] text-[#f3efe8] border border-[#1d1a17] hover:bg-[#2F5D50] hover:border-[#2F5D50] duration-300 font-sans text-[12px] sm:text-[11px] uppercase tracking-[0.18em] shadow-md transition-colors"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-16",
+      "pt-36",
+      "pt-16"
+    ],
+    "container_max": [],
+    "gap": [
+      "gap-8",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-2xl"
+  ],
+  "shadow": [
+    "shadow-md",
+    "shadow-sm"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "sticky-sections",
+      "blend-modes",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes",
+    "multi-stop-gradient"
+  ]
+}

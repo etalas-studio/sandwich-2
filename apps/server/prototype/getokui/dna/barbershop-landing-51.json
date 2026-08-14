@@ -1,0 +1,51 @@
+{
+  "slug": "barbershop-landing-51",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "hero-title",
+    "h1_sizes": [],
+    "cta_classes": null
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": []
+  },
+  "radius": [],
+  "shadow": [],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "fadeIn",
+      "fadeUp",
+      "heroImgReveal",
+      "marqueeScroll"
+    ],
+    "keyframes_css": [
+      "@keyframes heroImgReveal { from { opacity: 0; scale: 1.2; } to { opacity: 1; scale: 1.05; } }",
+      "@keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }",
+      "@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": true,
+    "techniques": [
+      "hover-states",
+      "transitions",
+      "scroll-reveal-observer",
+      "custom-keyframes"
+    ]
+  },
+  "signature": []
+}

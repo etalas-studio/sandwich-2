@@ -9,7 +9,11 @@ import {
 } from "../db/repo/password-resets.js";
 import { hashPassword } from "../auth/password.js";
 import { sendEmail } from "../pipeline/email.js";
+import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+
+const forgotLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 3 });
+const resetLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
 function resetLink(token: string): string {
   const base = process.env.APP_URL ?? "http://localhost:3000";
@@ -18,6 +22,10 @@ function resetLink(token: string): string {
 
 export function registerPasswordResetRoutes(router: Router, db: Database): void {
   router.post("/api/auth/forgot-password", async (req, res) => {
+    if (!forgotLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
     const body = (await readJsonBody(req).catch(() => null)) as { email?: string } | null;
     if (!body?.email) {
       sendJson(res, 400, { error: "email is required" });
@@ -46,6 +54,10 @@ export function registerPasswordResetRoutes(router: Router, db: Database): void 
   });
 
   router.post("/api/auth/reset-password", async (req, res) => {
+    if (!resetLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
     const body = (await readJsonBody(req).catch(() => null)) as {
       token?: string;
       newPassword?: string;

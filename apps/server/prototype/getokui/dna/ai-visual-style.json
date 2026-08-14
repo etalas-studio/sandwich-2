@@ -1,0 +1,68 @@
+{
+  "slug": "ai-visual-style",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": null,
+    "h1_sizes": [],
+    "cta_classes": "text-sm border border-neutral-200 rounded-full px-5 py-2 text-neutral-700 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 font-normal"
+  },
+  "type_scale": {
+    "h1": null,
+    "h2": null
+  },
+  "spacing": {
+    "section_padding": [
+      "py-28",
+      "pt-16",
+      "py-32"
+    ],
+    "container_max": [
+      "max-w-4xl"
+    ],
+    "gap": [
+      "gap-6",
+      "gap-4"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded-3xl"
+  ],
+  "shadow": [
+    "shadow-2xl"
+  ],
+  "layout": {
+    "hero_layout": "asymmetric",
+    "oversized_display_type": true,
+    "symmetry": "asymmetric",
+    "composition_techniques": [
+      "marquee",
+      "bento-grid",
+      "blend-modes"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [
+      "marquee"
+    ],
+    "keyframes_css": [
+      "@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }"
+    ],
+    "animate_classes": [],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "mix-blend",
+      "custom-keyframes"
+    ]
+  },
+  "signature": [
+    "glass",
+    "big-radius",
+    "blend-modes"
+  ]
+}

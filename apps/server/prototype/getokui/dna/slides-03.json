@@ -1,0 +1,69 @@
+{
+  "slug": "slides-03",
+  "extraction": "precise",
+  "css_fallback": null,
+  "hero": {
+    "h1_classes": "font-serif-display text-5xl sm:text-6xl font-medium tracking-tight text-zinc-900 leading-[0.95] mb-4",
+    "h1_sizes": [
+      "text-5xl",
+      "text-6xl"
+    ],
+    "cta_classes": "w-full py-3 bg-white border border-blue-500 text-blue-600 font-medium text-sm rounded-xl shadow-[0_0_0_4px_rgba(59,130,246,0.15)] transition-all"
+  },
+  "type_scale": {
+    "h1": "text-5xl",
+    "h2": "text-5xl"
+  },
+  "spacing": {
+    "section_padding": [],
+    "container_max": [],
+    "gap": [
+      "gap-4",
+      "gap-5"
+    ]
+  },
+  "radius": [
+    "rounded-full",
+    "rounded",
+    "rounded-xl"
+  ],
+  "shadow": [
+    "shadow-sm",
+    "shadow-2xl",
+    "shadow-lg"
+  ],
+  "layout": {
+    "hero_layout": "centered",
+    "oversized_display_type": true,
+    "symmetry": "centered-symmetric",
+    "composition_techniques": [
+      "marquee",
+      "rotated-elements",
+      "bento-grid",
+      "overlap-offset"
+    ]
+  },
+  "motion": {
+    "keyframe_names": [],
+    "keyframes_css": [],
+    "animate_classes": [
+      "animate-[marquee_10s_linear_infinite]",
+      "animate-bounce",
+      "animate-pulse"
+    ],
+    "has_scroll_reveal": false,
+    "techniques": [
+      "hover-states",
+      "group-hover-reveal",
+      "transitions",
+      "glass-backdrop-blur",
+      "gradient-text"
+    ]
+  },
+  "signature": [
+    "glass",
+    "gradient-text",
+    "big-radius",
+    "multi-stop-gradient"
+  ]
+}
