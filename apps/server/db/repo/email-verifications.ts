@@ -54,3 +54,7 @@ export async function markVerificationTokenUsed(db: Database, token: string): Pr
     .set({ usedAt: new Date() })
     .where(eq(emailVerificationTokens.token, hashToken(token)));
 }
+
+export async function deleteVerificationTokensByUser(db: Database, userId: string): Promise<void> {
+  await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
+}

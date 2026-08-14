@@ -60,6 +60,10 @@ export async function markEmailVerified(db: Database, userId: string): Promise<v
   await db.update(users).set({ emailVerified: true }).where(eq(users.id, userId));
 }
 
+export async function deleteUser(db: Database, userId: string): Promise<void> {
+  await db.delete(users).where(eq(users.id, userId));
+}
+
 function mapUser(row: typeof users.$inferSelect): User {
   return {
     id: row.id,

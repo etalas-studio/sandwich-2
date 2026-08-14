@@ -1,7 +1,7 @@
 import type { Router } from "../router.js";
 import { AuthError, type AuthResult, login, logout, register } from "../auth/service.js";
 import { authenticateRequest } from "../auth/middleware.js";
-import { getUserById } from "../db/users.js";
+import { getUserById, deleteUser } from "../db/users.js";
 import {
   SESSION_COOKIE_NAME,
   buildClearedSessionCookie,
@@ -9,7 +9,7 @@ import {
   parseCookies,
 } from "../auth/cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
-import { createVerificationToken } from "../db/repo/email-verifications.js";
+import { createVerificationToken, deleteVerificationTokensByUser } from "../db/repo/email-verifications.js";
 import { sendEmail } from "../pipeline/email.js";
 import { verificationLink } from "./email-verification.js";
 import type { Database } from "../db/connection.js";
@@ -66,12 +66,20 @@ export function registerAuthRoutes(
 
       const token = await createVerificationToken(db, user.id);
       const link = verificationLink(token);
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your email — SANDWICH",
-        text: `Verifikasi email kamu: ${link}`,
-        html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
-      });
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: "Verify your email — SANDWICH",
+          text: `Verifikasi email kamu: ${link}`,
+          html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
+        });
+      } catch (err) {
+        // Rollback the created user + token so a retry doesn't hit
+        // "username already taken" (email failure shouldn't leave a half-registered user).
+        await deleteVerificationTokensByUser(db, user.id).catch(() => {});
+        await deleteUser(db, user.id).catch(() => {});
+        throw err;
+      }
 
       sendJson(res, 201, {
         user: { username: user.username, email: user.email },
