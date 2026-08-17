@@ -66,8 +66,8 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
-              aria-label="Username"
-              placeholder="Username"
+              aria-label={tr('login_identifier')}
+              placeholder={tr('login_identifier')}
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>

@@ -166,6 +166,7 @@ const STRINGS = {
   // ── Login ──
   login_title: { en: 'Welcome back', id: 'Selamat datang lagi' },
   login_subtitle: { en: 'Log in to continue to SANDWICH', id: 'Login untuk lanjut ke SANDWICH' },
+  login_identifier: { en: 'Username or Email', id: 'Username atau Email' },
   login_cta: { en: 'Log in', id: 'Masuk' },
   login_pending: { en: 'Logging in…', id: 'Masuk...' },
   login_demo: { en: 'Try demo account', id: 'Coba pakai akun demo' },
