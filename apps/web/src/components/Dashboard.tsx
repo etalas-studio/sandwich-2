@@ -81,7 +81,7 @@ interface Turn {
   aiMessages: ChatMessage[]
 }
 
-function usePipelineStream(conversationId: string | null, regenNonce: number, autoRun: boolean, regenerateRef: { current: boolean }, onDone?: (output: string) => void) {
+function usePipelineStream(conversationId: string | null, regenNonce: number, autoRun: boolean, regenerateRef: { current: boolean }, onDone?: (output: string) => void, onSettled?: () => void) {
   const { t: tr } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
@@ -109,34 +109,42 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
         const reader = res.body!.getReader()
         const dec = new TextDecoder()
         let buf = ''
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) { setStreaming(false); break }
-          buf += dec.decode(value, { stream: true })
-          const parts = buf.split('\n\n')
-          buf = parts.pop() ?? ''
-          for (const part of parts) {
-            const line = part.replace(/^data: /, '').trim()
-            if (!line) continue
-            try {
-              const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; conversation?: { output?: string | null } }
-              if (ev.type === 'stage_start' && ev.stage) {
-                setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
-              } else if (ev.type === 'done') {
-                const output = ev.text ?? ''
-                setMessages(m => [...m, { role: 'ai', isDone: true, output }])
-                setStreaming(false)
-                onDone?.(output)
-              } else if (ev.type === 'error') {
-                const errText = ev.text ?? tr('pipeline_error')
-                setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
-                setStreaming(false)
-              }
-            } catch { /* skip bad JSON */ }
+        try {
+          while (true) {
+            const { value, done } = await reader.read()
+            if (done) break
+            buf += dec.decode(value, { stream: true })
+            const parts = buf.split('\n\n')
+            buf = parts.pop() ?? ''
+            for (const part of parts) {
+              const line = part.replace(/^data: /, '').trim()
+              if (!line) continue
+              try {
+                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; conversation?: { output?: string | null } }
+                if (ev.type === 'stage_start' && ev.stage) {
+                  setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
+                } else if (ev.type === 'done') {
+                  const output = ev.text ?? ''
+                  setMessages(m => [...m, { role: 'ai', isDone: true, output }])
+                  setStreaming(false)
+                  onDone?.(output)
+                } else if (ev.type === 'error') {
+                  const errText = ev.text ?? tr('pipeline_error')
+                  setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
+                  setStreaming(false)
+                }
+              } catch { /* skip bad JSON */ }
+            }
           }
+        } finally {
+          setStreaming(false)
+          onSettled?.()
         }
       })
-      .catch(() => setStreaming(false))
+      .catch(() => {
+        setStreaming(false)
+        onSettled?.()
+      })
 
     return () => ctrl.abort()
   }, [conversationId, regenNonce])
@@ -334,39 +342,13 @@ function ChatView({
   const [turns, setTurns] = useState<Turn[]>([
     { user: initialPrompt, attachments: [], aiMessages: [] }
   ])
-  const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
-    updateLocalConversation(conversationId, { content: output, status: 'done' })
-  })
-  const [followUp, setFollowUp] = useState('')
-  const [attachments, setAttachments] = useState<AttachedFile[]>([])
-  const [chatError, setChatError] = useState<string | null>(null)
-  const [editingPrompt, setEditingPrompt] = useState(false)
-  const [editValue, setEditValue] = useState(initialPrompt)
-  const [copied, setCopied] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    Array.from(e.target.files ?? []).forEach(file => {
-      const reader = new FileReader()
-      reader.onload = () => setAttachments(p => [...p, { name: file.name, type: file.type, dataUrl: reader.result as string }])
-      reader.readAsDataURL(file)
-    })
-    e.target.value = ''
-  }, [])
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
-  useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
-
-  // Load saved messages when opening a conversation.
-  useEffect(() => {
+  // Reconstruct committed turns from the DB history.
+  const reloadTurns = useCallback(() => {
     if (!conversationId) return
     getMessages(conversationId)
       .then((msgs) => {
         if (!msgs.length) return
-        // Reconstruct turns from chat history
         const reconstructed: Turn[] = []
         let currentUser = ''
         let currentAttachments: Attachment[] = []
@@ -392,6 +374,35 @@ function ChatView({
       })
       .catch(() => {})
   }, [conversationId])
+
+  const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
+    updateLocalConversation(conversationId, { content: output, status: 'done' })
+  }, () => { void reloadTurns() })
+  const [followUp, setFollowUp] = useState('')
+  const [attachments, setAttachments] = useState<AttachedFile[]>([])
+  const [chatError, setChatError] = useState<string | null>(null)
+  const [editingPrompt, setEditingPrompt] = useState(false)
+  const [editValue, setEditValue] = useState(initialPrompt)
+  const [copied, setCopied] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    Array.from(e.target.files ?? []).forEach(file => {
+      const reader = new FileReader()
+      reader.onload = () => setAttachments(p => [...p, { name: file.name, type: file.type, dataUrl: reader.result as string }])
+      reader.readAsDataURL(file)
+    })
+    e.target.value = ''
+  }, [])
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
+  useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
+
+  // Load saved messages when opening a conversation.
+  useEffect(() => { reloadTurns() }, [reloadTurns])
 
   const handleRefreshResponse = () => {
     if (streaming) return

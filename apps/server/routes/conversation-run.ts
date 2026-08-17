@@ -638,10 +638,12 @@ export function registerConversationRunRoutes(
         run()
           .then(async (output) => {
             if (!output) {
+              const msg = "Model returned no response. Try again.";
+              await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
               broadcast({
                 type: "error",
                 conversation: (await getConversation(db, conversationId))!,
-                text: "Model returned no response. Try again.",
+                text: msg,
               });
               return;
             }
@@ -704,6 +706,7 @@ export function registerConversationRunRoutes(
           })
           .catch(async (err) => {
             const msg = err instanceof Error ? err.message : "generation failed";
+            await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
             broadcast({
               type: "error",
               conversation: (await getConversation(db, conversationId))!,
@@ -714,6 +717,7 @@ export function registerConversationRunRoutes(
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "generation setup failed";
+        await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
         broadcast({
           type: "error",
           conversation: (await getConversation(db, conversationId))!,
