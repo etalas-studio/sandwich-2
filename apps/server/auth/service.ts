@@ -1,4 +1,4 @@
-import { createUser, getUserByUsername, type User } from "../db/users.js";
+import { createUser, getUserByEmail, getUserByUsername, type User } from "../db/users.js";
 import { createSession, deleteSession, getSessionByToken, type Session } from "../db/sessions.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { sessionExpiryIso } from "./cookie.js";
@@ -56,8 +56,23 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
   return { user };
 }
 
+export async function resolveUserByIdentifier(
+  identifier: string,
+  byUsername: (username: string) => Promise<User | null>,
+  byEmail: (email: string) => Promise<User | null>,
+): Promise<User | null> {
+  const trimmed = identifier.trim();
+  const user = await byUsername(trimmed);
+  if (user) return user;
+  return byEmail(trimmed.toLowerCase());
+}
+
 export async function login(db: Database, input: Credentials): Promise<AuthResult> {
-  let user = await getUserByUsername(db, input.username);
+  const user = await resolveUserByIdentifier(
+    input.username,
+    (username) => getUserByUsername(db, username),
+    (email) => getUserByEmail(db, email),
+  );
   if (!user) {
     await getDummyHash().then((hash) => verifyPassword(input.password, hash));
     throw new AuthError(401, "invalid username or password");
