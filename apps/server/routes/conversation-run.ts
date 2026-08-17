@@ -25,7 +25,7 @@ import {
   rollbackDocument,
   type DocumentType,
 } from "../db/documents.js";
-import { generatePrototypeDocument } from "../prototype/engine.js";
+import { formatPrototypeSummary, generatePrototypeDocument } from "../prototype/engine.js";
 import { parseRollbackIntent } from "../prototype/rollback.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
@@ -628,12 +628,14 @@ export function registerConversationRunRoutes(
         const hasGroqFallback = !!process.env.GROQ_API_KEY;
 
         const run = prototypeDocId
-          ? async () =>
-              (await generatePrototypeDocument(
+          ? async () => {
+              const result = await generatePrototypeDocument(
                 db,
                 { documentId: prototypeDocId!, versionNo: prototypeVersionNo!, brief: lastUserMessage },
                 controller.signal,
-              )).summary
+              );
+              return formatPrototypeSummary(result.summary, result.glowupWarning);
+            }
           : useOpenCode
             ? () =>
                 runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {

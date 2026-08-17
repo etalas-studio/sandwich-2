@@ -36,6 +36,16 @@ function listFilesRecursive(dir: string): string[] {
 export interface PrototypeGenerationResult {
   summary: string;
   files: string[];
+  glowupWarning?: string;
+}
+
+/**
+ * Compose the user-facing prototype summary with an optional glowup-failure
+ * note so a silent pass-1 fallback never reaches the user unnoticed.
+ */
+export function formatPrototypeSummary(summary: string, glowupWarning?: string): string {
+  if (!glowupWarning) return summary;
+  return `${summary}\n\nCatatan: ${glowupWarning}`;
 }
 
 /**
@@ -117,11 +127,14 @@ export async function generatePrototypeDocument(
     }
 
     // Glowup pass (best-effort, non-destructive): polish index.html + styles.css.
+    let glowupWarning: string | undefined;
     try {
       copyReferencesTo(workspace);
       await polishWorkspace(workspace, input.brief, signal);
     } catch (err) {
-      console.warn("[prototype] glowup failed, keeping pass-1 output:", err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? err.message : String(err);
+      glowupWarning = `polish desain (glowup) gagal dijalankan: ${msg}. Menampilkan hasil dasar.`;
+      console.warn("[prototype] glowup failed, keeping pass-1 output:", msg);
     }
 
     const files = listFilesRecursive(workspace);
@@ -139,7 +152,11 @@ export async function generatePrototypeDocument(
       saved.push(relPath);
     }
 
-    return { summary: `Generated ${saved.length} files: ${saved.join(", ")}`, files: saved };
+    return {
+      summary: `Generated ${saved.length} files: ${saved.join(", ")}`,
+      files: saved,
+      glowupWarning,
+    };
   } finally {
     rmSync(workspace, { recursive: true, force: true });
   }

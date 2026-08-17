@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { buildGlowupSystemPrompt, glowupModelId } from "./glowup.js";
+import { buildGlowupSystemPrompt, glowupEventLogLine, glowupModelId, selectReferences } from "./glowup.js";
 
 describe("glowupModelId", () => {
   it("defaults to deepseek-v4-flash", () => {
@@ -26,9 +26,23 @@ describe("buildGlowupSystemPrompt", () => {
     assert.ok(prompt.includes("A SaaS for warehouse inventory"));
   });
 
-  it("points the agent at the vendored taste library", () => {
-    assert.ok(prompt.includes(".getokui/index.json"));
-    assert.ok(prompt.includes(".getokui/dna/"));
+  it("injects pre-selected DNA instead of telling the model to read the library", () => {
+    const withRefs = buildGlowupSystemPrompt({
+      brief: "A SaaS for warehouse inventory",
+      refs: [
+        {
+          slug: "saas-inventory",
+          dna: {
+            layout: { hero_layout: "split" },
+            motion: { keyframes_css: "@keyframes float {}" },
+          },
+        },
+      ],
+    });
+    assert.ok(withRefs.includes("Design DNA"));
+    assert.ok(withRefs.includes("saas-inventory"));
+    assert.ok(withRefs.includes("@keyframes float"));
+    assert.ok(!withRefs.includes("Read .getokui/index.json"));
   });
 
   it("mandates style-not-content and stack preservation", () => {
@@ -58,5 +72,47 @@ describe("buildGlowupSystemPrompt", () => {
 
   it("ends with the DONE protocol", () => {
     assert.ok(prompt.includes("DONE"));
+  });
+});
+
+describe("glowupEventLogLine", () => {
+  it("logs tool start with elapsed seconds", () => {
+    const line = glowupEventLogLine({ type: "tool_execution_start", toolName: "read" }, 1250);
+    assert.ok(line, "should produce a log line");
+    assert.ok(line!.startsWith("[glowup] +1.3s tool_start=read"));
+  });
+
+  it("logs tool end with error flag", () => {
+    const line = glowupEventLogLine({ type: "tool_execution_end", toolName: "edit", isError: true }, 2500);
+    assert.ok(line!.includes("tool_end=edit"));
+    assert.ok(line!.includes("isError=true"));
+  });
+
+  it("logs agent end errors", () => {
+    const line = glowupEventLogLine({ type: "agent_end", errorMessage: "boom" }, 500);
+    assert.ok(line!.includes("agent_end"));
+    assert.ok(line!.includes("error=boom"));
+  });
+
+  it("ignores other events", () => {
+    assert.equal(glowupEventLogLine({ type: "message_update" }, 100), null);
+  });
+});
+
+describe("selectReferences", () => {
+  const templates = [
+    { slug: "saas-inventory", name: "SaasInventory", category: "saas", tags: ["saas", "inventory"], description: "warehouse inventory SaaS platform" },
+    { slug: "fintech-pay", name: "FinPay", category: "fintech", tags: ["fintech", "payment"], description: "payment gateway fintech" },
+    { slug: "agency-dark", name: "AgencyDark", category: "agency", tags: ["agency", "creative", "dark"], description: "creative agency studio" },
+  ];
+
+  it("picks references matching the brief vertical", () => {
+    const got = selectReferences("SaaS untuk warehouse inventory", templates);
+    assert.deepEqual(got.map((t) => t.slug), ["saas-inventory"]);
+  });
+
+  it("falls back to the first N when nothing matches", () => {
+    const got = selectReferences("xyzzy quux", templates, 2);
+    assert.deepEqual(got.map((t) => t.slug), ["saas-inventory", "fintech-pay"]);
   });
 });

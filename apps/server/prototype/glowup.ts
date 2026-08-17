@@ -1,5 +1,129 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 export interface GlowupPromptInput {
   brief: string;
+  refs?: GlowupReference[];
+}
+
+export interface ReferenceEntry {
+  slug: string;
+  name: string;
+  category: string;
+  tags?: string[];
+  description?: string;
+}
+
+export interface GlowupReference {
+  slug: string;
+  dna: Record<string, unknown>;
+}
+
+/** Pick 1..limit references whose category/tags/name/description best match the brief. */
+export function selectReferences(
+  brief: string,
+  templates: ReferenceEntry[],
+  limit = 3,
+): ReferenceEntry[] {
+  const words = brief
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 3);
+
+  const scored = templates
+    .map((t) => {
+      let score = 0;
+      const name = (t.name ?? "").toLowerCase();
+      const description = (t.description ?? "").toLowerCase();
+      const tags = (t.tags ?? []).map((x) => x.toLowerCase());
+      for (const w of words) {
+        if (t.category === w) score += 3;
+        else {
+          if (tags.some((tag) => tag === w)) score += 2;
+          if (name.includes(w)) score += 1;
+          if (description.includes(w)) score += 1;
+        }
+      }
+      return { entry: t, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const matched = scored
+    .filter((s) => s.score > 0)
+    .slice(0, limit)
+    .map((s) => s.entry);
+  if (matched.length > 0) return matched;
+  return templates.slice(0, limit);
+}
+
+function buildDnaContext(refs: GlowupReference[]): string {
+  if (refs.length === 0) return "";
+  const blocks = refs.map((r, i) => {
+    const d = r.dna ?? {};
+    const tokens = {
+      hero: d.hero,
+      type_scale: d.type_scale,
+      spacing: d.spacing,
+      radius: d.radius,
+      shadow: d.shadow,
+      layout: d.layout,
+      motion: d.motion,
+      signature: d.signature,
+    };
+    return `### Reference ${i + 1}: ${r.slug}\n\`\`\`json\n${JSON.stringify(tokens, null, 2)}\n\`\`\``;
+  });
+  return ["## Design DNA (pre-selected — apply these tokens)", ...blocks].join("\n\n");
+}
+
+/** Load the taste library, pick references in code (not in the model), and return their DNA. */
+function resolveReferences(workspace: string, brief: string): GlowupReference[] {
+  const indexPath = join(workspace, ".getokui", "index.json");
+  if (!existsSync(indexPath)) return [];
+  try {
+    const indexData = JSON.parse(readFileSync(indexPath, "utf-8")) as {
+      templates?: ReferenceEntry[];
+    };
+    const templates = Array.isArray(indexData.templates) ? indexData.templates : [];
+    const selected = selectReferences(brief, templates, 3);
+    const refs: GlowupReference[] = [];
+    for (const t of selected) {
+      const dnaPath = join(workspace, ".getokui", "dna", `${t.slug}.json`);
+      if (!existsSync(dnaPath)) continue;
+      try {
+        refs.push({
+          slug: t.slug,
+          dna: JSON.parse(readFileSync(dnaPath, "utf-8")) as Record<string, unknown>,
+        });
+      } catch {
+        // skip unreadable dna
+      }
+    }
+    return refs;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Format a diagnostic log line for a glowup agent event. Returns null for
+ * events we don't want to log. Kept pure so the timestamp/tool-activity
+ * formatting is unit-testable.
+ */
+export function glowupEventLogLine(
+  event: { type?: string; toolName?: string; isError?: boolean; errorMessage?: string },
+  elapsedMs: number,
+): string | null {
+  const secs = (elapsedMs / 1000).toFixed(1);
+  switch (event.type) {
+    case "tool_execution_start":
+      return `[glowup] +${secs}s tool_start=${event.toolName ?? "?"}`;
+    case "tool_execution_end":
+      return `[glowup] +${secs}s tool_end=${event.toolName ?? "?"} isError=${event.isError ?? false}`;
+    case "agent_end":
+      return `[glowup] +${secs}s agent_end${event.errorMessage ? ` error=${event.errorMessage}` : ""}`;
+    default:
+      return null;
+  }
 }
 
 export function glowupModelId(): string {
@@ -7,22 +131,25 @@ export function glowupModelId(): string {
 }
 
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
+  const dnaSection =
+    input.refs && input.refs.length > 0
+      ? buildDnaContext(input.refs)
+      : [
+          "## Design DNA",
+          "None provided — apply a clean, modern SaaS aesthetic (generous spacing, strong type hierarchy, one consistent radius + shadow, at least one subtle motion).",
+        ].join("\n");
+
   return [
     `You are SANDWICH's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
     ``,
     `## Client Brief (for reference matching)`,
     input.brief,
     ``,
-    `## The Taste Library (getokui)`,
-    `A curated design-reference library is already copied into this workspace at .getokui/.`,
-    `- .getokui/index.json — metadata for 213 templates (slug, category, tags, description, colors, fonts, sections).`,
-    `- .getokui/dna/<slug>.json — pre-extracted "Design DNA" for each template (real class strings, spacing, radius, shadow, layout, motion).`,
+    dnaSection,
     ``,
     `## Your Process`,
     `1. Read ONLY index.html and styles.css (the landing page and the shared stylesheet). Do NOT read or edit dashboard.html, module pages, or script.js.`,
-    `2. Read .getokui/index.json and pick 1–3 references whose category/tags/description best match the brief's vertical and mood.`,
-    `3. Read those references' .getokui/dna/<slug>.json files. Extract concrete tokens (layout.hero_layout, hero.h1_classes, hero.cta_classes, spacing.section_padding, radius, shadow, motion.keyframes_css, layout.composition_techniques).`,
-    `4. Apply those tokens to index.html and styles.css IN PLACE (edit, don't recreate). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
+    `2. Apply the Design DNA tokens above to index.html and styles.css IN PLACE (edit, don't recreate). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
     ``,
     `## STYLE, NOT CONTENT (MANDATORY)`,
     `- Keep every headline, paragraph, table row, form label, chart, and piece of demo data exactly as it is. Restyle, never rewrite copy.`,
@@ -64,7 +191,7 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
   ].join("\n");
 }
 
-const GLOWUP_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const GLOWUP_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes — glowup reads the full index.json + DNA and edits in place
 
 export async function polishWorkspace(
   workspace: string,
@@ -91,9 +218,12 @@ export async function polishWorkspace(
   });
 
   let errorMessage = "";
+  const startMs = Date.now();
 
   session.subscribe((event: any) => {
     if (signal?.aborted) return;
+    const line = glowupEventLogLine(event, Date.now() - startMs);
+    if (line) console.log(line);
     if (event.type === "agent_end") {
       if (typeof event.errorMessage === "string" && event.errorMessage) {
         errorMessage = event.errorMessage;
@@ -102,7 +232,9 @@ export async function polishWorkspace(
   });
 
   try {
-    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief }));
+    const refs = resolveReferences(workspace, brief);
+    console.log(`[glowup] start model=${provider}/${modelId} workspace=${workspace} refs=${refs.map((r) => r.slug).join(",") || "none"}`);
+    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief, refs }));
     promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
     await Promise.race([
       promptPromise,
