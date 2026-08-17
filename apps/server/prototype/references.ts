@@ -7,7 +7,18 @@ export const ALLOWED_EXTENSIONS: ReadonlySet<string> = new Set([
 ]);
 
 export function getokuiSourceDir(): string {
-  return join(dirname(fileURLToPath(import.meta.url)), "getokui");
+  const here = dirname(fileURLToPath(import.meta.url));
+  // Prefer the build-time copy (dist/prototype/getokui). Fall back to the
+  // tracked source (apps/server/prototype/getokui) so a deployment that
+  // skipped the copy step still finds the library.
+  const candidates = [
+    join(here, "getokui"),
+    join(here, "..", "..", "apps", "server", "prototype", "getokui"),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return candidates[0]!;
 }
 
 function copyDirRecursive(src: string, dest: string): void {
