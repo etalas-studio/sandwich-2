@@ -5,6 +5,7 @@ import { createMessage } from '../api/conversations'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
+import { DeliverableTypeSelect } from './DeliverableTypeSelect'
 
 interface LandingPageProps {
   onGoToApp: (plan?: string) => void
@@ -233,18 +234,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               >
                 {/* deliverable selector */}
                 <div className="flex items-center gap-2 px-5 pt-5 pb-2">
-                  <select
-                    value={pendingType}
-                    onChange={(e) => setPendingType(e.target.value)}
-                    className="text-xs px-3 py-1.5 rounded-full"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
-                  >
-                    <option value="">Auto</option>
-                    <option value="prd">PRD</option>
-                    <option value="quotation">Quotation</option>
-                    <option value="prototype">Prototype</option>
-                    <option value="specs">Specs</option>
-                  </select>
+                  <DeliverableTypeSelect value={pendingType} onChange={setPendingType} />
                 </div>
 
                 <textarea

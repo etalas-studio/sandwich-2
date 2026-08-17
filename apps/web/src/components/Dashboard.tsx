@@ -10,6 +10,7 @@ import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 import DocumentsPanel from './DocumentsPanel'
+import { DeliverableTypeSelect } from './DeliverableTypeSelect'
 import { useLanguage, type StringKey } from '../lib/i18n'
 
 interface AttachedFile { name: string; type: string; dataUrl: string }
@@ -731,18 +732,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
         </div>
       )}
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-        <select
-          value={pendingType}
-          onChange={(e) => setPendingType(e.target.value)}
-          className="text-xs px-3 py-1.5 rounded-full"
-          style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)' }}
-        >
-          <option value="">Auto</option>
-          <option value="prd">PRD</option>
-          <option value="quotation">Quotation</option>
-          <option value="prototype">Prototype</option>
-          <option value="specs">Specs</option>
-        </select>
+        <DeliverableTypeSelect value={pendingType} onChange={setPendingType} />
         {!usage.isPro && !atLimit && (
           <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
         )}
