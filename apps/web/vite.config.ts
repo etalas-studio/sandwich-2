@@ -17,6 +17,10 @@ export default defineConfig({
         changeOrigin: true,
         headers: { origin: 'http://localhost:4319' },
       },
+      '/p': {
+        target: 'http://localhost:4319',
+        changeOrigin: true,
+      },
     },
   },
   test: {
