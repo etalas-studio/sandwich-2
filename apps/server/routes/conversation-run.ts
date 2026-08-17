@@ -395,6 +395,18 @@ function enrichMessageContent(m: {
   return `${m.content}\n\n${blocks.join("\n\n")}`;
 }
 
+/**
+ * Absolute preview URL for a prototype document. Uses PREVIEW_DOMAIN in
+ * production, otherwise the app URL (localhost in dev) so the assistant can
+ * hand the user a real, clickable link instead of guessing.
+ */
+function prototypePreviewUrl(docId: string): string {
+  const domain = process.env.PREVIEW_DOMAIN;
+  if (domain) return `https://${domain}/p/${docId}/`;
+  const base = process.env.APP_URL ?? "http://localhost:3000";
+  return `${base.replace(/\/+$/, "")}/p/${docId}/`;
+}
+
 export function registerConversationRunRoutes(
   router: Router,
   db: Database,
@@ -648,8 +660,10 @@ export function registerConversationRunRoutes(
               return;
             }
 
+            let chatOutput = output;
             let nextStage: PipelineStage = stage;
             if (stage === "generating" && pendingType) {
+              const isPrototype = pendingType === "prototype";
               // Persist the deliverable as a versioned document.
               const title =
                 conversation.title.trim() || `${pendingType.toUpperCase()} document`;
@@ -681,6 +695,9 @@ export function registerConversationRunRoutes(
               if (pendingType === "prd") {
                 await incrementUsage(db, auth.userId, "prd");
               }
+              if (isPrototype && prototypeDocId) {
+                chatOutput = `${output}\n\nPreview: ${prototypePreviewUrl(prototypeDocId)}`;
+              }
               nextStage = "awaiting_next";
               pendingType = null;
             } else if (stage === "intake") {
@@ -696,11 +713,11 @@ export function registerConversationRunRoutes(
             await addChatMessage(db, {
               conversationId,
               role: "assistant",
-              content: output,
+              content: chatOutput,
             });
             broadcast({
               type: "done",
-              text: output,
+              text: chatOutput,
               conversation: (await getConversation(db, conversationId))!,
             });
           })
