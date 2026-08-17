@@ -4,6 +4,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getUserById } from "../db/users.js";
 import {
   createSnapTransaction,
+  getTransactionStatus,
   verifyNotificationSignature,
 } from "../pipeline/midtrans.js";
 import {
@@ -137,6 +138,69 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt,
     });
+  });
+
+  // Confirm a payment by asking Midtrans directly. The webhook cannot reach
+  // localhost, so the Snap success callback and the return page use this to
+  // fulfill the subscription server-side.
+  router.post("/api/midtrans/verify", async (req, res) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) {
+      sendJson(res, 401, { error: "unauthenticated" });
+      return;
+    }
+
+    const body = (await readJsonBody(req).catch(() => null)) as {
+      orderId?: string;
+    } | null;
+    const orderId = body?.orderId;
+    if (!orderId) {
+      sendJson(res, 400, { error: "orderId is required" });
+      return;
+    }
+
+    const payment = await getPayment(db, orderId);
+    if (!payment || payment.userId !== auth.userId) {
+      sendJson(res, 404, { error: "payment not found" });
+      return;
+    }
+
+    try {
+      const status = await getTransactionStatus(orderId);
+      const incoming = mapTransactionStatus(
+        status.transactionStatus,
+        status.fraudStatus,
+      );
+
+      if (shouldTransition(payment.localStatus as LocalPaymentStatus, incoming)) {
+        await updatePayment(db, orderId, {
+          localStatus: incoming,
+          transactionStatus: status.transactionStatus,
+          statusCode: "200",
+          paymentType: status.paymentType,
+          fraudStatus: status.fraudStatus,
+        });
+
+        if (incoming === "paid" && payment.userId && payment.planSlug) {
+          await activateSubscription(db, {
+            userId: payment.userId,
+            planSlug: payment.planSlug,
+          });
+        }
+        if (incoming === "refunded" && payment.userId) {
+          await cancelSubscription(db, payment.userId);
+        }
+      }
+
+      sendJson(res, 200, {
+        orderId,
+        localStatus: incoming,
+        transactionStatus: status.transactionStatus,
+        active: incoming === "paid",
+      });
+    } catch (err) {
+      sendCaughtError(res, err, "midtrans verify");
+    }
   });
 
   router.post("/api/midtrans/notification", async (req, res) => {

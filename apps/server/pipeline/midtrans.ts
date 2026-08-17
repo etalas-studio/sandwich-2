@@ -62,6 +62,54 @@ export async function createSnapTransaction(
   return { token: body.token, redirectUrl: body.redirect_url };
 }
 
+function apiBaseUrl(): string {
+  return process.env.MIDTRANS_IS_PRODUCTION === "true"
+    ? "https://api.midtrans.com"
+    : "https://api.sandbox.midtrans.com";
+}
+
+export interface TransactionStatusResult {
+  transactionStatus: string;
+  fraudStatus: string | null;
+  paymentType: string | null;
+}
+
+/**
+ * Server-to-server status lookup. Used by the verify route to confirm a
+ * payment when the async webhook cannot reach the server (e.g. localhost).
+ */
+export async function getTransactionStatus(
+  orderId: string,
+): Promise<TransactionStatusResult> {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  if (!serverKey) throw new Error("MIDTRANS_SERVER_KEY is not set");
+  const auth = Buffer.from(`${serverKey}:`).toString("base64");
+
+  const res = await fetch(
+    `${apiBaseUrl()}/v2/${encodeURIComponent(orderId)}/status`,
+    { headers: { accept: "application/json", authorization: `Basic ${auth}` } },
+  );
+
+  const body = (await res.json().catch(() => null)) as {
+    transaction_status?: string;
+    fraud_status?: string;
+    payment_type?: string;
+    status_message?: string;
+  } | null;
+
+  if (!res.ok || !body?.transaction_status) {
+    throw new Error(
+      body?.status_message ?? `Midtrans status error (${String(res.status)})`,
+    );
+  }
+
+  return {
+    transactionStatus: body.transaction_status,
+    fraudStatus: typeof body.fraud_status === "string" ? body.fraud_status : null,
+    paymentType: typeof body.payment_type === "string" ? body.payment_type : null,
+  };
+}
+
 /** Per Midtrans docs: SHA512(order_id + status_code + gross_amount + ServerKey). */
 export function verifyNotificationSignature(notification: {
   order_id: string;

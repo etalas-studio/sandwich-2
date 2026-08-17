@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
-import { getPayment } from '../api/payments'
+import { getPayment, verifyPayment } from '../api/payments'
 import { extractInstructions, type PaymentInstruction } from '../lib/paymentInstructions'
 
 const bowlby = "'Bowlby One', system-ui"
@@ -25,6 +25,11 @@ export default function PaymentReturn() {
 
   const refresh = React.useCallback(async () => {
     setStatus('loading')
+
+    // 0) Confirm with the provider directly (the webhook can't reach localhost).
+    if (orderId) {
+      try { await verifyPayment(orderId) } catch { /* ignore */ }
+    }
 
     // 1) Subscription state is the source of truth for fulfillment.
     let active = false

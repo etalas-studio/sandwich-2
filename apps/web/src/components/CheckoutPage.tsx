@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
+import { verifyPayment } from '../api/payments'
 import { useSubscription } from '../hooks/useSubscription'
 import { PLANS_META, getPlanMeta } from '../lib/plans'
 
@@ -232,8 +233,10 @@ function PaymentTrigger({
 
       ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
         onSuccess: () => {
-          // UX hint only — confirm via backend, then refresh the cache.
+          // Confirm server-side via the provider status API (the webhook can't
+          // reach localhost), then refresh the cache.
           void (async () => {
+            try { await verifyPayment(data.orderId) } catch { /* ignore */ }
             await waitForActivePlan()
             queryClient.invalidateQueries({ queryKey: ['subscription'] })
             setIsDone(true)
