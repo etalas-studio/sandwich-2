@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, max } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   conversationDocuments,
@@ -111,6 +111,33 @@ export async function getLatestVersion(db: Database, documentId: string): Promis
     .orderBy(desc(documentVersions.versionNo))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** Single query: versionNo for a set of version IDs. */
+export async function getVersionNosByIds(
+  db: Database,
+  versionIds: string[],
+): Promise<Map<string, number>> {
+  if (versionIds.length === 0) return new Map();
+  const rows = await db
+    .select({ id: documentVersions.id, versionNo: documentVersions.versionNo })
+    .from(documentVersions)
+    .where(inArray(documentVersions.id, versionIds));
+  return new Map(rows.map((r) => [r.id, r.versionNo]));
+}
+
+/** Single query: latest versionNo per document for a set of document IDs. */
+export async function getLatestVersionNosForDocuments(
+  db: Database,
+  documentIds: string[],
+): Promise<Map<string, number>> {
+  if (documentIds.length === 0) return new Map();
+  const rows = await db
+    .select({ documentId: documentVersions.documentId, maxNo: max(documentVersions.versionNo) })
+    .from(documentVersions)
+    .where(inArray(documentVersions.documentId, documentIds))
+    .groupBy(documentVersions.documentId);
+  return new Map(rows.map((r) => [r.documentId, r.maxNo ?? 0]));
 }
 
 export async function listVersions(db: Database, documentId: string): Promise<DocumentVersion[]> {

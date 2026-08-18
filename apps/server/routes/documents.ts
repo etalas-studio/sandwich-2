@@ -13,7 +13,8 @@ import {
   findDocumentByTitle,
   getDocument,
   getLatestVersion,
-  getVersion,
+  getLatestVersionNosForDocuments,
+  getVersionNosByIds,
   listDocuments,
   listVersions,
   setDocumentCurrentVersion,
@@ -37,19 +38,19 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       return;
     }
     const docs = await listDocuments(db, auth.userId);
-    const withMeta = await Promise.all(docs.map(async (doc) => {
-      const latest = await getLatestVersion(db, doc.id);
-      let currentVersionNo = latest?.versionNo ?? null;
-      if (doc.currentVersionId) {
-        const current = await getVersion(db, doc.currentVersionId);
-        if (current) currentVersionNo = current.versionNo;
-      }
-      return {
-        ...withPreviewUrl(doc),
-        latestVersionNo: latest?.versionNo ?? null,
-        currentVersionNo,
-      };
-    }));
+    const docIds = docs.map((d) => d.id);
+    const pinnedVersionIds = docs.map((d) => d.currentVersionId).filter((id): id is string => !!id);
+    const [latestNos, pinnedNos] = await Promise.all([
+      getLatestVersionNosForDocuments(db, docIds),
+      getVersionNosByIds(db, pinnedVersionIds),
+    ]);
+    const withMeta = docs.map((doc) => {
+      const latestVersionNo = latestNos.get(doc.id) ?? null;
+      const currentVersionNo = doc.currentVersionId
+        ? (pinnedNos.get(doc.currentVersionId) ?? latestVersionNo)
+        : latestVersionNo;
+      return { ...withPreviewUrl(doc), latestVersionNo, currentVersionNo };
+    });
     sendJson(res, 200, withMeta);
   });
 
