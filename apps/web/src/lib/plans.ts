@@ -21,7 +21,7 @@ export const PLANS_META: PlanMeta[] = [
   {
     slug: 'starter',
     name: 'Starter',
-    price: 'Free',
+    price: 'Rp 0k',
     oldPrice: 'Rp 50k',
     amount: 0,
     featureKeys: ['plan_starter_f2', 'plan_starter_proto', 'plan_starter_f3', 'plan_starter_f4'],

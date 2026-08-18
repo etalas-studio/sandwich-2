@@ -86,7 +86,7 @@ const STRINGS = {
   plan_starter_f4: { en: 'Download Markdown', id: 'Download Markdown' },
   plan_starter_f5: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
   plan_pro_desc: { en: 'Unlimited, full access.', id: 'Unlimited, semua akses.' },
-  plan_pro_cta: { en: 'Upgrade to Pro', id: 'Upgrade ke Pro' },
+  plan_pro_cta: { en: 'Get Pro', id: 'Dapatkan Pro' },
   plan_pro_f2: { en: 'Unlimited documents', id: 'Unlimited dokumen' },
   plan_pro_proto: { en: 'Unlimited prototypes', id: 'Unlimited prototype' },
   plan_pro_f3: { en: 'Unlimited AI chat', id: 'Chat AI unlimited' },
