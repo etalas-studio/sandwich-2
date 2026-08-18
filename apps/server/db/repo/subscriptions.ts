@@ -111,3 +111,7 @@ export async function cancelSubscription(db: Database, userId: string): Promise<
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")));
 }
+
+export async function deleteSubscriptionByUser(db: Database, userId: string): Promise<void> {
+  await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+}

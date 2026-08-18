@@ -2,6 +2,7 @@ import type { Router } from "../router.js";
 import { AuthError, type AuthResult, login, logout, register } from "../auth/service.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getUserById, deleteUser } from "../db/users.js";
+import { deleteSubscriptionByUser } from "../db/repo/subscriptions.js";
 import {
   SESSION_COOKIE_NAME,
   buildClearedSessionCookie,
@@ -78,7 +79,9 @@ export function registerAuthRoutes(
       } catch (err) {
         // Rollback the created user + token so a retry doesn't hit
         // "username already taken" (email failure shouldn't leave a half-registered user).
+        // Delete in FK-safe order: verification tokens → subscription → user.
         await deleteVerificationTokensByUser(db, user.id).catch(() => {});
+        await deleteSubscriptionByUser(db, user.id).catch(() => {});
         await deleteUser(db, user.id).catch(() => {});
         throw err;
       }
