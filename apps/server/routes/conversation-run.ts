@@ -358,7 +358,7 @@ async function runWithOpenCode(
   }
 }
 
-function closeInFlight(conversationId: string): void {
+export function closeInFlight(conversationId: string): void {
   inFlight.delete(conversationId);
   const clients = sseClients.get(conversationId);
   if (clients) {

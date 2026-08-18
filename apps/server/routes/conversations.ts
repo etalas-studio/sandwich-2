@@ -1,4 +1,5 @@
 import type { Router } from "../router.js";
+import { closeInFlight } from "./conversation-run.js";
 import {
   createConversation,
   listConversations,
@@ -170,6 +171,7 @@ export function registerConversationRoutes(router: Router, db: Database): void {
       sendJson(res, 404, { error: "conversation not found" });
       return;
     }
+    closeInFlight(params.id!);
     await deleteConversation(db, params.id!);
     sendJson(res, 200, { deleted: true });
   });
