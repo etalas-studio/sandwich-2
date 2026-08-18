@@ -167,7 +167,8 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
         status.fraudStatus,
       );
 
-      if (shouldTransition(payment.localStatus as LocalPaymentStatus, incoming)) {
+      const transitioned = shouldTransition(payment.localStatus as LocalPaymentStatus, incoming);
+      if (transitioned) {
         await updatePayment(db, orderId, {
           localStatus: incoming,
           transactionStatus: status.transactionStatus,
@@ -187,11 +188,12 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
         }
       }
 
+      const localStatus = transitioned ? incoming : (payment.localStatus as LocalPaymentStatus);
       sendJson(res, 200, {
         orderId,
-        localStatus: incoming,
+        localStatus,
         transactionStatus: status.transactionStatus,
-        active: incoming === "paid",
+        active: localStatus === "paid",
       });
     } catch (err) {
       sendCaughtError(res, err, "midtrans verify");
