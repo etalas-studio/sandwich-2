@@ -173,6 +173,6 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     }
     closeInFlight(params.id!);
     await deleteConversation(db, params.id!);
-    sendJson(res, 200, { deleted: true });
+    res.writeHead(204).end();
   });
 }
