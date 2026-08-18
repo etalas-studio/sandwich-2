@@ -21,7 +21,7 @@ const TYPE_LABEL: Record<string, string> = {
   specs: 'Specs',
 }
 
-function PrototypeCard({ doc, onChanged }: { doc: DocumentItem; onChanged: () => void }) {
+function PrototypeCard({ doc, onChanged, onOpenDocument }: { doc: DocumentItem; onChanged: () => void; onOpenDocument: (id: string) => void }) {
   const latest = doc.latestVersionNo ?? 1
   const current = doc.currentVersionNo ?? latest
   const [version, setVersion] = useState(current)
@@ -46,12 +46,18 @@ function PrototypeCard({ doc, onChanged }: { doc: DocumentItem; onChanged: () =>
 
   return (
     <div className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
-      <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>Prototype</span>
-      <span className="font-semibold truncate" style={{ color: '#111827' }}>{doc.title}</span>
-      <div className="flex items-center gap-2 flex-wrap">
+      <button onClick={() => onOpenDocument(doc.id)} className="text-left group">
+        <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>Prototype</span>
+        <span className="block font-semibold truncate mt-1" style={{ color: '#111827' }}>{doc.title}</span>
+        <span className="inline-flex items-center gap-1 text-xs mt-1.5 text-blue-600">
+          <iconify-icon icon="solar:eye-linear" width="12" />
+          Preview &amp; Download
+        </span>
+      </button>
+      <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
         {previewUrl && (
           <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#2563eb' }}>
-            Preview
+            Open preview
           </a>
         )}
         <select
@@ -79,7 +85,7 @@ function PrototypeCard({ doc, onChanged }: { doc: DocumentItem; onChanged: () =>
   )
 }
 
-export default function DocumentsPanel() {
+export default function DocumentsPanel({ onOpenDocument }: { onOpenDocument: (id: string) => void }) {
   const [items, setItems] = useState<DocumentItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -109,9 +115,14 @@ export default function DocumentsPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.slice().reverse().map((d) => (
               d.type === 'prototype' ? (
-                <PrototypeCard key={d.id} doc={d} onChanged={load} />
+                <PrototypeCard key={d.id} doc={d} onChanged={load} onOpenDocument={onOpenDocument} />
               ) : (
-                <div key={d.id} className="flex flex-col gap-2 p-5 rounded-2xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
+                <button
+                  key={d.id}
+                  onClick={() => onOpenDocument(d.id)}
+                  className="flex flex-col gap-2 p-5 rounded-2xl border text-left group"
+                  style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}
+                >
                   <span className="text-xs font-semibold uppercase" style={{ color: '#f91814' }}>
                     {TYPE_LABEL[d.type] ?? d.type}
                   </span>
@@ -119,8 +130,19 @@ export default function DocumentsPanel() {
                   {d.latestVersionNo != null && (
                     <span className="text-xs" style={{ color: '#9ca3af' }}>v{d.latestVersionNo}</span>
                   )}
-                  <a href={apiUrl(`/api/documents/${d.id}/export?format=md`)} className="text-xs underline" style={{ color: '#2563eb' }}>Download MD</a>
-                </div>
+                  <span className="inline-flex items-center gap-1 text-xs text-blue-600">
+                    <iconify-icon icon="solar:eye-linear" width="12" />
+                    Preview &amp; Download
+                  </span>
+                  <a
+                    href={apiUrl(`/api/documents/${d.id}/export?format=md`)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs underline"
+                    style={{ color: '#2563eb' }}
+                  >
+                    Download MD
+                  </a>
+                </button>
               )
             ))}
           </div>

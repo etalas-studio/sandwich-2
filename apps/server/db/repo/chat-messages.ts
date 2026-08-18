@@ -18,6 +18,7 @@ export interface ChatMessage {
   conversationId: string;
   role: string;
   content: string;
+  documentId: string | null;
   createdAt: Date;
   attachments: MessageAttachment[];
 }
@@ -39,7 +40,12 @@ async function toAttachment(
 /** Simple insert — used for assistant replies (no attachments). */
 export async function addChatMessage(
   db: Database,
-  input: { conversationId: string; role: string; content: string },
+  input: {
+    conversationId: string;
+    role: string;
+    content: string;
+    documentId?: string | null;
+  },
 ): Promise<number> {
   const now = new Date();
   const [row] = await db
@@ -48,6 +54,7 @@ export async function addChatMessage(
       conversationId: input.conversationId,
       role: input.role,
       content: input.content,
+      documentId: input.documentId ?? null,
       createdAt: now,
     })
     .returning({ id: chatMessages.id });
@@ -103,6 +110,7 @@ export async function getMessage(
     conversationId: row.conversationId,
     role: row.role,
     content: row.content,
+    documentId: row.documentId,
     createdAt: row.createdAt,
     attachments: await Promise.all(atts.map(toAttachment)),
   };
@@ -137,6 +145,7 @@ export async function getMessages(
     conversationId: m.conversationId,
     role: m.role,
     content: m.content,
+    documentId: m.documentId,
     createdAt: m.createdAt,
     attachments: byMessage.get(m.id) ?? [],
   }));
