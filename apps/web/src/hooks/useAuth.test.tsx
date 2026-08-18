@@ -256,4 +256,50 @@ describe('useAuth', () => {
       expect(result.current.state.status).toBe('unauthenticated')
     })
   })
+
+  // ── subscription cache isolation ──
+
+  it('login drops a stale subscription cache so the paywall gate re-fetches', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    qc.setQueryData(['subscription'], { planSlug: null, expired: false })
+
+    let loggedIn = false
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = typeof input === 'string' ? input : String(input)
+      if (url === '/api/auth/me') {
+        return {
+          ok: true,
+          json: async () =>
+            loggedIn
+              ? { state: 'authenticated', user: { username: 'alice' } }
+              : { state: 'unauthenticated' },
+        } as Response
+      }
+      if (url === '/api/auth/login') {
+        loggedIn = true
+        return { ok: true, json: async () => ({}) } as Response
+      }
+      return { ok: true, json: async () => ({}) } as Response
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+      ),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    await act(async () => {
+      await result.current.login('alice', 'secret')
+    })
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('authenticated')
+    })
+
+    expect(qc.getQueryData(['subscription'])).toBeUndefined()
+  })
 })

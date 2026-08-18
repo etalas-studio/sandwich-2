@@ -17,6 +17,9 @@ export function useAuth() {
       postLogin(username, password),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+      // Drop any user-scoped subscription cache so the gate waits for a
+      // fresh fetch for the newly-authenticated user (never a stale null).
+      queryClient.removeQueries({ queryKey: ['subscription'] })
     },
   })
 
@@ -29,6 +32,7 @@ export function useAuth() {
       postRegister(username, email, password),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+      queryClient.removeQueries({ queryKey: ['subscription'] })
     },
   })
 
