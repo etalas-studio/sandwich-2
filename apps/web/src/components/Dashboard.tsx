@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
@@ -1330,6 +1331,73 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: 3, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
+
+  const { data: sub, isLoading: subLoading } = useSubscription()
+  const queryClient = useQueryClient()
+
+  // Fire Snap for a pending Pro upgrade set during registration
+  useEffect(() => {
+    const pending = localStorage.getItem('sandwich_pending_plan')
+    if (pending !== 'pro') return
+    localStorage.removeItem('sandwich_pending_plan') // clear immediately — don't loop
+
+    const fireSnap = async () => {
+      try {
+        const txRes = await fetch(apiUrl('/api/midtrans/transaction'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ planSlug: 'pro' }),
+        })
+        if (!txRes.ok) return
+        const data = await txRes.json() as {
+          token: string | null
+          simulated: boolean
+          clientKey: string
+          isProduction: boolean
+        }
+        if (data.simulated || !data.token) {
+          queryClient.invalidateQueries({ queryKey: ['subscription'] })
+          return
+        }
+        await new Promise<void>((resolve, reject) => {
+          const w = window as unknown as Record<string, unknown>
+          if (w.snap) { resolve(); return }
+          const script = document.createElement('script')
+          script.src = data.isProduction
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js'
+          script.setAttribute('data-client-key', data.clientKey)
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Snap.js failed to load'))
+          document.head.appendChild(script)
+        })
+        ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
+          onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['subscription'] }) },
+          onPending: () => { /* user can check status later */ },
+          onError: () => { /* Snap already shows error UI */ },
+          onClose: () => { /* user closed — no action needed, key already cleared */ },
+        })
+      } catch {
+        /* transient — key already cleared, user can upgrade manually */
+      }
+    }
+
+    void fireSnap()
+  }, [queryClient])
+
+  if (!subLoading && sub !== undefined && !sub?.planSlug) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4EBE1' }}>
+        <div className="text-center max-w-sm px-4">
+          <p className="text-sm text-zinc-500 mb-4">No active plan found. Please contact support.</p>
+          <a href="mailto:support@etalas.ai" className="text-sm font-semibold underline" style={{ color: '#f91814' }}>
+            support@etalas.ai
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const refresh = () => setConversations(getConversations())
 
