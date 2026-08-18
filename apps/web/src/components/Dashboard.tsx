@@ -524,7 +524,7 @@ function ChatView({
                         </div>
                       </div>
                     ) : (
-                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-words whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-all whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
                         {turn.user}
                       </div>
                     )}
