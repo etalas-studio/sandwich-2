@@ -129,8 +129,16 @@ async function runWithGroq(
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
+  isRegenerate = false,
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY!;
+  const messages = buildMessages(history, stage, pendingType);
+  if (isRegenerate && messages.length > 0) {
+    const last = messages[messages.length - 1];
+    if (last && last.role === "user") {
+      last.content = `${last.content}\n\n[Try a different structure or angle than your previous response, but stay accurate and grounded in the context. Do not repeat the same phrasing or order as before.]`;
+    }
+  }
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -139,7 +147,7 @@ async function runWithGroq(
     },
     body: JSON.stringify({
       model: "qwen/qwen3.6-27b",
-      messages: buildMessages(history, stage, pendingType),
+      messages,
       max_tokens: 4000,
       reasoning_effort: "none",
       temperature: 0.7,
@@ -441,7 +449,8 @@ export function registerConversationRunRoutes(
 
     // For a regenerate, drop the previous assistant reply so we re-run the
     // last user turn cleanly instead of double-stacking assistant messages.
-    if (body?.regenerate) {
+    const isRegenerate = !!body?.regenerate;
+    if (isRegenerate) {
       const history = await getMessageHistory(db, conversationId);
       const last = history[history.length - 1];
       if (last && last.role === "assistant") {
@@ -639,11 +648,11 @@ export function registerConversationRunRoutes(
                     console.log(
                       `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
                     );
-                    return runWithGroq(turns, controller.signal, stage, pendingType);
+                    return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
                   }
                   throw err;
                 })
-            : () => runWithGroq(turns, controller.signal, stage, pendingType);
+            : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
 
         run()
           .then(async (output) => {
