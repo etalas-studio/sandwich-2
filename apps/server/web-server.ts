@@ -10,7 +10,6 @@ import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPasswordResetRoutes } from "./routes/password-reset.js";
 import { registerEmailVerificationRoutes } from "./routes/email-verification.js";
-import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
 import { registerConversationRunRoutes } from "./routes/conversation-run.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
@@ -88,7 +87,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerAuthRoutes(router, db, PUBLIC_API_PATHS);
   registerPasswordResetRoutes(router, db);
   registerEmailVerificationRoutes(router, db);
-  registerIntegrationRoutes(router);
   registerConversationRoutes(router, db);
   registerConversationRunRoutes(router, db);
   registerAttachmentRoutes(router, db);
