@@ -499,9 +499,9 @@ function ChatView({
                       {turn.attachments.map(a => <AttachmentTile key={a.id} attachment={a} />)}
                     </div>
                   )}
-                  <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
+                  <div className={`${editingTurnIndex === ti ? 'w-full' : 'max-w-[75%]'} flex flex-col items-end gap-1.5 group`}>
                     {editingTurnIndex === ti ? (
-                      <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
+                      <div className="w-full rounded-2xl px-5 py-3" style={{ backgroundColor: '#1a1a1a' }}>
                         <textarea
                           autoFocus
                           value={editValue}
@@ -510,7 +510,7 @@ function ChatView({
                             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit(ti) }
                             if (e.key === 'Escape') setEditingTurnIndex(null)
                           }}
-                          rows={Math.min(10, editValue.split('\n').length + 1)}
+                          rows={Math.max(3, Math.min(10, editValue.split('\n').length + 1))}
                           className="w-full resize-none bg-transparent outline-none text-sm leading-relaxed"
                           style={{ color: '#ffffff' }}
                         />
@@ -570,6 +570,8 @@ function ChatView({
                       </div>
                     </div>
                   )
+                  // Skip stale raw prototype generation outputs saved by older pipeline versions
+                  if (m.isDone && m.output && !m.document && /Step\s+1[:\s]|cat\s*>\s*\/app\/prototype|CSSEOF|<< 'EOF'/.test(m.output)) return null
                   if (m.isDone && m.output) return (
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
