@@ -176,6 +176,15 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             {lang === 'en' ? 'EN' : 'ID'}
           </button>
           <button
+            onClick={() => navigate('/login')}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
+            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
+            style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
+          >
+            {t('nav_login')}
+          </button>
+          <button
             onClick={() => onGoToApp()}
             className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
