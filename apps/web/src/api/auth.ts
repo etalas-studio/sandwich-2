@@ -3,11 +3,11 @@ import { apiUrl } from './base'
 export type AuthState =
   | { status: 'loading' }
   | { status: 'unauthenticated' }
-  | { status: 'authenticated'; username: string }
+  | { status: 'authenticated'; id: string; username: string }
 
 interface MeResponse {
   state: 'unauthenticated' | 'authenticated'
-  user?: { username: string }
+  user?: { id: string; username: string }
 }
 
 export async function fetchMe(): Promise<AuthState> {
@@ -17,7 +17,7 @@ export async function fetchMe(): Promise<AuthState> {
 
   switch (data.state) {
     case 'authenticated':
-      return { status: 'authenticated', username: data.user?.username ?? '' }
+      return { status: 'authenticated', id: data.user?.id ?? '', username: data.user?.username ?? '' }
     case 'unauthenticated':
       return { status: 'unauthenticated' }
   }

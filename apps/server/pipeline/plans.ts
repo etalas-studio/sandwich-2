@@ -9,16 +9,19 @@ export interface PlanConfig {
   slug: "starter" | "pro";
   name: string;
   amount: number;
-  // Monthly PRD quota; null = unlimited.
-  limit: number | null;
+  // Monthly document quota (PRD / quotation / specs); null = unlimited.
+  documentLimit: number | null;
+  // Monthly prototype quota (separate — prototypes are more expensive to run); null = unlimited.
+  prototypeLimit: number | null;
   // Monthly follow-up chat quota; null = unlimited.
   chatLimit: number | null;
   periodDays: number;
 }
 
 export const PLANS: Record<PlanConfig["slug"], PlanConfig> = {
-  starter: { slug: "starter", name: "Starter", amount: 50000, limit: 5, chatLimit: 100, periodDays: 30 },
-  pro: { slug: "pro", name: "Pro", amount: 100000, limit: null, chatLimit: null, periodDays: 30 },
+  // Free tier. `amount: 0` is the signal that no Midtrans charge happens.
+  starter: { slug: "starter", name: "Starter", amount: 0, documentLimit: 5, prototypeLimit: 3, chatLimit: 100, periodDays: 30 },
+  pro: { slug: "pro", name: "Pro", amount: 100000, documentLimit: null, prototypeLimit: null, chatLimit: null, periodDays: 30 },
 };
 
 export function getPlan(slug: string): PlanConfig | undefined {

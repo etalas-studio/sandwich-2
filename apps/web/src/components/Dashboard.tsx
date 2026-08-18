@@ -697,7 +697,7 @@ function ChatView({
 
 
 // ── Plan limit (server-side) ────────────────────────────────────────────────
-interface PlanUsage { used: number; chatUsed: number; limit: number | null; chatLimit: number | null; isPro: boolean }
+interface PlanUsage { used: number; prototypeUsed: number; chatUsed: number; limit: number | null; prototypeLimit: number | null; chatLimit: number | null; isPro: boolean }
 function isAtLimit(u: PlanUsage): boolean {
   return !u.isPro && u.limit !== null && u.used >= u.limit
 }
@@ -764,6 +764,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') setError(tr('dash_expired_error'))
       else if (msg === 'monthly quota reached') setError(tr('plan_limit_desc'))
+      else if (msg === 'prototype quota reached') setError(tr('prototype_quota_reached'))
       else setError(msg || tr('dash_generic_error'))
     } finally {
       setIsSubmitting(false)
@@ -1034,6 +1035,9 @@ function HomeOverview({
             <div className="h-1.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
               <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
             </div>
+            <p className="text-sm mt-4" style={{ color: '#111827' }}>
+              {usage.prototypeUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.prototypeLimit} {tr('home_quota_prototypes')}</span>
+            </p>
             <p className="text-sm mt-4" style={{ color: '#111827' }}>
               {usage.chatUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.chatLimit} {tr('home_quota_chats')}</span>
             </p>
@@ -1323,7 +1327,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [openDocumentId, setOpenDocumentId] = useState<string | null>(null)
   const { logout, state: authState } = useAuth()
   const usageQuery = useUsage()
-  const usage: PlanUsage = usageQuery.data ?? { used: 0, chatUsed: 0, limit: 5, chatLimit: 100, isPro: false }
+  const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: 3, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
 

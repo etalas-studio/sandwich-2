@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "../lib/i18n";
+import { getPlanMeta } from "../lib/plans";
+import { trackPostHog } from "../lib/posthog";
 
 const bowlby = "'Bowlby One', system-ui";
 
@@ -25,6 +28,8 @@ export default function SetupForm({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [params] = useSearchParams();
+  const [plan, setPlan] = useState<'starter' | 'pro'>(params.get('plan') === 'pro' ? 'pro' : 'starter');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -32,6 +37,10 @@ export default function SetupForm({
     if (!username.trim() || !email.trim() || !password.trim()) return;
     try {
       await onSubmit(username.trim(), email.trim(), password);
+      // Remember the chosen plan so a Pro signup is charged right after
+      // email verification + login (the verify link can't carry this).
+      if (plan === 'pro') localStorage.setItem('sandwich_pending_plan', 'pro');
+      trackPostHog('signup_completed', { plan });
       setRegistered(true);
     } catch {
       /* error surfaced via error prop */
@@ -101,6 +110,31 @@ export default function SetupForm({
         <p className="text-sm text-zinc-500 text-center mb-7">
           {tr("setup_subtitle")}
         </p>
+
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {(['starter', 'pro'] as const).map((slug) => {
+            const meta = getPlanMeta(slug);
+            const active = plan === slug;
+            return (
+              <button
+                key={slug}
+                type="button"
+                onClick={() => setPlan(slug)}
+                className="px-3 py-2.5 rounded-xl text-left transition-colors"
+                style={{
+                  backgroundColor: active ? '#0a0a0a' : '#F4EBE1',
+                  color: active ? '#ffffff' : '#111827',
+                  border: active ? '1.5px solid #0a0a0a' : '1.5px solid transparent',
+                }}
+              >
+                <span className="block text-sm font-semibold">{meta?.name}</span>
+                <span className="block text-[11px]" style={{ color: active ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
+                  {meta?.price}{meta?.amount === 0 ? '' : '/mo'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div

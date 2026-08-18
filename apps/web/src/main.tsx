@@ -4,8 +4,11 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthGate from "./components/AuthGate";
 import { LanguageProvider } from "./lib/i18n";
+import { initPostHog } from "./lib/posthog";
 import "@fontsource-variable/geist";
 import "./index.css";
+
+initPostHog();
 
 const queryClient = new QueryClient();
 

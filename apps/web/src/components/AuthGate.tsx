@@ -2,6 +2,7 @@ import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
+import { identifyPostHog } from '../lib/posthog'
 import SetupForm from './SetupForm'
 import LoginForm from './LoginForm'
 import App from '../App'
@@ -29,10 +30,31 @@ export default function AuthGate() {
   const navigate = useNavigate()
   // null = show register (default for checkout); 'login' = forced login
   const [forceView, setForceView] = React.useState<'login' | null>(null)
+  const authUserId = state.status === 'authenticated' ? state.id : ''
+  const authUsername = state.status === 'authenticated' ? state.username : ''
 
   React.useEffect(() => {
     if (state.status === 'authenticated') setForceView(null)
   }, [state.status])
+
+  // Honor a plan chosen at signup: a Pro signup is charged right after
+  // email verification + login (the verify link can't carry the intent).
+  React.useEffect(() => {
+    if (state.status === 'authenticated') {
+      const pending = localStorage.getItem('sandwich_pending_plan')
+      if (pending === 'pro') {
+        localStorage.removeItem('sandwich_pending_plan')
+        navigate('/checkout?plan=pro', { replace: true })
+      }
+    }
+  }, [state.status, navigate])
+
+  // Identify the user for analytics once we know who they are + their plan.
+  React.useEffect(() => {
+    if (state.status === 'authenticated' && !subLoading) {
+      identifyPostHog(authUserId, { username: authUsername, plan: sub?.planSlug ?? null })
+    }
+  }, [state.status, authUserId, authUsername, sub?.planSlug, subLoading])
 
   // Landing page at root — always accessible
   if (location.pathname === '/') {
