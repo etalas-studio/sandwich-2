@@ -21,8 +21,18 @@ export function detectDeliverableType(message: string): DocumentType | null {
   if (/\bprd\b|\bproduct requirement/.test(m)) return "prd";
   if (/\bquot|\bpenawaran\b|\bharga\b|\bpricing\b|\binvoice\b|\bestimasi\b/.test(m)) return "quotation";
   if (/\bprototype\b|\bprototip\b|\bui\b|\bdesign\b|\blanding/.test(m)) return "prototype";
-  if (/\bspec\b|\btask\b|\bbreakdown\b|\bfeature/.test(m)) return "specs";
+  if (/\bspecs?\b|\btasks?\b|\bbreakdown\b|\bfeatures?\b/.test(m)) return "specs";
   return null;
+}
+
+/** "Show/give me the preview link" follow-up on an existing prototype. */
+export function detectPreviewIntent(message: string): boolean {
+  return /\b(preview|previewnya|link|linknya|url)\b/i.test(message);
+}
+
+/** "Change/add/fix" follow-up that should revise the existing deliverable. */
+export function detectRefineIntent(message: string): boolean {
+  return /\b(ubah|ganti|edit|revisi|refine|update|perbaiki|fix|tambah|tambahkan|add|hilangkan|hapus|remove|change|modif|perbarui|sesuaikan)\b/i.test(message);
 }
 
 const DELIVERABLE_LABEL: Record<DocumentType, string> = {

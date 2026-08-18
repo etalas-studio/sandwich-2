@@ -45,6 +45,22 @@ describe("buildGlowupSystemPrompt", () => {
     assert.ok(!withRefs.includes("Read .getokui/index.json"));
   });
 
+  it("carries template colors and fonts into the DNA context", () => {
+    const withRefs = buildGlowupSystemPrompt({
+      brief: "A SaaS for warehouse inventory",
+      refs: [
+        {
+          slug: "saas-inventory",
+          dna: { colors: ["#111827", "#f91814"], fonts: ["Inter", "JetBrains Mono"] },
+        },
+      ],
+    });
+    assert.ok(withRefs.includes("#111827"));
+    assert.ok(withRefs.includes("#f91814"));
+    assert.ok(withRefs.includes("Inter"));
+    assert.ok(withRefs.includes("JetBrains Mono"));
+  });
+
   it("mandates style-not-content and stack preservation", () => {
     assert.ok(prompt.includes("STYLE, NOT CONTENT"));
     assert.ok(prompt.includes("plain static HTML"));

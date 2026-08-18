@@ -210,6 +210,22 @@ function timeAgo(iso: string, t: (key: StringKey) => string): string {
   return `${days} ${t('dash_time_days_ago')}`
 }
 
+/**
+ * Chat header title: keep the first 4 words on one line and wrap the rest,
+ * instead of a single ellipsized line.
+ */
+function TitleWithWrap({ text }: { text: string }) {
+  const words = text.split(/\s+/)
+  if (words.length <= 4) return <>{text}</>
+  return (
+    <>
+      {words.slice(0, 4).join(' ')}
+      <br />
+      {words.slice(4).join(' ')}
+    </>
+  )
+}
+
 const PLAN_BENEFITS: Record<string, { icon: string; text: string }[]> = {
   starter: [
     { icon: 'solar:document-add-linear', text: '5 PRDs / month' },
@@ -521,7 +537,7 @@ function ChatView({
                         </div>
                       </div>
                     ) : (
-                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-words whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
                         {turn.user}
                       </div>
                     )}
@@ -585,7 +601,7 @@ function ChatView({
                     </div>
                   )
                   if (m.isError) return (
-                    <div key={i} className="text-sm" style={{ color: '#f87171' }}>{m.text}</div>
+                    <div key={i} className="text-sm break-words" style={{ color: '#f87171' }}>{m.text}</div>
                   )
                   return null
                 })}
@@ -1712,7 +1728,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     style={{ color: 'rgba(0,0,0,0.7)', borderColor: 'rgba(0,0,0,0.25)', width: 220 }}
                   />
                 ) : (
-                  <p className="text-sm font-medium truncate" style={{ color: 'rgba(0,0,0,0.6)' }}>{chatState.prompt}</p>
+                  <p className="text-sm font-medium min-w-0 break-words line-clamp-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                    <TitleWithWrap text={chatState.prompt} />
+                  </p>
                 )}
                 <div className="relative shrink-0 flex items-center">
                   <button onClick={() => setShowChatMenu(v => !v)} className="p-1 rounded-md hover:bg-black/5 transition-colors flex items-center justify-center shrink-0">
@@ -1769,7 +1787,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           <div className="flex items-center gap-2">
             <PlanBadge />
             {chatState && (<>
-              <div className="relative">
+              <div className="relative hidden">
                 <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative">
                   <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
                   {notifications.length > 0 && (
@@ -1800,7 +1818,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                   </>
                 )}
               </div>
-              <button onClick={openShareModal} className="p-2 rounded-lg hover:bg-black/5 transition-colors" title="Share chat">
+              <button onClick={openShareModal} className="p-2 rounded-lg hover:bg-black/5 transition-colors hidden" title="Share chat">
                 <iconify-icon icon={shareCopied ? 'solar:check-circle-linear' : 'solar:upload-linear'} width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
               </button>
               <div className="relative">

@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { buildReferenceContext, buildPrototypeSystemPrompt } from "./prompts.js";
+import { buildReferenceContext, buildPrototypeSystemPrompt, buildPrototypeRefinePrompt } from "./prompts.js";
 
 describe("buildReferenceContext", () => {
   it("returns an empty string when there are no references", () => {
@@ -48,5 +48,30 @@ describe("buildPrototypeSystemPrompt", () => {
   it("omits reference section when no styles", () => {
     const prompt = buildPrototypeSystemPrompt("bikinin landing page");
     assert.ok(!prompt.includes("## Reference Style"));
+  });
+
+  it("mandates icon library, no emoji, table quality, and custom modals in pass 1", () => {
+    const prompt = buildPrototypeSystemPrompt("bikinin dashboard admin");
+    assert.ok(prompt.includes("lucide"));
+    assert.ok(prompt.includes("lucide.createIcons()"));
+    assert.ok(prompt.includes("NEVER use emoji"));
+    assert.ok(prompt.includes("<table>"));
+    assert.ok(prompt.includes("NEVER use window.confirm()"));
+  });
+});
+
+describe("buildPrototypeRefinePrompt", () => {
+  it("edits in place instead of regenerating and embeds the instruction", () => {
+    const prompt = buildPrototypeRefinePrompt("POS kasir", "ubah warnanya jadi biru");
+    assert.ok(prompt.includes("POS kasir"));
+    assert.ok(prompt.includes("ubah warnanya jadi biru"));
+    assert.ok(prompt.includes("Do NOT regenerate"));
+    assert.ok(prompt.includes("edit"));
+    assert.ok(prompt.includes("DONE"));
+  });
+
+  it("falls back to a generic instruction when empty", () => {
+    const prompt = buildPrototypeRefinePrompt("POS kasir", "");
+    assert.ok(prompt.includes("Apply the user's requested change."));
   });
 });
