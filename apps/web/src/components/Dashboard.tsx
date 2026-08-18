@@ -904,7 +904,6 @@ function ConversationList({ conversations, onOpen, onNew }: { conversations: Loc
 }
 
 // ── Home Overview ────────────────────────────────────────────────────────────
-const EXPORTED_MD_KEY = 'sandwich_exported_md'
 const DAY_LABELS_ID = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
 function HomeOverview({
@@ -954,12 +953,10 @@ function HomeOverview({
 
   const filteredConversations = conversations.filter(t => filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status === 'draft')
   const distinctTypes = new Set(conversations.map(t => t.type)).size
-  const exportedMd = localStorage.getItem(EXPORTED_MD_KEY) === '1'
   const checklist = [
     { key: 'home_check_1', done: conversations.length > 0 },
     { key: 'home_check_2', done: doneCount > 0 },
     { key: 'home_check_3', done: distinctTypes >= 3 },
-    { key: 'home_check_4', done: exportedMd },
     { key: 'home_check_5', done: usage.isPro },
   ] as const
   const checklistDone = checklist.filter(c => c.done).length
