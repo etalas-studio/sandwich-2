@@ -40,10 +40,16 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
 
   let user: User;
   try {
-    user = await createUser(db, {
-      username: input.username,
-      email: input.email,
-      passwordHash,
+    user = await db.transaction(async (tx) => {
+      const created = await createUser(tx as unknown as Database, {
+        username: input.username,
+        email: input.email,
+        passwordHash,
+      });
+      // Free tier: every new account starts on Starter (no payment). Pro is an
+      // upgrade via Midtrans that overwrites this row.
+      await activateSubscription(tx as unknown as Database, { userId: created.id, planSlug: "starter" });
+      return created;
     });
   } catch (err) {
     const code =
@@ -55,9 +61,6 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
     throw err;
   }
 
-  // Free tier: every new account starts on Starter (no payment). Pro is an
-  // upgrade via Midtrans that overwrites this row.
-  await activateSubscription(db, { userId: user.id, planSlug: "starter" });
   return { user };
 }
 
