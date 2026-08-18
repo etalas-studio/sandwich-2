@@ -9,12 +9,14 @@ import {
   parseCookies,
 } from "../auth/cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
 import { createVerificationToken, deleteVerificationTokensByUser } from "../db/repo/email-verifications.js";
 import { sendEmail } from "../pipeline/email.js";
 import { verificationLink } from "./email-verification.js";
 import type { Database } from "../db/connection.js";
 
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
+const loginLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 10 });
 
 function handleAuthRequest(
   res: import("node:http").ServerResponse,
@@ -91,6 +93,10 @@ export function registerAuthRoutes(
   });
 
   router.post("/api/auth/login", async (req, res) => {
+    if (!loginLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
     try {
       const body = (await readJsonBody(req)) as { username?: string; password?: string };
       if (!body.username || !body.password) {
