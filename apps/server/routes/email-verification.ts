@@ -36,8 +36,10 @@ export function registerEmailVerificationRoutes(router: Router, db: Database): v
       return;
     }
 
-    await markEmailVerified(db, tokenRow.userId);
-    await markVerificationTokenUsed(db, body.token);
+    await db.transaction(async (tx) => {
+      await markEmailVerified(tx as unknown as Database, tokenRow.userId);
+      await markVerificationTokenUsed(tx as unknown as Database, body.token!);
+    });
     sendJson(res, 200, { ok: true });
   });
 
