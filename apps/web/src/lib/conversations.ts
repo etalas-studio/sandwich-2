@@ -25,6 +25,8 @@ export interface LocalConversation {
 // source of truth — this cache only exists so the UI can read synchronously.
 let cache: LocalConversation[] = []
 
+export function clearConversationsCache(): void { cache = [] }
+
 function toLocal(c: ServerConversation): LocalConversation {
   return {
     id: c.id,

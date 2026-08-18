@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchMe, postLogin, postRegister, postLogout } from '../api/auth'
 import type { AuthState } from '../api/auth'
+import { clearConversationsCache } from '../lib/conversations'
 
 export function useAuth() {
   const queryClient = useQueryClient()
@@ -39,6 +40,7 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: postLogout,
     onSuccess: () => {
+      clearConversationsCache()
       queryClient.invalidateQueries({ queryKey: ['auth'] })
     },
   })
