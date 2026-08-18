@@ -211,21 +211,6 @@ function timeAgo(iso: string, t: (key: StringKey) => string): string {
   return `${days} ${t('dash_time_days_ago')}`
 }
 
-/**
- * Chat header title: keep the first 4 words on one line and wrap the rest,
- * instead of a single ellipsized line.
- */
-function TitleWithWrap({ text }: { text: string }) {
-  const words = text.split(/\s+/)
-  if (words.length <= 4) return <>{text}</>
-  return (
-    <>
-      {words.slice(0, 4).join(' ')}
-      <br />
-      {words.slice(4).join(' ')}
-    </>
-  )
-}
 
 const PLAN_BENEFITS: Record<string, { icon: string; text: string }[]> = {
   starter: [
@@ -403,8 +388,8 @@ function ChatView({
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [chatError, setChatError] = useState<string | null>(null)
-  const [editingPrompt, setEditingPrompt] = useState(false)
-  const [editValue, setEditValue] = useState(initialPrompt)
+  const [editingTurnIndex, setEditingTurnIndex] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState('')
   const [copied, setCopied] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -421,7 +406,6 @@ function ChatView({
   }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
-  useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
   // Load saved messages when opening a conversation.
   useEffect(() => { reloadTurns() }, [reloadTurns])
@@ -432,17 +416,20 @@ function ChatView({
     setRegenNonce(n => n + 1)
   }
 
-  const handleStartEdit = () => {
-    setEditValue(initialPrompt)
-    setEditingPrompt(true)
+  const handleStartEdit = (index: number) => {
+    setEditValue(turns[index].user)
+    setEditingTurnIndex(index)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = (index: number) => {
     const text = editValue.trim()
-    setEditingPrompt(false)
-    if (!text || text === initialPrompt) return
-    onPromptUpdate(text)
-    updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
+    setEditingTurnIndex(null)
+    if (!text || text === turns[index].user) return
+    if (index === 0) {
+      onPromptUpdate(text)
+      updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
+    }
+    setTurns(prev => prev.map((t, i) => i === index ? { ...t, user: text } : t))
     setRegenNonce(n => n + 1)
   }
 
@@ -503,7 +490,6 @@ function ChatView({
           {turns.map((turn, ti) => {
             const isLast = ti === turns.length - 1
             const msgs = isLast && liveMessages.length > 0 ? liveMessages : turn.aiMessages
-            const isFirstTurn = ti === 0
             return (
               <div key={ti} className="flex flex-col gap-8">
                 {/* Attachments + user bubble */}
@@ -514,25 +500,25 @@ function ChatView({
                     </div>
                   )}
                   <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
-                    {isFirstTurn && editingPrompt ? (
+                    {editingTurnIndex === ti ? (
                       <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
                         <textarea
                           autoFocus
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onKeyDown={e => {
-                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit() }
-                            if (e.key === 'Escape') setEditingPrompt(false)
+                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit(ti) }
+                            if (e.key === 'Escape') setEditingTurnIndex(null)
                           }}
                           rows={Math.min(10, editValue.split('\n').length + 1)}
                           className="w-full resize-none bg-transparent outline-none text-sm leading-relaxed"
                           style={{ color: '#ffffff' }}
                         />
                         <div className="flex items-center justify-end gap-2 mt-2">
-                          <button onClick={() => setEditingPrompt(false)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <button onClick={() => setEditingTurnIndex(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
                             Cancel
                           </button>
-                          <button onClick={handleSaveEdit} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
+                          <button onClick={() => handleSaveEdit(ti)} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
                             {tr('dash_save_resend')}
                           </button>
                         </div>
@@ -542,14 +528,16 @@ function ChatView({
                         {turn.user}
                       </div>
                     )}
-                    {isFirstTurn && !editingPrompt && (
+                    {editingTurnIndex !== ti && (
                       <div className="flex items-center gap-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="text-xs" style={{ color: 'rgba(0,0,0,0.35)' }}>{timeAgo(createdAt, tr)}</span>
-                        <button onClick={handleRefreshResponse} disabled={streaming}
-                          className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
-                          <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
-                        </button>
-                        <button onClick={handleStartEdit} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
+                        {isLast && (
+                          <button onClick={handleRefreshResponse} disabled={streaming}
+                            className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
+                            <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
+                          </button>
+                        )}
+                        <button onClick={() => handleStartEdit(ti)} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
                           <iconify-icon icon="solar:pen-2-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
                         </button>
                         <button onClick={handleCopyPrompt} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Copy">
@@ -1742,12 +1730,12 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           {showAccountMenu && (
             <div className="fixed inset-0 z-50" onClick={() => setShowAccountMenu(false)}>
               <style>{`@keyframes slideUp { from { transform: translateY(4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
-              <div className="absolute bottom-16 left-3 w-48 rounded-xl overflow-hidden"
+              <div className="absolute bottom-16 left-3 right-3 rounded-xl overflow-hidden"
                 style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', animation: 'slideUp 0.15s ease-out' }}
                 onClick={e => e.stopPropagation()}>
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                   <p className="text-sm font-semibold text-white">{username}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{email}@local</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{email}</p>
                 </div>
                 <div className="p-2">
                   <button onClick={() => { setShowAccountMenu(false); logout() }}
@@ -1793,8 +1781,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     style={{ color: 'rgba(0,0,0,0.7)', borderColor: 'rgba(0,0,0,0.25)', width: 220 }}
                   />
                 ) : (
-                  <p className="text-sm font-medium min-w-0 break-words line-clamp-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
-                    <TitleWithWrap text={chatState.prompt} />
+                  <p className="text-sm font-medium min-w-0 truncate" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                    {chatState.prompt.split(/\s+/).slice(0, 4).join(' ')}{chatState.prompt.split(/\s+/).length > 4 ? '...' : ''}
                   </p>
                 )}
                 <div className="relative shrink-0 flex items-center">
@@ -1803,8 +1791,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                   </button>
                   {showChatMenu && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
-                      <div className="absolute left-0 top-full mt-1 z-50 w-48 rounded-xl overflow-hidden"
+                      <div className="fixed inset-0 z-[100]" onClick={() => setShowChatMenu(false)} />
+                      <div className="absolute right-0 top-full mt-1 z-[101] w-48 rounded-xl overflow-hidden"
                         style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
                         onClick={e => e.stopPropagation()}>
                         <div className="p-1.5">
