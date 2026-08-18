@@ -104,7 +104,7 @@ const STRINGS = {
     id: 'Dari brief berantakan jadi prototype, PRD lengkap, sampai quotation siap kirim ke klien. Satu pipeline, bukan lima tools terpisah. Untuk tim yang kerja bareng AI.',
   },
   footer_product: { en: 'Product', id: 'Produk' },
-  footer_product_by: { en: 'product by', id: 'product by' },
+  footer_product_by: { en: 'powered by', id: 'powered by' },
 
   // ── Dashboard ──
   dash_home_headline_pipeline: { en: 'WHAT DO YOU WANT TO MAKE TODAY?', id: 'MAU BIKIN APA HARI INI?' },

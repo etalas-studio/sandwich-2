@@ -599,13 +599,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
 
           {/* Bottom row */}
-          <div className="flex flex-col sm:grid sm:grid-cols-3 items-center gap-4 pt-8">
-            <p className="text-xs text-zinc-600 font-medium order-2 sm:order-1">© 2026 SANDWICH</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
+            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH</p>
             <a
               href="https://www.etalas.com/"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors order-1 sm:order-2"
+              className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               <span className="text-sm">{t('footer_product_by')}</span>
               <img src="/logos/etalas-logo.png" alt="Etalas" className="h-4 w-auto brightness-0 invert" />
