@@ -572,6 +572,8 @@ function ChatView({
                   )
                   // Skip stale raw prototype generation outputs saved by older pipeline versions
                   if (m.isDone && m.output && !m.document && /Step\s+1[:\s]|cat\s*>\s*\/app\/prototype|CSSEOF|<< 'EOF'/.test(m.output)) return null
+                  // Skip raw HTML/code outputs — these should only appear as document cards
+                  if (m.isDone && m.output && !m.document && /<!DOCTYPE html/i.test(m.output)) return null
                   if (m.isDone && m.output) return (
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
