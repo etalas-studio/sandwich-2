@@ -14,8 +14,11 @@ export default function LoginPage() {
   return (
     <LoginForm
       onSubmit={async (username, password) => {
-        await login(username, password)
-        navigate('/dashboard', { replace: true })
+        try {
+          await login(username, password)
+        } catch {
+          // loginError from useAuth surfaces the error to the form
+        }
       }}
       error={loginError}
       isPending={loginPending}
