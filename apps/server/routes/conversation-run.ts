@@ -1,6 +1,13 @@
 import type { Database } from "../db/connection.js";
 import type { ServerResponse } from "node:http";
 import type { Router } from "../router.js";
+import {
+  markInFlight,
+  clearInFlight,
+  isInFlightRemote,
+  publishEvent,
+  subscribeToConversation,
+} from "../redis.js";
 import { getConversation, updateConversation, type Conversation } from "../db/conversations.js";
 import {
   addChatMessage,
@@ -360,6 +367,8 @@ async function runWithOpenCode(
 
 export function closeInFlight(conversationId: string): void {
   inFlight.delete(conversationId);
+  // Publish abort signal so other instances can close their SSE streams too.
+  void clearInFlight(conversationId, `data: ${JSON.stringify({ type: "abort" })}\n\n`);
   const clients = sseClients.get(conversationId);
   if (clients) {
     for (const client of clients) {
@@ -525,8 +534,8 @@ export function registerConversationRunRoutes(
       return;
     }
 
-    // Idempotent — if already running, just return success.
-    if (inFlight.has(conversationId)) {
+    // Idempotent — if already running locally or on another instance, return success.
+    if (inFlight.has(conversationId) || await isInFlightRemote(conversationId)) {
       sendJson(res, 200, { conversationId, started: true });
       return;
     }
@@ -556,11 +565,15 @@ export function registerConversationRunRoutes(
 
     const controller = new AbortController();
     inFlight.set(conversationId, controller);
+    void markInFlight(conversationId);
 
     const broadcast = (event: ConversationRunEvent) => {
+      const data = `data: ${JSON.stringify(event)}\n\n`;
+      // Publish to Redis so all instances fan out to their local SSE clients.
+      void publishEvent(conversationId, data);
+      // Also write directly for same-instance clients (avoids round-trip).
       const clients = sseClients.get(conversationId);
       if (!clients) return;
-      const data = `data: ${JSON.stringify(event)}\n\n`;
       for (const client of clients) {
         try {
           client.write(data);
@@ -899,7 +912,10 @@ export function registerConversationRunRoutes(
     }
     sseClients.get(conversationId)!.add(res);
 
-    if (!inFlight.has(conversationId)) {
+    const locallyInFlight = inFlight.has(conversationId);
+    const remotelyInFlight = locallyInFlight ? false : await isInFlightRemote(conversationId);
+
+    if (!locallyInFlight && !remotelyInFlight) {
       res.write(
         `data: ${JSON.stringify({ type: "done", conversation })}\n\n`,
       );
@@ -908,7 +924,24 @@ export function registerConversationRunRoutes(
       return;
     }
 
+    // For runs on another instance, subscribe via Redis so events fan out here.
+    const unsubscribe = remotelyInFlight
+      ? subscribeToConversation(conversationId, (data) => {
+          try {
+            res.write(data);
+            // Terminal events close this client's stream.
+            if (data.includes('"type":"done"') || data.includes('"type":"abort"')) {
+              sseClients.get(conversationId)?.delete(res);
+              res.end();
+            }
+          } catch {
+            sseClients.get(conversationId)?.delete(res);
+          }
+        })
+      : () => {};
+
     req.on("close", () => {
+      unsubscribe();
       sseClients.get(conversationId)?.delete(res);
       res.end();
     });

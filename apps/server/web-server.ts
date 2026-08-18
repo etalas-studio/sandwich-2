@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createServer } from "node:http";
 import type { Server, ServerResponse } from "node:http";
+import { closeRedis } from "./redis.js";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
@@ -130,6 +131,12 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     boundPort =
       typeof address === "object" && address ? address.port : port;
   });
+
+  for (const sig of ["SIGTERM", "SIGINT"] as const) {
+    process.once(sig, () => {
+      server.close(() => void closeRedis().finally(() => process.exit(0)));
+    });
+  }
 
   return server;
 }
