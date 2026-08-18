@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
-import CheckoutPage from './components/CheckoutPage'
+import PaymentPage from './components/PaymentPage'
 import PaymentReturn from './components/PaymentReturn'
 import SharePage from './components/SharePage'
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +19,7 @@ export default function App(_props: AppProps) {
   return (
     <Routes>
       <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/checkout" element={<PaymentPage />} />
       <Route path="/checkout/return" element={<PaymentReturn />} />
       <Route path="/share/:token" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
