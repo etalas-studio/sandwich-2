@@ -10,6 +10,8 @@ import Settings from './Settings'
 import HelpPage from './HelpPage'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 import DocumentsPanel from './DocumentsPanel'
+import DocumentCard from './DocumentCard'
+import DocumentReaderPanel from './DocumentReaderPanel'
 import { DeliverableTypeSelect } from './DeliverableTypeSelect'
 import { useLanguage, type StringKey } from '../lib/i18n'
 
@@ -73,6 +75,7 @@ interface ChatMessage {
   isError?: boolean
   output?: string
   conversationId?: string
+  document?: { id: string; type?: string; title?: string; versionNo?: number }
 }
 
 interface Turn {
@@ -120,12 +123,12 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
               const line = part.replace(/^data: /, '').trim()
               if (!line) continue
               try {
-                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; conversation?: { output?: string | null } }
+                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number }; conversation?: { output?: string | null } }
                 if (ev.type === 'stage_start' && ev.stage) {
                   setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
                 } else if (ev.type === 'done') {
                   const output = ev.text ?? ''
-                  setMessages(m => [...m, { role: 'ai', isDone: true, output }])
+                  setMessages(m => [...m, { role: 'ai', isDone: true, output, document: ev.document }])
                   setStreaming(false)
                   onDone?.(output)
                 } else if (ev.type === 'error') {
@@ -328,12 +331,14 @@ function ChatView({
   createdAt,
   autoRun,
   onPromptUpdate,
+  onOpenDocument,
 }: {
   initialPrompt: string
   conversationId: string
   createdAt: string
   autoRun: boolean
   onPromptUpdate: (text: string) => void
+  onOpenDocument: (id: string) => void
 }) {
   const { t: tr } = useLanguage()
   const [regenNonce, setRegenNonce] = useState(0)
@@ -362,7 +367,7 @@ function ChatView({
             currentAttachments = m.attachments ?? []
             currentAi = []
           } else if (m.role === 'assistant') {
-            currentAi.push({ role: 'ai', isDone: true, output: m.content })
+            currentAi.push({ role: 'ai', isDone: true, output: m.content, document: m.documentId ? { id: m.documentId } : undefined })
           }
         }
         if (currentUser) {
@@ -540,6 +545,26 @@ function ChatView({
 
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
+                  if (m.isDone && m.output && m.document) return (
+                    <div key={i} className="group relative">
+                      <DocumentCard
+                        documentId={m.document.id}
+                        initial={m.document}
+                        onClick={() => onOpenDocument(m.document!.id)}
+                      />
+                      {/* SANDWICH logo + hover actions */}
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
+                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814', opacity: 0.55 }}>
+                            <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
+                          </div>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <AiMessageActions output={m.output} conversationId={conversationId} onRegenerate={handleRefreshResponse} />
+                        </div>
+                      </div>
+                    </div>
+                  )
                   if (m.isDone && m.output) return (
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -1279,6 +1304,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [shareCopied, setShareCopied] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareVisibility, setShareVisibility] = useState<'private' | 'shared'>('private')
+  const [openDocumentId, setOpenDocumentId] = useState<string | null>(null)
   const { logout, state: authState } = useAuth()
   const usageQuery = useUsage()
   const usage: PlanUsage = usageQuery.data ?? { used: 0, chatUsed: 0, limit: 5, chatLimit: 100, isPro: false }
@@ -1410,7 +1436,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'documents') return <DocumentsPanel />
+    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1818,6 +1844,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               createdAt={currentConversation?.createdAt ?? new Date().toISOString()}
               autoRun={chatState.autoRun}
               onPromptUpdate={handleChatPromptUpdate}
+              onOpenDocument={setOpenDocumentId}
             />
           </div>
         ) : isHomePage ? (
@@ -1836,6 +1863,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
 
       {selected && <Drawer conversation={selected} onClose={() => setSelected(null)} onDelete={handleDelete} />}
+
+      <DocumentReaderPanel documentId={openDocumentId} onClose={() => setOpenDocumentId(null)} />
 
       <ConfirmDeleteModal
         open={confirmDeleteChat}

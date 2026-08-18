@@ -34,6 +34,7 @@ export interface ChatMessage {
   conversationId: string
   role: string
   content: string
+  documentId: string | null
   createdAt: string
   attachments: Attachment[]
 }

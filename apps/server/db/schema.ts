@@ -84,6 +84,8 @@ export const chatMessages = pgTable(
       .references(() => conversations.id),
     role: text("role").notNull(),
     content: text("content").notNull(),
+    // Nullable — set only on assistant messages that generated a document.
+    documentId: text("document_id").references(() => documents.id),
     createdAt: ts("created_at").notNull(),
   },
   (table) => ({

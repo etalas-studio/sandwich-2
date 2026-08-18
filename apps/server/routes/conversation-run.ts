@@ -131,10 +131,19 @@ HTML — Solar: <script src="https://code.iconify.design/iconify-icon/2.1.0/icon
 Output full, self-contained HTML with Tailwind CDN. Include real @keyframes animations. No placeholder lorem ipsum — generate plausible content for the domain.
 `;
 
+export interface DocumentRef {
+  id: string;
+  type: DocumentType;
+  title: string;
+  versionNo: number;
+  previewUrl: string | null;
+}
+
 export interface ConversationRunEvent {
   type: "stage_start" | "stage_end" | "output" | "error" | "done";
   stage?: string;
   text?: string;
+  document?: DocumentRef;
   conversation?: Conversation;
 }
 
@@ -407,6 +416,20 @@ function prototypePreviewUrl(docId: string): string {
   return `${base.replace(/\/+$/, "")}/p/${docId}/`;
 }
 
+const DELIVERABLE_LABEL: Record<DocumentType, string> = {
+  prd: "PRD",
+  quotation: "Quotation",
+  prototype: "Prototype",
+  specs: "Specs",
+};
+
+function documentSummary(
+  type: DocumentType,
+  versionNo: number,
+): string {
+  return `${DELIVERABLE_LABEL[type]} generated — v${versionNo}`;
+}
+
 export function registerConversationRunRoutes(
   router: Router,
   db: Database,
@@ -664,17 +687,21 @@ export function registerConversationRunRoutes(
 
             let chatOutput = output;
             let nextStage: PipelineStage = stage;
+            let documentRef: DocumentRef | null = null;
             if (stage === "generating" && pendingType) {
               const isPrototype = pendingType === "prototype";
               // Persist the deliverable as a versioned document.
-              const title =
+              const fallbackTitle =
                 conversation.title.trim() || `${pendingType.toUpperCase()} document`;
               const existing = await listConversationDocuments(db, conversationId);
               const existingDoc = existing.find((d) => d.type === pendingType);
+              let documentId: string;
+              let versionNo: number;
               if (existingDoc) {
-                const versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
+                documentId = existingDoc.id;
+                versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
                 await createDocumentVersion(db, {
-                  documentId: existingDoc.id,
+                  documentId,
                   versionNo,
                   content: output,
                   promptUsed: lastUserMessage,
@@ -683,11 +710,12 @@ export function registerConversationRunRoutes(
                 const doc = await createDocument(db, {
                   userId: auth.userId,
                   type: pendingType,
-                  title,
+                  title: fallbackTitle,
                 });
-                const versionNo = prototypeVersionNo ?? 1;
+                documentId = doc.id;
+                versionNo = prototypeVersionNo ?? 1;
                 await createDocumentVersion(db, {
-                  documentId: doc.id,
+                  documentId,
                   versionNo,
                   content: output,
                   promptUsed: lastUserMessage,
@@ -697,9 +725,19 @@ export function registerConversationRunRoutes(
               if (pendingType === "prd") {
                 await incrementUsage(db, auth.userId, "prd");
               }
-              if (isPrototype && prototypeDocId) {
-                chatOutput = `${output}\n\nPreview: ${prototypePreviewUrl(prototypeDocId)}`;
+
+              const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
+              chatOutput = documentSummary(pendingType, versionNo);
+              if (isPrototype) {
+                chatOutput = `${chatOutput}\n\nPreview: ${prototypePreviewUrl(documentId)}`;
               }
+              documentRef = {
+                id: documentId,
+                type: pendingType,
+                title: docTitle,
+                versionNo,
+                previewUrl: isPrototype ? prototypePreviewUrl(documentId) : null,
+              };
               nextStage = "awaiting_next";
               pendingType = null;
             } else if (stage === "intake") {
@@ -716,10 +754,12 @@ export function registerConversationRunRoutes(
               conversationId,
               role: "assistant",
               content: chatOutput,
+              documentId: documentRef?.id ?? null,
             });
             broadcast({
               type: "done",
               text: chatOutput,
+              document: documentRef ?? undefined,
               conversation: (await getConversation(db, conversationId))!,
             });
           })
