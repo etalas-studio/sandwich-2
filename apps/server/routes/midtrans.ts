@@ -73,31 +73,6 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
         grossAmount: plan.amount,
       });
 
-      // Dev simulation — no server key configured. Activate server-side so
-      // the client can never self-provision a subscription.
-      if (!process.env.MIDTRANS_SERVER_KEY) {
-        await updatePayment(db, orderId, {
-          localStatus: "paid",
-          transactionStatus: "settlement",
-          statusCode: "200",
-          paymentType: "simulated",
-          fraudStatus: "accept",
-        });
-        await activateSubscription(db, {
-          userId: auth.userId,
-          planSlug: plan.slug,
-        });
-        sendJson(res, 200, {
-          token: null,
-          redirectUrl: null,
-          orderId,
-          simulated: true,
-          clientKey,
-          isProduction,
-        });
-        return;
-      }
-
       const user = await getUserById(db, auth.userId);
       const result = await createSnapTransaction({
         orderId,
