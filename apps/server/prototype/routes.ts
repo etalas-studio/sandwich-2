@@ -1,6 +1,7 @@
 import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
 import { getDocument, getDocumentFile, getLatestVersion, getVersion } from "../db/documents.js";
+import { authenticateRequest } from "../auth/middleware.js";
 import type { Database } from "../db/connection.js";
 
 const MIME: Record<string, string> = {
@@ -60,6 +61,7 @@ interface ServerResponseLike {
 export function registerPrototypePublicRoutes(router: Router, db: Database): void {
   // Latest index — /p/:docId/
   router.get("/p/:docId", async (req, res, params) => {
+    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
     const urlPath = (req.url ?? "").split("?")[0] ?? "";
     if (!urlPath.endsWith("/")) {
       redirectTrailing(res, `/p/${params.docId!}/`);
@@ -77,6 +79,7 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
 
   // Versioned index — /p/:docId/v/:versionNo/
   router.get("/p/:docId/v/:versionNo", async (req, res, params) => {
+    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
     const urlPath = (req.url ?? "").split("?")[0] ?? "";
     if (!urlPath.endsWith("/")) {
       redirectTrailing(res, `/p/${params.docId!}/v/${params.versionNo!}/`);
@@ -93,7 +96,8 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
   });
 
   // Versioned file — /p/:docId/v/:versionNo/:path
-  router.get("/p/:docId/v/:versionNo/*path", async (_req, res, params) => {
+  router.get("/p/:docId/v/:versionNo/*path", async (req, res, params) => {
+    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
     const doc = await getDocument(db, params.docId!);
     if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
     const versionNo = await resolveVersionNo(db, doc.id, params.versionNo!);
@@ -105,7 +109,8 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
   });
 
   // Latest file — /p/:docId/:path
-  router.get("/p/:docId/*path", async (_req, res, params) => {
+  router.get("/p/:docId/*path", async (req, res, params) => {
+    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
     const doc = await getDocument(db, params.docId!);
     if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
     const versionNo = await resolveVersionNo(db, doc.id, null);
