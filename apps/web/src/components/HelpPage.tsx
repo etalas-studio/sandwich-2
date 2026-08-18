@@ -34,7 +34,7 @@ const HELP_SECTIONS = [
       },
       {
         q: { en: 'Is my data safe?', id: 'Apakah data saya aman?' },
-        a: { en: 'Documents are stored in your browser\'s localStorage. Nothing is sent to the server except during AI processing.', id: 'Dokumen disimpan di localStorage browser Anda. Tidak dikirim ke server kecuali saat proses AI berlangsung.' },
+        a: { en: 'Your documents are stored securely on our servers and are only accessible to you.', id: 'Dokumen Anda disimpan dengan aman di server kami dan hanya dapat diakses oleh Anda.' },
       },
     ],
   },
