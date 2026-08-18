@@ -16,7 +16,6 @@ import { registerConversationRunRoutes } from "./routes/conversation-run.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
 import { registerUsageRoutes } from "./routes/usage.js";
 import { registerShareRoutes } from "./routes/share.js";
-import { registerPurgeRoute } from "./routes/purge.js";
 import { registerSettingsRoutes } from "./routes/settings.js";
 import { registerMidtransRoutes } from "./routes/midtrans.js";
 import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
@@ -95,7 +94,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerAttachmentRoutes(router, db);
   registerUsageRoutes(router, db);
   registerShareRoutes(router, db);
-  registerPurgeRoute(router, db);
   registerSettingsRoutes(router, db);
   registerMidtransRoutes(router, db);
   registerSubscriptionRoutes(router, db);

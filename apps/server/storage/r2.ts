@@ -86,14 +86,10 @@ export async function downloadFromStorage(key: string): Promise<Buffer> {
 }
 
 export async function getAttachmentUrl(key: string): Promise<string> {
-  const publicUrl = process.env.R2_PUBLIC_URL;
-  if (publicUrl) {
-    return `${publicUrl.replace(/\/$/, "")}/${key}`;
-  }
   return getSignedUrl(
     getClient(),
     new GetObjectCommand({ Bucket: process.env.R2_BUCKET_NAME, Key: key }),
-    { expiresIn: 60 * 60 * 24 * 7 }, // 7 days
+    { expiresIn: 60 * 60 }, // 1 hour — user uploads are private; no permanent public URLs
   );
 }
 

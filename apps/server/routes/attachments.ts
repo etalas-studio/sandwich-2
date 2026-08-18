@@ -12,6 +12,7 @@ import {
   MAX_UPLOAD_BYTES,
 } from "../storage/r2.js";
 import { createAttachment, listAttachments } from "../db/repo/attachments.js";
+import { getConversation } from "../db/conversations.js";
 import { processExtraction } from "../pipeline/extract.js";
 
 interface UploadedFile {
@@ -88,6 +89,24 @@ function parseUpload(req: IncomingMessage): Promise<ParsedUpload> {
   });
 }
 
+/** Check magic bytes — rejects files that lie about their type via Content-Type header. */
+function isAllowedFileType(buf: Buffer): boolean {
+  if (buf.length < 4) return false;
+  // PDF: %PDF
+  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46) return true;
+  // DOCX / ZIP (PK): PK\x03\x04
+  if (buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 0x03 && buf[3] === 0x04) return true;
+  // PNG: \x89PNG
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return true;
+  // JPEG: \xff\xd8\xff
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return true;
+  // WebP: RIFF....WEBP
+  if (buf.length >= 12 && buf.slice(0, 4).toString() === "RIFF" && buf.slice(8, 12).toString() === "WEBP") return true;
+  // GIF: GIF87a / GIF89a
+  if (buf.slice(0, 6).toString() === "GIF87a" || buf.slice(0, 6).toString() === "GIF89a") return true;
+  return false;
+}
+
 export function registerAttachmentRoutes(router: Router, db: Database): void {
   router.post("/api/attachments", async (req, res) => {
     const auth = await authenticateRequest(db, req);
@@ -107,6 +126,11 @@ export function registerAttachmentRoutes(router: Router, db: Database): void {
       parsed = await parseUpload(req);
     } catch (err) {
       sendCaughtError(res, err, "attachment upload");
+      return;
+    }
+
+    if (!isAllowedFileType(parsed.file.buffer)) {
+      sendJson(res, 415, { error: "unsupported file type" });
       return;
     }
 
@@ -143,6 +167,11 @@ export function registerAttachmentRoutes(router: Router, db: Database): void {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    const conv = await getConversation(db, params.id!);
+    if (!conv || conv.userId !== auth.userId) {
+      sendJson(res, 404, { error: "conversation not found" });
       return;
     }
     sendJson(res, 200, await listAttachments(db, params.id!));
