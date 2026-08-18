@@ -291,13 +291,13 @@ function PlanBadge() {
             ))}
           </div>
           {!isPro && (
-            <button
-              type="button"
-              className="w-full mt-4 py-2 rounded-full text-xs font-semibold text-white"
+            <a
+              href="/checkout?plan=pro"
+              className="w-full mt-4 py-2 rounded-full text-xs font-semibold text-white flex items-center justify-center"
               style={{ backgroundColor: '#f91814' }}
             >
               Upgrade to Pro
-            </button>
+            </a>
           )}
         </div>
       )}
