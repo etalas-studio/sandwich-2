@@ -1332,7 +1332,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
 
-  const { data: sub } = useSubscription()
+  const { data: sub, isLoading: subLoading } = useSubscription()
   const queryClient = useQueryClient()
 
   // Fire Snap for a pending Pro upgrade set during registration
@@ -1386,7 +1386,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     void fireSnap()
   }, [queryClient])
 
-  if (!sub?.planSlug) {
+  if (!subLoading && sub !== undefined && !sub?.planSlug) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4EBE1' }}>
         <div className="text-center max-w-sm px-4">
