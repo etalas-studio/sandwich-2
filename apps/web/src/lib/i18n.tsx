@@ -17,6 +17,7 @@ const STRINGS = {
   nav_pricing: { en: 'Pricing', id: 'Harga' },
   nav_faq: { en: 'FAQ', id: 'FAQ' },
   nav_get_started: { en: 'Get Started', id: 'Mulai Sekarang' },
+  nav_login: { en: 'Login', id: 'Masuk' },
 
   // ── Hero ──
   hero_tagline: { en: 'From a messy brief to an execution-ready spec', id: 'Dari brief berantakan jadi spek siap eksekusi' },

@@ -176,6 +176,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             {lang === 'en' ? 'EN' : 'ID'}
           </button>
           <button
+            onClick={() => navigate('/login')}
+            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-70 active:scale-95 whitespace-nowrap"
+            style={{ backgroundColor: 'transparent', color: '#f91814', border: '1.5px solid #f91814' }}
+          >
+            {t('nav_login')}
+          </button>
+          <button
             onClick={() => onGoToApp()}
             className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
