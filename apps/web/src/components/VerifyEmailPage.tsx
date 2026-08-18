@@ -30,7 +30,7 @@ export default function VerifyEmailPage() {
         {state === 'success' && (
           <div className="flex flex-col gap-4">
             <p className="text-sm rounded-lg px-3 py-2" style={{ color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}>{tr('verify_success')}</p>
-            <button onClick={() => navigate('/')} className="w-full py-3 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>{tr('auth_back')}</button>
+            <button onClick={() => navigate('/login')} className="w-full py-3 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>{tr('auth_back')}</button>
           </div>
         )}
         {state === 'error' && (
