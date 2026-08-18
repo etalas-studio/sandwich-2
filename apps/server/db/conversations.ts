@@ -35,7 +35,8 @@ export interface CreateConversationInput {
   id?: string;
   title: string;
   prompt: string;
-  // Pre-selected deliverable (dropdown). Skips straight to clarifying.
+  // Pre-selected deliverable (dropdown). Skips the "which deliverable?"
+  // prompt; the next generate run asks clarifying questions for this type.
   pendingType?: DocumentType;
 }
 
@@ -83,7 +84,7 @@ export async function createConversation(
     userId,
     title: input.title,
     prompt: input.prompt,
-    pipelineStage: input.pendingType ? "clarifying" : "intake",
+    pipelineStage: input.pendingType ? "choosing_deliverable" : "intake",
     pendingType: input.pendingType ?? null,
     createdAt: now,
     updatedAt: now,

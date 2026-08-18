@@ -351,3 +351,6 @@ body {
 .sandwich-output li { margin-bottom: 0.25em; }
 .sandwich-output strong { font-weight: 600; }
 .sandwich-output hr { border-color: rgba(0,0,0,0.08); margin: 1em 0; }
+.sandwich-output a {
+  overflow-wrap: anywhere;
+}

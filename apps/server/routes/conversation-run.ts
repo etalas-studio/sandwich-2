@@ -15,7 +15,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../pipeline/plans.js";
-import { stageInstruction, detectDeliverableType, type PipelineStage } from "../pipeline/orchestrate.js";
+import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectRefineIntent, type PipelineStage } from "../pipeline/orchestrate.js";
 import {
   createDocument,
   createDocumentVersion,
@@ -405,15 +405,36 @@ function enrichMessageContent(m: {
 }
 
 /**
+ * Compose the brief handed to the prototype engine. Unlike the text engine
+ * (which receives the full message history), the prototype engine takes a
+ * single `brief` string — so we fold every user turn (original brief, follow-ups,
+ * clarifying answers) and their extracted attachment text into one document.
+ * This prevents the prototype from being generated from only the last message.
+ */
+export function composePrototypeBrief(turns: ConversationTurn[]): string {
+  const parts: string[] = [];
+  for (const turn of turns) {
+    if (turn.role !== "user") continue;
+    const text = turn.content.trim();
+    if (!text) continue;
+    if (parts.length > 0 && parts[parts.length - 1] === text) continue;
+    parts.push(text);
+  }
+  return parts.join("\n\n");
+}
+
+/**
  * Absolute preview URL for a prototype document. Uses PREVIEW_DOMAIN in
  * production, otherwise the app URL (localhost in dev) so the assistant can
  * hand the user a real, clickable link instead of guessing.
  */
-function prototypePreviewUrl(docId: string): string {
+export function prototypePreviewUrl(docId: string): string {
   const domain = process.env.PREVIEW_DOMAIN;
-  if (domain) return `https://${domain}/p/${docId}/`;
-  const base = process.env.APP_URL ?? "http://localhost:3000";
-  return `${base.replace(/\/+$/, "")}/p/${docId}/`;
+  if (domain) return `https://${domain.replace(/\/+$/, "")}/p/${docId}/`;
+  // Relative fallback: works same-origin in dev (Vite proxies /p) and in the
+  // single-server Railway deploy. For a split frontend/API deploy, set
+  // PREVIEW_DOMAIN to the host that serves /p (e.g. preview.sandwich.etalas.com).
+  return `/p/${docId}/`;
 }
 
 const DELIVERABLE_LABEL: Record<DocumentType, string> = {
@@ -599,11 +620,33 @@ export function registerConversationRunRoutes(
           }
         }
 
+        // Preview intent — return the existing prototype's link (no AI call).
+        if (detectPreviewIntent(lastUserMessage)) {
+          const protoDocs = (await listConversationDocuments(db, conversationId))
+            .filter((d) => d.type === "prototype");
+          const protoDoc = protoDocs[0];
+          if (protoDoc) {
+            const msg = `Preview prototype: [Buka prototype](${prototypePreviewUrl(protoDoc.id)})`;
+            await addChatMessage(db, { conversationId, role: "assistant", content: msg });
+            broadcast({
+              type: "done",
+              text: msg,
+              conversation: (await getConversation(db, conversationId))!,
+            });
+            closeInFlight(conversationId);
+            return;
+          }
+          // No prototype to preview yet — fall through to normal flow.
+        }
+
         let stage = conversation.pipelineStage as PipelineStage;
         let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
+        let refineInstruction: string | null = null;
 
         if (stage === "choosing_deliverable") {
-          const detected = detectDeliverableType(lastUserMessage);
+          // A pre-selected type (dropdown) means the deliverable is already
+          // known — skip detection and go straight to clarifying questions.
+          const detected = pendingType ?? detectDeliverableType(lastUserMessage);
           if (detected) {
             pendingType = detected;
             stage = "clarifying";
@@ -615,6 +658,16 @@ export function registerConversationRunRoutes(
           if (detected) {
             pendingType = detected;
             stage = "clarifying";
+          } else {
+            // Refine intent — revise the most recently updated deliverable as
+            // a new version (same document), using the full conversation context.
+            const existingDocs = await listConversationDocuments(db, conversationId);
+            if (detectRefineIntent(lastUserMessage) && existingDocs.length > 0) {
+              existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+              pendingType = existingDocs[0]!.type as DocumentType;
+              stage = "generating";
+              refineInstruction = lastUserMessage;
+            }
           }
         }
 
@@ -654,7 +707,12 @@ export function registerConversationRunRoutes(
           ? async () => {
               const result = await generatePrototypeDocument(
                 db,
-                { documentId: prototypeDocId!, versionNo: prototypeVersionNo!, brief: lastUserMessage },
+                {
+                  documentId: prototypeDocId!,
+                  versionNo: prototypeVersionNo!,
+                  brief: composePrototypeBrief(turns),
+                  ...(refineInstruction ? { refine: { instruction: refineInstruction } } : {}),
+                },
                 controller.signal,
               );
               return formatPrototypeSummary(result.summary, result.glowupWarning);
@@ -725,11 +783,10 @@ export function registerConversationRunRoutes(
               if (pendingType === "prd") {
                 await incrementUsage(db, auth.userId, "prd");
               }
-
               const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
               chatOutput = documentSummary(pendingType, versionNo);
               if (isPrototype) {
-                chatOutput = `${chatOutput}\n\nPreview: ${prototypePreviewUrl(documentId)}`;
+                chatOutput = `${chatOutput}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
               }
               documentRef = {
                 id: documentId,

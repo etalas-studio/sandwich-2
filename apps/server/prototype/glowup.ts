@@ -12,6 +12,8 @@ export interface ReferenceEntry {
   category: string;
   tags?: string[];
   description?: string;
+  colors?: string[];
+  fonts?: string[];
 }
 
 export interface GlowupReference {
@@ -69,6 +71,8 @@ function buildDnaContext(refs: GlowupReference[]): string {
       layout: d.layout,
       motion: d.motion,
       signature: d.signature,
+      colors: d.colors,
+      fonts: d.fonts,
     };
     return `### Reference ${i + 1}: ${r.slug}\n\`\`\`json\n${JSON.stringify(tokens, null, 2)}\n\`\`\``;
   });
@@ -90,9 +94,12 @@ function resolveReferences(workspace: string, brief: string): GlowupReference[] 
       const dnaPath = join(workspace, ".getokui", "dna", `${t.slug}.json`);
       if (!existsSync(dnaPath)) continue;
       try {
+        const dna = JSON.parse(readFileSync(dnaPath, "utf-8")) as Record<string, unknown>;
         refs.push({
           slug: t.slug,
-          dna: JSON.parse(readFileSync(dnaPath, "utf-8")) as Record<string, unknown>,
+          // colors/fonts live in index.json (not the dna file), so carry them
+          // over from the selected template entry.
+          dna: { ...dna, colors: t.colors ?? [], fonts: t.fonts ?? [] },
         });
       } catch {
         // skip unreadable dna

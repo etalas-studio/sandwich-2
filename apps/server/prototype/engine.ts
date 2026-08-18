@@ -1,8 +1,14 @@
-import { mkdtempSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
-import { buildPrototypeSystemPrompt } from "./prompts.js";
-import { saveDocumentFile } from "../db/documents.js";
+import { join, dirname, relative } from "node:path";
+import { buildPrototypeSystemPrompt, buildPrototypeRefinePrompt } from "./prompts.js";
+import {
+  getDocumentFiles,
+  getDocument,
+  getVersion,
+  getLatestVersion,
+  saveDocumentFile,
+} from "../db/documents.js";
 import {
   fetchReferenceStyles,
   findReferenceUrls,
@@ -39,6 +45,14 @@ export interface PrototypeGenerationResult {
   glowupWarning?: string;
 }
 
+export interface PrototypeGenerationInput {
+  documentId: string;
+  versionNo: number;
+  brief: string;
+  /** When present, edit the current version's files in place instead of generating fresh. */
+  refine?: { instruction: string };
+}
+
 /**
  * Compose the user-facing prototype summary with an optional glowup-failure
  * note so a silent pass-1 fallback never reaches the user unnoticed.
@@ -55,16 +69,32 @@ export function formatPrototypeSummary(summary: string, glowupWarning?: string):
  */
 export async function generatePrototypeDocument(
   db: Database,
-  input: { documentId: string; versionNo: number; brief: string },
+  input: PrototypeGenerationInput,
   signal?: AbortSignal,
 ): Promise<PrototypeGenerationResult> {
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
 
   try {
+    // Refine mode: seed the workspace with the current version's files so the
+    // agent edits them in place instead of regenerating from scratch.
+    if (input.refine) {
+      const doc = await getDocument(db, input.documentId);
+      const current = doc?.currentVersionId
+        ? await getVersion(db, doc.currentVersionId)
+        : await getLatestVersion(db, input.documentId);
+      const sourceVersionNo = current?.versionNo ?? Math.max(1, input.versionNo - 1);
+      const existing = await getDocumentFiles(db, input.documentId, sourceVersionNo);
+      for (const file of existing) {
+        const target = join(workspace, file.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, file.content);
+      }
+    }
+
     // Reference URL style (best-effort, multiple URLs + screenshot vision).
     // Writes .reference/<i>/ + index.json into the workspace.
     const styles: ReferenceStyle[] = [];
-    const urls = findReferenceUrls(input.brief);
+    const urls = input.refine ? [] : findReferenceUrls(input.brief);
     if (urls.length > 0) {
       try {
         const fetched = await Promise.race([
@@ -107,7 +137,9 @@ export async function generatePrototypeDocument(
       }
     });
 
-    const systemPrompt = buildPrototypeSystemPrompt(input.brief, styles);
+    const systemPrompt = input.refine
+      ? buildPrototypeRefinePrompt(input.brief, input.refine.instruction)
+      : buildPrototypeSystemPrompt(input.brief, styles);
 
     try {
       const promptPromise = session.prompt(systemPrompt);
@@ -127,14 +159,18 @@ export async function generatePrototypeDocument(
     }
 
     // Glowup pass (best-effort, non-destructive): polish index.html + styles.css.
+    // Skipped in refine mode — the user asked for a targeted change, and a
+    // re-polish could overwrite it.
     let glowupWarning: string | undefined;
-    try {
-      copyReferencesTo(workspace);
-      await polishWorkspace(workspace, input.brief, signal);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      glowupWarning = `polish desain (glowup) gagal dijalankan: ${msg}. Menampilkan hasil dasar.`;
-      console.warn("[prototype] glowup failed, keeping pass-1 output:", msg);
+    if (!input.refine) {
+      try {
+        copyReferencesTo(workspace);
+        await polishWorkspace(workspace, input.brief, signal);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        glowupWarning = `polish desain (glowup) gagal dijalankan: ${msg}. Menampilkan hasil dasar.`;
+        console.warn("[prototype] glowup failed, keeping pass-1 output:", msg);
+      }
     }
 
     const files = listFilesRecursive(workspace);
@@ -153,7 +189,7 @@ export async function generatePrototypeDocument(
     }
 
     return {
-      summary: `Generated ${saved.length} files: ${saved.join(", ")}`,
+      summary: `${input.refine ? "Refined" : "Generated"} ${saved.length} files: ${saved.join(", ")}`,
       files: saved,
       glowupWarning,
     };
