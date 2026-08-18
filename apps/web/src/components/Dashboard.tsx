@@ -574,7 +574,7 @@ function ChatView({
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       </div>
-                      <div className="text-sm break-words sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                      <div className="text-sm break-words overflow-x-hidden sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                         dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
@@ -1315,7 +1315,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const usageQuery = useUsage()
   const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: 3, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
-  const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
+  const email = authState.status === 'authenticated' ? authState.email : username
 
   const { data: sub, isLoading: subLoading } = useSubscription()
   const queryClient = useQueryClient()
@@ -1416,6 +1416,18 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     }
   }, [chatState?.conversationId])
 
+  // Handle browser back button when navigating from Documents into chat
+  useEffect(() => {
+    const handler = (e: PopStateEvent) => {
+      if (e.state?.activeNav) {
+        setActiveNav(e.state.activeNav)
+        setChatState(null)
+      }
+    }
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [])
+
   const toggleChatPin = () => {
     if (!currentConversation) return
     updateLocalConversation(currentConversation.id, { pinned: !currentConversation.pinned })
@@ -1509,7 +1521,16 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} />
+    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
+      const conv = convId
+        ? conversations.find(c => c.id === convId)
+        : conversations.find(c => c.summary.includes(docTitle))
+      if (conv) {
+        history.pushState({ activeNav: 'documents' }, '')
+        setChatState({ prompt: conv.summary, conversationId: conv.id, autoRun: false })
+        setActiveNav('home')
+      }
+    }} />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1603,6 +1624,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                       onClick={() => {
                         setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
+                        setActiveNav('home')
                         if (t.unread) updateLocalConversation(t.id, { unread: false })
                         refresh()
                       }}
@@ -1730,7 +1752,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           {showAccountMenu && (
             <div className="fixed inset-0 z-50" onClick={() => setShowAccountMenu(false)}>
               <style>{`@keyframes slideUp { from { transform: translateY(4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
-              <div className="absolute bottom-16 left-3 right-3 rounded-xl overflow-hidden"
+              <div className="absolute bottom-16 left-3 w-[200px] rounded-xl overflow-hidden"
                 style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', animation: 'slideUp 0.15s ease-out' }}
                 onClick={e => e.stopPropagation()}>
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
@@ -1765,7 +1787,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 <iconify-icon icon="solar:sidebar-minimalistic-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
               </button>
             )}
-            {chatState && (
+            {chatState && activeNav !== 'settings' && activeNav !== 'help' && (
               <div className="flex items-center gap-1 min-w-0">
                 {renamingTitle ? (
                   <input
@@ -1839,7 +1861,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           </div>
           <div className="flex items-center gap-2">
             <PlanBadge />
-            {chatState && (<>
+            {chatState && activeNav !== 'settings' && activeNav !== 'help' && (<>
               <div className="relative hidden">
                 <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative">
                   <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
@@ -1911,7 +1933,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         </div>
 
         {/* Content */}
-        {chatState ? (
+        {activeNav === 'settings' || activeNav === 'help' ? renderPage() : chatState ? (
           <div className="flex-1 min-h-0">
             <ChatView
               initialPrompt={chatState.prompt}
