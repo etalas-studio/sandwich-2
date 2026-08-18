@@ -147,12 +147,20 @@ function PaymentTrigger({
       ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
         onSuccess: () => {
           void (async () => {
-            try { await verifyPayment(data.orderId) } catch { /* ignore */ }
-            await waitForActivePlan()
-            queryClient.invalidateQueries({ queryKey: ['subscription'] })
-            trackPostHog('payment_succeeded', { plan_slug: planSlug, order_id: data.orderId })
-            trackPostHog('subscription_activated', { plan_slug: planSlug })
-            setIsDone(true)
+            try {
+              try { await verifyPayment(data.orderId) } catch { /* ignore */ }
+              const activated = await waitForActivePlan()
+              if (!activated) {
+                setError(tr('checkout_payment_error'))
+                return
+              }
+              queryClient.invalidateQueries({ queryKey: ['subscription'] })
+              trackPostHog('payment_succeeded', { plan_slug: planSlug, order_id: data.orderId })
+              trackPostHog('subscription_activated', { plan_slug: planSlug })
+              setIsDone(true)
+            } catch {
+              setError(tr('checkout_payment_error'))
+            }
           })()
         },
         onPending: () => { navigate(`/checkout/return?order_id=${data.orderId}&transaction_status=pending`) },

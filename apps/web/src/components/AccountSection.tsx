@@ -8,7 +8,7 @@ export interface Account {
 
 interface AccountSectionProps {
   account: Account
-  onChangePassword: (currentPassword: string, newPassword: string) => void
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
   onPurge?: () => void
 }
 
@@ -20,7 +20,7 @@ export default function AccountSection({ account, onChangePassword, onPurge }: A
   const [error, setError] = useState<string | null>(null)
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false)
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setError(null)
 
     if (!currentPassword.trim()) {
@@ -40,11 +40,15 @@ export default function AccountSection({ account, onChangePassword, onPurge }: A
       return
     }
 
-    onChangePassword(currentPassword, newPassword)
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setShowModal(false)
+    try {
+      await onChangePassword(currentPassword, newPassword)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowModal(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change password')
+    }
   }
 
   const handleClose = () => {
