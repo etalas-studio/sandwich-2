@@ -272,7 +272,6 @@ const STRINGS = {
   home_check_1: { en: 'Make your first brief', id: 'Bikin brief pertama' },
   home_check_2: { en: 'Finish 1 document', id: 'Selesaikan 1 dokumen' },
   home_check_3: { en: 'Try 3 document types', id: 'Coba 3 jenis dokumen' },
-  home_check_4: { en: 'Download a result as Markdown', id: 'Download hasil jadi Markdown' },
   home_check_5: { en: 'Upgrade for unlimited', id: 'Upgrade biar unlimited' },
   home_tips_title: { en: 'SHARPEN YOUR RESULTS', id: 'BIAR HASILNYA MAKIN TAJAM' },
   home_tips_sub: { en: 'Three things that matter most for output quality', id: 'Tiga hal yang paling ngaruh ke kualitas output' },
