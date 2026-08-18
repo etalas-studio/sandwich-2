@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { subscriptions } from "../schema.js";
 import type { Database } from "../connection.js";
 import { PLANS } from "../../pipeline/plans.js";
@@ -42,7 +42,10 @@ export async function getActiveSubscription(
       and(
         eq(subscriptions.userId, userId),
         eq(subscriptions.status, "active"),
-        gt(subscriptions.expiresAt, new Date()),
+        or(
+          isNull(subscriptions.expiresAt),
+          gt(subscriptions.expiresAt, new Date()),
+        ),
       ),
     )
     .limit(1);
@@ -50,11 +53,13 @@ export async function getActiveSubscription(
 }
 
 /**
- * Activate or extend a plan. Called ONLY from the verified payment webhook
- * (or the dev simulation path server-side) — never from client input.
+ * Activate or extend a plan. Called from the verified payment webhook, the
+ * dev simulation path, and at registration (free Starter). Never from raw
+ * client input.
  *
- * Renewal extends from `max(now, existing.expiresAt)` so an active plan
- * stacks, while an expired plan restarts from now.
+ * Free plans never expire (permanent free tier). Paid renewal extends from
+ * `max(now, existing.expiresAt)` so an active plan stacks, while an expired
+ * plan restarts from now.
  */
 export async function activateSubscription(
   db: Database,
@@ -64,12 +69,17 @@ export async function activateSubscription(
   const now = new Date();
   const existing = await getSubscriptionForUser(db, input.userId);
 
+  const isFree = plan.amount === 0;
+  const expiresAt = isFree
+    ? null
+    : addDays(
+        existing?.expiresAt && existing.expiresAt.getTime() > now.getTime()
+          ? existing.expiresAt
+          : now,
+        plan.periodDays,
+      );
+
   if (existing) {
-    const base =
-      existing.expiresAt && existing.expiresAt.getTime() > now.getTime()
-        ? existing.expiresAt
-        : now;
-    const expiresAt = addDays(base, plan.periodDays);
     await db.update(subscriptions).set({
       planSlug: input.planSlug,
       status: "active",
@@ -83,7 +93,7 @@ export async function activateSubscription(
       planSlug: input.planSlug,
       status: "active",
       periodDays: plan.periodDays,
-      expiresAt: addDays(now, plan.periodDays),
+      expiresAt,
       startedAt: now,
       updatedAt: now,
     });

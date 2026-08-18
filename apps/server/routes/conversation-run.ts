@@ -618,14 +618,21 @@ export function registerConversationRunRoutes(
           }
         }
 
-        // Enforce the PRD document quota before generating.
-        if (stage === "generating" && pendingType === "prd") {
+        // Enforce the document/prototype quota before generating. Prototypes
+        // have their own (smaller) quota; everything else shares the document
+        // quota (PRD / quotation / specs).
+        if (stage === "generating" && pendingType) {
           const sub = await getActiveSubscription(db, auth.userId);
           const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
           if (!plan) throw new Error("active subscription required");
-          if (plan.limit !== null) {
-            const used = await getMonthlyUsage(db, auth.userId, "prd");
-            if (used >= plan.limit) throw new Error("monthly quota reached");
+          const isPrototype = pendingType === "prototype";
+          const kind = isPrototype ? "prototype" : "doc";
+          const limit = isPrototype ? plan.prototypeLimit : plan.documentLimit;
+          if (limit !== null) {
+            const used = await getMonthlyUsage(db, auth.userId, kind);
+            if (used >= limit) {
+              throw new Error(isPrototype ? "prototype quota reached" : "monthly quota reached");
+            }
           }
         }
 
@@ -722,9 +729,11 @@ export function registerConversationRunRoutes(
                 });
                 await linkConversationDocument(db, conversationId, doc.id);
               }
-              if (pendingType === "prd") {
-                await incrementUsage(db, auth.userId, "prd");
-              }
+              await incrementUsage(
+                db,
+                auth.userId,
+                pendingType === "prototype" ? "prototype" : "doc",
+              );
 
               const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
               chatOutput = documentSummary(pendingType, versionNo);

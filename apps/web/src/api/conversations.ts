@@ -54,11 +54,13 @@ export interface Attachment {
 
 export interface Usage {
   used: number
+  prototypeUsed: number
   chatUsed: number
   yearMonth: string
   planSlug: string | null
   isPro: boolean
   limit: number | null
+  prototypeLimit: number | null
   chatLimit: number | null
 }
 

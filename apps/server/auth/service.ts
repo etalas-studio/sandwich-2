@@ -1,5 +1,6 @@
 import { createUser, getUserByEmail, getUserByUsername, type User } from "../db/users.js";
 import { createSession, deleteSession, getSessionByToken, type Session } from "../db/sessions.js";
+import { activateSubscription } from "../db/repo/subscriptions.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { sessionExpiryIso } from "./cookie.js";
 import type { Database } from "../db/connection.js";
@@ -23,7 +24,7 @@ export interface RegisterInput extends Credentials {
 }
 
 export interface AuthResult {
-  user: Pick<User, "username" | "email">;
+  user: Pick<User, "id" | "username" | "email">;
   session: Session;
 }
 
@@ -53,6 +54,10 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
     }
     throw err;
   }
+
+  // Free tier: every new account starts on Starter (no payment). Pro is an
+  // upgrade via Midtrans that overwrites this row.
+  await activateSubscription(db, { userId: user.id, planSlug: "starter" });
   return { user };
 }
 
@@ -88,7 +93,7 @@ export async function login(db: Database, input: Credentials): Promise<AuthResul
   }
 
   const session = await createSession(db, user.id, sessionExpiryIso());
-  return { user: { username: user.username, email: user.email }, session };
+  return { user: { id: user.id, username: user.username, email: user.email }, session };
 }
 
 export async function logout(db: Database, token: string): Promise<void> {

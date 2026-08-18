@@ -19,18 +19,21 @@ export function registerUsageRoutes(router: Router, db: Database): void {
     const plan = planSlug ? PLANS[planSlug as keyof typeof PLANS] : undefined;
     const isPro = planSlug === "pro";
 
-    const used = await getMonthlyUsage(db, auth.userId, "prd");
+    const used = await getMonthlyUsage(db, auth.userId, "doc");
+    const prototypeUsed = await getMonthlyUsage(db, auth.userId, "prototype");
     const chatUsed = await getMonthlyUsage(db, auth.userId, "chat");
 
     const now = new Date();
     sendJson(res, 200, {
       used,
+      prototypeUsed,
       chatUsed,
       yearMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
       planSlug,
       isPro,
       // No active plan ⇒ 0 quota; starter ⇒ its limits; pro ⇒ unlimited.
-      limit: isPro ? null : plan ? plan.limit : 0,
+      limit: isPro ? null : plan ? plan.documentLimit : 0,
+      prototypeLimit: isPro ? null : plan ? plan.prototypeLimit : 0,
       chatLimit: isPro ? null : plan ? plan.chatLimit : 0,
     });
   });

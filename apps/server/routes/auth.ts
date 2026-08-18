@@ -44,7 +44,7 @@ export function registerAuthRoutes(
       return;
     }
     const user = await getUserById(db, auth.userId);
-    sendJson(res, 200, { state: "authenticated", user: { username: user?.username ?? "" } });
+    sendJson(res, 200, { state: "authenticated", user: { id: user?.id ?? "", username: user?.username ?? "" } });
   });
 
   router.post("/api/auth/register", async (req, res) => {
@@ -82,7 +82,7 @@ export function registerAuthRoutes(
       }
 
       sendJson(res, 201, {
-        user: { username: user.username, email: user.email },
+        user: { id: user.id, username: user.username, email: user.email },
         verificationPending: true,
       });
     } catch (err) {

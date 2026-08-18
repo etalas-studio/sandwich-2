@@ -16,7 +16,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 function mockFetchMeResponse(state: AuthState) {
   const body: Record<string, unknown> = { state: state.status }
-  if (state.status === 'authenticated') body.user = { username: state.username }
+  if (state.status === 'authenticated') body.user = { id: state.id, username: state.username }
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : String(input)
     if (url === '/api/auth/me') {
@@ -49,7 +49,7 @@ describe('useAuth', () => {
   })
 
   it('returns authenticated state and username when /me responds with authenticated', async () => {
-    mockFetchMeResponse({ status: 'authenticated', username: 'alice' })
+    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice' })
 
     const { result } = renderHook(() => useAuth(), { wrapper })
 
@@ -57,7 +57,7 @@ describe('useAuth', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', username: 'alice' })
+    expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice' })
   })
 
   it('returns unauthenticated state when /me responds with unauthenticated', async () => {
@@ -86,7 +86,7 @@ describe('useAuth', () => {
           ok: true,
           json: async () =>
             loginCalled
-              ? { state: 'authenticated', user: { username: 'alice' } }
+              ? { state: 'authenticated', user: { id: 'u-alice', username: 'alice' } }
               : { state: 'unauthenticated' },
         } as Response
       }
@@ -110,7 +110,7 @@ describe('useAuth', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', username: 'alice' })
+      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice' })
     })
   })
 
@@ -160,7 +160,7 @@ describe('useAuth', () => {
           ok: true,
           json: async () =>
             registered
-              ? { state: 'authenticated', user: { username: 'bob' } }
+              ? { state: 'authenticated', user: { id: 'u-bob', username: 'bob' } }
               : { state: 'unauthenticated' },
         } as Response
       }
@@ -182,7 +182,7 @@ describe('useAuth', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', username: 'bob' })
+      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-bob', username: 'bob' })
     })
   })
 
@@ -222,7 +222,7 @@ describe('useAuth', () => {
   // ── logout ──
 
   it('logout calls postLogout and refreshes auth state', async () => {
-    mockFetchMeResponse({ status: 'authenticated', username: 'alice' })
+    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice' })
     let loggedOut = false
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
@@ -231,7 +231,7 @@ describe('useAuth', () => {
         return {
           ok: true,
           json: async () =>
-            loggedOut ? { state: 'unauthenticated' } : { state: 'authenticated', user: { username: 'alice' } },
+            loggedOut ? { state: 'unauthenticated' } : { state: 'authenticated', user: { id: 'u-alice', username: 'alice' } },
         } as Response
       }
       if (url === '/api/auth/logout') {
@@ -271,7 +271,7 @@ describe('useAuth', () => {
           ok: true,
           json: async () =>
             loggedIn
-              ? { state: 'authenticated', user: { username: 'alice' } }
+              ? { state: 'authenticated', user: { id: 'u-alice', username: 'alice' } }
               : { state: 'unauthenticated' },
         } as Response
       }

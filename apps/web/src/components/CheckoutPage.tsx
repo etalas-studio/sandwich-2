@@ -6,6 +6,7 @@ import { apiUrl } from '../api/base'
 import { verifyPayment } from '../api/payments'
 import { useSubscription } from '../hooks/useSubscription'
 import { PLANS_META, getPlanMeta } from '../lib/plans'
+import { trackPostHog } from '../lib/posthog'
 
 const bowlby = "'Bowlby One', system-ui"
 
@@ -17,7 +18,7 @@ function PlanPicker() {
     slug: p.slug,
     name: p.name,
     price: p.price,
-    priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+    priceNote: p.amount === 0 ? '' : `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
     desc: t(p.descKey),
     features: p.featureKeys.map((k) => t(k)),
     cta: t(p.ctaKey),
@@ -151,7 +152,7 @@ function PaymentTrigger({
   navigate,
 }: {
   planSlug: string
-  plan: { name: string }
+  plan: { name: string; amount: number }
   tr: ReturnType<typeof useLanguage>['t']
   navigate: ReturnType<typeof useNavigate>
 }) {
@@ -179,6 +180,25 @@ function PaymentTrigger({
     hasTriggered.current = true
 
     const run = async () => {
+      // Free plan — no Midtrans call. Registration already assigned Starter,
+      // but re-affirm server-side (idempotent) then go straight to the app.
+      if (plan.amount === 0) {
+        try {
+          await fetch(apiUrl('/api/midtrans/transaction'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ planSlug }),
+          })
+        } catch { /* ignore — Starter is already active from registration */ }
+        queryClient.invalidateQueries({ queryKey: ['subscription'] })
+        trackPostHog('subscription_activated', { plan_slug: planSlug, free: true })
+        navigate('/dashboard', { replace: true })
+        return
+      }
+
+      trackPostHog('checkout_started', { plan_slug: planSlug })
+
       let txRes: Response
       try {
         txRes = await fetch(apiUrl('/api/midtrans/transaction'), {
@@ -239,11 +259,13 @@ function PaymentTrigger({
             try { await verifyPayment(data.orderId) } catch { /* ignore */ }
             await waitForActivePlan()
             queryClient.invalidateQueries({ queryKey: ['subscription'] })
+            trackPostHog('payment_succeeded', { plan_slug: planSlug, order_id: data.orderId })
+            trackPostHog('subscription_activated', { plan_slug: planSlug })
             setIsDone(true)
           })()
         },
         onPending: () => { navigate(`/checkout/return?order_id=${data.orderId}&transaction_status=pending`) },
-        onError: () => { setError(tr('checkout_payment_error')) },
+        onError: () => { trackPostHog('payment_failed', { plan_slug: planSlug }); setError(tr('checkout_payment_error')) },
         onClose: () => { navigate('/checkout') },
       })
     }

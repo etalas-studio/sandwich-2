@@ -5,6 +5,7 @@ import { createMessage } from '../api/conversations'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
+import { trackPostHog } from '../lib/posthog'
 import { DeliverableTypeSelect } from './DeliverableTypeSelect'
 
 interface LandingPageProps {
@@ -29,19 +30,11 @@ const FAQS = [
   },
   {
     q: 'How does the quotation get generated?',
-    a: 'Once scope is defined in the PRD, SANDWICH breaks it into priced, dependency-aware line items — so your quotation is grounded in the actual feature queue, not a guess.',
+    a: 'Once scope is defined, SANDWICH breaks it into priced, dependency-aware line items — so your quotation is grounded in the actual scope, not a guess.',
   },
   {
     q: 'Is it free?',
-    a: 'No free tier — Starter is Rp 50k/mo, Pro is Rp 100k/mo. Pro unlocks unlimited PRDs and unlimited AI chat.',
-  },
-  {
-    q: 'Which AI agents are supported?',
-    a: 'Pi, Claude Code, and Codex out of the box. More agents coming as the ecosystem grows.',
-  },
-  {
-    q: 'Do I need to configure anything?',
-    a: "Just install via your agent's skill manager. The Order → Prep → Recipe pipeline — brief to prototype to PRD to quotation — works out of the box.",
+    a: 'Yes — Starter is free: 5 documents and 3 prototypes a month, plus 100 AI chat messages. Pro is Rp 100k/mo for unlimited everything.',
   },
 ]
 
@@ -53,7 +46,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
     slug: p.slug,
     name: p.name,
     price: p.price,
-    priceNote: `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
+    priceNote: p.amount === 0 ? '' : `/ ${lang === 'id' ? 'bulan' : 'mo'}`,
     desc: t(p.descKey),
     features: p.featureKeys.map((k) => t(k)),
     cta: t(p.ctaKey),
@@ -301,7 +294,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(-5deg)' }}>
                 <iconify-icon icon="solar:notes-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>MOM</span>
+                <span>Specs</span>
               </div>
               <div className="flex items-center gap-3" style={{ transform: 'rotate(4deg)' }}>
                 <iconify-icon icon="solar:widget-2-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
@@ -346,13 +339,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </h2>
           <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight max-w-lg">
             {t('pipeline_desc_1')}{' '}
-            <a href="https://superpowers.obra.studio" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4 hover:text-[#f91814] transition-colors">Superpowers by Obra</a>.
+            <a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4 hover:text-[#f91814] transition-colors">Superpowers by Obra</a>.
             {' '}{t('pipeline_desc_2')}
           </p>
           <div className="flex items-center gap-4 mt-12">
             <span className="text-sm font-bold uppercase tracking-widest text-white">SANDWICH</span>
             <span className="text-white/30">→</span>
-            <a href="https://superpowers.obra.studio" target="_blank" rel="noreferrer" className="text-sm font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors">Superpowers</a>
+            <a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer" className="text-sm font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors">Superpowers</a>
           </div>
           <div className="mt-12">
             <button
@@ -380,10 +373,10 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </p>
           <div className="grid grid-cols-2 md:flex md:flex-row justify-center items-start gap-x-6 gap-y-10 md:gap-24">
             {[
-              { img: '/ingredients/tomato.webp', name: '/ Order', desc: t('stack_order_desc'), offset: false },
-              { img: '/ingredients/cheese.webp', name: '/ Prep', desc: t('stack_prep_desc'), offset: true },
-              { img: '/ingredients/meat.webp', name: '/ Recipe', desc: t('stack_recipe_desc'), offset: false },
-              { img: '/ingredients/lettuce.webp', name: '/ Validate', desc: t('stack_validate_desc'), offset: true },
+              { img: '/ingredients/tomato.webp', name: 'PRD', desc: t('stack_order_desc'), offset: false },
+              { img: '/ingredients/cheese.webp', name: 'Prototype', desc: t('stack_prep_desc'), offset: true },
+              { img: '/ingredients/meat.webp', name: 'Quotation', desc: t('stack_recipe_desc'), offset: false },
+              { img: '/ingredients/lettuce.webp', name: 'Specs', desc: t('stack_validate_desc'), offset: true },
             ].map((item) => (
               <div key={item.name} className={`flex flex-col items-center text-center w-full md:w-40 ${item.offset ? 'md:translate-y-8' : ''}`}>
                 <img
@@ -446,7 +439,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
                 <div className="px-6 pb-5">
                   <button
-                    onClick={() => onGoToApp(plan.slug)}
+                    onClick={() => { trackPostHog('plan_selected', { plan_slug: plan.slug }); onGoToApp(plan.slug) }}
                     className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
                     style={plan.highlight
                       ? { backgroundColor: '#f91814', color: '#ffffff' }
@@ -540,8 +533,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
               </p>
               <div className="flex items-center gap-3 mt-5">
                 {[
-                  { icon: 'solar:github-linear', href: 'https://github.com/etalas-studio/sandwich-2', label: 'GitHub' },
-                  { icon: 'solar:twitter-linear', href: 'https://twitter.com/etalasworks', label: 'Twitter' },
+                  { icon: 'mdi:instagram', href: 'https://www.instagram.com/etalas.id/', label: 'Instagram' },
+                  { icon: 'mdi:linkedin', href: 'https://www.linkedin.com/company/etalas/', label: 'LinkedIn' },
                 ].map(({ icon, href, label }) => (
                   <a key={label} href={href} target="_blank" rel="noreferrer"
                     className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
@@ -582,8 +575,8 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
                 <ul className="flex flex-col gap-3">
                   {[
                     { label: 'Website', href: 'https://etalas.com' },
-                    { label: 'GitHub', href: 'https://github.com/etalas-studio' },
-                    { label: 'Twitter', href: 'https://twitter.com/etalasworks' },
+                    { label: 'Instagram', href: 'https://www.instagram.com/etalas.id/' },
+                    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/etalas/' },
                   ].map(({ label, href }) => (
                     <li key={label}>
                       <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">

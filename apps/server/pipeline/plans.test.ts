@@ -3,11 +3,13 @@ import { describe, it } from "node:test";
 import { getPlan, generateOrderId } from "./plans.js";
 
 describe("getPlan", () => {
-  it("returns the starter plan config", () => {
+  it("returns the starter plan config (free tier)", () => {
     const plan = getPlan("starter");
     assert.ok(plan);
-    assert.equal(plan.amount, 50000);
-    assert.equal(plan.limit, 5);
+    assert.equal(plan.amount, 0);
+    assert.equal(plan.documentLimit, 5);
+    assert.equal(plan.prototypeLimit, 3);
+    assert.equal(plan.chatLimit, 100);
     assert.equal(plan.periodDays, 30);
   });
 
@@ -15,7 +17,9 @@ describe("getPlan", () => {
     const plan = getPlan("pro");
     assert.ok(plan);
     assert.equal(plan.amount, 100000);
-    assert.equal(plan.limit, null);
+    assert.equal(plan.documentLimit, null);
+    assert.equal(plan.prototypeLimit, null);
+    assert.equal(plan.chatLimit, null);
     assert.equal(plan.periodDays, 30);
   });
 

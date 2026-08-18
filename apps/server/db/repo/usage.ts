@@ -2,7 +2,8 @@ import { eq, and } from "drizzle-orm";
 import { usage } from "../schema.js";
 import type { Database } from "../connection.js";
 
-export type UsageKind = "prd" | "chat";
+/** "doc" = PRD/quotation/specs (text deliverables), "prototype" = prototype engine, "chat" = follow-up messages. */
+export type UsageKind = "doc" | "prototype" | "chat";
 
 /** "YYYY-MM" (1-indexed, zero-padded month) — stable sortable key. */
 function currentYearMonth(): string {
