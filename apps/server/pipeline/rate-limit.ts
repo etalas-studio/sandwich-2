@@ -50,11 +50,23 @@ export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
   };
 }
 
-/** Best-effort client IP, honoring x-forwarded-for when behind a proxy. */
+/**
+ * Client IP resolution. Only trusts X-Forwarded-For when the direct
+ * connection comes from a known trusted proxy (set TRUSTED_PROXY_IPS as a
+ * comma-separated list of IPs). Falls back to the socket address otherwise,
+ * preventing spoofed XFF headers from bypassing rate limits.
+ */
+const TRUSTED_PROXY_IPS: Set<string> = new Set(
+  (process.env.TRUSTED_PROXY_IPS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+);
+
 export function clientIp(req: IncomingMessage): string {
-  const xff = req.headers["x-forwarded-for"];
-  if (typeof xff === "string" && xff.trim() !== "") {
-    return xff.split(",")[0]!.trim();
+  const remoteAddr = req.socket.remoteAddress ?? "unknown";
+  if (TRUSTED_PROXY_IPS.has(remoteAddr)) {
+    const xff = req.headers["x-forwarded-for"];
+    if (typeof xff === "string" && xff.trim() !== "") {
+      return xff.split(",")[0]!.trim();
+    }
   }
-  return req.socket.remoteAddress ?? "unknown";
+  return remoteAddr;
 }
