@@ -21,6 +21,11 @@ export function registerPreferenceRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "unauthorized" });
       return;
     }
+    const key = params.key!;
+    if (key.length > 128) {
+      sendJson(res, 400, { error: "key too long (max 128 chars)" });
+      return;
+    }
     const body = (await readJsonBody(req).catch(() => null)) as {
       value?: string;
     } | null;
@@ -28,7 +33,11 @@ export function registerPreferenceRoutes(router: Router, db: Database): void {
       sendJson(res, 400, { error: "value is required" });
       return;
     }
-    await setPreference(db, auth.userId, params.key!, body.value);
-    sendJson(res, 200, { key: params.key, value: body.value });
+    if (body.value.length > 4096) {
+      sendJson(res, 400, { error: "value too long (max 4096 chars)" });
+      return;
+    }
+    await setPreference(db, auth.userId, key, body.value);
+    sendJson(res, 200, { key, value: body.value });
   });
 }
