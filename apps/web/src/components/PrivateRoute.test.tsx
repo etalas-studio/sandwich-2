@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import PrivateRoute from './PrivateRoute'
 import * as useAuthModule from '../hooks/useAuth'
+
+afterEach(() => vi.restoreAllMocks())
 
 function setup(status: 'authenticated' | 'unauthenticated' | 'loading') {
   vi.spyOn(useAuthModule, 'useAuth').mockReturnValue({
