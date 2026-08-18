@@ -9,7 +9,7 @@ afterEach(() => vi.restoreAllMocks())
 function setup(status: 'authenticated' | 'unauthenticated' | 'loading') {
   vi.spyOn(useAuthModule, 'useAuth').mockReturnValue({
     state: status === 'authenticated'
-      ? { status: 'authenticated', id: 'u1', username: 'alice' }
+      ? { status: 'authenticated', id: 'u1', username: 'alice', email: 'alice@test.com' }
       : { status: 'unauthenticated' },
     isLoading: status === 'loading',
     login: vi.fn(), loginError: null, loginPending: false,

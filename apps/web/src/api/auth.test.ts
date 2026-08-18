@@ -12,12 +12,12 @@ describe('fetchMe', () => {
   it('returns authenticated state when server responds with authenticated', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ state: 'authenticated', user: { id: 'u-alice', username: 'alice' } }),
+      json: async () => ({ state: 'authenticated', user: { id: 'u-alice', username: 'alice', email: 'alice@test.com' } }),
     } as Response)
 
     const result = await fetchMe()
 
-    expect(result).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice' })
+    expect(result).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice', email: 'alice@test.com' })
     expect(fetch).toHaveBeenCalledWith('/api/auth/me', { credentials: 'include' })
   })
 

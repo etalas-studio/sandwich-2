@@ -20,7 +20,6 @@ export default function AuthGate() {
     register,
     registerError,
     registerPending,
-    logout,
   } = useAuth()
 
   const { data: sub, isLoading: subLoading } = useSubscription()
@@ -83,8 +82,7 @@ export default function AuthGate() {
       navigate(sub?.expired ? '/checkout?expired=1' : '/checkout', { replace: true })
       return null
     }
-    const username = state.status === 'authenticated' ? state.username : ''
-    return <App username={username} onLogout={() => { void logout(); navigate('/') }} />
+    return <App />
   }
 
   // Checkout — unauthenticated: register first (default), login on request
@@ -96,8 +94,7 @@ export default function AuthGate() {
       }
       return <SetupForm onSubmit={register} error={registerError} isPending={registerPending} onBack={() => navigate('/')} onSwitchToLogin={() => setForceView('login')} />
     }
-    const username = state.status === 'authenticated' ? state.username : ''
-    return <App username={username} onLogout={() => { void logout(); navigate('/') }} />
+    return <App />
   }
 
   // Fallback
@@ -114,6 +111,5 @@ export default function AuthGate() {
     )
   }
 
-  const username = state.status === 'authenticated' ? state.username : ''
-  return <App username={username} onLogout={logout} />
+  return <App />
 }
