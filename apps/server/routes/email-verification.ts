@@ -61,9 +61,15 @@ export function registerEmailVerificationRoutes(router: Router, db: Database): v
         const link = verificationLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Verify your email — SANDWICH",
-          text: `Verifikasi email kamu: ${link}`,
-          html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
+          subject: "Ini link verifikasi baru kamu — SANDWICH",
+          text: `Hei, ini link verifikasi baru yang kamu minta.\n\nKlik link berikut untuk verifikasi email dan aktifkan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak merasa meminta ini, abaikan saja.\n\n— Tim SANDWICH`,
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
+  <p>Hei, ini link verifikasi baru yang kamu minta.</p>
+  <p>Klik tombol di bawah untuk verifikasi email dan aktifkan akun kamu.</p>
+  <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Verifikasi Email Saya →</a></p>
+  <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 24 jam. Kalau kamu tidak merasa meminta ini, abaikan saja.</p>
+  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+</div>`,
         });
       } catch (err) {
         sendCaughtError(res, err, "resend verification");

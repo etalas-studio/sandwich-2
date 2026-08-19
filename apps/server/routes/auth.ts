@@ -72,9 +72,15 @@ export function registerAuthRoutes(
       try {
         await sendEmail({
           to: user.email,
-          subject: "Verify your email — SANDWICH",
-          text: `Verifikasi email kamu: ${link}`,
-          html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
+          subject: "Satu langkah lagi — verifikasi email kamu di SANDWICH",
+          text: `Hei, selamat datang di SANDWICH!\n\nKamu hampir selesai. Klik link berikut untuk verifikasi email dan mulai gunakan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di SANDWICH, abaikan email ini saja.\n\n— Tim SANDWICH`,
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
+  <p>Hei, selamat datang di SANDWICH! 👋</p>
+  <p>Kamu hampir selesai. Klik tombol di bawah untuk verifikasi email dan mulai gunakan akun kamu.</p>
+  <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Verifikasi Email Saya →</a></p>
+  <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di SANDWICH, abaikan email ini saja.</p>
+  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+</div>`,
         });
       } catch (err) {
         // Rollback the created user + token so a retry doesn't hit
