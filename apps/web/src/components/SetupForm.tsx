@@ -1,6 +1,8 @@
+'use client'
+
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "next/navigation";
 import { useLanguage } from "../lib/i18n";
 import { trackPostHog } from "../lib/posthog";
 
@@ -27,7 +29,7 @@ export default function SetupForm({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [registered, setRegistered] = useState(false);
-  const [params] = useSearchParams();
+  const params = useSearchParams();
   const plan = params.get('plan') === 'pro' ? 'pro' : 'starter';
 
   const handleSubmit = async (e: FormEvent) => {

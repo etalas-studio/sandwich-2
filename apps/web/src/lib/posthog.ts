@@ -18,7 +18,7 @@ export function initPostHog(): void {
     capture_pageview: true,
     capture_pageleave: true,
     loaded: (ph) => {
-      if (import.meta.env.DEV) ph.debug()
+      if (process.env.NODE_ENV === 'development') ph.debug()
     },
   })
   initialized = true

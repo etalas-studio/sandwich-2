@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../hooks/useAuth'
 import PaymentReturn from '../../../components/PaymentReturn'
@@ -18,5 +18,5 @@ export default function Page() {
     return <div className="ds-bg min-h-screen" />
   }
 
-  return <PaymentReturn />
+  return <Suspense><PaymentReturn /></Suspense>
 }
