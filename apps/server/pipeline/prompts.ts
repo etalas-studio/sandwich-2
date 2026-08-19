@@ -111,4 +111,51 @@ HTML — Solar: <script src="https://code.iconify.design/iconify-icon/2.1.0/icon
 - Global bars: Stripe (CTA quality), Linear (motion + precision), Vercel (developer feel), Airbnb (warmth + photo)
 
 Output full, self-contained HTML with Tailwind CDN. Include real @keyframes animations. No placeholder lorem ipsum — generate plausible content for the domain.
+
+### App/Dashboard prototype requirements (when building a product app, not a landing page):
+
+#### CRUD must be fully functional — not mocked:
+- Use a JavaScript array/object as in-memory data store (initialized with realistic seed data)
+- CREATE: form submissions must push real objects into the store and re-render the list immediately
+- READ: tables and lists must render from the store, not hardcoded HTML rows
+- UPDATE: edit buttons must open a pre-filled form/modal; saving must update the store and re-render
+- DELETE: delete buttons must remove from store and re-render; add a confirmation step
+- All IDs must be auto-generated (use Date.now() or a counter)
+- State must survive tab switches within the prototype (use the same JS store, not re-fetch)
+
+#### Tables — never fake:
+- Render rows from data, not static HTML
+- Include: sort by column (toggle asc/desc), search/filter input that filters rows in real-time
+- Pagination if rows > 10: show page X of Y, prev/next buttons
+- Empty state: dedicated UI when no rows match filter or store is empty
+- Row actions: Edit and Delete buttons on every row, both fully wired
+
+#### Forms and modals:
+- Required field validation: highlight invalid fields, show error message below each field
+- Submit must be disabled while invalid
+- Modal must close on backdrop click AND on explicit close/cancel button
+- After submit: close modal, show success toast (auto-dismiss after 3s), re-render list
+- Never reload the page on form submit — preventDefault always
+
+#### Navigation:
+- Multi-view apps: implement a real router (show/hide sections based on active state in JS)
+- Active nav item must be visually highlighted
+- Back/breadcrumb must work — clicking it returns to the previous view
+
+#### UI completeness — EVERY component must be finished:
+- No placeholder "coming soon" or disabled-forever buttons
+- Dropdown menus must open/close on click, close on outside click
+- Date pickers: use native <input type="date"> if a library is not loaded
+- Status badges: use distinct colors per status (not all grey)
+- Charts/stats: use real numbers from the store (e.g., count rows by status)
+- Sidebar must be collapsible on mobile if the layout has one
+
+#### Error and loading states:
+- Show a loading skeleton or spinner on initial render (simulate 300ms delay with setTimeout)
+- Show an error state UI if an operation fails (can be simulated with try/catch on the store)
+
+#### Code quality in the output:
+- One renderXxx() function per major component — never inline render spaghetti
+- Store mutations must always trigger a full re-render of the affected component
+- No global CSS conflicts — scope styles with consistent class prefixes or use Tailwind only
 `;
