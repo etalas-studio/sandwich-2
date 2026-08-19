@@ -1,15 +1,15 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 import LoginForm from './LoginForm'
 
 export default function LoginPage() {
   const { state, login, loginError, loginPending } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
 
   useEffect(() => {
-    if (state.status === 'authenticated') navigate('/dashboard', { replace: true })
-  }, [state.status, navigate])
+    if (state.status === 'authenticated') router.push('/dashboard')
+  }, [state.status, router])
 
   return (
     <LoginForm
@@ -22,9 +22,9 @@ export default function LoginPage() {
       }}
       error={loginError}
       isPending={loginPending}
-      onBack={() => navigate('/')}
-      onSwitchToRegister={() => navigate('/register')}
-      onForgotPassword={() => navigate('/forgot-password')}
+      onBack={() => router.push('/')}
+      onSwitchToRegister={() => router.push('/register')}
+      onForgotPassword={() => router.push('/forgot-password')}
     />
   )
 }

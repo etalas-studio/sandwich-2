@@ -60,8 +60,8 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage onBack={() => navigate('/')} />} />
-      <Route path="/reset-password" element={<ResetPasswordPage onBack={() => navigate('/')} />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/share/:token" element={<SharePage />} />
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/checkout" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
