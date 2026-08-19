@@ -460,8 +460,9 @@ export function registerConversationRunRoutes(
       // stage so it re-generates that document type instead of starting over.
       if (conversation.pipelineStage === "awaiting_next" && !conversation.pendingType) {
         const linkedDocs = await listConversationDocuments(db, conversationId);
-        if (linkedDocs.length > 0) {
-          const docType = linkedDocs[linkedDocs.length - 1].type;
+        const lastDoc = linkedDocs[linkedDocs.length - 1];
+        if (lastDoc) {
+          const docType = lastDoc.type;
           await updateConversation(db, conversationId, {
             pipelineStage: "generating",
             pendingType: docType,
