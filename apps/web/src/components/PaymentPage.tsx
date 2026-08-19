@@ -1,6 +1,6 @@
 // apps/web/src/components/PaymentPage.tsx
-import React, { useState } from 'react'
-import { useNavigate, useSearchParams, Navigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
@@ -13,13 +13,17 @@ const bowlby = "'Bowlby One', system-ui"
 
 export default function PaymentPage() {
   const { t: tr } = useLanguage()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const paramPlan = searchParams.get('plan')
   const expired = searchParams.get('expired') === '1'
   const { data: sub } = useSubscription()
 
-  if (!paramPlan) return <Navigate to="/" replace />
+  useEffect(() => {
+    if (!paramPlan) router.replace('/')
+  }, [paramPlan, router])
+
+  if (!paramPlan) return null
 
   const planSlug = paramPlan
   const plan = getPlanMeta(planSlug) ?? getPlanMeta('starter')!
@@ -37,7 +41,7 @@ export default function PaymentPage() {
           {notice}
         </div>
       )}
-      <PaymentTrigger planSlug={planSlug} plan={plan} tr={tr} navigate={navigate} />
+      <PaymentTrigger planSlug={planSlug} plan={plan} tr={tr} router={router} />
     </div>
   )
 }
@@ -46,12 +50,12 @@ function PaymentTrigger({
   planSlug,
   plan,
   tr,
-  navigate,
+  router,
 }: {
   planSlug: string
   plan: { name: string; amount: number }
   tr: ReturnType<typeof useLanguage>['t']
-  navigate: ReturnType<typeof useNavigate>
+  router: ReturnType<typeof useRouter>
 }) {
   const queryClient = useQueryClient()
   const [isDone, setIsDone] = useState(false)
@@ -88,7 +92,7 @@ function PaymentTrigger({
         } catch { /* Starter already active */ }
         queryClient.invalidateQueries({ queryKey: ['subscription'] })
         trackPostHog('subscription_activated', { plan_slug: planSlug, free: true })
-        navigate('/dashboard', { replace: true })
+        router.push('/dashboard')
         return
       }
 
@@ -163,9 +167,9 @@ function PaymentTrigger({
             }
           })()
         },
-        onPending: () => { navigate(`/checkout/return?order_id=${data.orderId}&transaction_status=pending`) },
+        onPending: () => { router.push(`/pay/return?order_id=${data.orderId}&transaction_status=pending`) },
         onError: () => { trackPostHog('payment_failed', { plan_slug: planSlug }); setError(tr('checkout_payment_error')) },
-        onClose: () => { navigate('/dashboard') },
+        onClose: () => { router.push('/dashboard') },
       })
     }
 
@@ -184,7 +188,7 @@ function PaymentTrigger({
           </div>
           <h1 className="text-2xl tracking-tight mb-2" style={{ fontFamily: bowlby, color: '#111827' }}>{tr('checkout_success_title')}</h1>
           <p className="text-sm text-zinc-500 mb-8">{plan.name} {tr('checkout_plan_active')} {tr('checkout_success_note')}</p>
-          <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#111827' }}>
+          <button onClick={() => router.push('/dashboard')} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#111827' }}>
             {tr('checkout_success_cta')}
           </button>
         </div>
@@ -202,7 +206,7 @@ function PaymentTrigger({
             </div>
           </div>
           <p className="text-sm text-zinc-600 mb-8">{error}</p>
-          <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#111827' }}>
+          <button onClick={() => router.push('/dashboard')} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#111827' }}>
             {tr('auth_back')}
           </button>
         </div>

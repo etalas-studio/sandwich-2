@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLanguage } from '../lib/i18n'
 import { apiUrl } from '../api/base'
@@ -15,9 +15,9 @@ const bowlby = "'Bowlby One', system-ui"
  */
 export default function PaymentReturn() {
   const { t: tr } = useLanguage()
-  const navigate = useNavigate()
+  const router = useRouter()
   const queryClient = useQueryClient()
-  const [searchParams] = useSearchParams()
+  const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
   const displayedStatus = searchParams.get('transaction_status')
   const [status, setStatus] = useState<'loading' | 'success' | 'pending'>('loading')
@@ -96,7 +96,7 @@ export default function PaymentReturn() {
           </h1>
           <p className="text-sm text-zinc-500 mb-8">{tr('checkout_success_note')}</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => router.push('/dashboard')}
             className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: '#111827' }}
           >
@@ -149,7 +149,7 @@ export default function PaymentReturn() {
             </button>
           )}
           <button
-            onClick={() => navigate('/checkout')}
+            onClick={() => router.push('/pay')}
             className="px-6 py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80"
             style={{ border: '1.5px solid #0a0a0a', color: '#0a0a0a', backgroundColor: 'transparent' }}
           >

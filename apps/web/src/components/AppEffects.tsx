@@ -28,7 +28,7 @@ export default function AppEffects() {
       const pending = localStorage.getItem('sandwich_pending_plan')
       if (pending === 'pro') {
         localStorage.removeItem('sandwich_pending_plan')
-        router.replace('/checkout?plan=pro')
+        router.replace('/pay?plan=pro')
       }
     }
   }, [state?.status, router])
