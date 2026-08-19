@@ -16,6 +16,7 @@ import {
   getMessageHistory,
   getMessagesForPrompt,
   deleteMessage,
+  updateMessageContent,
 } from "../db/repo/chat-messages.js";
 import { getPendingAttachmentIds } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";
@@ -420,6 +421,20 @@ export function registerConversationRunRoutes(
     } catch (err) {
       sendCaughtError(res, err, "message creation");
     }
+  });
+
+  // Update a user message content (for edit-and-resend).
+  router.patch("/api/conversations/:id/messages/:messageId", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) { sendJson(res, 401, { error: "unauthorized" }); return; }
+    const conversation = await getConversation(db, params.id!);
+    if (!conversation || conversation.userId !== auth.userId) { sendJson(res, 404, { error: "not found" }); return; }
+    const body = (await readJsonBody(req).catch(() => null)) as { content?: string } | null;
+    if (!body?.content?.trim()) { sendJson(res, 400, { error: "content is required" }); return; }
+    const msgId = parseInt(params.messageId!, 10);
+    if (isNaN(msgId)) { sendJson(res, 400, { error: "invalid messageId" }); return; }
+    await updateMessageContent(db, msgId, body.content.trim());
+    sendJson(res, 200, { ok: true });
   });
 
   // Generate the assistant reply — reads history from the DB.

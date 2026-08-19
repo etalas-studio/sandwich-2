@@ -4,7 +4,7 @@ import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { getConversations, loadConversations, createConversationLocal, updateLocalConversation, deleteLocalConversation, type LocalConversation, type ConversationType } from '../lib/conversations'
-import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, type Attachment } from '../api/conversations'
+import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, updateMessage, type Attachment } from '../api/conversations'
 import { useUsage } from '../hooks/useUsage'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
@@ -81,6 +81,7 @@ interface ChatMessage {
 
 interface Turn {
   user: string
+  messageId?: number
   attachments: Attachment[]
   aiMessages: ChatMessage[]
 }
@@ -358,14 +359,16 @@ function ChatView({
         if (!msgs.length) return
         const reconstructed: Turn[] = []
         let currentUser = ''
+        let currentMessageId: number | undefined
         let currentAttachments: Attachment[] = []
         let currentAi: ChatMessage[] = []
         for (const m of msgs) {
           if (m.role === 'user') {
             if (currentUser) {
-              reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
+              reconstructed.push({ user: currentUser, messageId: currentMessageId, attachments: currentAttachments, aiMessages: currentAi })
             }
             currentUser = m.content
+            currentMessageId = m.id
             currentAttachments = m.attachments ?? []
             currentAi = []
           } else if (m.role === 'assistant') {
@@ -373,7 +376,7 @@ function ChatView({
           }
         }
         if (currentUser) {
-          reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
+          reconstructed.push({ user: currentUser, messageId: currentMessageId, attachments: currentAttachments, aiMessages: currentAi })
         }
         if (reconstructed.length > 0) {
           setTurns(reconstructed)
@@ -425,11 +428,16 @@ function ChatView({
     const text = editValue.trim()
     setEditingTurnIndex(null)
     if (!text || text === turns[index].user) return
+    const messageId = turns[index].messageId
+    if (messageId) {
+      updateMessage(conversationId, messageId, text).catch(() => {})
+    }
     if (index === 0) {
       onPromptUpdate(text)
       updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
     }
     setTurns(prev => prev.map((t, i) => i === index ? { ...t, user: text } : t))
+    regenerateRef.current = true
     setRegenNonce(n => n + 1)
   }
 

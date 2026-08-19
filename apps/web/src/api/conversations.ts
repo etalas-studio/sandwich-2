@@ -161,6 +161,23 @@ export async function createMessage(
   return json<ChatMessage>(res)
 }
 
+export async function updateMessage(
+  conversationId: string,
+  messageId: number,
+  content: string,
+): Promise<void> {
+  const res = await fetch(
+    apiUrl(`/api/conversations/${encodeURIComponent(conversationId)}/messages/${messageId}`),
+    {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ content }),
+    },
+  )
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+}
+
 export async function generateConversation(
   conversationId: string,
   data: { regenerate?: boolean } = {},
