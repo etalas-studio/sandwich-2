@@ -76,7 +76,7 @@ interface ChatMessage {
   isError?: boolean
   output?: string
   conversationId?: string
-  document?: { id: string; type?: string; title?: string; versionNo?: number }
+  document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }
 }
 
 interface Turn {
@@ -124,7 +124,7 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
               const line = part.replace(/^data: /, '').trim()
               if (!line) continue
               try {
-                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number }; conversation?: { output?: string | null } }
+                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }
                 if (ev.type === 'stage_start' && ev.stage) {
                   setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
                 } else if (ev.type === 'done') {
@@ -551,11 +551,27 @@ function ChatView({
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output && m.document) return (
-                    <div key={i} className="group relative">
+                    <div key={i} className="group relative flex flex-col gap-3">
+                      {m.document.type !== 'prototype' && (
+                        <div className="text-sm sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
+                      )}
+                      {m.document.type === 'prototype' && (
+                        <p className="text-sm" style={{ color: 'rgba(0,0,0,0.65)', lineHeight: '1.7' }}>
+                          Prototype lo udah siap! Klik kartu di bawah untuk buka preview langsung di browser, atau minta revisi kalau ada yang perlu diubah.
+                        </p>
+                      )}
                       <DocumentCard
                         documentId={m.document.id}
                         initial={m.document}
-                        onClick={() => onOpenDocument(m.document!.id)}
+                        onClick={() => {
+                          if (m.document!.type === 'prototype') {
+                            const url = m.document!.previewUrl ?? `/p/${m.document!.id}/`
+                            window.open(url, '_blank')
+                          } else {
+                            onOpenDocument(m.document!.id)
+                          }
+                        }}
                       />
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
