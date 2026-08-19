@@ -456,6 +456,21 @@ export function registerConversationRunRoutes(
       if (last && last.role === "assistant") {
         await deleteMessage(db, last.id);
       }
+      // If the conversation already produced a document, rewind the pipeline
+      // stage so it re-generates that document type instead of starting over.
+      if (conversation.pipelineStage === "awaiting_next" && !conversation.pendingType) {
+        const linkedDocs = await listConversationDocuments(db, conversationId);
+        if (linkedDocs.length > 0) {
+          const docType = linkedDocs[linkedDocs.length - 1].type;
+          await updateConversation(db, conversationId, {
+            pipelineStage: "generating",
+            pendingType: docType,
+          });
+          // Re-fetch so the pipeline below sees the updated stage.
+          const updated = await getConversation(db, conversationId);
+          if (updated) Object.assign(conversation, updated);
+        }
+      }
     }
 
     const engine = getEngine();
