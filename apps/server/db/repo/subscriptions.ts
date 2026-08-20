@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { subscriptions } from "../schema.js";
 import type { Database } from "../connection.js";
 import { PLANS } from "../../pipeline/plans.js";
@@ -29,8 +29,9 @@ export async function getSubscriptionForUser(
 }
 
 /**
- * An active subscription must be `active` AND not yet expired. Expiry is
- * enforced here (no grace period per product decision).
+ * An active subscription must be `active` AND have a future expiry. Legacy
+ * free Starter rows used `expiresAt = null`; treating those rows as inactive
+ * cleanly moves existing free accounts onto the paid checkout flow.
  */
 export async function getActiveSubscription(
   db: Database,
@@ -42,10 +43,7 @@ export async function getActiveSubscription(
       and(
         eq(subscriptions.userId, userId),
         eq(subscriptions.status, "active"),
-        or(
-          isNull(subscriptions.expiresAt),
-          gt(subscriptions.expiresAt, new Date()),
-        ),
+        gt(subscriptions.expiresAt, new Date()),
       ),
     )
     .limit(1);
