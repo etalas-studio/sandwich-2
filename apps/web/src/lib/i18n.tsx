@@ -19,6 +19,8 @@ const STRINGS = {
   nav_faq: { en: 'FAQ', id: 'FAQ' },
   nav_get_started: { en: 'Start from your brief', id: 'Mulai dari brief' },
   nav_login: { en: 'Login', id: 'Masuk' },
+  nav_menu_open: { en: 'Open menu', id: 'Buka menu' },
+  nav_menu_close: { en: 'Close menu', id: 'Tutup menu' },
 
   // ── Hero ──
   hero_tagline: {
@@ -229,6 +231,9 @@ const STRINGS = {
   setup_title: { en: 'Create account', id: 'Buat akun' },
   setup_subtitle: { en: 'Create your free SANDWICH account to turn briefs into PRDs, prototypes, and quotations.', id: 'Buat akun SANDWICH gratis untuk mengubah brief jadi PRD, prototype, dan quotation.' },
   setup_pass_placeholder: { en: 'Min. 8 characters', id: 'Min. 8 karakter' },
+  setup_username_label: { en: 'Username', id: 'Username' },
+  setup_email_label: { en: 'Email', id: 'Email' },
+  setup_password_label: { en: 'Password', id: 'Password' },
   setup_cta: { en: 'Create account', id: 'Buat akun' },
   setup_pending: { en: 'Creating account…', id: 'Membuat akun...' },
 
