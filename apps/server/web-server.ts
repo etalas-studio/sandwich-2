@@ -1,3 +1,4 @@
+import './otel.js';
 import "dotenv/config";
 import { createServer } from "node:http";
 import type { Server, ServerResponse } from "node:http";
