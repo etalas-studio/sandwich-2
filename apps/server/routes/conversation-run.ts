@@ -800,7 +800,7 @@ export function registerConversationRunRoutes(
               });
               await startSpan(
                 'sandwich.db.write_message',
-                { 'sandwich.conversation_id': conversationId },
+                { 'sandwich.conversation_id': conversationId, 'db.operation': 'insert' },
                 () => addChatMessage(db, {
                   conversationId,
                   role: "assistant",
