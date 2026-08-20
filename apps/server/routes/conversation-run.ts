@@ -836,13 +836,14 @@ export function registerConversationRunRoutes(
                 conversation: (await getConversation(db, conversationId))!,
                 text: msg,
               });
+              throw err;
             }
           },
         );
       } finally {
         closeInFlight(conversationId);
       }
-    })();
+    })().catch(() => {});
   });
 
   // Message history (with attachments).
