@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { getPreference, setPreference } from '../api/preferences'
+import { useAuth } from '../hooks/useAuth'
 
 export type Lang = 'en' | 'id'
 
@@ -28,7 +29,7 @@ const STRINGS = {
   hero_error_generic: { en: 'Failed to submit', id: 'Gagal mengirim' },
 
   // ── Harnesses / How it works ──
-  harnesses_kicker: { en: 'The Harnesses', id: 'The Harnesses' },
+  harnesses_kicker: { en: 'The Harnesses', id: 'Prosesnya' },
   harnesses_title: { en: 'MESSY INPUT. CLEAN SPEC.', id: 'INPUT BERANTAKAN. SPEC RAPI.' },
   harnesses_desc: {
     en: 'Client sends a voice note, a screenshot, a Notion dump. SANDWICH turns all of it into structured, machine-readable specs — validated and ready for your agent to execute.',
@@ -48,8 +49,8 @@ const STRINGS = {
 
   // ── Pipeline ──
   pipeline_kicker: { en: 'Got a Spec?', id: 'Got a Spec?' },
-  pipeline_title_l1: { en: 'FEED YOUR', id: 'FEED YOUR' },
-  pipeline_title_l2: { en: 'PIPELINE.', id: 'PIPELINE.' },
+  pipeline_title_l1: { en: 'FEED YOUR', id: 'ISI' },
+  pipeline_title_l2: { en: 'PIPELINE.', id: 'PIPELINE KAMU.' },
   pipeline_desc_1: {
     en: "SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute. The spec closes that gap. What you do with it next depends on your stack — but if you're looking for a starting point, we recommend",
     id: 'SANDWICH dibuat karena selalu ada gap antara apa yang klien deskripsikan dan apa yang bisa dieksekusi agent. Spec menutup gap itu. Setelah itu tergantung stack kamu — tapi kalau butuh titik mulai, kami rekomendasikan',
@@ -58,7 +59,7 @@ const STRINGS = {
   pipeline_cta: { en: 'Try It Now', id: 'Coba Sekarang' },
 
   // ── Ingredients / Stack ──
-  stack_kicker: { en: 'Ingredients', id: 'Ingredients' },
+  stack_kicker: { en: 'Ingredients', id: 'Bahan-Bahan' },
   stack_title: { en: 'WHAT YOU GET', id: 'APA YANG KAMU DAPAT' },
   stack_desc: {
     en: 'Four deliverables from one brief — each generated through the same pipeline.',
@@ -94,7 +95,7 @@ const STRINGS = {
   plan_pro_f6: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
 
   // ── FAQ ──
-  faq_kicker: { en: 'Shout Out', id: 'Shout Out' },
+  faq_kicker: { en: 'Shout Out', id: 'Nanya Yuk' },
   faq_title: { en: 'GOT QUESTIONS?', id: 'ADA PERTANYAAN?' },
   faq_cta: { en: 'Start Now', id: 'Mulai Sekarang' },
 
@@ -238,7 +239,7 @@ const STRINGS = {
   home_greeting_night: { en: 'Good night', id: 'Selamat malam' },
   home_subtitle_empty: { en: 'No briefs yet. Start with a sentence below.', id: 'Belum ada brief. Mulai dari satu kalimat di bawah.' },
   home_subtitle_count: { en: 'You have {n} briefs so far.', id: 'Kamu punya {n} brief sejauh ini.' },
-  home_templates_btn: { en: 'Templates', id: 'Templates' },
+  home_templates_btn: { en: 'Templates', id: 'Template' },
   home_all_briefs_btn: { en: 'All briefs', id: 'Semua brief' },
   home_stat_total: { en: 'Total briefs', id: 'Total brief' },
   home_stat_done: { en: 'Done', id: 'Selesai' },
@@ -251,7 +252,7 @@ const STRINGS = {
   home_quota_prototypes: { en: 'prototypes', id: 'prototype' },
   home_quota_chats: { en: 'chats', id: 'chat' },
   home_quota_upgrade: { en: 'Upgrade to Pro', id: 'Upgrade ke Pro' },
-  home_quota_completion: { en: 'Completion rate', id: 'Completion rate' },
+  home_quota_completion: { en: 'Completion rate', id: 'Tingkat Penyelesaian' },
   home_activity_title: { en: 'LAST 7 DAYS', id: 'AKTIVITAS 7 HARI' },
   home_activity_sub_zero: { en: 'No briefs made this week', id: '0 brief dibuat minggu ini' },
   home_activity_sub: { en: '{n} briefs made this week', id: '{n} brief dibuat minggu ini' },
@@ -264,10 +265,10 @@ const STRINGS = {
   home_filter_draft: { en: 'Draft', id: 'Draft' },
   home_recent_empty_title: { en: 'No documents here yet', id: 'Belum ada dokumen di sini' },
   home_recent_empty_sub: { en: 'Write a brief above to get started', id: 'Tulis brief di atas buat mulai' },
-  home_breakdown_title: { en: 'BREAKDOWN', id: 'BREAKDOWN' },
+  home_breakdown_title: { en: 'BREAKDOWN', id: 'RINCIAN' },
   home_breakdown_sub: { en: 'Per document type', id: 'Per jenis dokumen' },
   home_breakdown_empty: { en: 'Data appears after your first brief.', id: 'Data muncul setelah brief pertama.' },
-  home_checklist_title: { en: 'CHECKLIST', id: 'CHECKLIST' },
+  home_checklist_title: { en: 'CHECKLIST', id: 'DAFTAR CEK' },
   home_checklist_done: { en: '{done}/{total} complete', id: '{done}/{total} selesai' },
   home_check_1: { en: 'Make your first brief', id: 'Bikin brief pertama' },
   home_check_2: { en: 'Finish 1 document', id: 'Selesaikan 1 dokumen' },
@@ -283,7 +284,7 @@ const STRINGS = {
   home_tip_3_desc: { en: 'Ask to revise a specific part, not regenerate from scratch.', id: 'Minta revisi bagian tertentu, bukan generate ulang dari nol.' },
   home_help_title: { en: 'Need help or have a feature request?', id: 'Butuh bantuan atau punya request fitur?' },
   home_help_sub: { en: 'Read the quick guide or send feedback straight to the team.', id: 'Baca panduan singkat atau kirim masukan langsung ke tim.' },
-  home_help_cta: { en: 'Help & Docs', id: 'Help & Docs' },
+  home_help_cta: { en: 'Help & Docs', id: 'Bantuan & Dokumentasi' },
 } satisfies Record<string, { en: string; id: string }>
 
 export type StringKey = keyof typeof STRINGS
@@ -306,21 +307,32 @@ function readInitialLang(): Lang {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(readInitialLang)
+  const { state: authState } = useAuth()
+  const isAuthed = authState.status === 'authenticated'
+
+  // Keep <html lang> in sync so screen readers/browsers pick the right
+  // pronunciation/spellcheck rules for whichever language is active.
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
 
   const setLang = (next: Lang) => {
     setLangState(next)
     try { localStorage.setItem(STORAGE_KEY, next) } catch { /* ignore */ }
-    void setPreference('lang', next).catch(() => {})
+    // Server preference is per-account; skip the call for anonymous visitors
+    // (would 401 — localStorage already persists their choice locally).
+    if (isAuthed) void setPreference('lang', next).catch(() => {})
   }
 
   // Sync from the server for authenticated users (localStorage is the instant cache).
   useEffect(() => {
+    if (!isAuthed) return
     void getPreference('lang')
       .then((value) => {
         if (value === 'en' || value === 'id') setLangState(value)
       })
       .catch(() => {})
-  }, [])
+  }, [isAuthed])
 
   const t = (key: StringKey) => STRINGS[key][lang]
 

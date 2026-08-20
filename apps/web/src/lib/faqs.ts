@@ -17,6 +17,6 @@ export const FAQS = [
   },
   {
     q: 'Is it free?',
-    a: 'Starter is Rp 50.000/month: 5 documents and 3 prototypes per month, plus 100 AI chat messages. Pro is Rp 100.000/month: unlimited everything.',
+    a: 'Starter is free: 5 documents and 3 prototypes per month, plus 100 AI chat messages. Pro is Rp 100.000/month: unlimited everything.',
   },
 ]
