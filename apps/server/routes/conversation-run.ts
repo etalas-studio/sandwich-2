@@ -45,6 +45,7 @@ import {
   GETOKUI_PROTOTYPE_GUIDE,
 } from "../pipeline/prompts.js";
 import { buildReferenceBlock } from "../pipeline/references.js";
+import { startSpan } from '../otel.js';
 
 export interface DocumentRef {
   id: string;
@@ -421,12 +422,20 @@ export function registerConversationRunRoutes(
     }
 
     try {
-      const message = await createMessage(db, {
-        conversationId: params.id!,
-        userId: auth.userId,
-        content: body.content.trim(),
-        attachmentIds,
-      });
+      const message = await startSpan(
+        'sandwich.db.create_message',
+        {
+          'sandwich.conversation_id': params.id ?? '',
+          'db.operation': 'insert',
+          'sandwich.role': 'user',
+        },
+        () => createMessage(db, {
+          conversationId: params.id!,
+          userId: auth.userId,
+          content: body.content!.trim(),
+          attachmentIds,
+        }),
+      );
       await incrementUsage(db, auth.userId, "chat");
       sendJson(res, 201, message);
     } catch (err) {
@@ -535,289 +544,306 @@ export function registerConversationRunRoutes(
 
     void (async () => {
       try {
-        // Wait for attachment extraction (image/audio/pdf/docx -> text) so
-        // the prompt includes their content.
-        await waitForExtraction(db, conversationId, 30_000);
+        await startSpan(
+          'sandwich.generate',
+          {
+            'sandwich.conversation_id': conversationId,
+            'sandwich.stage': String(conversation.pipelineStage ?? 'unknown'),
+            'sandwich.engine': engine ?? 'none',
+          },
+          async () => {
+            try {
+              // Wait for attachment extraction (image/audio/pdf/docx -> text) so
+              // the prompt includes their content.
+              await waitForExtraction(db, conversationId, 30_000);
 
-        const messages = await getMessagesForPrompt(db, conversationId);
-        const turns: ConversationTurn[] = messages.map((m) => ({
-          role: m.role as Role,
-          content: enrichMessageContent(m),
-        }));
+              const messages = await getMessagesForPrompt(db, conversationId);
+              const turns: ConversationTurn[] = messages.map((m) => ({
+                role: m.role as Role,
+                content: enrichMessageContent(m),
+              }));
 
-        broadcast({
-          type: "stage_start",
-          stage: "generate",
-          conversation: (await getConversation(db, conversationId))!,
-        });
+              broadcast({
+                type: "stage_start",
+                stage: "generate",
+                conversation: (await getConversation(db, conversationId))!,
+              });
 
-        // ── Model-driven orchestration ────────────────────────────────────
-        const lastUserMessage =
-          [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+              // ── Model-driven orchestration ────────────────────────────────────
+              const lastUserMessage =
+                [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
 
-        // Rollback intent — DB-only, no AI call.
-        const rollbackIntent = parseRollbackIntent(lastUserMessage);
-        if (rollbackIntent) {
-          const protoDocs = (await listConversationDocuments(db, conversationId))
-            .filter((d) => d.type === "prototype");
-          const protoDoc = protoDocs[0];
-          if (protoDoc) {
-            const rolledBack = await rollbackDocument(db, protoDoc.id, rollbackIntent);
-            const msg = rolledBack
-              ? `Prototype di-rollback ke versi v${rolledBack.versionNo}.`
-              : rollbackIntent === "latest"
-                ? "Prototype sudah di versi terbaru."
-                : "Tidak ada versi sebelumnya untuk di-rollback.";
-            await addChatMessage(db, { conversationId, role: "assistant", content: msg });
-            broadcast({
-              type: "done",
-              text: msg,
-              conversation: (await getConversation(db, conversationId))!,
-            });
-            closeInFlight(conversationId);
-            return;
-          }
-        }
+              // Rollback intent — DB-only, no AI call.
+              const rollbackIntent = parseRollbackIntent(lastUserMessage);
+              if (rollbackIntent) {
+                const protoDocs = (await listConversationDocuments(db, conversationId))
+                  .filter((d) => d.type === "prototype");
+                const protoDoc = protoDocs[0];
+                if (protoDoc) {
+                  const rolledBack = await rollbackDocument(db, protoDoc.id, rollbackIntent);
+                  const msg = rolledBack
+                    ? `Prototype di-rollback ke versi v${rolledBack.versionNo}.`
+                    : rollbackIntent === "latest"
+                      ? "Prototype sudah di versi terbaru."
+                      : "Tidak ada versi sebelumnya untuk di-rollback.";
+                  await addChatMessage(db, { conversationId, role: "assistant", content: msg });
+                  broadcast({
+                    type: "done",
+                    text: msg,
+                    conversation: (await getConversation(db, conversationId))!,
+                  });
+                  return;
+                }
+              }
 
-        // Preview intent — return the existing prototype's link (no AI call).
-        if (detectPreviewIntent(lastUserMessage)) {
-          const protoDocs = (await listConversationDocuments(db, conversationId))
-            .filter((d) => d.type === "prototype");
-          const protoDoc = protoDocs[0];
-          if (protoDoc) {
-            const msg = `Preview prototype: [Buka prototype](${prototypePreviewUrl(protoDoc.id)})`;
-            await addChatMessage(db, { conversationId, role: "assistant", content: msg });
-            broadcast({
-              type: "done",
-              text: msg,
-              conversation: (await getConversation(db, conversationId))!,
-            });
-            closeInFlight(conversationId);
-            return;
-          }
-          // No prototype to preview yet — fall through to normal flow.
-        }
+              // Preview intent — return the existing prototype's link (no AI call).
+              if (detectPreviewIntent(lastUserMessage)) {
+                const protoDocs = (await listConversationDocuments(db, conversationId))
+                  .filter((d) => d.type === "prototype");
+                const protoDoc = protoDocs[0];
+                if (protoDoc) {
+                  const msg = `Preview prototype: [Buka prototype](${prototypePreviewUrl(protoDoc.id)})`;
+                  await addChatMessage(db, { conversationId, role: "assistant", content: msg });
+                  broadcast({
+                    type: "done",
+                    text: msg,
+                    conversation: (await getConversation(db, conversationId))!,
+                  });
+                  return;
+                }
+                // No prototype to preview yet — fall through to normal flow.
+              }
 
-        let stage = conversation.pipelineStage as PipelineStage;
-        let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
-        let refineInstruction: string | null = null;
+              let stage = conversation.pipelineStage as PipelineStage;
+              let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
+              let refineInstruction: string | null = null;
 
-        if (stage === "choosing_deliverable") {
-          // A pre-selected type (dropdown) means the deliverable is already
-          // known — skip detection and go straight to clarifying questions.
-          const detected = pendingType ?? detectDeliverableType(lastUserMessage);
-          if (detected) {
-            pendingType = detected;
-            stage = "clarifying";
-          }
-        } else if (stage === "clarifying") {
-          // Prototype-only hard gate: don't advance to generating until the
-          // conversation has covered both logo and color/palette — keeps the
-          // model asking instead of silently skipping ahead.
-          const readyToGenerate =
-            pendingType !== "prototype" ||
-            hasLogoAndColorDetails(composePrototypeBrief(turns));
-          if (readyToGenerate) {
-            stage = "generating";
-          }
-        } else if (stage === "awaiting_next") {
-          const detected = detectDeliverableType(lastUserMessage);
-          if (detected) {
-            pendingType = detected;
-            stage = "clarifying";
-          } else {
-            // Refine intent — revise the most recently updated deliverable as
-            // a new version (same document), using the full conversation context.
-            const existingDocs = await listConversationDocuments(db, conversationId);
-            if (detectRefineIntent(lastUserMessage) && existingDocs.length > 0) {
-              existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-              pendingType = existingDocs[0]!.type as DocumentType;
-              stage = "generating";
-              refineInstruction = lastUserMessage;
-            }
-          }
-        }
-
-        // Enforce the document/prototype quota before generating. Prototypes
-        // have their own (smaller) quota; everything else shares the document
-        // quota (PRD / quotation / specs).
-        if (stage === "generating" && pendingType) {
-          const sub = await getActiveSubscription(db, auth.userId);
-          const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
-          if (!plan) throw new Error("active subscription required");
-          const isPrototype = pendingType === "prototype";
-          const kind = isPrototype ? "prototype" : "doc";
-          const limit = isPrototype ? plan.prototypeLimit : plan.documentLimit;
-          if (limit !== null) {
-            const used = await getMonthlyUsage(db, auth.userId, kind);
-            if (used >= limit) {
-              throw new Error(isPrototype ? "prototype quota reached" : "monthly quota reached");
-            }
-          }
-        }
-
-        // For a prototype, create (or reuse) the document up front so the
-        // prototype engine has a document id to write files under.
-        let prototypeDocId: string | null = null;
-        let prototypeVersionNo: number | null = null;
-        if (stage === "generating" && pendingType === "prototype") {
-          const title = conversation.title.trim() || "Prototype";
-          const existing = await listConversationDocuments(db, conversationId);
-          const existingDoc = existing.find((d) => d.type === "prototype");
-          if (existingDoc) {
-            prototypeDocId = existingDoc.id;
-          } else {
-            const doc = await createDocument(db, { userId: auth.userId, type: "prototype", title });
-            await linkConversationDocument(db, conversationId, doc.id);
-            prototypeDocId = doc.id;
-          }
-          prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
-        }
-
-        const useOpenCode = engine === "opencode";
-        const hasGroqFallback = !!process.env.GROQ_API_KEY;
-
-        const run = prototypeDocId
-          ? async () => {
-              const result = await generatePrototypeDocument(
-                db,
-                {
-                  documentId: prototypeDocId!,
-                  versionNo: prototypeVersionNo!,
-                  brief: composePrototypeBrief(turns),
-                  ...(refineInstruction ? { refine: { instruction: refineInstruction } } : {}),
-                },
-                controller.signal,
-              );
-              return formatPrototypeSummary(result.summary, result.glowupWarning);
-            }
-          : useOpenCode
-            ? () =>
-                runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
-                  if (hasGroqFallback) {
-                    console.log(
-                      `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-                    );
-                    return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+              if (stage === "choosing_deliverable") {
+                // A pre-selected type (dropdown) means the deliverable is already
+                // known — skip detection and go straight to clarifying questions.
+                const detected = pendingType ?? detectDeliverableType(lastUserMessage);
+                if (detected) {
+                  pendingType = detected;
+                  stage = "clarifying";
+                }
+              } else if (stage === "clarifying") {
+                // Prototype-only hard gate: don't advance to generating until the
+                // conversation has covered both logo and color/palette — keeps the
+                // model asking instead of silently skipping ahead.
+                const readyToGenerate =
+                  pendingType !== "prototype" ||
+                  hasLogoAndColorDetails(composePrototypeBrief(turns));
+                if (readyToGenerate) {
+                  stage = "generating";
+                }
+              } else if (stage === "awaiting_next") {
+                const detected = detectDeliverableType(lastUserMessage);
+                if (detected) {
+                  pendingType = detected;
+                  stage = "clarifying";
+                } else {
+                  // Refine intent — revise the most recently updated deliverable as
+                  // a new version (same document), using the full conversation context.
+                  const existingDocs = await listConversationDocuments(db, conversationId);
+                  if (detectRefineIntent(lastUserMessage) && existingDocs.length > 0) {
+                    existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+                    pendingType = existingDocs[0]!.type as DocumentType;
+                    stage = "generating";
+                    refineInstruction = lastUserMessage;
                   }
-                  throw err;
-                })
-            : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+                }
+              }
 
-        run()
-          .then(async (output) => {
-            if (!output) {
-              const msg = "Model returned no response. Try again.";
+              // Enforce the document/prototype quota before generating. Prototypes
+              // have their own (smaller) quota; everything else shares the document
+              // quota (PRD / quotation / specs).
+              if (stage === "generating" && pendingType) {
+                const sub = await getActiveSubscription(db, auth.userId);
+                const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
+                if (!plan) throw new Error("active subscription required");
+                const isPrototype = pendingType === "prototype";
+                const kind = isPrototype ? "prototype" : "doc";
+                const limit = isPrototype ? plan.prototypeLimit : plan.documentLimit;
+                if (limit !== null) {
+                  const used = await getMonthlyUsage(db, auth.userId, kind);
+                  if (used >= limit) {
+                    throw new Error(isPrototype ? "prototype quota reached" : "monthly quota reached");
+                  }
+                }
+              }
+
+              // For a prototype, create (or reuse) the document up front so the
+              // prototype engine has a document id to write files under.
+              let prototypeDocId: string | null = null;
+              let prototypeVersionNo: number | null = null;
+              if (stage === "generating" && pendingType === "prototype") {
+                const title = conversation.title.trim() || "Prototype";
+                const existing = await listConversationDocuments(db, conversationId);
+                const existingDoc = existing.find((d) => d.type === "prototype");
+                if (existingDoc) {
+                  prototypeDocId = existingDoc.id;
+                } else {
+                  const doc = await createDocument(db, { userId: auth.userId, type: "prototype", title });
+                  await linkConversationDocument(db, conversationId, doc.id);
+                  prototypeDocId = doc.id;
+                }
+                prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
+              }
+
+              const useOpenCode = engine === "opencode";
+              const hasGroqFallback = !!process.env.GROQ_API_KEY;
+
+              const run = prototypeDocId
+                ? async () => {
+                    const result = await generatePrototypeDocument(
+                      db,
+                      {
+                        documentId: prototypeDocId!,
+                        versionNo: prototypeVersionNo!,
+                        brief: composePrototypeBrief(turns),
+                        ...(refineInstruction ? { refine: { instruction: refineInstruction } } : {}),
+                      },
+                      controller.signal,
+                    );
+                    return formatPrototypeSummary(result.summary, result.glowupWarning);
+                  }
+                : useOpenCode
+                  ? () =>
+                      runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
+                        if (hasGroqFallback) {
+                          console.log(
+                            `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
+                          );
+                          return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+                        }
+                        throw err;
+                      })
+                  : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+
+              const output = await startSpan(
+                'sandwich.ai.run',
+                {
+                  'sandwich.engine': engine ?? 'none',
+                  'sandwich.pending_type': pendingType ?? 'none',
+                },
+                () => run(),
+              );
+
+              if (!output) {
+                const msg = "Model returned no response. Try again.";
+                await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
+                broadcast({
+                  type: "error",
+                  conversation: (await getConversation(db, conversationId))!,
+                  text: msg,
+                });
+                return;
+              }
+
+              let chatOutput = output;
+              let nextStage: PipelineStage = stage;
+              let documentRef: DocumentRef | null = null;
+              if (stage === "generating" && pendingType) {
+                const isPrototype = pendingType === "prototype";
+                // Persist the deliverable as a versioned document.
+                const fallbackTitle =
+                  conversation.title.trim() || `${pendingType.toUpperCase()} document`;
+                const existing = await listConversationDocuments(db, conversationId);
+                const existingDoc = existing.find((d) => d.type === pendingType);
+                let documentId: string;
+                let versionNo: number;
+                if (existingDoc) {
+                  documentId = existingDoc.id;
+                  versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
+                  await createDocumentVersion(db, {
+                    documentId,
+                    versionNo,
+                    content: output,
+                    promptUsed: lastUserMessage,
+                  });
+                } else {
+                  const doc = await createDocument(db, {
+                    userId: auth.userId,
+                    type: pendingType,
+                    title: fallbackTitle,
+                  });
+                  documentId = doc.id;
+                  versionNo = prototypeVersionNo ?? 1;
+                  await createDocumentVersion(db, {
+                    documentId,
+                    versionNo,
+                    content: output,
+                    promptUsed: lastUserMessage,
+                  });
+                  await linkConversationDocument(db, conversationId, doc.id);
+                }
+                await incrementUsage(
+                  db,
+                  auth.userId,
+                  pendingType === "prototype" ? "prototype" : "doc",
+                );
+                const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
+                chatOutput = documentSummary(pendingType, versionNo);
+                if (isPrototype) {
+                  chatOutput = `${chatOutput}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
+                }
+                documentRef = {
+                  id: documentId,
+                  type: pendingType,
+                  title: docTitle,
+                  versionNo,
+                  previewUrl: isPrototype ? prototypePreviewUrl(documentId) : null,
+                };
+                nextStage = "awaiting_next";
+                pendingType = null;
+              } else if (stage === "intake") {
+                nextStage = "choosing_deliverable";
+              } else if (stage === "clarifying") {
+                nextStage = "generating";
+              }
+
+              await updateConversation(db, conversationId, {
+                pipelineStage: nextStage,
+                pendingType,
+              });
+              await startSpan(
+                'sandwich.db.write_message',
+                { 'sandwich.conversation_id': conversationId, 'db.operation': 'insert' },
+                () => addChatMessage(db, {
+                  conversationId,
+                  role: "assistant",
+                  content: chatOutput,
+                  documentId: documentRef?.id ?? null,
+                }),
+              );
+              await startSpan(
+                'sandwich.sse.broadcast',
+                { 'sandwich.conversation_id': conversationId, 'sandwich.event_type': 'done' },
+                async () => {
+                  broadcast({
+                    type: "done",
+                    text: chatOutput,
+                    document: documentRef ?? undefined,
+                    conversation: (await getConversation(db, conversationId))!,
+                  });
+                },
+              );
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : "generation failed";
               await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
               broadcast({
                 type: "error",
                 conversation: (await getConversation(db, conversationId))!,
                 text: msg,
               });
-              return;
+              throw err;
             }
-
-            let chatOutput = output;
-            let nextStage: PipelineStage = stage;
-            let documentRef: DocumentRef | null = null;
-            if (stage === "generating" && pendingType) {
-              const isPrototype = pendingType === "prototype";
-              // Persist the deliverable as a versioned document.
-              const fallbackTitle =
-                conversation.title.trim() || `${pendingType.toUpperCase()} document`;
-              const existing = await listConversationDocuments(db, conversationId);
-              const existingDoc = existing.find((d) => d.type === pendingType);
-              let documentId: string;
-              let versionNo: number;
-              if (existingDoc) {
-                documentId = existingDoc.id;
-                versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
-                await createDocumentVersion(db, {
-                  documentId,
-                  versionNo,
-                  content: output,
-                  promptUsed: lastUserMessage,
-                });
-              } else {
-                const doc = await createDocument(db, {
-                  userId: auth.userId,
-                  type: pendingType,
-                  title: fallbackTitle,
-                });
-                documentId = doc.id;
-                versionNo = prototypeVersionNo ?? 1;
-                await createDocumentVersion(db, {
-                  documentId,
-                  versionNo,
-                  content: output,
-                  promptUsed: lastUserMessage,
-                });
-                await linkConversationDocument(db, conversationId, doc.id);
-              }
-              await incrementUsage(
-                db,
-                auth.userId,
-                pendingType === "prototype" ? "prototype" : "doc",
-              );
-              const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
-              chatOutput = documentSummary(pendingType, versionNo);
-              if (isPrototype) {
-                chatOutput = `${chatOutput}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
-              }
-              documentRef = {
-                id: documentId,
-                type: pendingType,
-                title: docTitle,
-                versionNo,
-                previewUrl: isPrototype ? prototypePreviewUrl(documentId) : null,
-              };
-              nextStage = "awaiting_next";
-              pendingType = null;
-            } else if (stage === "intake") {
-              nextStage = "choosing_deliverable";
-            } else if (stage === "clarifying") {
-              nextStage = "generating";
-            }
-
-            await updateConversation(db, conversationId, {
-              pipelineStage: nextStage,
-              pendingType,
-            });
-            await addChatMessage(db, {
-              conversationId,
-              role: "assistant",
-              content: chatOutput,
-              documentId: documentRef?.id ?? null,
-            });
-            broadcast({
-              type: "done",
-              text: chatOutput,
-              document: documentRef ?? undefined,
-              conversation: (await getConversation(db, conversationId))!,
-            });
-          })
-          .catch(async (err) => {
-            const msg = err instanceof Error ? err.message : "generation failed";
-            await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
-            broadcast({
-              type: "error",
-              conversation: (await getConversation(db, conversationId))!,
-              text: msg,
-            });
-          })
-          .finally(() => closeInFlight(conversationId));
-      } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "generation setup failed";
-        await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
-        broadcast({
-          type: "error",
-          conversation: (await getConversation(db, conversationId))!,
-          text: msg,
-        });
+          },
+        );
+      } finally {
         closeInFlight(conversationId);
       }
-    })();
+    })().catch(() => {});
   });
 
   // Message history (with attachments).

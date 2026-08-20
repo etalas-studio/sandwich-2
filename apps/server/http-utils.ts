@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { trace } from '@opentelemetry/api';
 import { AuthError } from "./auth/service.js";
 
 export const MIME: Record<string, string> = {
@@ -19,10 +20,13 @@ export function sendJson(
   extraHeaders: Record<string, string> = {},
 ): void {
   const payload = JSON.stringify(body);
+  const activeSpan = trace.getActiveSpan();
+  const traceId = activeSpan?.spanContext().traceId;
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),
     "cache-control": "no-store",
+    ...(traceId ? { 'x-trace-id': traceId } : {}),
     ...extraHeaders,
   });
   res.end(payload);
