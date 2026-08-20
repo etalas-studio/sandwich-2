@@ -21,3 +21,5 @@ apps/web/.next/
 # tesseract.js OCR cache
 *.traineddata
 .tesseract-cache/
+
+/apps/web/scripts
