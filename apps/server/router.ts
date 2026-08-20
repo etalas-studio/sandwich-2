@@ -134,7 +134,7 @@ export class Router {
       // Origin / CSRF guard for state-changing methods
       const method = (req.method ?? "GET").toUpperCase();
       const isSafe = method === "GET" || method === "HEAD";
-      if (!isSafe) {
+      if (!isSafe && !isCorsRequest) {
         const origin = req.headers.origin;
         if (origin !== undefined && !originMatchesHost(origin, req.headers.host, this.trustedHosts)) {
           sendJson(res, 403, { error: "forbidden" });
