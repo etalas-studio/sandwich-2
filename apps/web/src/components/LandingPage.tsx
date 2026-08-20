@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
 import { useAuth } from '../hooks/useAuth'
@@ -8,40 +10,15 @@ import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
 import { DeliverableTypeSelect } from './DeliverableTypeSelect'
 
-interface LandingPageProps {
-  onGoToApp: (plan?: string) => void
-}
+import { FAQS } from '../lib/faqs'
 
 const bowlby = "'Bowlby One', system-ui"
 const mousememoirs = "'Mouse Memoirs', sans-serif"
 
-const FAQS = [
-  {
-    q: 'What can SANDWICH actually produce?',
-    a: 'From a single client brief: a clickable prototype, a complete PRD, user flows, technical notes, and a client-ready quotation — all generated through one pipeline, not five separate tools.',
-  },
-  {
-    q: 'Can it turn a messy brief into a PRD?',
-    a: "Yes — that's the core job. SANDWICH takes raw, chaotic client input and structures it into a validated, machine-checkable PRD your AI agent can execute against, no guessing required.",
-  },
-  {
-    q: 'Does it build prototypes too, or just docs?',
-    a: 'Both. The same pipeline that produces your PRD also drives prototype generation, so what you show the client matches what gets built — no drift between spec and demo.',
-  },
-  {
-    q: 'How does the quotation get generated?',
-    a: 'Once scope is defined, SANDWICH breaks it into priced, dependency-aware line items — so your quotation is grounded in the actual scope, not a guess.',
-  },
-  {
-    q: 'Is it free?',
-    a: 'Yes — Starter is Rp 0k: 5 documents and 3 prototypes a month, plus 100 AI chat messages. Pro is Rp 100k/mo for unlimited everything.',
-  },
-]
-
-export default function LandingPage({ onGoToApp }: LandingPageProps) {
+export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
   const PLANS = PLANS_META.map((p) => ({
     slug: p.slug,
     name: p.name,
@@ -93,7 +70,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       try {
         localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
       } catch { /* best-effort draft save, e.g. storage quota */ }
-      onGoToApp()
+      router.push('/register')
       return
     }
     setIsSubmitting(true)
@@ -105,13 +82,13 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
       try {
         localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
       } catch { /* ignore storage errors */ }
-      navigate('/dashboard')
+      router.push('/dashboard')
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') {
         // No active plan — stash the draft and send them to checkout.
         try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
-        onGoToApp()
+        router.push('/register')
         return
       }
       setError(msg || t('hero_error_generic'))
@@ -176,7 +153,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             {lang === 'en' ? 'EN' : 'ID'}
           </button>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => router.push('/login')}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
             className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
@@ -185,7 +162,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
             {t('nav_login')}
           </button>
           <button
-            onClick={() => onGoToApp()}
+            onClick={() => router.push('/register')}
             className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
           >
@@ -358,7 +335,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
           </div>
           <div className="mt-12">
             <button
-              onClick={() => onGoToApp()}
+              onClick={() => router.push('/register')}
               className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
               {t('pipeline_cta')}
@@ -448,7 +425,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
                 <div className="px-6 pb-5">
                   <button
-                    onClick={() => { trackPostHog('plan_selected', { plan_slug: plan.slug }); onGoToApp(plan.slug) }}
+                    onClick={() => { trackPostHog('plan_selected', { plan_slug: plan.slug }); router.push(`/register?plan=${plan.slug}`) }}
                     className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
                     style={plan.highlight
                       ? { backgroundColor: '#f91814', color: '#ffffff' }
@@ -514,7 +491,7 @@ export default function LandingPage({ onGoToApp }: LandingPageProps) {
 
           <div className="mt-14 text-center">
             <button
-              onClick={() => onGoToApp()}
+              onClick={() => router.push('/register')}
               className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
               {t('faq_cta')}

@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useLanguage } from '../lib/i18n'
 import { postForgotPassword } from '../api/auth'
 
 const bowlby = "'Bowlby One', system-ui"
 
-export default function ForgotPasswordPage({ onBack }: { onBack: () => void }) {
+export default function ForgotPasswordPage() {
   const { t: tr } = useLanguage()
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export default function ForgotPasswordPage({ onBack }: { onBack: () => void }) {
         {sent ? (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-center rounded-lg px-3 py-2" style={{ color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}>{tr('forgot_success')}</p>
-            <button onClick={onBack} className="w-full py-3 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>{tr('auth_back')}</button>
+            <button onClick={() => router.push('/')} className="w-full py-3 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>{tr('auth_back')}</button>
           </div>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); void submit() }} className="flex flex-col gap-3">
@@ -44,7 +46,7 @@ export default function ForgotPasswordPage({ onBack }: { onBack: () => void }) {
             </div>
             {error && <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>{error}</p>}
             <button type="submit" disabled={pending} className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2" style={{ backgroundColor: '#0a0a0a' }}>{tr('forgot_submit')}</button>
-            <button type="button" onClick={onBack} className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80" style={{ border: '1.5px solid #0a0a0a', color: '#0a0a0a', backgroundColor: 'transparent' }}>{tr('auth_back')}</button>
+            <button type="button" onClick={() => router.push('/')} className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80" style={{ border: '1.5px solid #0a0a0a', color: '#0a0a0a', backgroundColor: 'transparent' }}>{tr('auth_back')}</button>
           </form>
         )}
       </div>

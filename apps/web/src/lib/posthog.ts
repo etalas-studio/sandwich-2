@@ -1,13 +1,13 @@
 import posthog from 'posthog-js'
 
 /**
- * PostHog analytics — client-side only. Disabled unless VITE_POSTHOG_KEY is
+ * PostHog analytics — client-side only. Disabled unless NEXT_PUBLIC_POSTHOG_KEY is
  * set at build time (see root .env.example). Every call below is a safe no-op
  * in local dev / when analytics is not configured.
  */
 
-const KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined
-const HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined
+const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
+const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
 let initialized = false
 
@@ -18,7 +18,7 @@ export function initPostHog(): void {
     capture_pageview: true,
     capture_pageleave: true,
     loaded: (ph) => {
-      if (import.meta.env.DEV) ph.debug()
+      if (process.env.NODE_ENV === 'development') ph.debug()
     },
   })
   initialized = true

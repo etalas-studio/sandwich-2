@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { apiUrl } from '../api/base'
 
 interface SharedConversation {
@@ -17,8 +16,7 @@ interface SharedData {
 
 const inter = "'Inter', sans-serif"
 
-export default function SharePage() {
-  const { token } = useParams<{ token: string }>()
+export default function SharePage({ token }: { token: string }) {
   const [data, setData] = useState<SharedData | null>(null)
   const [error, setError] = useState<string | null>(null)
 

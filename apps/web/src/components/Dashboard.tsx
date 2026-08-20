@@ -279,7 +279,7 @@ function PlanBadge() {
           </div>
           {!isPro && (
             <a
-              href="/checkout?plan=pro"
+              href="/pay?plan=pro"
               className="w-full mt-4 py-2 rounded-full text-xs font-semibold text-white flex items-center justify-center"
               style={{ backgroundColor: '#f91814' }}
             >
@@ -800,7 +800,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
             <p className="text-xs font-semibold" style={{ color: '#f91814' }}>{tr('plan_limit_title')}</p>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{tr('plan_limit_desc')}</p>
           </div>
-          <a href="/checkout?plan=pro" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#f91814' }}>
+          <a href="/pay?plan=pro" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#f91814' }}>
             {tr('plan_limit_upgrade')}
           </a>
         </div>
@@ -1013,7 +1013,7 @@ function HomeOverview({
 
         {/* Expiry notice — proactive + mid-session */}
         {(sub?.expired || (sub?.expiresAt && new Date(sub.expiresAt).getTime() - now < 24 * 60 * 60 * 1000)) && (
-          <a href="/checkout?expired=1" className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-sm font-semibold" style={{ backgroundColor: 'rgba(249,24,20,0.1)', color: '#f91814', border: '1px solid rgba(249,24,20,0.25)' }}>
+          <a href="/pay?expired=1" className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-sm font-semibold" style={{ backgroundColor: 'rgba(249,24,20,0.1)', color: '#f91814', border: '1px solid rgba(249,24,20,0.25)' }}>
             <span>{sub?.expired ? tr('dash_expired_banner') : tr('dash_expiring_banner')}</span>
             <span className="shrink-0">{tr('plan_limit_upgrade')}</span>
           </a>
@@ -1060,7 +1060,7 @@ function HomeOverview({
               {usage.chatUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.chatLimit} {tr('home_quota_chats')}</span>
             </p>
             {!usage.isPro && (
-              <a href="/checkout?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+              <a href="/pay?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
                 <iconify-icon icon="solar:crown-linear" width="14" />
                 {tr('home_quota_upgrade')}
               </a>
