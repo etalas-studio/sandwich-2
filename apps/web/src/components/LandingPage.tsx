@@ -15,6 +15,58 @@ import { FAQS } from '../lib/faqs'
 const bowlby = "'Bowlby One', system-ui"
 const mousememoirs = "'Mouse Memoirs', sans-serif"
 
+const SAMPLE_OUTPUTS = [
+  {
+    type: 'PRD',
+    project: 'Padel court booking platform',
+    excerpt: `## 2. Business Requirements
+
+| Requirement | Details |
+|---|---|
+| Multi-location support | Manage courts across multiple venues from one dashboard |
+| Phase 1: third-party booking API | Use existing platform for availability + exposure |
+| Custom payment UI | In-page checkout, no redirect to reduce drop-off |
+| Fraud / double-booking prevention | Lock slot on payment start, auto-release after 10 min`,
+  },
+  {
+    type: 'Quotation',
+    project: 'Fleet management portal',
+    excerpt: `## Scope & Pricing
+
+| Module | Est. days | Price (IDR) |
+|---|---|---|
+| Vehicle tracking dashboard | 8 | 12.000.000 |
+| Driver assignment flow | 5 | 7.500.000 |
+| Maintenance scheduling | 4 | 6.000.000 |
+
+**Assumptions:** client provides GPS API access.
+**Terms:** 50% upfront, 50% on delivery.`,
+  },
+  {
+    type: 'Specs',
+    project: 'Housekeeping ops app',
+    excerpt: `### Feature: Room status sync
+
+**Scope:** Housekeeper marks room clean/dirty from mobile; front desk sees live status.
+
+**Acceptance criteria:**
+- Status updates reflect in front desk view within 5s
+- Offline updates queue and sync on reconnect
+- Only assigned housekeeper can update their rooms`,
+  },
+  {
+    type: 'Prototype',
+    project: 'Restaurant table reservation',
+    excerpt: `<!-- dashboard.html -->
+<div class="booking-grid">
+  <div class="slot available" data-time="19:00">19:00</div>
+  <div class="slot booked" data-time="19:30">19:30</div>
+  <div class="slot available" data-time="20:00">20:00</div>
+</div>
+<!-- live-rendered in preview sidebar, not a static mock -->`,
+  },
+]
+
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
@@ -317,23 +369,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PIPELINE ── */}
+      {/* ── PIPELINE / HOW IT WORKS ── */}
       <section id="pipeline" className="py-24 md:py-32 bg-black">
         <div className="max-w-3xl mx-auto px-6">
           <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('pipeline_kicker')}</p>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white mb-8" style={{ fontFamily: bowlby }}>
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white mb-12" style={{ fontFamily: bowlby }}>
             {t('pipeline_title_l1')}<br />{t('pipeline_title_l2')}
           </h2>
-          <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight max-w-lg">
-            {t('pipeline_desc_1')}{' '}
-            <a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4 hover:text-[#f91814] transition-colors">Superpowers by Obra</a>.
-            {' '}{t('pipeline_desc_2')}
-          </p>
-          <div className="flex items-center gap-4 mt-12">
-            <span className="text-sm font-bold uppercase tracking-widest text-white">SANDWICH</span>
-            <span className="text-white/30">→</span>
-            <a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer" className="text-sm font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors">Superpowers</a>
+
+          <div className="flex flex-col gap-8">
+            {[
+              { n: '01', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc') },
+              { n: '02', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc') },
+              { n: '03', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc') },
+              { n: '04', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
+            ].map((step) => (
+              <div key={step.n} className="flex items-start gap-5">
+                <span className="text-2xl font-bold text-[#f91814] tabular-nums shrink-0" style={{ fontFamily: bowlby }}>{step.n}</span>
+                <div>
+                  <p className="text-white font-semibold text-base tracking-tight">{step.title}</p>
+                  <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight mt-1">{step.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
+
           <div className="mt-12">
             <button
               onClick={() => router.push('/register')}
@@ -373,6 +433,31 @@ export default function LandingPage() {
                 />
                 <h4 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h4>
                 <p className="text-xs text-black/50 mt-1 font-medium">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SAMPLE OUTPUTS ── */}
+      <section id="samples" className="py-24 md:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="mb-12 text-center">
+            <p className="text-2xl tracking-tight mb-4 uppercase text-[#B3120E]" style={{ fontFamily: mousememoirs }}>{t('samples_kicker')}</p>
+            <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-4 text-black" style={{ fontFamily: bowlby }}>
+              {t('samples_title_l1')}<br />{t('samples_title_l2')}
+            </h2>
+            <p className="text-sm text-black/50 font-medium max-w-md mx-auto">{t('samples_desc')}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            {SAMPLE_OUTPUTS.map((sample) => (
+              <div key={sample.type} className="rounded-2xl border border-black/10 p-6 bg-[#F4EBE1]">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">{sample.type}</span>
+                  <span className="text-xs text-black/40 font-medium">{sample.project}</span>
+                </div>
+                <pre className="text-xs text-black/70 font-mono leading-relaxed whitespace-pre-wrap">{sample.excerpt}</pre>
               </div>
             ))}
           </div>

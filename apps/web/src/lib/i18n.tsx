@@ -50,15 +50,18 @@ const STRINGS = {
   right_structure_brief: { en: 'Structure the Brief', id: 'Struktur Brief' },
   right_quotation: { en: 'Quotation', id: 'Quotation' },
 
-  // ── Pipeline ──
-  pipeline_kicker: { en: 'Got a Spec?', id: 'Got a Spec?' },
-  pipeline_title_l1: { en: 'FEED YOUR', id: 'ISI' },
-  pipeline_title_l2: { en: 'PIPELINE.', id: 'PIPELINE KAMU.' },
-  pipeline_desc_1: {
-    en: "SANDWICH was built because there's always been a gap between what a client describes and what an agent can execute. The spec closes that gap. What you do with it next depends on your stack — but if you're looking for a starting point, we recommend",
-    id: 'SANDWICH dibuat karena selalu ada gap antara apa yang klien deskripsikan dan apa yang bisa dieksekusi agent. Spec menutup gap itu. Setelah itu tergantung stack kamu — tapi kalau butuh titik mulai, kami rekomendasikan',
-  },
-  pipeline_desc_2: { en: "It's what we reach for.", id: 'Ini yang kami pakai.' },
+  // ── Pipeline / How it works ──
+  pipeline_kicker: { en: 'How it works', id: 'Cara kerja' },
+  pipeline_title_l1: { en: 'BRIEF IN,', id: 'BRIEF MASUK,' },
+  pipeline_title_l2: { en: 'SPEC OUT.', id: 'SPEC KELUAR.' },
+  pipeline_step_1_title: { en: 'Paste your brief', id: 'Tempel brief kamu' },
+  pipeline_step_1_desc: { en: 'Drop in the messy client email, voice note transcript, or meeting notes as-is.', id: 'Masukin email klien, transkrip voice note, atau notulen rapat apa adanya.' },
+  pipeline_step_2_title: { en: 'Choose a deliverable', id: 'Pilih deliverable' },
+  pipeline_step_2_desc: { en: 'PRD, quotation, prototype, or specs — pick what you need first.', id: 'PRD, quotation, prototype, atau specs — pilih yang kamu butuh duluan.' },
+  pipeline_step_3_title: { en: 'Answer a few questions', id: 'Jawab beberapa pertanyaan' },
+  pipeline_step_3_desc: { en: 'The AI asks clarifying questions instead of guessing at your requirements.', id: 'AI nanya hal-hal yang belum jelas, bukan asal nebak requirement kamu.' },
+  pipeline_step_4_title: { en: 'Review, revise, share', id: 'Review, revisi, share' },
+  pipeline_step_4_desc: { en: 'Every version is saved. Revise in chat, or share a read-only link with your client.', id: 'Setiap versi tersimpan. Revisi lewat chat, atau share link read-only ke klien.' },
   pipeline_cta: { en: 'Start from your brief', id: 'Mulai dari brief' },
 
   // ── Ingredients / Stack ──
@@ -96,6 +99,15 @@ const STRINGS = {
   plan_pro_f3: { en: 'Unlimited AI chat', id: 'Chat AI unlimited' },
   plan_pro_f4: { en: 'Download Markdown', id: 'Download Markdown' },
   plan_pro_f6: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
+
+  // ── Sample outputs ──
+  samples_kicker: { en: 'Proof, Not Promises', id: 'Bukti, Bukan Janji' },
+  samples_title_l1: { en: 'SEE THE', id: 'LIHAT' },
+  samples_title_l2: { en: 'REAL OUTPUT.', id: 'HASIL ASLINYA.' },
+  samples_desc: {
+    en: 'Real excerpts from documents SANDWICH generated — not mockups.',
+    id: 'Cuplikan asli dari dokumen yang dibuat SANDWICH — bukan mockup.',
+  },
 
   // ── FAQ ──
   faq_kicker: { en: 'Shout Out', id: 'Nanya Yuk' },
