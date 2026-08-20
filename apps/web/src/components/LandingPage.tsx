@@ -189,7 +189,7 @@ export default function LandingPage() {
         </h1>
 
         <p
-          className="relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
+          className="relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#92400E]"
           style={{ fontFamily: mousememoirs }}
         >
           {t('hero_tagline')}
@@ -349,7 +349,7 @@ export default function LandingPage() {
       {/* ── STACK / INGREDIENTS ── */}
       <section id="about" className="py-24 md:py-32 bg-[#F4EBE1]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>
+          <p className="text-2xl tracking-tight mb-4 uppercase text-[#B3120E]" style={{ fontFamily: mousememoirs }}>
             {t('stack_kicker')}
           </p>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-6 text-black" style={{ fontFamily: bowlby }}>
@@ -384,18 +384,18 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12 text-center">
             <p
-              className="text-2xl uppercase tracking-tight mb-4 text-white"
+              className="text-2xl uppercase tracking-tight mb-4 text-black"
               style={{ fontFamily: mousememoirs }}
             >
               {t('pricing_kicker')}
             </p>
             <h2
-              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-white"
+              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-black"
               style={{ fontFamily: bowlby }}
             >
               {t('pricing_title_l1')}<br />{t('pricing_title_l2')}
             </h2>
-            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white">
+            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-black/80">
               {t('pricing_desc')}
             </p>
           </div>
