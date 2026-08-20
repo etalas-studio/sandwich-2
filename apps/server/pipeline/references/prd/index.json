@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "references": [
+    {
+      "slug": "komplek-in",
+      "title": "PRD — Community Financial Management Platform",
+      "language": "en",
+      "industry": "community-fintech",
+      "tags": ["community", "dues", "donation", "finance", "admin-panel", "whatsapp-notification", "rt-rw", "web-app"],
+      "description": "PRD for a community/neighborhood financial management app — dues, donations, admin panel, resident-facing features."
+    },
+    {
+      "slug": "bayarin-aja",
+      "title": "PRD — P2P Escrow Payment Platform",
+      "language": "en",
+      "industry": "fintech-marketplace",
+      "tags": ["escrow", "marketplace", "c2c", "payment", "dispute-resolution", "mvp", "task-based-dod"],
+      "description": "PRD for a P2P escrow platform, structured as Context/Problem/DoD per task with buyer/seller journeys and MVP scope table."
+    },
+    {
+      "slug": "tablecheck-restaurant",
+      "title": "PRD — In-house Reservation Platform (Replacing 3rd-party Vendor)",
+      "language": "en",
+      "industry": "hospitality-saas-replacement",
+      "tags": ["reservation", "hospitality", "vendor-replacement", "migration", "personas", "multi-app-integration", "enterprise"],
+      "description": "PRD for replacing a paid third-party SaaS with an in-house platform — strong personas/journeys section and phased migration strategy."
+    }
+  ]
+}

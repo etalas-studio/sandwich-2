@@ -4,6 +4,8 @@ import {
   detectDeliverableType,
   detectPreviewIntent,
   detectRefineIntent,
+  hasLogoAndColorDetails,
+  stageInstruction,
 } from "./orchestrate.js";
 
 describe("detectDeliverableType", () => {
@@ -22,6 +24,16 @@ describe("detectDeliverableType", () => {
   it("returns null for follow-ups and refinements", () => {
     assert.equal(detectDeliverableType("kasih link previewnya dong"), null);
     assert.equal(detectDeliverableType("ubah warnanya jadi biru"), null);
+  });
+
+  it("detects broadened synonyms", () => {
+    assert.equal(detectDeliverableType("buatin mockup dashboard"), "prototype");
+    assert.equal(detectDeliverableType("bikin wireframe aja dulu"), "prototype");
+    assert.equal(detectDeliverableType("buatkan aplikasi POS"), "prototype");
+    assert.equal(detectDeliverableType("mau dokumen kebutuhan produknya"), "prd");
+    assert.equal(detectDeliverableType("kirim rincian biaya dong"), "quotation");
+    assert.equal(detectDeliverableType("bikinin daftar fitur"), "specs");
+    assert.equal(detectDeliverableType("mau lihat roadmap fitur"), "specs");
   });
 });
 
@@ -48,5 +60,40 @@ describe("detectRefineIntent", () => {
   it("rejects non-refine messages", () => {
     assert.equal(detectRefineIntent("kasih link previewnya"), false);
     assert.equal(detectRefineIntent("terima kasih"), false);
+  });
+});
+
+describe("stageInstruction", () => {
+  it("forces logo + color palette questions when clarifying a prototype", () => {
+    const instruction = stageInstruction("clarifying", "prototype");
+    assert.match(instruction, /logo/i);
+    assert.match(instruction, /color palette|brand colors/i);
+  });
+
+  it("tells the model NOT to ask about timeline for a prototype", () => {
+    const instruction = stageInstruction("clarifying", "prototype");
+    assert.match(instruction, /do not ask about timeline/i);
+  });
+
+  it("keeps the generic clarifying instruction (incl. timeline) for non-prototype deliverables", () => {
+    const instruction = stageInstruction("clarifying", "prd");
+    assert.doesNotMatch(instruction, /logo/i);
+    assert.match(instruction, /timeline/i);
+  });
+});
+
+describe("hasLogoAndColorDetails", () => {
+  it("requires both logo and color mentions", () => {
+    assert.equal(hasLogoAndColorDetails("logonya pakai teks aja, warna biru putih"), true);
+    assert.equal(hasLogoAndColorDetails("Logo: upload nanti. Brand colors: navy + gold."), true);
+  });
+
+  it("returns false when only one of the two is mentioned", () => {
+    assert.equal(hasLogoAndColorDetails("logonya pakai teks aja"), false);
+    assert.equal(hasLogoAndColorDetails("warna biru putih ya"), false);
+  });
+
+  it("returns false when neither is mentioned", () => {
+    assert.equal(hasLogoAndColorDetails("Buatkan prototype aplikasi POS untuk kasir"), false);
   });
 });

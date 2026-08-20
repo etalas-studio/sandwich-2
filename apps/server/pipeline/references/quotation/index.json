@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "references": [
+    {
+      "slug": "lms-umk-academy",
+      "title": "Quotation Pengembangan LMS (Program Pembinaan UMK)",
+      "language": "id",
+      "industry": "education-government-program",
+      "tags": ["lms", "e-learning", "pemerintah", "program-pembinaan", "multi-role", "kurasi", "milestone-payment", "web-app"],
+      "description": "Quotation Bahasa Indonesia untuk platform LMS & program management multi-role dengan skema milestone payment dan person-day breakdown."
+    },
+    {
+      "slug": "grab-fleet-portal",
+      "title": "Commercial Quotation — Fleet Partnership Portal",
+      "language": "en",
+      "industry": "logistics-enterprise-b2b",
+      "tags": ["enterprise", "b2b", "fleet", "logistics", "mvp", "fixed-price", "integration-heavy", "web-app"],
+      "description": "English commercial quotation for an enterprise B2B MVP with heavy third-party API integrations, fixed-price per module, and formal T&C section."
+    },
+    {
+      "slug": "impala-pertacomm-effort-estimation",
+      "title": "Effort Estimation — Detailed Functional Requirements",
+      "language": "id",
+      "industry": "enterprise-dashboard",
+      "tags": ["effort-estimation", "user-story", "acceptance-criteria", "detailed-spec", "dashboard", "scoring-engine", "rbac"],
+      "description": "Bahasa Indonesia functional requirements doc styled as User Story + Acceptance Criteria per feature — use when the ask is a detailed technical breakdown rather than a priced quotation."
+    }
+  ]
+}

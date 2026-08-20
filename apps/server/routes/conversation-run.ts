@@ -23,7 +23,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../pipeline/plans.js";
-import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectRefineIntent, type PipelineStage } from "../pipeline/orchestrate.js";
+import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectRefineIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
 import {
   createDocument,
   createDocumentVersion,
@@ -44,6 +44,7 @@ import {
   SANDWICH_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
 } from "../pipeline/prompts.js";
+import { buildReferenceBlock } from "../pipeline/references.js";
 
 export interface DocumentRef {
   id: string;
@@ -102,7 +103,17 @@ function buildMessages(
         ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
         : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
 
-    system = [...base, ``, instruction, ``, docGuide, ``, outputInstruction].join("\n");
+    const briefText = history
+      .filter((turn) => turn.role === "user")
+      .map((turn) => turn.content)
+      .join("\n");
+    const referenceBlock =
+      guideKind === "prd" || guideKind === "quotation" ? buildReferenceBlock(guideKind, briefText) : "";
+
+    const parts = [...base, ``, instruction, ``, docGuide];
+    if (referenceBlock) parts.push(``, referenceBlock);
+    parts.push(``, outputInstruction);
+    system = parts.join("\n");
   } else {
     system = [...base, ``, instruction].join("\n");
   }
@@ -600,7 +611,15 @@ export function registerConversationRunRoutes(
             stage = "clarifying";
           }
         } else if (stage === "clarifying") {
-          stage = "generating";
+          // Prototype-only hard gate: don't advance to generating until the
+          // conversation has covered both logo and color/palette — keeps the
+          // model asking instead of silently skipping ahead.
+          const readyToGenerate =
+            pendingType !== "prototype" ||
+            hasLogoAndColorDetails(composePrototypeBrief(turns));
+          if (readyToGenerate) {
+            stage = "generating";
+          }
         } else if (stage === "awaiting_next") {
           const detected = detectDeliverableType(lastUserMessage);
           if (detected) {

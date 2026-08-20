@@ -9,10 +9,10 @@
   },
   "scripts": {
     "postinstall": "npm --prefix apps/web install",
-    "build": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && npm --prefix apps/web run build",
+    "build": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && node scripts/copy-doc-references.mjs && npm --prefix apps/web run build",
     "dev:web": "npm --prefix apps/web run dev",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && node --test dist/**/*.test.js",
+    "test": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && node scripts/copy-doc-references.mjs && node --test dist/**/*.test.js",
     "format": "prettier --write \"apps/server/**/*.ts\"",
     "lint": "eslint \"apps/server/**/*.ts\"",
     "serve": "node dist/web-server.js",
