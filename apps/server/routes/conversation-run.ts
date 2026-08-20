@@ -422,12 +422,20 @@ export function registerConversationRunRoutes(
     }
 
     try {
-      const message = await createMessage(db, {
-        conversationId: params.id!,
-        userId: auth.userId,
-        content: body.content.trim(),
-        attachmentIds,
-      });
+      const message = await startSpan(
+        'sandwich.db.create_message',
+        {
+          'sandwich.conversation_id': params.id ?? '',
+          'db.operation': 'insert',
+          'sandwich.role': 'user',
+        },
+        () => createMessage(db, {
+          conversationId: params.id!,
+          userId: auth.userId,
+          content: body.content!.trim(),
+          attachmentIds,
+        }),
+      );
       await incrementUsage(db, auth.userId, "chat");
       sendJson(res, 201, message);
     } catch (err) {
