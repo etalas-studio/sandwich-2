@@ -354,3 +354,10 @@ body {
 .sandwich-output a {
   overflow-wrap: anywhere;
 }
+.sandwich-output pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.sandwich-output code {
+  word-break: break-all;
+}

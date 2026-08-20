@@ -11,6 +11,8 @@ export interface DocumentListItem {
   latestVersionNo: number | null
   currentVersionNo: number | null
   previewUrl: string | null
+  conversationId: string | null
+  createdAt?: string
   updatedAt: string
 }
 

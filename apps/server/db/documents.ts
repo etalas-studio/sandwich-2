@@ -64,6 +64,16 @@ export async function listDocuments(db: Database, userId: string): Promise<Docum
   return db.select().from(documents).where(eq(documents.userId, userId)).orderBy(desc(documents.updatedAt));
 }
 
+export async function getConversationIdForDocument(db: Database, documentId: string): Promise<string | null> {
+  const rows = await db
+    .select({ conversationId: conversationDocuments.conversationId })
+    .from(conversationDocuments)
+    .where(eq(conversationDocuments.documentId, documentId))
+    .orderBy(desc(conversationDocuments.createdAt))
+    .limit(1);
+  return rows[0]?.conversationId ?? null;
+}
+
 /** Title-scoped retrieval — the explicit "buka PRD X" lookup. */
 export async function findDocumentByTitle(
   db: Database,

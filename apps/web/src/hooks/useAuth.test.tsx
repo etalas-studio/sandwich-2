@@ -49,7 +49,7 @@ describe('useAuth', () => {
   })
 
   it('returns authenticated state and username when /me responds with authenticated', async () => {
-    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice' })
+    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice', email: 'alice@test.com' })
 
     const { result } = renderHook(() => useAuth(), { wrapper })
 
@@ -57,7 +57,7 @@ describe('useAuth', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice' })
+    expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice', email: 'alice@test.com' })
   })
 
   it('returns unauthenticated state when /me responds with unauthenticated', async () => {
@@ -110,7 +110,7 @@ describe('useAuth', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice' })
+      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-alice', username: 'alice', email: 'alice@test.com' })
     })
   })
 
@@ -182,7 +182,7 @@ describe('useAuth', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-bob', username: 'bob' })
+      expect(result.current.state).toEqual<AuthState>({ status: 'authenticated', id: 'u-bob', username: 'bob', email: 'bob@test.com' })
     })
   })
 
@@ -222,7 +222,7 @@ describe('useAuth', () => {
   // ── logout ──
 
   it('logout calls postLogout and refreshes auth state', async () => {
-    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice' })
+    mockFetchMeResponse({ status: 'authenticated', id: 'u-alice', username: 'alice', email: 'alice@test.com' })
     let loggedOut = false
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {

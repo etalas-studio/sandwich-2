@@ -15,6 +15,7 @@ import {
   getLatestVersion,
   getLatestVersionNosForDocuments,
   getVersionNosByIds,
+  getConversationIdForDocument,
   listDocuments,
   listVersions,
   setDocumentCurrentVersion,
@@ -40,16 +41,17 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
     const docs = await listDocuments(db, auth.userId);
     const docIds = docs.map((d) => d.id);
     const pinnedVersionIds = docs.map((d) => d.currentVersionId).filter((id): id is string => !!id);
-    const [latestNos, pinnedNos] = await Promise.all([
+    const [latestNos, pinnedNos, conversationIds] = await Promise.all([
       getLatestVersionNosForDocuments(db, docIds),
       getVersionNosByIds(db, pinnedVersionIds),
+      Promise.all(docs.map((d) => getConversationIdForDocument(db, d.id))),
     ]);
-    const withMeta = docs.map((doc) => {
+    const withMeta = docs.map((doc, i) => {
       const latestVersionNo = latestNos.get(doc.id) ?? null;
       const currentVersionNo = doc.currentVersionId
         ? (pinnedNos.get(doc.currentVersionId) ?? latestVersionNo)
         : latestVersionNo;
-      return { ...withPreviewUrl(doc), latestVersionNo, currentVersionNo };
+      return { ...withPreviewUrl(doc), latestVersionNo, currentVersionNo, conversationId: conversationIds[i] ?? null };
     });
     sendJson(res, 200, withMeta);
   });

@@ -4,7 +4,7 @@ import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { getConversations, loadConversations, createConversationLocal, updateLocalConversation, deleteLocalConversation, type LocalConversation, type ConversationType } from '../lib/conversations'
-import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, type Attachment } from '../api/conversations'
+import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, updateMessage, type Attachment } from '../api/conversations'
 import { useUsage } from '../hooks/useUsage'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
@@ -76,11 +76,12 @@ interface ChatMessage {
   isError?: boolean
   output?: string
   conversationId?: string
-  document?: { id: string; type?: string; title?: string; versionNo?: number }
+  document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }
 }
 
 interface Turn {
   user: string
+  messageId?: number
   attachments: Attachment[]
   aiMessages: ChatMessage[]
 }
@@ -124,7 +125,7 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
               const line = part.replace(/^data: /, '').trim()
               if (!line) continue
               try {
-                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number }; conversation?: { output?: string | null } }
+                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }
                 if (ev.type === 'stage_start' && ev.stage) {
                   setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
                 } else if (ev.type === 'done') {
@@ -211,21 +212,6 @@ function timeAgo(iso: string, t: (key: StringKey) => string): string {
   return `${days} ${t('dash_time_days_ago')}`
 }
 
-/**
- * Chat header title: keep the first 4 words on one line and wrap the rest,
- * instead of a single ellipsized line.
- */
-function TitleWithWrap({ text }: { text: string }) {
-  const words = text.split(/\s+/)
-  if (words.length <= 4) return <>{text}</>
-  return (
-    <>
-      {words.slice(0, 4).join(' ')}
-      <br />
-      {words.slice(4).join(' ')}
-    </>
-  )
-}
 
 const PLAN_BENEFITS: Record<string, { icon: string; text: string }[]> = {
   starter: [
@@ -373,14 +359,16 @@ function ChatView({
         if (!msgs.length) return
         const reconstructed: Turn[] = []
         let currentUser = ''
+        let currentMessageId: number | undefined
         let currentAttachments: Attachment[] = []
         let currentAi: ChatMessage[] = []
         for (const m of msgs) {
           if (m.role === 'user') {
             if (currentUser) {
-              reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
+              reconstructed.push({ user: currentUser, messageId: currentMessageId, attachments: currentAttachments, aiMessages: currentAi })
             }
             currentUser = m.content
+            currentMessageId = m.id
             currentAttachments = m.attachments ?? []
             currentAi = []
           } else if (m.role === 'assistant') {
@@ -388,7 +376,7 @@ function ChatView({
           }
         }
         if (currentUser) {
-          reconstructed.push({ user: currentUser, attachments: currentAttachments, aiMessages: currentAi })
+          reconstructed.push({ user: currentUser, messageId: currentMessageId, attachments: currentAttachments, aiMessages: currentAi })
         }
         if (reconstructed.length > 0) {
           setTurns(reconstructed)
@@ -403,8 +391,8 @@ function ChatView({
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [chatError, setChatError] = useState<string | null>(null)
-  const [editingPrompt, setEditingPrompt] = useState(false)
-  const [editValue, setEditValue] = useState(initialPrompt)
+  const [editingTurnIndex, setEditingTurnIndex] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState('')
   const [copied, setCopied] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -421,7 +409,6 @@ function ChatView({
   }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [liveMessages, streaming])
-  useEffect(() => { if (!editingPrompt) setEditValue(initialPrompt) }, [initialPrompt, editingPrompt])
 
   // Load saved messages when opening a conversation.
   useEffect(() => { reloadTurns() }, [reloadTurns])
@@ -432,17 +419,25 @@ function ChatView({
     setRegenNonce(n => n + 1)
   }
 
-  const handleStartEdit = () => {
-    setEditValue(initialPrompt)
-    setEditingPrompt(true)
+  const handleStartEdit = (index: number) => {
+    setEditValue(turns[index].user)
+    setEditingTurnIndex(index)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = (index: number) => {
     const text = editValue.trim()
-    setEditingPrompt(false)
-    if (!text || text === initialPrompt) return
-    onPromptUpdate(text)
-    updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
+    setEditingTurnIndex(null)
+    if (!text || text === turns[index].user) return
+    const messageId = turns[index].messageId
+    if (messageId) {
+      updateMessage(conversationId, messageId, text).catch(() => {})
+    }
+    if (index === 0) {
+      onPromptUpdate(text)
+      updateConversationApi(conversationId, { title: text, prompt: text }).catch(() => {})
+    }
+    setTurns(prev => prev.map((t, i) => i === index ? { ...t, user: text } : t))
+    regenerateRef.current = true
     setRegenNonce(n => n + 1)
   }
 
@@ -503,7 +498,6 @@ function ChatView({
           {turns.map((turn, ti) => {
             const isLast = ti === turns.length - 1
             const msgs = isLast && liveMessages.length > 0 ? liveMessages : turn.aiMessages
-            const isFirstTurn = ti === 0
             return (
               <div key={ti} className="flex flex-col gap-8">
                 {/* Attachments + user bubble */}
@@ -513,43 +507,45 @@ function ChatView({
                       {turn.attachments.map(a => <AttachmentTile key={a.id} attachment={a} />)}
                     </div>
                   )}
-                  <div className="max-w-[75%] flex flex-col items-end gap-1.5 group">
-                    {isFirstTurn && editingPrompt ? (
-                      <div className="w-full rounded-2xl px-4 py-3" style={{ backgroundColor: '#1a1a1a' }}>
+                  <div className={`${editingTurnIndex === ti ? 'w-full' : 'max-w-[75%]'} flex flex-col items-end gap-1.5 group`}>
+                    {editingTurnIndex === ti ? (
+                      <div className="w-full rounded-2xl px-5 py-3" style={{ backgroundColor: '#1a1a1a' }}>
                         <textarea
                           autoFocus
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onKeyDown={e => {
-                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit() }
-                            if (e.key === 'Escape') setEditingPrompt(false)
+                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSaveEdit(ti) }
+                            if (e.key === 'Escape') setEditingTurnIndex(null)
                           }}
-                          rows={Math.min(10, editValue.split('\n').length + 1)}
+                          rows={Math.max(3, Math.min(10, editValue.split('\n').length + 1))}
                           className="w-full resize-none bg-transparent outline-none text-sm leading-relaxed"
                           style={{ color: '#ffffff' }}
                         />
                         <div className="flex items-center justify-end gap-2 mt-2">
-                          <button onClick={() => setEditingPrompt(false)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <button onClick={() => setEditingTurnIndex(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
                             Cancel
                           </button>
-                          <button onClick={handleSaveEdit} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
+                          <button onClick={() => handleSaveEdit(ti)} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
                             {tr('dash_save_resend')}
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-words whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-all whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
                         {turn.user}
                       </div>
                     )}
-                    {isFirstTurn && !editingPrompt && (
+                    {editingTurnIndex !== ti && (
                       <div className="flex items-center gap-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="text-xs" style={{ color: 'rgba(0,0,0,0.35)' }}>{timeAgo(createdAt, tr)}</span>
-                        <button onClick={handleRefreshResponse} disabled={streaming}
-                          className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
-                          <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
-                        </button>
-                        <button onClick={handleStartEdit} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
+                        {isLast && (
+                          <button onClick={handleRefreshResponse} disabled={streaming}
+                            className="p-1 rounded-md hover:bg-black/5 transition-colors disabled:opacity-30" title="Refresh respond">
+                            <iconify-icon icon="solar:refresh-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
+                          </button>
+                        )}
+                        <button onClick={() => handleStartEdit(ti)} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Edit">
                           <iconify-icon icon="solar:pen-2-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)' }} />
                         </button>
                         <button onClick={handleCopyPrompt} className="p-1 rounded-md hover:bg-black/5 transition-colors" title="Copy">
@@ -563,11 +559,27 @@ function ChatView({
                 {/* AI messages for this turn */}
                 {msgs.map((m, i) => {
                   if (m.isDone && m.output && m.document) return (
-                    <div key={i} className="group relative">
+                    <div key={i} className="group relative flex flex-col gap-3">
+                      {m.document.type !== 'prototype' && (
+                        <div className="text-sm sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
+                      )}
+                      {m.document.type === 'prototype' && (
+                        <p className="text-sm" style={{ color: 'rgba(0,0,0,0.65)', lineHeight: '1.7' }}>
+                          Prototype lo udah siap! Klik kartu di bawah untuk buka preview langsung di browser, atau minta revisi kalau ada yang perlu diubah.
+                        </p>
+                      )}
                       <DocumentCard
                         documentId={m.document.id}
                         initial={m.document}
-                        onClick={() => onOpenDocument(m.document!.id)}
+                        onClick={() => {
+                          if (m.document!.type === 'prototype') {
+                            const url = m.document!.previewUrl ?? `/p/${m.document!.id}/`
+                            window.open(url, '_blank')
+                          } else {
+                            onOpenDocument(m.document!.id)
+                          }
+                        }}
                       />
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
@@ -582,11 +594,19 @@ function ChatView({
                       </div>
                     </div>
                   )
+                  // Skip stale raw prototype generation outputs saved by older pipeline versions
+                  if (m.isDone && m.output && !m.document && /Step\s+1[:\s]|cat\s*>\s*\/app\/prototype|CSSEOF|<< 'EOF'/.test(m.output)) return null
+                  // For raw HTML prototype outputs without a document card, show a simple placeholder
+                  if (m.isDone && m.output && !m.document && /<!DOCTYPE html/i.test(m.output)) return (
+                    <div key={i} className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                      Prototype berhasil dibuat. Buka panel Documents untuk melihat hasilnya.
+                    </div>
+                  )
                   if (m.isDone && m.output) return (
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       </div>
-                      <div className="text-sm break-words sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                      <div className="text-sm break-words overflow-x-hidden sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                         dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
@@ -1327,7 +1347,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const usageQuery = useUsage()
   const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: 3, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
-  const email = authState.status === 'authenticated' ? (authState as { email?: string }).email ?? username : username
+  const email = authState.status === 'authenticated' ? authState.email : username
 
   const { data: sub, isLoading: subLoading } = useSubscription()
   const queryClient = useQueryClient()
@@ -1428,6 +1448,18 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     }
   }, [chatState?.conversationId])
 
+  // Handle browser back button when navigating from Documents into chat
+  useEffect(() => {
+    const handler = (e: PopStateEvent) => {
+      if (e.state?.activeNav) {
+        setActiveNav(e.state.activeNav)
+        setChatState(null)
+      }
+    }
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [])
+
   const toggleChatPin = () => {
     if (!currentConversation) return
     updateLocalConversation(currentConversation.id, { pinned: !currentConversation.pinned })
@@ -1521,7 +1553,16 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} />
+    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
+      const conv = convId
+        ? conversations.find(c => c.id === convId)
+        : conversations.find(c => c.summary.includes(docTitle))
+      if (conv) {
+        history.pushState({ activeNav: 'documents' }, '')
+        setChatState({ prompt: conv.summary, conversationId: conv.id, autoRun: false })
+        setActiveNav('home')
+      }
+    }} />
 
     if (activeNav === 'briefs') return (
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1615,6 +1656,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                       onClick={() => {
                         setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
+                        setActiveNav('home')
                         if (t.unread) updateLocalConversation(t.id, { unread: false })
                         refresh()
                       }}
@@ -1742,12 +1784,12 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           {showAccountMenu && (
             <div className="fixed inset-0 z-50" onClick={() => setShowAccountMenu(false)}>
               <style>{`@keyframes slideUp { from { transform: translateY(4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
-              <div className="absolute bottom-16 left-3 w-48 rounded-xl overflow-hidden"
+              <div className="absolute bottom-16 left-3 w-[200px] rounded-xl overflow-hidden"
                 style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', animation: 'slideUp 0.15s ease-out' }}
                 onClick={e => e.stopPropagation()}>
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                   <p className="text-sm font-semibold text-white">{username}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{email}@local</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{email}</p>
                 </div>
                 <div className="p-2">
                   <button onClick={() => { setShowAccountMenu(false); logout() }}
@@ -1777,7 +1819,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 <iconify-icon icon="solar:sidebar-minimalistic-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
               </button>
             )}
-            {chatState && (
+            {chatState && activeNav !== 'settings' && activeNav !== 'help' && (
               <div className="flex items-center gap-1 min-w-0">
                 {renamingTitle ? (
                   <input
@@ -1793,8 +1835,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     style={{ color: 'rgba(0,0,0,0.7)', borderColor: 'rgba(0,0,0,0.25)', width: 220 }}
                   />
                 ) : (
-                  <p className="text-sm font-medium min-w-0 break-words line-clamp-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
-                    <TitleWithWrap text={chatState.prompt} />
+                  <p className="text-sm font-medium min-w-0 truncate" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                    {chatState.prompt.split(/\s+/).slice(0, 4).join(' ')}{chatState.prompt.split(/\s+/).length > 4 ? '...' : ''}
                   </p>
                 )}
                 <div className="relative shrink-0 flex items-center">
@@ -1803,8 +1845,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                   </button>
                   {showChatMenu && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
-                      <div className="absolute left-0 top-full mt-1 z-50 w-48 rounded-xl overflow-hidden"
+                      <div className="fixed inset-0 z-[100]" onClick={() => setShowChatMenu(false)} />
+                      <div className="absolute right-0 top-full mt-1 z-[101] w-48 rounded-xl overflow-hidden"
                         style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
                         onClick={e => e.stopPropagation()}>
                         <div className="p-1.5">
@@ -1851,7 +1893,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           </div>
           <div className="flex items-center gap-2">
             <PlanBadge />
-            {chatState && (<>
+            {chatState && activeNav !== 'settings' && activeNav !== 'help' && (<>
               <div className="relative hidden">
                 <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative">
                   <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
@@ -1923,7 +1965,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         </div>
 
         {/* Content */}
-        {chatState ? (
+        {activeNav === 'settings' || activeNav === 'help' ? renderPage() : chatState ? (
           <div className="flex-1 min-h-0">
             <ChatView
               initialPrompt={chatState.prompt}

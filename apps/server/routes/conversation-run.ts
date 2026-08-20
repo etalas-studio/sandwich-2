@@ -16,6 +16,7 @@ import {
   getMessageHistory,
   getMessagesForPrompt,
   deleteMessage,
+  updateMessageContent,
 } from "../db/repo/chat-messages.js";
 import { getPendingAttachmentIds } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";
@@ -129,8 +130,16 @@ async function runWithGroq(
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
+  isRegenerate = false,
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY!;
+  const messages = buildMessages(history, stage, pendingType);
+  if (isRegenerate && messages.length > 0) {
+    const last = messages[messages.length - 1];
+    if (last && last.role === "user") {
+      last.content = `${last.content}\n\n[Try a different structure or angle than your previous response, but stay accurate and grounded in the context. Do not repeat the same phrasing or order as before.]`;
+    }
+  }
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -139,7 +148,7 @@ async function runWithGroq(
     },
     body: JSON.stringify({
       model: "qwen/qwen3.6-27b",
-      messages: buildMessages(history, stage, pendingType),
+      messages,
       max_tokens: 4000,
       reasoning_effort: "none",
       temperature: 0.7,
@@ -414,6 +423,20 @@ export function registerConversationRunRoutes(
     }
   });
 
+  // Update a user message content (for edit-and-resend).
+  router.patch("/api/conversations/:id/messages/:messageId", async (req, res, params) => {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) { sendJson(res, 401, { error: "unauthorized" }); return; }
+    const conversation = await getConversation(db, params.id!);
+    if (!conversation || conversation.userId !== auth.userId) { sendJson(res, 404, { error: "not found" }); return; }
+    const body = (await readJsonBody(req).catch(() => null)) as { content?: string } | null;
+    if (!body?.content?.trim()) { sendJson(res, 400, { error: "content is required" }); return; }
+    const msgId = parseInt(params.messageId!, 10);
+    if (isNaN(msgId)) { sendJson(res, 400, { error: "invalid messageId" }); return; }
+    await updateMessageContent(db, msgId, body.content.trim());
+    sendJson(res, 200, { ok: true });
+  });
+
   // Generate the assistant reply — reads history from the DB.
   router.post("/api/conversations/:id/generate", async (req, res, params) => {
     const auth = await authenticateRequest(db, req);
@@ -441,11 +464,28 @@ export function registerConversationRunRoutes(
 
     // For a regenerate, drop the previous assistant reply so we re-run the
     // last user turn cleanly instead of double-stacking assistant messages.
-    if (body?.regenerate) {
+    const isRegenerate = !!body?.regenerate;
+    if (isRegenerate) {
       const history = await getMessageHistory(db, conversationId);
       const last = history[history.length - 1];
       if (last && last.role === "assistant") {
         await deleteMessage(db, last.id);
+      }
+      // If the conversation already produced a document, rewind the pipeline
+      // stage so it re-generates that document type instead of starting over.
+      if (conversation.pipelineStage === "awaiting_next" && !conversation.pendingType) {
+        const linkedDocs = await listConversationDocuments(db, conversationId);
+        const lastDoc = linkedDocs[linkedDocs.length - 1];
+        if (lastDoc) {
+          const docType = lastDoc.type;
+          await updateConversation(db, conversationId, {
+            pipelineStage: "generating",
+            pendingType: docType,
+          });
+          // Re-fetch so the pipeline below sees the updated stage.
+          const updated = await getConversation(db, conversationId);
+          if (updated) Object.assign(conversation, updated);
+        }
       }
     }
 
@@ -639,11 +679,11 @@ export function registerConversationRunRoutes(
                     console.log(
                       `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
                     );
-                    return runWithGroq(turns, controller.signal, stage, pendingType);
+                    return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
                   }
                   throw err;
                 })
-            : () => runWithGroq(turns, controller.signal, stage, pendingType);
+            : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
 
         run()
           .then(async (output) => {

@@ -213,6 +213,10 @@ export async function getMessagesForPrompt(
   }));
 }
 
+export async function updateMessageContent(db: Database, id: number, content: string): Promise<void> {
+  await db.update(chatMessages).set({ content }).where(eq(chatMessages.id, id));
+}
+
 export async function deleteMessage(db: Database, id: number): Promise<void> {
   await db.delete(chatMessages).where(eq(chatMessages.id, id));
 }

@@ -42,6 +42,7 @@ export function useAuth() {
     onSuccess: () => {
       clearConversationsCache()
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+      queryClient.removeQueries({ queryKey: ['subscription'] })
     },
   })
 
