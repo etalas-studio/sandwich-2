@@ -17,11 +17,14 @@ const STRINGS = {
   nav_pipeline: { en: 'Pipeline', id: 'Pipeline' },
   nav_pricing: { en: 'Pricing', id: 'Harga' },
   nav_faq: { en: 'FAQ', id: 'FAQ' },
-  nav_get_started: { en: 'Get Started', id: 'Mulai Sekarang' },
+  nav_get_started: { en: 'Start from your brief', id: 'Mulai dari brief' },
   nav_login: { en: 'Login', id: 'Masuk' },
 
   // ── Hero ──
-  hero_tagline: { en: 'From a messy brief to an execution-ready spec', id: 'Dari brief berantakan jadi spek siap eksekusi' },
+  hero_tagline: {
+    en: 'One brief in. Versioned PRD, quotation, specs, and a live prototype out — one guided pipeline.',
+    id: 'Satu brief masuk. PRD, quotation, specs, dan prototype hidup keluar — satu pipeline terpandu.',
+  },
   hero_prompt_placeholder: { en: 'Tell us about your brief...', id: 'Ceritain brief lo di sini...' },
   hero_brief_created: { en: 'Brief created!', id: 'Brief dibuat!' },
   hero_brief_processing: { en: 'Your pipeline is processing the brief. Check the result in the dashboard.', id: 'Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.' },
@@ -56,7 +59,7 @@ const STRINGS = {
     id: 'SANDWICH dibuat karena selalu ada gap antara apa yang klien deskripsikan dan apa yang bisa dieksekusi agent. Spec menutup gap itu. Setelah itu tergantung stack kamu — tapi kalau butuh titik mulai, kami rekomendasikan',
   },
   pipeline_desc_2: { en: "It's what we reach for.", id: 'Ini yang kami pakai.' },
-  pipeline_cta: { en: 'Try It Now', id: 'Coba Sekarang' },
+  pipeline_cta: { en: 'Start from your brief', id: 'Mulai dari brief' },
 
   // ── Ingredients / Stack ──
   stack_kicker: { en: 'Ingredients', id: 'Bahan-Bahan' },
@@ -97,7 +100,7 @@ const STRINGS = {
   // ── FAQ ──
   faq_kicker: { en: 'Shout Out', id: 'Nanya Yuk' },
   faq_title: { en: 'GOT QUESTIONS?', id: 'ADA PERTANYAAN?' },
-  faq_cta: { en: 'Start Now', id: 'Mulai Sekarang' },
+  faq_cta: { en: 'Start from your brief', id: 'Mulai dari brief' },
 
   // ── Footer ──
   footer_desc: {
