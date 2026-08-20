@@ -86,9 +86,10 @@ export default function LandingPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') {
-        // No active plan — stash the draft and send them to checkout.
+        // Already logged in but out of quota — stash the draft and send to checkout,
+        // not /register (which would just bounce an authenticated user to /dashboard).
         try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
-        router.push('/register')
+        router.push('/pay?plan=pro')
         return
       }
       setError(msg || t('hero_error_generic'))

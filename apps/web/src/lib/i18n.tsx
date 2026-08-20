@@ -201,7 +201,7 @@ const STRINGS = {
 
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },
-  setup_subtitle: { en: 'No account on this instance yet — register to continue.', id: 'Belum ada akun di instance ini — daftar dulu untuk lanjut.' },
+  setup_subtitle: { en: 'Create your free SANDWICH account to turn briefs into PRDs, prototypes, and quotations.', id: 'Buat akun SANDWICH gratis untuk mengubah brief jadi PRD, prototype, dan quotation.' },
   setup_pass_placeholder: { en: 'Min. 8 characters', id: 'Min. 8 karakter' },
   setup_cta: { en: 'Create account', id: 'Buat akun' },
   setup_pending: { en: 'Creating account…', id: 'Membuat akun...' },
