@@ -24,6 +24,30 @@
       "industry": "hospitality-saas-replacement",
       "tags": ["reservation", "hospitality", "vendor-replacement", "migration", "personas", "multi-app-integration", "enterprise"],
       "description": "PRD for replacing a paid third-party SaaS with an in-house platform — strong personas/journeys section and phased migration strategy."
+    },
+    {
+      "slug": "ayana-housekeeping-frontops",
+      "title": "PRD — Internal Hospitality Ops Platform (Housekeeping & Front Office)",
+      "language": "en",
+      "industry": "hospitality-internal-ops",
+      "tags": ["hospitality", "internal-tool", "housekeeping", "front-office", "sla", "personas", "workshop-questions", "glossary", "enterprise"],
+      "description": "PRD for an internal luxury-hospitality ops platform replacing manual/WhatsApp workflows — strong as-is/future-state narrative, SLA-driven requirements, and a categorized pre-workshop client questions section."
+    },
+    {
+      "slug": "yolo-padel-booking",
+      "title": "PRD — Multi-site Sports Venue Booking & Payment Platform",
+      "language": "en",
+      "industry": "sports-venue-booking",
+      "tags": ["booking", "payment", "multi-site", "third-party-integration", "phased-rollout", "whatsapp-notification", "mvp"],
+      "description": "Concise, business-driven PRD for a booking platform phased around a third-party API integration before owning the full stack — tight requirement tables over long prose."
+    },
+    {
+      "slug": "pertacomm-enterprise-dashboard",
+      "title": "PRD — Enterprise Program Management Dashboard (BUMN/Government Program)",
+      "language": "id",
+      "industry": "enterprise-government-program",
+      "tags": ["enterprise", "government", "program-management", "okr", "scoring", "non-goals", "phasing", "compliance", "dashboard"],
+      "description": "Bahasa Indonesia PRD for a large enterprise/government program platform — explicit Non-Goals section, per-persona journeys, phased release strategy, and compliance-driven non-functional requirements."
     }
   ]
 }
