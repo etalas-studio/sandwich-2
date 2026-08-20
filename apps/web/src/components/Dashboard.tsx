@@ -991,7 +991,7 @@ function HomeOverview({
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#f91814' }}>{dateStr}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#B3120E' }}>{dateStr}</p>
             <h1 className="text-2xl tracking-tighter mt-1" style={{ color: '#111827', fontFamily: bowlby }}>{tr(greetingKey).toUpperCase()}, {username.toUpperCase()}</h1>
             <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>
               {conversations.length === 0 ? tr('home_subtitle_empty') : tr('home_subtitle_count').replace('{n}', String(conversations.length))}

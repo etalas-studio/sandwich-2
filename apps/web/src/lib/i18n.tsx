@@ -232,6 +232,11 @@ const STRINGS = {
   checkout_method_card: { en: 'Credit / Debit Card', id: 'Kartu Kredit / Debit' },
   checkout_method_va: { en: 'Bank Transfer (VA)', id: 'Transfer Bank (VA)' },
 
+  // ── 404 ──
+  notfound_title: { en: "Page not found", id: 'Halaman tidak ditemukan' },
+  notfound_desc: { en: "This page doesn't exist or was moved.", id: 'Halaman ini tidak ada atau sudah dipindahkan.' },
+  notfound_home: { en: 'Back to home', id: 'Kembali ke beranda' },
+
   // ── Home overview ──
   home_greeting_morning: { en: 'Good morning', id: 'Selamat pagi' },
   home_greeting_afternoon: { en: 'Good afternoon', id: 'Selamat siang' },
