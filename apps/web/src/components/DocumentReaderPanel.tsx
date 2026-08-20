@@ -106,6 +106,7 @@ export default function DocumentReaderPanel({
 
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg transition-colors"
             style={{ color: 'rgba(0,0,0,0.45)' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)')}
