@@ -16,7 +16,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 function mockFetchMeResponse(state: AuthState) {
   const body: Record<string, unknown> = { state: state.status }
-  if (state.status === 'authenticated') body.user = { id: state.id, username: state.username }
+  if (state.status === 'authenticated') body.user = { id: state.id, username: state.username, email: state.email }
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : String(input)
     if (url === '/api/auth/me') {
@@ -86,7 +86,7 @@ describe('useAuth', () => {
           ok: true,
           json: async () =>
             loginCalled
-              ? { state: 'authenticated', user: { id: 'u-alice', username: 'alice' } }
+              ? { state: 'authenticated', user: { id: 'u-alice', username: 'alice', email: 'alice@test.com' } }
               : { state: 'unauthenticated' },
         } as Response
       }
@@ -160,7 +160,7 @@ describe('useAuth', () => {
           ok: true,
           json: async () =>
             registered
-              ? { state: 'authenticated', user: { id: 'u-bob', username: 'bob' } }
+              ? { state: 'authenticated', user: { id: 'u-bob', username: 'bob', email: 'bob@test.com' } }
               : { state: 'unauthenticated' },
         } as Response
       }

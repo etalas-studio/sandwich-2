@@ -29,7 +29,7 @@ export function DeliverableTypeSelect({
 }) {
   return (
     <Select value={value} onValueChange={(v) => onChange(v ?? '')}>
-      <SelectTrigger className="text-xs px-3 py-1.5 rounded-full bg-white/10 text-white border border-white/15">
+      <SelectTrigger aria-label="Choose deliverable type" className="min-h-11 text-sm px-3 py-1.5 rounded-full bg-white/10 text-white border border-white/15">
         <SelectValue>{(v) => LABEL_BY_VALUE[v as string] ?? 'Auto'}</SelectValue>
         <SelectIcon>
           <ChevronDownIcon className="size-3" />

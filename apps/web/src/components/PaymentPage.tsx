@@ -81,21 +81,6 @@ function PaymentTrigger({
     hasTriggered.current = true
 
     const run = async () => {
-      if (plan.amount === 0) {
-        try {
-          await fetch(apiUrl('/api/midtrans/transaction'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ planSlug }),
-          })
-        } catch { /* Starter already active */ }
-        queryClient.invalidateQueries({ queryKey: ['subscription'] })
-        trackPostHog('subscription_activated', { plan_slug: planSlug, free: true })
-        router.push('/dashboard')
-        return
-      }
-
       trackPostHog('checkout_started', { plan_slug: planSlug })
 
       let txRes: Response

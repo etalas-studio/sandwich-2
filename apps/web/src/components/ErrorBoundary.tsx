@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             gap: "1rem",
             color: "rgba(255,255,255,0.7)",
             backgroundColor: "#0a0a0a",
-            fontFamily: "Geist Variable, sans-serif",
+            fontFamily: "Inter, system-ui, sans-serif",
           }}
         >
           <p style={{ fontSize: "1rem" }}>Something went wrong.</p>

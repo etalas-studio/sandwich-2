@@ -2,7 +2,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { usage } from "../schema.js";
 import type { Database } from "../connection.js";
 
-/** "doc" = PRD/quotation/specs (text deliverables), "prototype" = prototype engine, "chat" = follow-up messages. */
+/** "doc" = generated PRDs, "prototype" = legacy analytics, "chat" = follow-up messages. */
 export type UsageKind = "doc" | "prototype" | "chat";
 
 /** "YYYY-MM" (1-indexed, zero-padded month) — stable sortable key. */

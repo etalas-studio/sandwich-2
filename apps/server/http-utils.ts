@@ -23,6 +23,7 @@ export function sendJson(
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),
     "cache-control": "no-store",
+    "x-robots-tag": "noindex, nofollow",
     ...extraHeaders,
   });
   res.end(payload);

@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: FAQS.map((faq) => ({
+  mainEntity: FAQS.en.map((faq) => ({
     '@type': 'Question',
     name: faq.q,
     acceptedAnswer: { '@type': 'Answer', text: faq.a },

@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
@@ -719,9 +718,6 @@ function ChatView({
 
 // ── Plan limit (server-side) ────────────────────────────────────────────────
 interface PlanUsage { used: number; prototypeUsed: number; chatUsed: number; limit: number | null; prototypeLimit: number | null; chatLimit: number | null; isPro: boolean }
-function isAtLimit(u: PlanUsage): boolean {
-  return !u.isPro && u.limit !== null && u.used >= u.limit
-}
 
 // ── Prompt Box (reusable) ──────────────────────────────────────────────────────
 interface PromptBoxProps {
@@ -751,7 +747,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
   const [attachments, setAttachments] = useState<AttachedFile[]>(draft.attachments)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const atLimit = isAtLimit(usage)
+  const prdAtLimit = pendingType === 'prd' && !usage.isPro && usage.limit !== null && usage.used >= usage.limit
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(e.target.files ?? []).forEach(file => {
@@ -764,7 +760,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return
-    if (atLimit) return
+    if (prdAtLimit) return
     setIsSubmitting(true)
     setError(null)
     try {
@@ -794,7 +790,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
 
   return (
     <div className="w-full rounded-2xl" style={{ backgroundColor: '#111113' }}>
-      {atLimit && (
+      {prdAtLimit && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-t-2xl" style={{ backgroundColor: 'rgba(249,24,20,0.12)', borderBottom: '1px solid rgba(249,24,20,0.2)' }}>
           <div>
             <p className="text-xs font-semibold" style={{ color: '#f91814' }}>{tr('plan_limit_title')}</p>
@@ -807,7 +803,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
       )}
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
         <DeliverableTypeSelect value={pendingType} onChange={setPendingType} />
-        {!usage.isPro && !atLimit && (
+        {!usage.isPro && !prdAtLimit && (
           <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
         )}
       </div>
@@ -815,10 +811,10 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
       <textarea
         value={prompt}
         onChange={e => setPrompt(e.target.value)}
-        onKeyDown={e => { if (!atLimit && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleSubmit() } }}
+        onKeyDown={e => { if (!prdAtLimit && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleSubmit() } }}
         placeholder="Write a message..."
         rows={3}
-        disabled={atLimit}
+        disabled={prdAtLimit}
         className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed text-white placeholder:text-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ minHeight: '72px' }}
       />
@@ -858,7 +854,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
         <div className="flex items-center gap-2">
           <button
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !prompt.trim() || atLimit}
+            disabled={isSubmitting || !prompt.trim() || prdAtLimit}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-40 active:scale-95"
             style={{ backgroundColor: '#f91814' }}
           >
@@ -1054,7 +1050,7 @@ function HomeOverview({
               <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
             </div>
             <p className="text-sm mt-4" style={{ color: '#111827' }}>
-              {usage.prototypeUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.prototypeLimit} {tr('home_quota_prototypes')}</span>
+              {usage.prototypeUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> {tr('home_quota_prototypes')}</span>
             </p>
             <p className="text-sm mt-4" style={{ color: '#111827' }}>
               {usage.chatUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.chatLimit} {tr('home_quota_chats')}</span>
@@ -1345,64 +1341,11 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [openDocumentId, setOpenDocumentId] = useState<string | null>(null)
   const { logout, state: authState } = useAuth()
   const usageQuery = useUsage()
-  const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: 3, chatLimit: 100, isPro: false }
+  const usage: PlanUsage = usageQuery.data ?? { used: 0, prototypeUsed: 0, chatUsed: 0, limit: 5, prototypeLimit: null, chatLimit: 100, isPro: false }
   const username = authState.status === 'authenticated' ? authState.username : 'sandwich'
   const email = authState.status === 'authenticated' ? authState.email : username
 
   const { data: sub, isLoading: subLoading } = useSubscription()
-  const queryClient = useQueryClient()
-
-  // Fire Snap for a pending Pro upgrade set during registration
-  useEffect(() => {
-    const pending = localStorage.getItem('sandwich_pending_plan')
-    if (pending !== 'pro') return
-    localStorage.removeItem('sandwich_pending_plan') // clear immediately — don't loop
-
-    const fireSnap = async () => {
-      try {
-        const txRes = await fetch(apiUrl('/api/midtrans/transaction'), {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ planSlug: 'pro' }),
-        })
-        if (!txRes.ok) return
-        const data = await txRes.json() as {
-          token: string | null
-          simulated: boolean
-          clientKey: string
-          isProduction: boolean
-        }
-        if (data.simulated || !data.token) {
-          queryClient.invalidateQueries({ queryKey: ['subscription'] })
-          return
-        }
-        await new Promise<void>((resolve, reject) => {
-          const w = window as unknown as Record<string, unknown>
-          if (w.snap) { resolve(); return }
-          const script = document.createElement('script')
-          script.src = data.isProduction
-            ? 'https://app.midtrans.com/snap/snap.js'
-            : 'https://app.sandbox.midtrans.com/snap/snap.js'
-          script.setAttribute('data-client-key', data.clientKey)
-          script.onload = () => resolve()
-          script.onerror = () => reject(new Error('Snap.js failed to load'))
-          document.head.appendChild(script)
-        })
-        ;(window as unknown as { snap: { pay: (token: string, opts: Record<string, unknown>) => void } }).snap.pay(data.token, {
-          onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['subscription'] }) },
-          onPending: () => { /* user can check status later */ },
-          onError: () => { /* Snap already shows error UI */ },
-          onClose: () => { /* user closed — no action needed, key already cleared */ },
-        })
-      } catch {
-        /* transient — key already cleared, user can upgrade manually */
-      }
-    }
-
-    void fireSnap()
-  }, [queryClient])
-
   if (!subLoading && sub !== undefined && !sub?.planSlug) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4EBE1' }}>

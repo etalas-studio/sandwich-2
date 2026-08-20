@@ -58,39 +58,45 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
         <p className="text-sm text-zinc-500 text-center mb-7">{tr('login_subtitle')}</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <label className="sr-only" htmlFor="login-identifier">{tr('login_identifier')}</label>
           <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#F4EBE1' }}>
             <iconify-icon icon="solar:user-linear" width="18" style={{ color: 'rgba(0,0,0,0.35)', display: 'block' }} />
             <input
+              id="login-identifier"
+              name="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
-              aria-label={tr('login_identifier')}
+              autoComplete="username"
               placeholder={tr('login_identifier')}
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
+          <label className="sr-only" htmlFor="login-password">{tr('auth_password')}</label>
           <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#F4EBE1' }}>
             <iconify-icon icon="solar:lock-password-linear" width="18" style={{ color: 'rgba(0,0,0,0.35)', display: 'block' }} />
             <input
+              id="login-password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              aria-label="Password"
-              placeholder="Password"
+              autoComplete="current-password"
+              placeholder={tr('auth_password')}
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
-            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }}>
+            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 w-11 h-11 -my-2 -mr-2 flex items-center justify-center rounded-full" style={{ color: 'rgba(0,0,0,0.35)' }} aria-label={showPassword ? tr('auth_hide_password') : tr('auth_show_password')}>
               <iconify-icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width="18" />
             </button>
           </div>
 
           {onForgotPassword && (
             <div className="flex justify-end -mt-1">
-              <button type="button" onClick={onForgotPassword} className="text-xs font-semibold underline" style={{ color: '#f91814' }}>
+              <button type="button" onClick={onForgotPassword} className="min-h-11 text-sm font-semibold underline" style={{ color: '#f91814' }}>
                 {tr('login_forgot_password')}
               </button>
             </div>
@@ -104,14 +110,18 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               ) : (
                 <div className="flex items-center gap-2">
                   <input
+                    id="resend-email"
+                    name="email"
                     type="email"
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
+                    autoComplete="email"
+                    aria-label={tr('forgot_email_placeholder')}
                     placeholder={tr('forgot_email_placeholder')}
                     className="flex-1 bg-white rounded-lg px-2 py-1.5 outline-none"
                     style={{ color: '#111827', border: '1px solid rgba(0,0,0,0.1)' }}
                   />
-                  <button type="button" onClick={handleResend} disabled={resending} className="shrink-0 px-2.5 py-1.5 rounded-lg font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>
+                  <button type="button" onClick={handleResend} disabled={resending} className="shrink-0 min-h-11 px-3 rounded-lg font-semibold text-white" style={{ backgroundColor: '#0a0a0a' }}>
                     {tr('login_resend')}
                   </button>
                 </div>
@@ -119,7 +129,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
             </div>
           ) : (
             error && (
-              <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>
+              <p className="text-xs font-medium rounded-lg px-3 py-2" role="alert" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>
                 {error}
               </p>
             )
@@ -128,7 +138,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            className="w-full min-h-11 py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             style={{ backgroundColor: '#0a0a0a' }}
           >
             {isPending ? tr('login_pending') : tr('login_cta')}
@@ -137,7 +147,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
 
         <button
           onClick={onBack}
-          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
+          className="w-full min-h-11 py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
           style={{ border: '1.5px solid #0a0a0a', color: '#0a0a0a', backgroundColor: 'transparent' }}
         >
           <iconify-icon icon="solar:arrow-left-linear" width="16" />
@@ -147,7 +157,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
         {onSwitchToRegister && (
           <p className="text-center text-xs text-zinc-400 mt-4">
             {tr('auth_no_account')}{' '}
-            <button type="button" onClick={onSwitchToRegister} className="font-semibold underline" style={{ color: '#f91814' }}>
+            <button type="button" onClick={onSwitchToRegister} className="font-semibold underline min-h-11 inline-flex items-center" style={{ color: '#f91814' }}>
               {tr('auth_register_link')}
             </button>
           </p>

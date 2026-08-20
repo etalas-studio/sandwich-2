@@ -92,7 +92,7 @@ export default function Settings({ onPurge }: SettingsProps) {
   return (
     <div
       className="h-full overflow-y-auto p-8"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <div className="mb-8">
         <h1

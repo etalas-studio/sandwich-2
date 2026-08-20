@@ -1,6 +1,5 @@
 import { createUser, getUserByEmail, getUserByUsername, type User } from "../db/users.js";
 import { createSession, deleteSession, getSessionByToken, type Session } from "../db/sessions.js";
-import { activateSubscription } from "../db/repo/subscriptions.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { sessionExpiryIso } from "./cookie.js";
 import type { Database } from "../db/connection.js";
@@ -40,16 +39,10 @@ export async function register(db: Database, input: RegisterInput): Promise<{ us
 
   let user: User;
   try {
-    user = await db.transaction(async (tx) => {
-      const created = await createUser(tx as unknown as Database, {
-        username: input.username,
-        email: input.email,
-        passwordHash,
-      });
-      // Free tier: every new account starts on Starter (no payment). Pro is an
-      // upgrade via Midtrans that overwrites this row.
-      await activateSubscription(tx as unknown as Database, { userId: created.id, planSlug: "starter" });
-      return created;
+    user = await createUser(db, {
+      username: input.username,
+      email: input.email,
+      passwordHash,
     });
   } catch (err) {
     const code =

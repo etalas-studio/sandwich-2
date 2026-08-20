@@ -45,25 +45,6 @@ export function registerMidtransRoutes(router: Router, db: Database): void {
     const clientKey = process.env.MIDTRANS_CLIENT_KEY ?? "";
     const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 
-    // Free tier — no Midtrans call (Midtrans rejects `gross_amount = 0`).
-    // Just ensure an active Starter subscription exists, then return.
-    if (plan.amount === 0) {
-      const existing = await getActiveSubscription(db, auth.userId);
-      if (!existing) {
-        await activateSubscription(db, { userId: auth.userId, planSlug: plan.slug });
-      }
-      sendJson(res, 200, {
-        token: null,
-        redirectUrl: null,
-        orderId,
-        simulated: false,
-        free: true,
-        clientKey,
-        isProduction,
-      });
-      return;
-    }
-
     try {
       // Persist `creating_payment` BEFORE any provider call.
       await createPayment(db, {
