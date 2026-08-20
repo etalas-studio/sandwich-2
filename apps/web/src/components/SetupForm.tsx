@@ -115,6 +115,7 @@ export default function SetupForm({
 
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <label htmlFor="setup-username" className="sr-only">{tr("setup_username_label")}</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -125,16 +126,20 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="setup-username"
+              name="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
+              autoComplete="username"
               placeholder="Username"
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
+          <label htmlFor="setup-email" className="sr-only">{tr("setup_email_label")}</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -145,15 +150,19 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="setup-email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               placeholder="Email"
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
+          <label htmlFor="setup-password" className="sr-only">{tr("setup_password_label")}</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -164,10 +173,13 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="setup-password"
+              name="new-password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="new-password"
               placeholder="Password"
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />

@@ -89,6 +89,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const activeSectionRef = useRef<string>('')
   const [activeSectionState, setActiveSectionState] = useState<string>('')
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
     if (window.location.hash === '#pricing') {
@@ -163,6 +164,7 @@ export default function LandingPage() {
     >
       {/* ── NAV ── */}
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+        <div className="relative flex justify-center w-full">
         <nav
           className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full border max-w-full"
           style={{
@@ -198,6 +200,21 @@ export default function LandingPage() {
             ))}
           </div>
           <button
+            onClick={() => setMobileNavOpen((v) => !v)}
+            aria-label={mobileNavOpen ? t('nav_menu_close') : t('nav_menu_open')}
+            aria-expanded={mobileNavOpen}
+            className="md:hidden shrink-0 w-8 h-8 flex items-center justify-center rounded-full"
+            style={{ color: '#0a0a0a' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              {mobileNavOpen ? (
+                <path d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
+          <button
             onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
             className="shrink-0 ml-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
             style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
@@ -222,6 +239,36 @@ export default function LandingPage() {
             {t('nav_get_started')}
           </button>
         </nav>
+        {mobileNavOpen && (
+          <div
+            className="md:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100%-2rem)] max-w-sm rounded-2xl border flex flex-col overflow-hidden"
+            style={{ backgroundColor: '#F4EBE1', borderColor: 'rgba(0,0,0,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+          >
+            {[
+              { id: 'harnesses', label: t('nav_how') },
+              { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'pricing', label: t('nav_pricing') },
+              { id: 'faq', label: t('nav_faq') },
+            ].map(({ id, label }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  activeSectionRef.current = id
+                  setActiveSectionState(id)
+                  setMobileNavOpen(false)
+                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="px-5 py-3.5 text-sm font-medium text-left border-b last:border-b-0"
+                style={{ color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.06)' }}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        )}
+        </div>
       </div>
 
       {/* ── HERO ── */}
