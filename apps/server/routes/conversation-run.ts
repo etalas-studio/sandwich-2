@@ -638,20 +638,17 @@ export function registerConversationRunRoutes(
           }
         }
 
-        // Enforce the document/prototype quota before generating. Prototypes
-        // have their own (smaller) quota; everything else shares the document
-        // quota (PRD / quotation / specs).
-        if (stage === "generating" && pendingType) {
+        // Starter quota counts only generated PRDs. Quotation, specs, and
+        // prototype remain available; chat follow-ups are metered separately.
+        if (stage === "generating" && pendingType === "prd") {
           const sub = await getActiveSubscription(db, auth.userId);
           const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
           if (!plan) throw new Error("active subscription required");
-          const isPrototype = pendingType === "prototype";
-          const kind = isPrototype ? "prototype" : "doc";
-          const limit = isPrototype ? plan.prototypeLimit : plan.documentLimit;
+          const limit = plan.documentLimit;
           if (limit !== null) {
-            const used = await getMonthlyUsage(db, auth.userId, kind);
+            const used = await getMonthlyUsage(db, auth.userId, "doc");
             if (used >= limit) {
-              throw new Error(isPrototype ? "prototype quota reached" : "monthly quota reached");
+              throw new Error("monthly quota reached");
             }
           }
         }
@@ -754,11 +751,9 @@ export function registerConversationRunRoutes(
                 });
                 await linkConversationDocument(db, conversationId, doc.id);
               }
-              await incrementUsage(
-                db,
-                auth.userId,
-                pendingType === "prototype" ? "prototype" : "doc",
-              );
+              if (pendingType === "prd") {
+                await incrementUsage(db, auth.userId, "doc");
+              }
               const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
               chatOutput = documentSummary(pendingType, versionNo);
               if (isPrototype) {

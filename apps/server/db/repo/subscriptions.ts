@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { subscriptions } from "../schema.js";
 import type { Database } from "../connection.js";
 import { PLANS } from "../../pipeline/plans.js";
@@ -29,8 +29,9 @@ export async function getSubscriptionForUser(
 }
 
 /**
- * An active subscription must be `active` AND not yet expired. Expiry is
- * enforced here (no grace period per product decision).
+ * An active subscription must be `active` AND have a future expiry. Legacy
+ * free Starter rows used `expiresAt = null`; treating those rows as inactive
+ * cleanly moves existing free accounts onto the paid checkout flow.
  */
 export async function getActiveSubscription(
   db: Database,
@@ -42,10 +43,7 @@ export async function getActiveSubscription(
       and(
         eq(subscriptions.userId, userId),
         eq(subscriptions.status, "active"),
-        or(
-          isNull(subscriptions.expiresAt),
-          gt(subscriptions.expiresAt, new Date()),
-        ),
+        gt(subscriptions.expiresAt, new Date()),
       ),
     )
     .limit(1);
@@ -53,13 +51,11 @@ export async function getActiveSubscription(
 }
 
 /**
- * Activate or extend a plan. Called from the verified payment webhook, the
- * dev simulation path, and at registration (free Starter). Never from raw
- * client input.
+ * Activate or extend a paid plan. Called from the verified payment webhook
+ * and the development simulation path. Never from raw client input.
  *
- * Free plans never expire (permanent free tier). Paid renewal extends from
- * `max(now, existing.expiresAt)` so an active plan stacks, while an expired
- * plan restarts from now.
+ * Renewal extends from `max(now, existing.expiresAt)` so an active plan
+ * stacks, while an expired plan restarts from now.
  */
 export async function activateSubscription(
   db: Database,
@@ -69,15 +65,12 @@ export async function activateSubscription(
   const now = new Date();
   const existing = await getSubscriptionForUser(db, input.userId);
 
-  const isFree = plan.amount === 0;
-  const expiresAt = isFree
-    ? null
-    : addDays(
-        existing?.expiresAt && existing.expiresAt.getTime() > now.getTime()
-          ? existing.expiresAt
-          : now,
-        plan.periodDays,
-      );
+  const expiresAt = addDays(
+    existing?.expiresAt && existing.expiresAt.getTime() > now.getTime()
+      ? existing.expiresAt
+      : now,
+    plan.periodDays,
+  );
 
   if (existing) {
     await db.update(subscriptions).set({

@@ -22,6 +22,9 @@ const STRINGS = {
   // ── Hero ──
   hero_tagline: { en: 'From a messy brief to an execution-ready spec', id: 'Dari brief berantakan jadi spek siap eksekusi' },
   hero_prompt_placeholder: { en: 'Tell us about your brief...', id: 'Ceritain brief lo di sini...' },
+  hero_prompt_label: { en: 'Describe your brief', id: 'Ceritakan brief kamu' },
+  hero_submit: { en: 'Continue with this brief', id: 'Lanjutkan dengan brief ini' },
+  hero_attachments_note: { en: 'Image, audio, PDF, and DOCX attachments are available after login.', id: 'Lampiran gambar, audio, PDF, dan DOCX tersedia setelah login.' },
   hero_brief_created: { en: 'Brief created!', id: 'Brief dibuat!' },
   hero_brief_processing: { en: 'Your pipeline is processing the brief. Check the result in the dashboard.', id: 'Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.' },
   hero_see_result: { en: 'See result', id: 'Lihat hasil' },
@@ -31,17 +34,17 @@ const STRINGS = {
   harnesses_kicker: { en: 'The Harnesses', id: 'The Harnesses' },
   harnesses_title: { en: 'MESSY INPUT. CLEAN SPEC.', id: 'INPUT BERANTAKAN. SPEC RAPI.' },
   harnesses_desc: {
-    en: 'Client sends a voice note, a screenshot, a Notion dump. SANDWICH turns all of it into structured, machine-readable specs — validated and ready for your agent to execute.',
-    id: 'Klien kirim voice note, screenshot, Notion dump. SANDWICH ubah semua itu jadi structured, machine-readable specs — tervalidasi dan siap dieksekusi agent kamu.',
+    en: 'Start with text, then add voice notes, screenshots, PDFs, or DOCX files after login. SANDWICH turns the context into persistent, versioned deliverables.',
+    id: 'Mulai dari teks, lalu tambahkan voice note, screenshot, PDF, atau DOCX setelah login. SANDWICH mengubah konteks itu jadi deliverable yang tersimpan dan berversi.',
   },
-  step_1_label: { en: 'Send Brief', id: 'Kasih Brief' },
-  step_1_desc: { en: 'Raw input, any language', id: 'Input kasar, bahasa apapun' },
-  step_2_label: { en: 'AI Processes', id: 'AI Proses' },
-  step_2_desc: { en: 'Order → Prep → Recipe', id: 'Order → Prep → Recipe' },
-  step_3_label: { en: 'Get the Spec', id: 'Dapat Spec' },
-  step_3_desc: { en: 'PRD, Specs, Quotation', id: 'PRD, Specs, Quotation' },
-  step_4_label: { en: 'Agent Executes', id: 'Agent Eksekusi' },
-  step_4_desc: { en: 'Claude, Pi, or Codex', id: 'Claude, Pi, atau Codex' },
+  step_1_label: { en: 'Drop the brief', id: 'Masukkan brief' },
+  step_1_desc: { en: 'Messy input is fine', id: 'Input berantakan tidak masalah' },
+  step_2_label: { en: 'Choose output', id: 'Pilih output' },
+  step_2_desc: { en: 'PRD, quotation, prototype, or specs', id: 'PRD, quotation, prototype, atau specs' },
+  step_3_label: { en: 'Clarify', id: 'Klarifikasi' },
+  step_3_desc: { en: 'Answer focused questions', id: 'Jawab pertanyaan terarah' },
+  step_4_label: { en: 'Generate', id: 'Generate' },
+  step_4_desc: { en: 'Get a versioned deliverable', id: 'Dapatkan deliverable berversi' },
   right_write_spec: { en: 'Write Spec', id: 'Tulis Spec' },
   right_structure_brief: { en: 'Structure the Brief', id: 'Struktur Brief' },
   right_quotation: { en: 'Quotation', id: 'Quotation' },
@@ -78,10 +81,10 @@ const STRINGS = {
     id: 'Pilihan jelas untuk kebutuhan berbeda. Mulai dari yang kecil, upgrade kapan saja.',
   },
   pricing_best_value: { en: 'Best value', id: 'Paling worth it' },
-  plan_starter_desc: { en: 'Free to start.', id: 'Gratis untuk mulai.' },
-  plan_starter_cta: { en: 'Start Free', id: 'Mulai Gratis' },
-  plan_starter_f2: { en: '5 documents / month (PRD, quotation, specs)', id: '5 dokumen / bulan (PRD, quotation, specs)' },
-  plan_starter_proto: { en: '3 prototypes / month', id: '3 prototype / bulan' },
+  plan_starter_desc: { en: 'For focused monthly work.', id: 'Untuk kebutuhan bulanan yang fokus.' },
+  plan_starter_cta: { en: 'Choose Starter', id: 'Pilih Starter' },
+  plan_starter_f2: { en: '5 generated PRDs / month', id: '5 PRD hasil generate / bulan' },
+  plan_starter_proto: { en: 'Prototype generation included', id: 'Generate prototype termasuk' },
   plan_starter_f3: { en: '100 AI chat messages / month', id: '100 pesan chat AI / bulan' },
   plan_starter_f4: { en: 'Download Markdown', id: 'Download Markdown' },
   plan_starter_f5: { en: 'Generate specs for features and tasks', id: 'Generate specs untuk fitur dan task' },
@@ -166,6 +169,9 @@ const STRINGS = {
   // ── Auth shared ──
   auth_back: { en: 'Back', id: 'Kembali' },
   auth_or: { en: 'or', id: 'atau' },
+  auth_password: { en: 'Password', id: 'Password' },
+  auth_show_password: { en: 'Show password', id: 'Tampilkan password' },
+  auth_hide_password: { en: 'Hide password', id: 'Sembunyikan password' },
 
   // ── Login ──
   login_title: { en: 'Welcome back', id: 'Selamat datang lagi' },
@@ -200,7 +206,7 @@ const STRINGS = {
 
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },
-  setup_subtitle: { en: 'No account on this instance yet — register to continue.', id: 'Belum ada akun di instance ini — daftar dulu untuk lanjut.' },
+  setup_subtitle: { en: 'Create your SANDWICH account to continue.', id: 'Buat akun SANDWICH untuk lanjut.' },
   setup_pass_placeholder: { en: 'Min. 8 characters', id: 'Min. 8 karakter' },
   setup_cta: { en: 'Create account', id: 'Buat akun' },
   setup_pending: { en: 'Creating account…', id: 'Membuat akun...' },
@@ -313,7 +319,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     void setPreference('lang', next).catch(() => {})
   }
 
-  // Sync from the server for authenticated users (localStorage is the instant cache).
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
+  // Preference API checks auth first, avoiding anonymous 401s.
   useEffect(() => {
     void getPreference('lang')
       .then((value) => {

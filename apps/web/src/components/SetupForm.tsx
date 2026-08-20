@@ -38,9 +38,9 @@ export default function SetupForm({
     if (!username.trim() || !email.trim() || !password.trim()) return;
     try {
       await onSubmit(username.trim(), email.trim(), password);
-      // Remember the chosen plan so a Pro signup is charged right after
-      // email verification + login (the verify link can't carry this).
-      if (plan === 'pro') localStorage.setItem('sandwich_pending_plan', 'pro');
+      // Remember the paid plan so checkout resumes after email verification
+      // and login (the verification link cannot carry this state).
+      try { localStorage.setItem('sandwich_pending_plan', plan); } catch { /* best effort */ }
       trackPostHog('signup_completed', { plan });
       setRegistered(true);
     } catch {
@@ -64,7 +64,7 @@ export default function SetupForm({
           <p className="text-sm text-zinc-500 text-center mb-6">{tr("setup_verify_sent_desc")}</p>
           <button
             onClick={onBack}
-            className="w-full py-3 rounded-full text-sm font-semibold text-white"
+            className="w-full min-h-11 py-3 rounded-full text-sm font-semibold text-white"
             style={{ backgroundColor: "#0a0a0a" }}
           >
             {tr("auth_back")}
@@ -115,6 +115,7 @@ export default function SetupForm({
 
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <label className="sr-only" htmlFor="register-username">Username</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -125,16 +126,20 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="register-username"
+              name="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
+              autoComplete="username"
               placeholder="Username"
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
+          <label className="sr-only" htmlFor="register-email">Email</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -145,15 +150,19 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="register-email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               placeholder="Email"
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
+          <label className="sr-only" htmlFor="register-password">{tr('auth_password')}</label>
           <div
             className="flex items-center gap-2.5 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: "#F4EBE1" }}
@@ -164,18 +173,22 @@ export default function SetupForm({
               style={{ color: "rgba(0,0,0,0.35)", display: "block" }}
             />
             <input
+              id="register-password"
+              name="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Password"
+              autoComplete="new-password"
+              placeholder={tr('auth_password')}
               className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="shrink-0 flex items-center"
+              className="shrink-0 w-11 h-11 -my-2 -mr-2 flex items-center justify-center rounded-full"
               style={{ color: "rgba(0,0,0,0.35)" }}
+              aria-label={showPassword ? tr('auth_hide_password') : tr('auth_show_password')}
             >
               <iconify-icon
                 icon={
@@ -191,6 +204,7 @@ export default function SetupForm({
           {error && (
             <p
               className="text-xs font-medium rounded-lg px-3 py-2"
+              role="alert"
               style={{
                 color: "#f91814",
                 backgroundColor: "rgba(249,24,20,0.08)",
@@ -203,7 +217,7 @@ export default function SetupForm({
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            className="w-full min-h-11 py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             style={{ backgroundColor: "#0a0a0a" }}
           >
             {isPending ? tr("setup_pending") : tr("setup_cta")}
@@ -212,7 +226,7 @@ export default function SetupForm({
 
         <button
           onClick={onBack}
-          className="w-full py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
+          className="w-full min-h-11 py-3 rounded-full text-sm font-semibold transition-colors hover:opacity-80 mt-2 flex items-center justify-center gap-1.5"
           style={{
             border: "1.5px solid #0a0a0a",
             color: "#0a0a0a",
@@ -228,7 +242,7 @@ export default function SetupForm({
           <button
             type="button"
             onClick={onSwitchToLogin}
-            className="font-semibold underline"
+            className="font-semibold underline min-h-11 inline-flex items-center"
             style={{ color: "#f91814" }}
           >
             {tr("auth_login_link")}

@@ -31,7 +31,7 @@ export function registerUsageRoutes(router: Router, db: Database): void {
       yearMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
       planSlug,
       isPro,
-      // No active plan ⇒ 0 quota; starter ⇒ its limits; pro ⇒ unlimited.
+      // No active plan ⇒ 0 quota; starter ⇒ PRD/chat limits; pro ⇒ unlimited.
       limit: isPro ? null : plan ? plan.documentLimit : 0,
       prototypeLimit: isPro ? null : plan ? plan.prototypeLimit : 0,
       chatLimit: isPro ? null : plan ? plan.chatLimit : 0,

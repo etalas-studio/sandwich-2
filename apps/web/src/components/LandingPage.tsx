@@ -34,9 +34,23 @@ export default function LandingPage() {
   const [pendingType, setPendingType] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const activeSectionRef = useRef<string>('')
   const [activeSectionState, setActiveSectionState] = useState<string>('')
+  const faqs = FAQS[lang]
+  const navItems = [
+    { id: 'harnesses', label: t('nav_how') },
+    { id: 'pipeline', label: t('nav_pipeline') },
+    { id: 'pricing', label: t('nav_pricing') },
+    { id: 'faq', label: t('nav_faq') },
+  ]
+
+  const scrollToSection = (id: string) => {
+    activeSectionRef.current = id
+    setActiveSectionState(id)
+    setMobileMenuOpen(false)
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
     if (window.location.hash === '#pricing') {
@@ -111,33 +125,26 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
         <nav
-          className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full border max-w-full"
+          className="relative flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-full border max-w-full"
           style={{
             backgroundColor: '#F4EBE1',
             borderColor: 'rgba(0,0,0,0.1)',
             boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           }}
         >
-          <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
+          <a href="#top" aria-label="SANDWICH home" className="w-11 h-11 md:w-8 md:h-8 rounded-full flex items-center justify-center mr-1 shrink-0" style={{ backgroundColor: '#f91814' }}>
             <span className="text-white font-black text-[10px]" style={{ fontFamily: bowlby }}>S</span>
-          </div>
+          </a>
           <div className="hidden md:flex items-center gap-1">
-            {[
-              { id: 'harnesses', label: t('nav_how') },
-              { id: 'pipeline', label: t('nav_pipeline') },
-              { id: 'pricing', label: t('nav_pricing') },
-              { id: 'faq', label: t('nav_faq') },
-            ].map(({ id, label }) => (
+            {navItems.map(({ id, label }) => (
               <a
                 key={id}
                 href={`#${id}`}
                 onClick={(e) => {
                   e.preventDefault()
-                  activeSectionRef.current = id
-                  setActiveSectionState(id)
-                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                  scrollToSection(id)
                 }}
-                className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors"
+                className="shrink-0 px-3.5 min-h-11 inline-flex items-center text-sm font-medium transition-colors"
                 style={{ color: activeSectionState === id ? '#0a0a0a' : '#6b7280', fontWeight: activeSectionState === id ? 600 : 500 }}
               >
                 {label}
@@ -145,10 +152,21 @@ export default function LandingPage() {
             ))}
           </div>
           <button
-            onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-            className="shrink-0 ml-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="md:hidden shrink-0 w-11 h-11 rounded-full inline-flex items-center justify-center"
             style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
-            title="Switch language"
+            aria-label={mobileMenuOpen ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+          >
+            <iconify-icon icon={mobileMenuOpen ? 'solar:close-circle-linear' : 'solar:hamburger-menu-linear'} width="20" />
+          </button>
+          <button
+            onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+            className="shrink-0 ml-1 min-w-11 h-11 px-3 rounded-full text-xs font-semibold transition-colors"
+            style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
+            aria-label={lang === 'en' ? 'Ganti bahasa ke Indonesia' : 'Switch language to English'}
           >
             {lang === 'en' ? 'EN' : 'ID'}
           </button>
@@ -156,23 +174,48 @@ export default function LandingPage() {
             onClick={() => router.push('/login')}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
-            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
+            className="hidden md:inline-flex items-center shrink-0 ml-1 px-4 min-h-11 rounded-full text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
           >
             {t('nav_login')}
           </button>
           <button
             onClick={() => router.push('/register')}
-            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
+            className="shrink-0 ml-1 px-3 sm:px-4 min-h-11 inline-flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
           >
             {t('nav_get_started')}
           </button>
+          {mobileMenuOpen && (
+            <div
+              id="mobile-navigation"
+              className="absolute top-[calc(100%+0.5rem)] left-0 right-0 md:hidden rounded-2xl border p-2 shadow-xl"
+              style={{ backgroundColor: '#F4EBE1', borderColor: 'rgba(0,0,0,0.1)' }}
+            >
+              {navItems.map(({ id, label }) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(event) => { event.preventDefault(); scrollToSection(id) }}
+                  className="min-h-11 px-4 rounded-xl flex items-center text-sm font-semibold text-zinc-700 hover:bg-black/5"
+                >
+                  {label}
+                </a>
+              ))}
+              <button
+                type="button"
+                onClick={() => router.push('/login')}
+                className="w-full min-h-11 px-4 rounded-xl flex items-center text-sm font-semibold text-[#f91814] hover:bg-black/5"
+              >
+                {t('nav_login')}
+              </button>
+            </div>
+          )}
         </nav>
       </div>
 
       {/* ── HERO ── */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 flex flex-col items-center text-center px-6 overflow-hidden">
+      <section id="top" className="relative pt-32 pb-20 md:pt-40 md:pb-32 flex flex-col items-center text-center px-6 overflow-hidden">
         {/* watermark */}
         <div className="absolute inset-0 flex items-center justify-center z-0 opacity-5 pointer-events-none select-none">
           <span className="text-[25vw] leading-none text-[#F4A804]" style={{ fontFamily: bowlby }}>
@@ -181,14 +224,14 @@ export default function LandingPage() {
         </div>
 
         <h1
-          className="relative z-10 text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
+          className="landing-hero-enter relative z-10 text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
           style={{ fontFamily: bowlby }}
         >
           SANDWICH
         </h1>
 
         <p
-          className="relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#F4A804]"
+          className="landing-hero-enter relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#A96D00]"
           style={{ fontFamily: mousememoirs }}
         >
           {t('hero_tagline')}
@@ -198,7 +241,11 @@ export default function LandingPage() {
         <div className="relative w-full max-w-xs mt-12 mb-8 z-10">
           <img
             src="/sandwich.webp"
-            alt="sandwich"
+            alt="SANDWICH product illustration"
+            width="701"
+            height="561"
+            loading="eager"
+            fetchPriority="high"
             className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
           />
         </div>
@@ -208,7 +255,7 @@ export default function LandingPage() {
           <>
 
               <div
-                className="relative rounded-xl overflow-hidden shadow-lg"
+                className="landing-prompt-shell relative rounded-xl overflow-hidden shadow-lg"
                 style={{ backgroundColor: '#111113' }}
               >
                 {/* deliverable selector */}
@@ -217,12 +264,13 @@ export default function LandingPage() {
                 </div>
 
                 <textarea
+                  aria-label={t('hero_prompt_label')}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t('hero_prompt_placeholder')}
                   rows={4}
-                  className="w-full resize-none bg-transparent text-white text-sm outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-white/30"
+                  className="w-full resize-none bg-transparent text-white text-base outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-white/45"
                 />
 
                 <div className="flex items-center justify-between px-4 pb-4 pt-1">
@@ -233,8 +281,9 @@ export default function LandingPage() {
                     <button
                       onClick={() => void handleSubmit()}
                       disabled={isSubmitting || !prompt.trim()}
-                      className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
+                      className="flex items-center justify-center w-11 h-11 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
                       style={{ backgroundColor: '#f91814' }}
+                      aria-label={t('hero_submit')}
                     >
                       {isSubmitting
                         ? <iconify-icon icon="solar:refresh-linear" width="15" style={{ color: '#ffffff' }} className="animate-spin" />
@@ -244,7 +293,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {error && <p className="mt-2 text-xs text-center" style={{ color: '#f91814' }}>{error}</p>}
+              <p className="mt-3 text-sm text-center text-zinc-600">{t('hero_attachments_note')}</p>
+              {error && <p className="mt-2 text-sm text-center" style={{ color: '#c91512' }} role="alert">{error}</p>}
           </>
         </div>
 
@@ -266,10 +316,25 @@ export default function LandingPage() {
             >
               {t('harnesses_title')}
             </h2>
-            <p className="max-w-lg mx-auto text-white/80 text-sm font-medium tracking-tight leading-relaxed">
+            <p className="max-w-2xl mx-auto text-white/90 text-base font-medium tracking-tight leading-relaxed">
               {t('harnesses_desc')}
             </p>
           </div>
+
+          <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-16" aria-label={t('nav_how')}>
+            {[
+              ['1', t('step_1_label'), t('step_1_desc')],
+              ['2', t('step_2_label'), t('step_2_desc')],
+              ['3', t('step_3_label'), t('step_3_desc')],
+              ['4', t('step_4_label'), t('step_4_desc')],
+            ].map(([number, label, description]) => (
+              <li key={number} className="pipeline-step rounded-2xl border border-white/25 bg-white/10 p-5 text-left">
+                <span className="w-8 h-8 rounded-full bg-white text-[#c91512] inline-flex items-center justify-center text-sm font-bold mb-4">{number}</span>
+                <h3 className="text-base font-bold text-white mb-1">{label}</h3>
+                <p className="text-sm leading-relaxed text-white/85">{description}</p>
+              </li>
+            ))}
+          </ol>
 
           <div className="flex flex-wrap md:flex-nowrap flex-row items-center justify-center gap-6 md:gap-10 mt-8">
             {/* Left — output types */}
@@ -292,7 +357,11 @@ export default function LandingPage() {
             <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0 order-1 md:order-2">
               <img
                 src="/spec-illustration.png"
-                alt="SPEC"
+                alt="Example of a structured execution-ready specification"
+                width="890"
+                height="674"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto hover:scale-[1.02] transition-transform duration-700 object-contain"
               />
             </div>
@@ -323,7 +392,7 @@ export default function LandingPage() {
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white mb-8" style={{ fontFamily: bowlby }}>
             {t('pipeline_title_l1')}<br />{t('pipeline_title_l2')}
           </h2>
-          <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight max-w-lg">
+          <p className="text-base text-white/75 font-medium leading-relaxed tracking-tight max-w-xl">
             {t('pipeline_desc_1')}{' '}
             <a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4 hover:text-[#f91814] transition-colors">Superpowers by Obra</a>.
             {' '}{t('pipeline_desc_2')}
@@ -336,7 +405,7 @@ export default function LandingPage() {
           <div className="mt-12">
             <button
               onClick={() => router.push('/register')}
-              className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
+              className="inline-flex min-h-11 items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-semibold text-sm uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
               {t('pipeline_cta')}
               <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
@@ -354,7 +423,7 @@ export default function LandingPage() {
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-6 text-black" style={{ fontFamily: bowlby }}>
             {t('stack_title')}
           </h2>
-          <p className="max-w-lg mx-auto text-black/50 mb-16 text-sm font-medium tracking-tight leading-relaxed">
+          <p className="max-w-lg mx-auto text-black/70 mb-16 text-base font-medium tracking-tight leading-relaxed">
             {t('stack_desc')}
           </p>
           <div className="grid grid-cols-2 md:flex md:flex-row justify-center items-start gap-x-6 gap-y-10 md:gap-24">
@@ -368,10 +437,14 @@ export default function LandingPage() {
                 <img
                   src={item.img}
                   alt={item.name}
+                  width="507"
+                  height="388"
+                  loading="lazy"
+                  decoding="async"
                   className="w-20 h-20 sm:w-36 sm:h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
                 />
-                <h4 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h4>
-                <p className="text-xs text-black/50 mt-1 font-medium">{item.desc}</p>
+                <h3 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h3>
+                <p className="text-sm text-black/70 mt-1 font-medium">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -383,18 +456,18 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12 text-center">
             <p
-              className="text-2xl uppercase tracking-tight mb-4 text-white"
+              className="text-2xl uppercase tracking-tight mb-4 text-[#c91512]"
               style={{ fontFamily: mousememoirs }}
             >
               {t('pricing_kicker')}
             </p>
             <h2
-              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-white"
+              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-black"
               style={{ fontFamily: bowlby }}
             >
               {t('pricing_title_l1')}<br />{t('pricing_title_l2')}
             </h2>
-            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white">
+            <p className="text-base font-semibold leading-relaxed max-w-md mx-auto text-black/75">
               {t('pricing_desc')}
             </p>
           </div>
@@ -426,7 +499,7 @@ export default function LandingPage() {
                 <div className="px-6 pb-5">
                   <button
                     onClick={() => { trackPostHog('plan_selected', { plan_slug: plan.slug }); router.push(`/register?plan=${plan.slug}`) }}
-                    className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
+                    className="w-full min-h-11 py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
                     style={plan.highlight
                       ? { backgroundColor: '#f91814', color: '#ffffff' }
                       : { backgroundColor: '#111827', color: '#ffffff' }
@@ -473,16 +546,16 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col divide-y divide-zinc-800">
-            {FAQS.map((faq, i) => (
-              <details key={i} className="group py-6" open={openFaq === i} onClick={(e) => { e.preventDefault(); setOpenFaq(openFaq === i ? null : i) }}>
-                <summary className="flex items-center justify-between cursor-pointer list-none gap-4">
+            {faqs.map((faq, i) => (
+              <details key={i} className="group py-6">
+                <summary className="flex min-h-11 items-center justify-between cursor-pointer list-none gap-4">
                   <span className="text-base font-semibold text-white tracking-tight">{faq.q}</span>
                   <iconify-icon
                     icon="solar:alt-arrow-down-linear"
-                    className={`text-[#f91814] text-xl shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`}
+                    className="text-[#f91814] text-xl shrink-0 transition-transform duration-300 group-open:rotate-180"
                   ></iconify-icon>
                 </summary>
-                <p className="mt-4 text-sm text-zinc-400 leading-relaxed font-medium">
+                <p className="mt-4 text-base text-zinc-300 leading-relaxed font-medium">
                   {faq.a}
                 </p>
               </details>
@@ -492,7 +565,7 @@ export default function LandingPage() {
           <div className="mt-14 text-center">
             <button
               onClick={() => router.push('/register')}
-              className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
+              className="inline-flex min-h-11 items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-semibold text-sm uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
             >
               {t('faq_cta')}
               <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
@@ -523,7 +596,7 @@ export default function LandingPage() {
                   { icon: 'mdi:linkedin', href: 'https://www.linkedin.com/company/etalas/', label: 'LinkedIn' },
                 ].map(({ icon, href, label }) => (
                   <a key={label} href={href} target="_blank" rel="noreferrer"
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+                    className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
                     style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
                     aria-label={label}
                   >
@@ -585,7 +658,7 @@ export default function LandingPage() {
               className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               <span className="text-sm">{t('footer_product_by')}</span>
-              <img src="/logos/etalas-logo.png" alt="Etalas" className="h-4 w-auto brightness-0 invert" />
+              <img src="/logos/etalas-logo.png" alt="Etalas" width="227" height="43" loading="lazy" decoding="async" className="h-4 w-auto brightness-0 invert" />
             </a>
           </div>
         </div>

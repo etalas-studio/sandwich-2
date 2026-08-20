@@ -42,7 +42,7 @@ async function resolveVersionNo(
 }
 
 function redirectTrailing(res: ServerResponseLike, location: string): boolean {
-  res.writeHead(301, { location });
+  res.writeHead(301, { location, "x-robots-tag": "noindex, nofollow" });
   res.end();
   return true;
 }
@@ -73,7 +73,7 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     if (!versionNo) { sendJson(res, 404, { error: "no files generated" }); return; }
     const indexFile = await getDocumentFile(db, doc.id, versionNo, "index.html");
     if (!indexFile) { sendJson(res, 404, { error: "index.html not found" }); return; }
-    res.writeHead(200, { "content-type": "text/html" });
+    res.writeHead(200, { "content-type": "text/html", "x-robots-tag": "noindex, nofollow" });
     res.end(indexFile.content);
   });
 
@@ -91,7 +91,7 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     if (!versionNo) { sendJson(res, 404, { error: "version not found" }); return; }
     const indexFile = await getDocumentFile(db, doc.id, versionNo, "index.html");
     if (!indexFile) { sendJson(res, 404, { error: "index.html not found" }); return; }
-    res.writeHead(200, { "content-type": "text/html" });
+    res.writeHead(200, { "content-type": "text/html", "x-robots-tag": "noindex, nofollow" });
     res.end(indexFile.content);
   });
 
@@ -104,7 +104,7 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     if (!versionNo) { sendJson(res, 404, { error: "version not found" }); return; }
     const file = await getDocumentFile(db, doc.id, versionNo, params.path!);
     if (!file) { sendJson(res, 404, { error: "file not found" }); return; }
-    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream" });
+    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream", "x-robots-tag": "noindex, nofollow" });
     res.end(file.content);
   });
 
@@ -117,7 +117,7 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     if (!versionNo) { sendJson(res, 404, { error: "no files generated" }); return; }
     const file = await getDocumentFile(db, doc.id, versionNo, params.path!);
     if (!file) { sendJson(res, 404, { error: "file not found" }); return; }
-    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream" });
+    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream", "x-robots-tag": "noindex, nofollow" });
     res.end(file.content);
   });
 }

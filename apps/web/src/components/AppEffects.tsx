@@ -1,12 +1,13 @@
 'use client'
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { identifyPostHog, initPostHog } from '../lib/posthog'
 
 export default function AppEffects() {
   const router = useRouter()
+  const pathname = usePathname()
   const { state } = useAuth()
   const { data: sub, isLoading: subLoading } = useSubscription()
 
@@ -24,14 +25,23 @@ export default function AppEffects() {
   }, [state?.status, authUserId, authUsername, sub?.planSlug, subLoading])
 
   useEffect(() => {
-    if (state?.status === 'authenticated') {
+    if (state?.status === 'authenticated' && !subLoading) {
       const pending = localStorage.getItem('sandwich_pending_plan')
-      if (pending === 'pro') {
-        localStorage.removeItem('sandwich_pending_plan')
-        router.replace('/pay?plan=pro')
+      if (pending === 'starter' || pending === 'pro') {
+        if (sub?.planSlug) {
+          localStorage.removeItem('sandwich_pending_plan')
+          return
+        }
+        if (!pathname.startsWith('/pay')) {
+          router.replace(`/pay?plan=${pending}`)
+        }
+        return
+      }
+      if (!sub?.planSlug && !pathname.startsWith('/pay')) {
+        router.replace('/pay?plan=starter')
       }
     }
-  }, [state?.status, router])
+  }, [state?.status, sub?.planSlug, subLoading, pathname, router])
 
   return null
 }

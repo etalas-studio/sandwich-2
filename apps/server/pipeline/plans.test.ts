@@ -3,12 +3,12 @@ import { describe, it } from "node:test";
 import { getPlan, generateOrderId } from "./plans.js";
 
 describe("getPlan", () => {
-  it("returns the starter plan config (free tier)", () => {
+  it("returns the paid starter plan config", () => {
     const plan = getPlan("starter");
     assert.ok(plan);
-    assert.equal(plan.amount, 0);
+    assert.equal(plan.amount, 50000);
     assert.equal(plan.documentLimit, 5);
-    assert.equal(plan.prototypeLimit, 3);
+    assert.equal(plan.prototypeLimit, null);
     assert.equal(plan.chatLimit, 100);
     assert.equal(plan.periodDays, 30);
   });
