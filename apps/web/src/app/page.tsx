@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     'lovable indonesia',
     'PRD',
     'Prototype',
+    'Sandwich',
+    'Sandwich PRD',
+    'Sandwich Prototype',
+    'Sandwich Etalas',
+    'Etalas'
   ],
   metadataBase: new URL('https://sandwich.etalas.com'),
   alternates: { canonical: '/' },
