@@ -69,8 +69,8 @@ const HELP_SECTIONS = [
         a: { en: 'Click the "Upgrade to PRO" button in the left sidebar. You\'ll be taken to the payment page.', id: 'Klik tombol "Upgrade ke PRO" di sidebar kiri. Anda akan diarahkan ke halaman pembayaran.' },
       },
       {
-        q: { en: 'Is there a free trial?', id: 'Apakah ada free trial?' },
-        a: { en: 'No free tier — Starter is Rp 50k/mo, Pro is Rp 100k/mo.', id: 'Tidak ada paket gratis — Starter Rp 50k/bulan, Pro Rp 100k/bulan.' },
+        q: { en: 'Is there a free plan?', id: 'Apakah ada paket gratis?' },
+        a: { en: 'Yes — Starter is free (5 PRDs/month, 100 AI chats). Pro is Rp 100k/mo for unlimited everything.', id: 'Ada — Starter gratis (5 PRD/bulan, 100 chat AI). Pro Rp 100k/bulan untuk semuanya unlimited.' },
       },
     ],
   },

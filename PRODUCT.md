@@ -111,11 +111,11 @@ tools to emit files into a workspace.
 
 ### Plans
 
-- **No free tier.** Only Starter and Pro.
+- **Starter is free.** Only Starter (free) and Pro (paid).
 
 | Plan | Price | Documents | AI chat |
 |------|-------|-----------|---------|
-| **Starter** | Rp 50.000 / 30 days | 5 PRDs / month | 100 messages / month |
+| **Starter** | Free (was Rp 50.000 / 30 days) | 5 PRDs / month | 100 messages / month |
 | **Pro** | Rp 100.000 / 30 days (shown as discounted from Rp 250.000) | Unlimited | Unlimited |
 
 ### Quota rules
