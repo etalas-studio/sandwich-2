@@ -300,6 +300,8 @@ export default function LandingPage() {
           <img
             src="/sandwich.webp"
             alt="sandwich"
+            fetchPriority="high"
+            loading="eager"
             className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
           />
         </div>
@@ -391,11 +393,16 @@ export default function LandingPage() {
 
             {/* Center — spec illustration */}
             <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0 order-1 md:order-2">
-              <img
-                src="/spec-illustration.png"
-                alt="SPEC"
-                className="w-full h-auto hover:scale-[1.02] transition-transform duration-700 object-contain"
-              />
+              <picture>
+                <source srcSet="/spec-illustration.avif" type="image/avif" />
+                <source srcSet="/spec-illustration.webp" type="image/webp" />
+                <img
+                  src="/spec-illustration.png"
+                  alt="SPEC"
+                  loading="lazy"
+                  className="w-full h-auto hover:scale-[1.02] transition-transform duration-700 object-contain"
+                />
+              </picture>
             </div>
 
             {/* Right — output types */}
@@ -477,6 +484,7 @@ export default function LandingPage() {
                 <img
                   src={item.img}
                   alt={item.name}
+                  loading="lazy"
                   className="w-20 h-20 sm:w-36 sm:h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
                 />
                 <h3 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h3>
@@ -740,7 +748,7 @@ export default function LandingPage() {
               className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               <span className="text-sm">{t('footer_product_by')}</span>
-              <img src="/logos/etalas-logo.png" alt="Etalas" className="h-4 w-auto brightness-0 invert" />
+              <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto brightness-0 invert" />
             </a>
           </div>
         </div>

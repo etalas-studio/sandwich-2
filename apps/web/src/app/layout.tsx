@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import Providers from '../components/Providers'
 import AppEffects from '../components/AppEffects'
 import ErrorBoundary from '../components/ErrorBoundary'
@@ -19,10 +20,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Bowlby+One&family=Mouse+Memoirs&display=swap"
           rel="stylesheet"
         />
-        <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" />
         <link rel="icon" href="/sandwich.webp" type="image/webp" />
       </head>
       <body>
+        <Script
+          src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"
+          strategy="afterInteractive"
+        />
         <ErrorBoundary>
           <Providers>
             <AppEffects />
