@@ -464,6 +464,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── DIFFERENTIATORS ── */}
+      <section id="differentiators" className="py-24 md:py-32 bg-black">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-2xl tracking-tight mb-12 uppercase text-[#f91814] text-center" style={{ fontFamily: mousememoirs }}>{t('diff_kicker')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            {[
+              { title: t('diff_1_title'), desc: t('diff_1_desc') },
+              { title: t('diff_2_title'), desc: t('diff_2_desc') },
+              { title: t('diff_3_title'), desc: t('diff_3_desc') },
+              { title: t('diff_4_title'), desc: t('diff_4_desc') },
+            ].map((d) => (
+              <div key={d.title}>
+                <p className="text-white font-semibold text-base tracking-tight">{d.title}</p>
+                <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight mt-1">{d.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── PRICING ── */}
       <section id="pricing" className="py-24 md:py-32 bg-[#F9CD25]">
         <div className="max-w-7xl mx-auto px-6">

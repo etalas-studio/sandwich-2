@@ -35,8 +35,8 @@ const STRINGS = {
   harnesses_kicker: { en: 'The Harnesses', id: 'Prosesnya' },
   harnesses_title: { en: 'MESSY INPUT. CLEAN SPEC.', id: 'INPUT BERANTAKAN. SPEC RAPI.' },
   harnesses_desc: {
-    en: 'Client sends a voice note, a screenshot, a Notion dump. SANDWICH turns all of it into structured, machine-readable specs — validated and ready for your agent to execute.',
-    id: 'Klien kirim voice note, screenshot, Notion dump. SANDWICH ubah semua itu jadi structured, machine-readable specs — tervalidasi dan siap dieksekusi agent kamu.',
+    en: 'Paste the brief here to start. Once you\'re in, attach voice notes, screenshots, and docs too — SANDWICH turns all of it into structured, machine-readable specs your agent can execute.',
+    id: 'Tempel brief di sini buat mulai. Setelah login, kamu juga bisa lampirkan voice note, screenshot, dan dokumen — SANDWICH ubah semua itu jadi spec terstruktur yang bisa dieksekusi agent kamu.',
   },
   step_1_label: { en: 'Send Brief', id: 'Kasih Brief' },
   step_1_desc: { en: 'Raw input, any language', id: 'Input kasar, bahasa apapun' },
@@ -108,6 +108,17 @@ const STRINGS = {
     en: 'Real excerpts from documents SANDWICH generated — not mockups.',
     id: 'Cuplikan asli dari dokumen yang dibuat SANDWICH — bukan mockup.',
   },
+
+  // ── Differentiators ──
+  diff_kicker: { en: 'Why SANDWICH', id: 'Kenapa SANDWICH' },
+  diff_1_title: { en: 'Version history, not overwrites', id: 'Riwayat versi, bukan ditimpa' },
+  diff_1_desc: { en: 'Every revision creates a new version — nothing you generated is ever lost.', id: 'Setiap revisi bikin versi baru — hasil generate kamu nggak pernah hilang.' },
+  diff_2_title: { en: 'Documents persist, across sessions', id: 'Dokumen tersimpan, lintas sesi' },
+  diff_2_desc: { en: 'Come back days later and open the same PRD — it\'s tied to your account, not one chat.', id: 'Balik lagi berhari-hari kemudian dan buka PRD yang sama — nempel ke akun kamu, bukan cuma satu chat.' },
+  diff_3_title: { en: 'Read-only share links', id: 'Link berbagi read-only' },
+  diff_3_desc: { en: 'Send clients a link to view the document without giving them an account.', id: 'Kirim link ke klien buat lihat dokumen tanpa perlu kasih mereka akun.' },
+  diff_4_title: { en: 'One deliverable at a time', id: 'Satu deliverable per waktu' },
+  diff_4_desc: { en: 'The AI asks clarifying questions before generating each document, instead of dumping everything at once.', id: 'AI nanya dulu sebelum generate tiap dokumen, bukan langsung tumpahin semuanya sekaligus.' },
 
   // ── FAQ ──
   faq_kicker: { en: 'Shout Out', id: 'Nanya Yuk' },
