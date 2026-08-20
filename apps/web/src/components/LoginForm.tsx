@@ -68,7 +68,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               autoFocus
               aria-label={tr('login_identifier')}
               placeholder={tr('login_identifier')}
-              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+              className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
 
@@ -81,9 +81,9 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               required
               aria-label="Password"
               placeholder="Password"
-              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+              className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
-            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }}>
+            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
               <iconify-icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width="18" />
             </button>
           </div>

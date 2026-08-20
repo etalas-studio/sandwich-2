@@ -678,7 +678,7 @@ function ChatView({
                 <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
                   {a.type.startsWith('image/') ? <img src={a.dataUrl} className="w-4 h-4 rounded object-cover" alt="" /> : <iconify-icon icon="solar:document-linear" width="12" />}
                   <span className="max-w-[100px] truncate">{a.name}</span>
-                  <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100">
+                  <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100" aria-label="Remove attachment">
                     <iconify-icon icon="solar:close-circle-bold" width="12" />
                   </button>
                 </div>
@@ -689,12 +689,12 @@ function ChatView({
           <div className="flex items-center gap-1 px-4 pb-4 pt-1">
             <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
             <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
-            <button onClick={() => imageInputRef.current?.click()} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
+            <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
               <iconify-icon icon="solar:gallery-linear" width="18" />
             </button>
-            <button onClick={() => fileInputRef.current?.click()} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
+            <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
               <iconify-icon icon="solar:paperclip-linear" width="18" />
@@ -704,6 +704,7 @@ function ChatView({
             <button
               onClick={handleSend}
               disabled={streaming || !followUp.trim()}
+              aria-label="Send message"
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-25 active:scale-95 ml-2"
               style={{ backgroundColor: '#f91814' }}
             >
@@ -829,7 +830,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
             <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
               {a.type.startsWith('image/') ? <img src={a.dataUrl} className="w-4 h-4 rounded object-cover" alt="" /> : <iconify-icon icon="solar:document-linear" width="12" />}
               <span className="max-w-[100px] truncate">{a.name}</span>
-              <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100">
+              <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100" aria-label="Remove attachment">
                 <iconify-icon icon="solar:close-circle-bold" width="12" />
               </button>
             </div>
@@ -843,12 +844,12 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
         <div className="flex items-center gap-1">
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
           <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
-          <button onClick={() => imageInputRef.current?.click()} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
+          <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:gallery-linear" width="18" />
           </button>
-          <button onClick={() => fileInputRef.current?.click()} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
+          <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:paperclip-linear" width="18" />
@@ -859,6 +860,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
           <button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !prompt.trim() || atLimit}
+            aria-label="Send"
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-40 active:scale-95"
             style={{ backgroundColor: '#f91814' }}
           >
@@ -1260,7 +1262,7 @@ function Drawer({ conversation, onClose, onDelete }: { conversation: LocalConver
               {conversation.status === 'done' ? 'Selesai' : conversation.status === 'processing' ? 'Diproses' : 'Draft'}
             </span>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
             <iconify-icon icon="solar:close-linear" width="16" style={{ color: '#6b7280' }} />
           </button>
         </div>
@@ -1593,7 +1595,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
             </div>
           </div>
-          <button className="p-1 rounded transition-colors hover:bg-white/10" onClick={() => setSidebarOpen(false)}>
+          <button className="p-1 rounded transition-colors hover:bg-white/10" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
             <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: '#ffffff' }} />
           </button>
         </div>
@@ -1706,6 +1708,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-0 group-hover/item:opacity-100 transition-opacity"
                       style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
+                      aria-label="Chat options"
                     >
                       <iconify-icon icon="solar:menu-dots-bold" width="14" />
                     </button>
@@ -1815,7 +1818,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b shrink-0 gap-2" style={{ backgroundColor: 'rgba(244,235,225,0.8)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
           <div className="flex items-center gap-2 min-w-0">
             {!sidebarOpen && (
-              <button className="p-1.5 rounded-lg hover:bg-black/8 transition-colors shrink-0" onClick={() => setSidebarOpen(true)}>
+              <button className="p-1.5 rounded-lg hover:bg-black/8 transition-colors shrink-0" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
                 <iconify-icon icon="solar:sidebar-minimalistic-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
               </button>
             )}
@@ -1840,7 +1843,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                   </p>
                 )}
                 <div className="relative shrink-0 flex items-center">
-                  <button onClick={() => setShowChatMenu(v => !v)} className="p-1 rounded-md hover:bg-black/5 transition-colors flex items-center justify-center shrink-0">
+                  <button onClick={() => setShowChatMenu(v => !v)} className="p-1 rounded-md hover:bg-black/5 transition-colors flex items-center justify-center shrink-0" aria-label="Chat options">
                     <iconify-icon icon="solar:alt-arrow-down-linear" width="14" style={{ color: 'rgba(0,0,0,0.4)', display: 'block' }} />
                   </button>
                   {showChatMenu && (
@@ -1895,7 +1898,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             <PlanBadge />
             {chatState && activeNav !== 'settings' && activeNav !== 'help' && (<>
               <div className="relative hidden">
-                <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative">
+                <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative" aria-label="Notifications">
                   <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
                   {notifications.length > 0 && (
                     <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
@@ -1929,7 +1932,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 <iconify-icon icon={shareCopied ? 'solar:check-circle-linear' : 'solar:upload-linear'} width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
               </button>
               <div className="relative">
-                <button onClick={() => { setShowMoreMenu(v => !v); setShowNotifMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors">
+                <button onClick={() => { setShowMoreMenu(v => !v); setShowNotifMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors" aria-label="More options">
                   <iconify-icon icon="solar:menu-dots-bold" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
                 </button>
                 {showMoreMenu && (
@@ -2018,7 +2021,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     className="ml-auto w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0"
                     style={{ color: 'rgba(255,255,255,0.5)' }}
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
+                    aria-label="Close">
                     <iconify-icon icon="solar:close-circle-linear" width="18" />
                   </button>
                 </div>

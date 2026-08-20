@@ -203,7 +203,7 @@ export default function LandingPage() {
             onClick={() => setMobileNavOpen((v) => !v)}
             aria-label={mobileNavOpen ? t('nav_menu_close') : t('nav_menu_open')}
             aria-expanded={mobileNavOpen}
-            className="md:hidden shrink-0 w-8 h-8 flex items-center justify-center rounded-full"
+            className="md:hidden shrink-0 w-11 h-11 flex items-center justify-center rounded-full"
             style={{ color: '#0a0a0a' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -216,7 +216,7 @@ export default function LandingPage() {
           </button>
           <button
             onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-            className="shrink-0 ml-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+            className="shrink-0 ml-1 px-3 min-h-11 flex items-center rounded-full text-xs font-semibold transition-colors"
             style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
             title="Switch language"
           >
@@ -226,14 +226,14 @@ export default function LandingPage() {
             onClick={() => router.push('/login')}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
-            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
+            className="shrink-0 ml-1 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
           >
             {t('nav_login')}
           </button>
           <button
             onClick={() => router.push('/register')}
-            className="shrink-0 ml-1 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
+            className="shrink-0 ml-1 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
           >
             {t('nav_get_started')}
@@ -271,6 +271,7 @@ export default function LandingPage() {
         </div>
       </div>
 
+      <main>
       {/* ── HERO ── */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 flex flex-col items-center text-center px-6 overflow-hidden">
         {/* watermark */}
@@ -333,7 +334,7 @@ export default function LandingPage() {
                     <button
                       onClick={() => void handleSubmit()}
                       disabled={isSubmitting || !prompt.trim()}
-                      className="flex items-center justify-center w-10 h-10 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
+                      className="flex items-center justify-center w-11 h-11 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
                       style={{ backgroundColor: '#f91814' }}
                     >
                       {isSubmitting
@@ -478,7 +479,7 @@ export default function LandingPage() {
                   alt={item.name}
                   className="w-20 h-20 sm:w-36 sm:h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
                 />
-                <h4 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h4>
+                <h3 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h3>
                 <p className="text-xs text-black/50 mt-1 font-medium">{item.desc}</p>
               </div>
             ))}
@@ -653,6 +654,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ── FOOTER ── */}
       <footer className="bg-black border-t border-zinc-800 pt-16 pb-10 text-white">
@@ -676,7 +678,7 @@ export default function LandingPage() {
                   { icon: 'mdi:linkedin', href: 'https://www.linkedin.com/company/etalas/', label: 'LinkedIn' },
                 ].map(({ icon, href, label }) => (
                   <a key={label} href={href} target="_blank" rel="noreferrer"
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+                    className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
                     style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
                     aria-label={label}
                   >

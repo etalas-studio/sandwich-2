@@ -30,6 +30,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
               <button
                 className="text-white/40 hover:text-white transition-colors"
                 onClick={onClose}
+                aria-label="Close"
               >
                 <iconify-icon icon="solar:close-circle-linear" width="20" />
               </button>
