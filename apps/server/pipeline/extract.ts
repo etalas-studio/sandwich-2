@@ -41,15 +41,7 @@ const OCR_LANGS = process.env.OCR_LANGS ?? "eng";
 const VISION_PROMPT =
   "Extract every piece of text in this image verbatim, then describe the layout, UI elements, and visual design in detail. If there is no text, just describe what you see.";
 
-let modelRuntimePromise: Promise<any> | null = null;
-function getModelRuntime(): Promise<any> {
-  if (!modelRuntimePromise) {
-    modelRuntimePromise = import("@earendil-works/pi-coding-agent").then((pi) =>
-      pi.ModelRuntime.create({ modelsPath: null }),
-    );
-  }
-  return modelRuntimePromise;
-}
+import { getModelRuntime } from "../model-runtime.js";
 
 export interface ExtractResult {
   text: string;
@@ -100,6 +92,12 @@ async function extractImageWithVision(
   buffer: Buffer,
   mimeType: string,
 ): Promise<string> {
+  if (process.env.NINEROUTER_URL) {
+    const { runAnthropicVision } = await import("../anthropic-agent.js");
+    const modelId = process.env.OPENCODE_MODEL ?? "cc/claude-haiku-4-5-20251001";
+    return runAnthropicVision(buffer, mimeType as any, VISION_PROMPT, modelId);
+  }
+
   const rt = await getModelRuntime();
   const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
   if (!model) {
@@ -108,8 +106,6 @@ async function extractImageWithVision(
     );
   }
 
-  // `Models.stream()` resolves auth (env/stored/runtime) and delegates to the
-  // provider — calling `provider.stream()` directly bypasses auth resolution.
   const stream = rt.stream(model, {
     messages: [
       {

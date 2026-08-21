@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
@@ -134,7 +135,12 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
                   setStreaming(false)
                   onDone?.(output)
                 } else if (ev.type === 'error') {
-                  const errText = ev.text ?? tr('pipeline_error')
+                  const raw = ev.text ?? ''
+                  const errText = raw === 'prototype quota reached'
+                    ? tr('prototype_quota_reached')
+                    : raw === 'monthly quota reached'
+                      ? tr('plan_limit_desc')
+                      : raw || tr('pipeline_error')
                   setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
                   setStreaming(false)
                 }
@@ -351,10 +357,12 @@ function ChatView({
     { user: initialPrompt, attachments: [], aiMessages: [] }
   ])
 
+  const [isReloading, setIsReloading] = useState(false)
+
   // Reconstruct committed turns from the DB history.
   const reloadTurns = useCallback(() => {
-    if (!conversationId) return
-    getMessages(conversationId)
+    if (!conversationId) return Promise.resolve()
+    return getMessages(conversationId)
       .then((msgs) => {
         if (!msgs.length) return
         const reconstructed: Turn[] = []
@@ -387,7 +395,7 @@ function ChatView({
 
   const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
     updateLocalConversation(conversationId, { content: output, status: 'done' })
-  }, () => { void reloadTurns() })
+  }, () => { setIsReloading(true); void reloadTurns()?.finally(() => setIsReloading(false)) })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [chatError, setChatError] = useState<string | null>(null)
@@ -627,8 +635,8 @@ function ChatView({
                   return null
                 })}
 
-                {/* Loading state — shown while streaming */}
-                {isLast && streaming && !msgs.some(m => m.isDone || m.isError) && (
+                {/* Loading state — shown while streaming or reloading turns after fast response */}
+                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (
                   <div className="flex flex-col gap-2">
                     {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
                       <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
@@ -1318,6 +1326,8 @@ function Drawer({ conversation, onClose, onDelete }: { conversation: LocalConver
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const { t: tr } = useLanguage()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [conversations, setConversations] = useState<LocalConversation[]>([])
   const [selected, setSelected] = useState<LocalConversation | null>(null)
   const [activeNav, setActiveNav] = useState('home')
@@ -1445,17 +1455,45 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setConfirmDeleteChat(false)
     if (chatState) {
       localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, conversationId: chatState.conversationId }))
+      // Sync conversation ID to URL (?c=<id>) without adding a history entry
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('c') !== chatState.conversationId) {
+        router.replace(`/dashboard?c=${chatState.conversationId}`, { scroll: false })
+      }
     } else {
       localStorage.removeItem('sandwich_last_chat')
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('c')) router.replace('/dashboard', { scroll: false })
     }
-  }, [chatState?.conversationId])
+  }, [chatState?.conversationId, router])
 
-  // Handle browser back button when navigating from Documents into chat
+  // Restore conversation from ?c= URL param on first load
+  useEffect(() => {
+    const cId = searchParams.get('c')
+    if (!cId || chatState?.conversationId === cId) return
+    void loadConversations().then(convs => {
+      setConversations(convs)
+      const match = convs.find(c => c.id === cId)
+      if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Handle browser back/forward between conversations
   useEffect(() => {
     const handler = (e: PopStateEvent) => {
       if (e.state?.activeNav) {
         setActiveNav(e.state.activeNav)
         setChatState(null)
+        return
+      }
+      const params = new URLSearchParams(window.location.search)
+      const cId = params.get('c')
+      if (!cId) {
+        setChatState(null)
+      } else {
+        const match = getConversations().find(c => c.id === cId)
+        if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
       }
     }
     window.addEventListener('popstate', handler)

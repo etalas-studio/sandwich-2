@@ -13,15 +13,7 @@ const DESIGN_PROMPT =
 
 const VISION_TIMEOUT_MS = 30_000;
 
-let modelRuntimePromise: Promise<any> | null = null;
-function getModelRuntime(): Promise<any> {
-  if (!modelRuntimePromise) {
-    modelRuntimePromise = import("@earendil-works/pi-coding-agent").then((pi) =>
-      pi.ModelRuntime.create({ modelsPath: null }),
-    );
-  }
-  return modelRuntimePromise;
-}
+import { getModelRuntime } from "../model-runtime.js";
 
 /** Take a screenshot of a URL via ScreenshotOne. Null when unconfigured/failed. */
 export async function screenshotUrl(url: string): Promise<Buffer | null> {
@@ -41,9 +33,21 @@ export async function screenshotUrl(url: string): Promise<Buffer | null> {
   }
 }
 
-/** Describe the visual design of a screenshot via OpenCode vision. */
+/** Describe the visual design of a screenshot via vision model. */
 export async function describeVisual(buffer: Buffer): Promise<string | null> {
   try {
+    if (process.env.NINEROUTER_URL) {
+      const { runAnthropicVision } = await import("../anthropic-agent.js");
+      const modelId = process.env.OPENCODE_MODEL ?? "cc/claude-haiku-4-5-20251001";
+      const text = await Promise.race([
+        runAnthropicVision(buffer, "image/png", DESIGN_PROMPT, modelId),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("vision timed out")), VISION_TIMEOUT_MS),
+        ),
+      ]);
+      return text || null;
+    }
+
     const rt = await getModelRuntime();
     const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
     if (!model) return null;
