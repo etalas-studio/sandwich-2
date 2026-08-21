@@ -442,8 +442,8 @@ export function registerConversationRunRoutes(
     if (!conversation || conversation.userId !== auth.userId) { sendJson(res, 404, { error: "not found" }); return; }
     const body = (await readJsonBody(req).catch(() => null)) as { content?: string } | null;
     if (!body?.content?.trim()) { sendJson(res, 400, { error: "content is required" }); return; }
-    const msgId = parseInt(params.messageId!, 10);
-    if (isNaN(msgId)) { sendJson(res, 400, { error: "invalid messageId" }); return; }
+    const msgId = params.messageId!;
+    if (!msgId) { sendJson(res, 400, { error: "invalid messageId" }); return; }
     await updateMessageContent(db, msgId, body.content.trim());
     sendJson(res, 200, { ok: true });
   });

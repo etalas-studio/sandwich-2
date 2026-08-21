@@ -80,7 +80,7 @@ export const conversations = pgTable(
 export const chatMessages = pgTable(
   "chat_messages",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
@@ -108,7 +108,7 @@ export const attachments = pgTable("attachments", {
     .notNull()
     .references(() => users.id),
   conversationId: text("conversation_id").references(() => conversations.id),
-  messageId: integer("message_id").references(() => chatMessages.id),
+  messageId: text("message_id").references(() => chatMessages.id),
   storageKey: text("storage_key").notNull(),
   filename: text("filename").notNull(),
   mimeType: text("mime_type").notNull(),

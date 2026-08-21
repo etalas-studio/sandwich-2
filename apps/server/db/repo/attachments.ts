@@ -9,7 +9,7 @@ export interface Attachment {
   id: string;
   userId: string;
   conversationId: string | null;
-  messageId: number | null;
+  messageId: string | null;
   storageKey: string;
   filename: string;
   mimeType: string;
@@ -24,7 +24,7 @@ export interface CreateAttachmentInput {
   id: string;
   userId: string;
   conversationId: string | null;
-  messageId?: number | null;
+  messageId?: string | null;
   storageKey: string;
   filename: string;
   mimeType: string;
