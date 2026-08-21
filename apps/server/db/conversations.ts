@@ -77,7 +77,7 @@ export async function createConversation(
   userId: string,
   input: CreateConversationInput,
 ): Promise<Conversation> {
-  const id = input.id?.trim() || `c-${randomUUID().slice(0, 8)}`;
+  const id = input.id?.trim() || randomUUID();
   const now = new Date();
   await db.insert(conversations).values({
     id,

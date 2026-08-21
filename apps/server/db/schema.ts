@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -46,7 +47,8 @@ export const sessions = pgTable(
 export const conversations = pgTable(
   "conversations",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    idOld: text("id_old"),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -78,7 +80,7 @@ export const conversations = pgTable(
 export const chatMessages = pgTable(
   "chat_messages",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
@@ -106,7 +108,7 @@ export const attachments = pgTable("attachments", {
     .notNull()
     .references(() => users.id),
   conversationId: text("conversation_id").references(() => conversations.id),
-  messageId: integer("message_id").references(() => chatMessages.id),
+  messageId: text("message_id").references(() => chatMessages.id),
   storageKey: text("storage_key").notNull(),
   filename: text("filename").notNull(),
   mimeType: text("mime_type").notNull(),
@@ -139,7 +141,7 @@ export const payments = pgTable("payments", {
 });
 
 export const subscriptions = pgTable("subscriptions", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -155,7 +157,7 @@ export const subscriptions = pgTable("subscriptions", {
 export const usage = pgTable(
   "usage",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -176,7 +178,7 @@ export const usage = pgTable(
 export const userPreferences = pgTable(
   "user_preferences",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -248,7 +250,7 @@ export const documentVersions = pgTable(
 export const conversationDocuments = pgTable(
   "conversation_documents",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
@@ -269,7 +271,7 @@ export const conversationDocuments = pgTable(
 export const documentFiles = pgTable(
   "document_files",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     documentId: text("document_id")
       .notNull()
       .references(() => documents.id),

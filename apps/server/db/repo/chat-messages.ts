@@ -6,7 +6,7 @@ import { getAttachmentUrl } from "../../storage/r2.js";
 export interface MessageAttachment {
   id: string;
   conversationId: string | null;
-  messageId: number | null;
+  messageId: string | null;
   filename: string;
   mimeType: string;
   sizeBytes: number;
@@ -14,7 +14,7 @@ export interface MessageAttachment {
 }
 
 export interface ChatMessage {
-  id: number;
+  id: string;
   conversationId: string;
   role: string;
   content: string;
@@ -46,7 +46,7 @@ export async function addChatMessage(
     content: string;
     documentId?: string | null;
   },
-): Promise<number> {
+): Promise<string> {
   const now = new Date();
   const [row] = await db
     .insert(chatMessages)
@@ -92,7 +92,7 @@ export async function createMessage(
 
 export async function getMessage(
   db: Database,
-  id: number,
+  id: string,
 ): Promise<ChatMessage | null> {
   const rows = await db
     .select()
@@ -131,7 +131,7 @@ export async function getMessages(
     .from(attachments)
     .where(eq(attachments.conversationId, conversationId));
 
-  const byMessage = new Map<number, MessageAttachment[]>();
+  const byMessage = new Map<string, MessageAttachment[]>();
   for (const a of atts) {
     if (a.messageId == null) continue;
     const item = await toAttachment(a);
@@ -155,7 +155,7 @@ export async function getMessages(
 export async function getMessageHistory(
   db: Database,
   conversationId: string,
-): Promise<{ id: number; role: string; content: string }[]> {
+): Promise<{ id: string; role: string; content: string }[]> {
   const rows = await db
     .select()
     .from(chatMessages)
@@ -170,7 +170,7 @@ export async function getMessagesForPrompt(
   conversationId: string,
 ): Promise<
   {
-    id: number;
+    id: string;
     role: string;
     content: string;
     attachments: {
@@ -192,7 +192,7 @@ export async function getMessagesForPrompt(
     .from(attachments)
     .where(eq(attachments.conversationId, conversationId));
 
-  const byMessage = new Map<number, typeof atts>();
+  const byMessage = new Map<string, typeof atts>();
   for (const a of atts) {
     if (a.messageId == null) continue;
     const list = byMessage.get(a.messageId) ?? [];
@@ -213,10 +213,10 @@ export async function getMessagesForPrompt(
   }));
 }
 
-export async function updateMessageContent(db: Database, id: number, content: string): Promise<void> {
+export async function updateMessageContent(db: Database, id: string, content: string): Promise<void> {
   await db.update(chatMessages).set({ content }).where(eq(chatMessages.id, id));
 }
 
-export async function deleteMessage(db: Database, id: number): Promise<void> {
+export async function deleteMessage(db: Database, id: string): Promise<void> {
   await db.delete(chatMessages).where(eq(chatMessages.id, id));
 }
