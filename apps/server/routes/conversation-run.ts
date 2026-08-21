@@ -125,51 +125,44 @@ const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
 
 // ── Engine selection ─────────────────────────────────────────────────────────
-// OpenCode (Pi SDK) is primary. Groq is dev fallback.
+// Priority: 9router > OpenCode (Pi SDK).
 // Owner sets via env vars — users never pick.
+//   9router:   NINEROUTER_URL + NINEROUTER_KEY + NINEROUTER_MODEL
+//   OpenCode:  OPENCODE_API_KEY (+ optional OPENCODE_PROVIDER / OPENCODE_MODEL)
 
-function getEngine(): "opencode" | "groq" | null {
+function getEngine(): "9router" | "opencode" | null {
+  if (process.env.NINEROUTER_URL) return "9router";
   if (process.env.OPENCODE_API_KEY) return "opencode";
-  if (process.env.GROQ_API_KEY) return "groq";
   return null;
 }
 
 const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engine call
 
-async function runWithGroq(
+// ── 9router provider ─────────────────────────────────────────────────────────
+// Env vars: NINEROUTER_URL, NINEROUTER_KEY, NINEROUTER_MODEL
+
+async function runWith9Router(
   history: ConversationTurn[],
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
-  isRegenerate = false,
 ): Promise<string> {
-  const groqKey = process.env.GROQ_API_KEY!;
+  const rawUrl = process.env.NINEROUTER_URL!.replace(/\/+$/, "");
+  const baseUrl = rawUrl.endsWith("/v1") ? rawUrl : `${rawUrl}/v1`;
+  const apiKey = process.env.NINEROUTER_KEY ?? "no-key";
+  const modelId = process.env.NINEROUTER_MODEL ?? "ocg/deepseek-v4-pro";
   const messages = buildMessages(history, stage, pendingType);
-  if (isRegenerate && messages.length > 0) {
-    const last = messages[messages.length - 1];
-    if (last && last.role === "user") {
-      last.content = `${last.content}\n\n[Try a different structure or angle than your previous response, but stay accurate and grounded in the context. Do not repeat the same phrasing or order as before.]`;
-    }
-  }
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${groqKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: "qwen/qwen3.6-27b",
-      messages,
-      max_tokens: 4000,
-      reasoning_effort: "none",
-      temperature: 0.7,
-    }),
+    body: JSON.stringify({ model: modelId, messages, max_tokens: 4000, stream: false }),
     signal: AbortSignal.any([signal, AbortSignal.timeout(ENGINE_TIMEOUT_MS)]),
   });
   if (!res.ok) {
-    throw new Error(
-      `Groq ${res.status}: ${await res.text().catch(() => res.statusText)}`,
-    );
+    throw new Error(`9router ${res.status}: ${await res.text().catch(() => res.statusText)}`);
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
@@ -177,19 +170,19 @@ async function runWithGroq(
   return json.choices?.[0]?.message?.content ?? "";
 }
 
+// ── OpenCode provider (Pi SDK) ────────────────────────────────────────────────
+// Env vars: OPENCODE_API_KEY, OPENCODE_PROVIDER, OPENCODE_MODEL
+
 async function runWithOpenCode(
   history: ConversationTurn[],
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
 ): Promise<string> {
-  // Dynamic import Pi SDK — only loaded when OpenCode is configured
   const pi = await import("@earendil-works/pi-coding-agent");
+  const { getModelRuntime } = await import("../model-runtime.js");
 
-  const modelRuntime = await pi.ModelRuntime.create({
-    modelsPath: null,
-  });
-
+  const modelRuntime = await getModelRuntime();
   const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
   const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
   const model = modelRuntime.getModel(provider, modelId);
@@ -504,7 +497,7 @@ export function registerConversationRunRoutes(
     if (!engine) {
       sendJson(res, 503, {
         error:
-          "No AI engine configured. Set OPENCODE_API_KEY or GROQ_API_KEY env var.",
+          "No AI engine configured. Set NINEROUTER_URL or OPENCODE_API_KEY env var.",
       });
       return;
     }
@@ -621,19 +614,22 @@ export function registerConversationRunRoutes(
             stage = "generating";
           }
         } else if (stage === "awaiting_next") {
-          const detected = detectDeliverableType(lastUserMessage);
-          if (detected) {
-            pendingType = detected;
-            stage = "clarifying";
+          // Check refine intent first — feedback on an existing deliverable often
+          // contains words that also match detectDeliverableType (e.g. "UI layout"
+          // → prototype, "harga" → quotation), which would send the conversation
+          // back to clarifying instead of revising.
+          const existingDocs = await listConversationDocuments(db, conversationId);
+          const isRefine = detectRefineIntent(lastUserMessage) && existingDocs.length > 0;
+          if (isRefine) {
+            existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+            pendingType = existingDocs[0]!.type as DocumentType;
+            stage = "generating";
+            refineInstruction = lastUserMessage;
           } else {
-            // Refine intent — revise the most recently updated deliverable as
-            // a new version (same document), using the full conversation context.
-            const existingDocs = await listConversationDocuments(db, conversationId);
-            if (detectRefineIntent(lastUserMessage) && existingDocs.length > 0) {
-              existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-              pendingType = existingDocs[0]!.type as DocumentType;
-              stage = "generating";
-              refineInstruction = lastUserMessage;
+            const detected = detectDeliverableType(lastUserMessage);
+            if (detected) {
+              pendingType = detected;
+              stage = "clarifying";
             }
           }
         }
@@ -674,8 +670,12 @@ export function registerConversationRunRoutes(
           prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
         }
 
-        const useOpenCode = engine === "opencode";
-        const hasGroqFallback = !!process.env.GROQ_API_KEY;
+        const runText = (): Promise<string> => {
+          if (engine === "9router") {
+            return runWith9Router(turns, controller.signal, stage, pendingType);
+          }
+          return runWithOpenCode(turns, controller.signal, stage, pendingType);
+        };
 
         const run = prototypeDocId
           ? async () => {
@@ -691,18 +691,7 @@ export function registerConversationRunRoutes(
               );
               return formatPrototypeSummary(result.summary, result.glowupWarning);
             }
-          : useOpenCode
-            ? () =>
-                runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
-                  if (hasGroqFallback) {
-                    console.log(
-                      `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-                    );
-                    return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
-                  }
-                  throw err;
-                })
-            : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+          : runText;
 
         run()
           .then(async (output) => {
@@ -798,7 +787,6 @@ export function registerConversationRunRoutes(
           })
           .catch(async (err) => {
             const msg = err instanceof Error ? err.message : "generation failed";
-            await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
             broadcast({
               type: "error",
               conversation: (await getConversation(db, conversationId))!,
