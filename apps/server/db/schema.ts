@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -46,7 +47,7 @@ export const sessions = pgTable(
 export const conversations = pgTable(
   "conversations",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
