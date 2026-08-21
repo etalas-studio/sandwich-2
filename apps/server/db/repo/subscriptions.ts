@@ -4,7 +4,7 @@ import type { Database } from "../connection.js";
 import { PLANS } from "../../pipeline/plans.js";
 
 export interface Subscription {
-  id: number;
+  id: string;
   userId: string;
   planSlug: string;
   status: string;

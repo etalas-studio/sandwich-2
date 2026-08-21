@@ -141,7 +141,7 @@ export const payments = pgTable("payments", {
 });
 
 export const subscriptions = pgTable("subscriptions", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),

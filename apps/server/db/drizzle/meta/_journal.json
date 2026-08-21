@@ -120,6 +120,13 @@
       "when": 1724198400001,
       "tag": "0016_uuid_chat_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787287792170,
+      "tag": "0017_uuid_subscriptions",
+      "breakpoints": true
     }
   ]
 }
