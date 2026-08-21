@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 export interface GlowupPromptInput {
@@ -134,7 +134,7 @@ export function glowupEventLogLine(
 }
 
 export function glowupModelId(): string {
-  return process.env.GLOWUP_MODEL ?? "deepseek-v4-flash";
+  return process.env.GLOWUP_MODEL ?? process.env.OPENCODE_MODEL ?? "cc/claude-sonnet-4-6";
 }
 
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
@@ -155,8 +155,7 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     dnaSection,
     ``,
     `## Your Process`,
-    `1. Read ONLY index.html and styles.css (the landing page and the shared stylesheet). Do NOT read or edit dashboard.html, module pages, or script.js.`,
-    `2. Apply the Design DNA tokens above to index.html and styles.css IN PLACE (edit, don't recreate). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
+    `1. The current contents of index.html and styles.css are provided in the user message. Apply the Design DNA tokens to them IN PLACE using the write tool (write the complete new file — do NOT use edit for piecemeal patches). styles.css is shared across all pages, so keep every existing selector/rule that dashboard.html and module pages depend on working.`,
     ``,
     `## STYLE, NOT CONTENT (MANDATORY)`,
     `- Keep every headline, paragraph, table row, form label, chart, and piece of demo data exactly as it is. Restyle, never rewrite copy.`,
@@ -194,26 +193,67 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
     `- Vary section rhythm (some full-bleed, some contained).`,
     ``,
     `## Output`,
-    `Edit only index.html and styles.css in place with the write/edit tool. After finishing, respond with ONLY the text "DONE".`,
+    `Use the write tool to write the complete new index.html and the complete new styles.css. You MUST call the write tool — do not output HTML as text. Write index.html first, then styles.css. When both writes are done, stop.`,
   ].join("\n");
 }
 
 const GLOWUP_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes — glowup reads the full index.json + DNA and edits in place
+
+function readWorkspaceFile(workspace: string, filename: string): string {
+  const p = join(workspace, filename);
+  if (!existsSync(p)) return "";
+  try {
+    return readFileSync(p, "utf-8");
+  } catch {
+    return "";
+  }
+}
 
 export async function polishWorkspace(
   workspace: string,
   brief: string,
   signal?: AbortSignal,
 ): Promise<void> {
-  const pi = await import("@earendil-works/pi-coding-agent");
-
-  const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
-  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
   const modelId = glowupModelId();
-  const model = modelRuntime.getModel(provider, modelId);
-  if (!model) {
-    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+  const refs = resolveReferences(workspace, brief);
+  const systemPrompt = buildGlowupSystemPrompt({ brief, refs });
+  console.log(`[glowup] start model=${modelId} workspace=${workspace} refs=${refs.map((r) => r.slug).join(",") || "none"}`);
+
+  if (process.env.NINEROUTER_URL) {
+    const { runAnthropicAgent } = await import("../anthropic-agent.js");
+
+    // Pre-load files so the agent skips read turns entirely.
+    const indexHtml = readWorkspaceFile(workspace, "index.html");
+    const stylesCss = readWorkspaceFile(workspace, "styles.css");
+    const userPrompt = [
+      "Polish the prototype as described in the system prompt.",
+      "",
+      indexHtml ? `<index.html>\n${indexHtml}\n</index.html>` : "(index.html not found)",
+      "",
+      stylesCss ? `<styles.css>\n${stylesCss}\n</styles.css>` : "(styles.css not found)",
+    ].join("\n");
+
+    await runAnthropicAgent({
+      cwd: workspace,
+      model: modelId,
+      systemPrompt,
+      userPrompt,
+      signal,
+      timeoutMs: GLOWUP_TIMEOUT_MS,
+      onEvent: (type, detail) => {
+        const line = glowupEventLogLine({ type, toolName: detail }, Date.now());
+        if (line) console.log(line);
+      },
+    });
+    return;
   }
+
+  const pi = await import("@earendil-works/pi-coding-agent");
+  const { getModelRuntime } = await import("../model-runtime.js");
+  const modelRuntime = await getModelRuntime();
+  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
+  const model = modelRuntime.getModel(provider, modelId);
+  if (!model) throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
 
   const { session } = await pi.createAgentSession({
     cwd: workspace,
@@ -231,28 +271,31 @@ export async function polishWorkspace(
     if (signal?.aborted) return;
     const line = glowupEventLogLine(event, Date.now() - startMs);
     if (line) console.log(line);
-    if (event.type === "agent_end") {
-      if (typeof event.errorMessage === "string" && event.errorMessage) {
-        errorMessage = event.errorMessage;
-      }
+    if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
+      errorMessage = event.errorMessage;
     }
   });
 
   try {
-    const refs = resolveReferences(workspace, brief);
-    console.log(`[glowup] start model=${provider}/${modelId} workspace=${workspace} refs=${refs.map((r) => r.slug).join(",") || "none"}`);
-    const promptPromise = session.prompt(buildGlowupSystemPrompt({ brief, refs }));
-    promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
+    const indexHtml = readWorkspaceFile(workspace, "index.html");
+    const stylesCss = readWorkspaceFile(workspace, "styles.css");
+    const piUserPrompt = [
+      systemPrompt,
+      "",
+      indexHtml ? `<index.html>\n${indexHtml}\n</index.html>` : "(index.html not found)",
+      "",
+      stylesCss ? `<styles.css>\n${stylesCss}\n</styles.css>` : "(styles.css not found)",
+    ].join("\n");
+    const promptPromise = session.prompt(piUserPrompt);
+    promptPromise.catch(() => {});
     await Promise.race([
       promptPromise,
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Prototype glowup timed out")), GLOWUP_TIMEOUT_MS),
       ),
     ]);
-    // Small delay for agent_end event to propagate
     await new Promise((r) => setTimeout(r, 500));
     session.dispose();
-
     if (errorMessage) throw new Error(errorMessage);
   } catch (err) {
     session.dispose();
