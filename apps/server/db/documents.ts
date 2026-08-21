@@ -30,7 +30,7 @@ export interface DocumentVersion {
 }
 
 export interface DocumentFile {
-  id: number;
+  id: string;
   documentId: string;
   versionNo: number;
   path: string;

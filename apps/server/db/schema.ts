@@ -157,7 +157,7 @@ export const subscriptions = pgTable("subscriptions", {
 export const usage = pgTable(
   "usage",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -178,7 +178,7 @@ export const usage = pgTable(
 export const userPreferences = pgTable(
   "user_preferences",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -250,7 +250,7 @@ export const documentVersions = pgTable(
 export const conversationDocuments = pgTable(
   "conversation_documents",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
@@ -271,7 +271,7 @@ export const conversationDocuments = pgTable(
 export const documentFiles = pgTable(
   "document_files",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     documentId: text("document_id")
       .notNull()
       .references(() => documents.id),
