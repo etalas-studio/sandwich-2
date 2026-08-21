@@ -32,6 +32,7 @@ const STRINGS = {
   hero_brief_processing: { en: 'Your pipeline is processing the brief. Check the result in the dashboard.', id: 'Pipeline sedang memproses brief kamu. Cek hasilnya di dashboard.' },
   hero_see_result: { en: 'See result', id: 'Lihat hasil' },
   hero_error_generic: { en: 'Failed to submit', id: 'Gagal mengirim' },
+  hero_send_label: { en: 'Send message', id: 'Kirim pesan' },
 
   // ── Harnesses / How it works ──
   harnesses_kicker: { en: 'The Harnesses', id: 'Prosesnya' },
@@ -134,6 +135,16 @@ const STRINGS = {
   },
   footer_product: { en: 'Product', id: 'Produk' },
   footer_product_by: { en: 'powered by', id: 'powered by' },
+  footer_legal: { en: 'Legal', id: 'Legal' },
+  footer_privacy: { en: 'Privacy Policy', id: 'Kebijakan Privasi' },
+  footer_terms: { en: 'Terms of Service', id: 'Syarat & Ketentuan' },
+  footer_refund: { en: 'Refund Policy', id: 'Kebijakan Refund' },
+  footer_contact: { en: 'Contact', id: 'Kontak' },
+
+  // ── Legal ──
+  legal_back: { en: 'Back to home', id: 'Kembali ke beranda' },
+  setup_legal_prefix: { en: 'By creating an account you agree to our', id: 'Dengan membuat akun kamu menyetujui' },
+  setup_legal_and: { en: 'and', id: 'dan' },
 
   // ── Dashboard ──
   dash_home_headline_pipeline: { en: 'WHAT DO YOU WANT TO MAKE TODAY?', id: 'MAU BIKIN APA HARI INI?' },
@@ -230,12 +241,18 @@ const STRINGS = {
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },
   setup_subtitle: { en: 'Create your free SANDWICH account to turn briefs into PRDs, prototypes, and quotations.', id: 'Buat akun SANDWICH gratis untuk mengubah brief jadi PRD, prototype, dan quotation.' },
+  setup_username_placeholder: { en: 'Username', id: 'Username' },
+  setup_email_placeholder: { en: 'Email', id: 'Email' },
   setup_pass_placeholder: { en: 'Min. 8 characters', id: 'Min. 8 karakter' },
   setup_username_label: { en: 'Username', id: 'Username' },
   setup_email_label: { en: 'Email', id: 'Email' },
   setup_password_label: { en: 'Password', id: 'Password' },
   setup_cta: { en: 'Create account', id: 'Buat akun' },
   setup_pending: { en: 'Creating account…', id: 'Membuat akun...' },
+
+  // ── Password visibility ──
+  password_show: { en: 'Show password', id: 'Tampilkan password' },
+  password_hide: { en: 'Hide password', id: 'Sembunyikan password' },
 
   // ── Checkout ──
   checkout_title: { en: 'Checkout', id: 'Checkout' },

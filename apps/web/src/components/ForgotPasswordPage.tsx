@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={(e) => { e.preventDefault(); void submit() }} className="flex flex-col gap-3">
             <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#F4EBE1' }}>
               <iconify-icon icon="solar:letter-linear" width="18" style={{ color: 'rgba(0,0,0,0.35)', display: 'block' }} />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus aria-label="Email" placeholder={tr('forgot_email_placeholder')} className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus autoComplete="email" aria-label="Email" placeholder={tr('forgot_email_placeholder')} className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none" />
             </div>
             {error && <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ color: '#f91814', backgroundColor: 'rgba(249,24,20,0.08)' }}>{error}</p>}
             <button type="submit" disabled={pending} className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2" style={{ backgroundColor: '#0a0a0a' }}>{tr('forgot_submit')}</button>

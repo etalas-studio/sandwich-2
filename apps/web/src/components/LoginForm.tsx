@@ -66,6 +66,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
+              autoComplete="username"
               aria-label={tr('login_identifier')}
               placeholder={tr('login_identifier')}
               className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
@@ -79,11 +80,12 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
               aria-label="Password"
               placeholder="Password"
               className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
-            <button type="button" onClick={() => setShowPassword((s) => !s)} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+            <button type="button" onClick={() => setShowPassword((s) => !s)} aria-label={showPassword ? tr('password_hide') : tr('password_show')} className="shrink-0 flex items-center" style={{ color: 'rgba(0,0,0,0.35)' }}>
               <iconify-icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width="18" />
             </button>
           </div>
@@ -107,6 +109,8 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
                     type="email"
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
+                    autoComplete="email"
+                    aria-label={tr('forgot_email_placeholder')}
                     placeholder={tr('forgot_email_placeholder')}
                     className="flex-1 bg-white rounded-lg px-2 py-1.5 outline-none"
                     style={{ color: '#111827', border: '1px solid rgba(0,0,0,0.1)' }}

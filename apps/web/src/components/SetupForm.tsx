@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useLanguage } from "../lib/i18n";
 import { trackPostHog } from "../lib/posthog";
 
@@ -134,7 +135,7 @@ export default function SetupForm({
               required
               autoFocus
               autoComplete="username"
-              placeholder="Username"
+              placeholder={tr('setup_username_placeholder')}
               className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
@@ -157,7 +158,7 @@ export default function SetupForm({
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="Email"
+              placeholder={tr('setup_email_placeholder')}
               className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
           </div>
@@ -180,15 +181,15 @@ export default function SetupForm({
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              placeholder="Password"
+              placeholder={tr('setup_pass_placeholder')}
               className="flex-1 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? tr('password_hide') : tr('password_show')}
               className="shrink-0 flex items-center"
               style={{ color: "rgba(0,0,0,0.35)" }}
-              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               <iconify-icon
                 icon={
@@ -212,6 +213,18 @@ export default function SetupForm({
               {error}
             </p>
           )}
+
+          <p className="text-[11px] text-zinc-400 text-center leading-relaxed">
+            {tr("setup_legal_prefix")}{" "}
+            <Link href="/terms" className="underline hover:text-zinc-600">
+              {tr("footer_terms")}
+            </Link>{" "}
+            {tr("setup_legal_and")}{" "}
+            <Link href="/privacy" className="underline hover:text-zinc-600">
+              {tr("footer_privacy")}
+            </Link>
+            .
+          </p>
 
           <button
             type="submit"

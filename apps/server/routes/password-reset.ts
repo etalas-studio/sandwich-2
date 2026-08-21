@@ -39,9 +39,15 @@ export function registerPasswordResetRoutes(router: Router, db: Database): void 
         const link = resetLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Reset password SANDWICH",
-          text: `Reset password kamu: ${link}`,
-          html: `<p>Klik link ini untuk reset password:</p><p><a href="${link}">${link}</a></p>`,
+          subject: "Reset password kamu — SANDWICH",
+          text: `Hei, kami terima permintaan reset password untuk akun kamu.\n\nKlik link berikut untuk atur password baru:\n\n${link}\n\nLink ini berlaku selama 1 jam. Kalau kamu tidak meminta ini, abaikan saja email ini — password kamu tetap aman.\n\n— Tim SANDWICH`,
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
+  <p>Hei, kami terima permintaan reset password untuk akun kamu.</p>
+  <p>Klik tombol di bawah untuk atur password baru.</p>
+  <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Reset Password Saya →</a></p>
+  <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 1 jam. Kalau kamu tidak meminta ini, abaikan saja email ini — password kamu tetap aman.</p>
+  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+</div>`,
         });
       } catch (err) {
         sendCaughtError(res, err, "forgot password");

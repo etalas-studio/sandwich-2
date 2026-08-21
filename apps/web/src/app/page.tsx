@@ -48,8 +48,8 @@ const faqJsonLd = {
   '@type': 'FAQPage',
   mainEntity: FAQS.map((faq) => ({
     '@type': 'Question',
-    name: faq.q,
-    acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    name: faq.q.en,
+    acceptedAnswer: { '@type': 'Answer', text: faq.a.en },
   })),
 }
 

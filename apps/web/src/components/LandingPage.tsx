@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
 import { useAuth } from '../hooks/useAuth'
@@ -336,6 +337,7 @@ export default function LandingPage() {
                     <button
                       onClick={() => void handleSubmit()}
                       disabled={isSubmitting || !prompt.trim()}
+                      aria-label={t('hero_send_label')}
                       className="flex items-center justify-center w-11 h-11 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
                       style={{ backgroundColor: '#f91814' }}
                     >
@@ -638,14 +640,14 @@ export default function LandingPage() {
             {FAQS.map((faq, i) => (
               <details key={i} className="group py-6" open={openFaq === i} onClick={(e) => { e.preventDefault(); setOpenFaq(openFaq === i ? null : i) }}>
                 <summary className="flex items-center justify-between cursor-pointer list-none gap-4">
-                  <span className="text-base font-semibold text-white tracking-tight">{faq.q}</span>
+                  <span className="text-base font-semibold text-white tracking-tight">{faq.q[lang]}</span>
                   <iconify-icon
                     icon="solar:alt-arrow-down-linear"
                     className={`text-[#f91814] text-xl shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`}
                   ></iconify-icon>
                 </summary>
                 <p className="mt-4 text-sm text-zinc-400 leading-relaxed font-medium">
-                  {faq.a}
+                  {faq.a[lang]}
                 </p>
               </details>
             ))}
@@ -731,6 +733,23 @@ export default function LandingPage() {
                       <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
                         {label}
                       </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">{t('footer_legal')}</p>
+                <ul className="flex flex-col gap-3">
+                  {[
+                    { label: t('footer_privacy'), href: '/privacy' },
+                    { label: t('footer_terms'), href: '/terms' },
+                    { label: t('footer_refund'), href: '/refund' },
+                    { label: t('footer_contact'), href: '/contact' },
+                  ].map(({ label, href }) => (
+                    <li key={href}>
+                      <Link href={href} className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
+                        {label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
