@@ -48,6 +48,7 @@ export const conversations = pgTable(
   "conversations",
   {
     id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    idOld: text("id_old"),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
