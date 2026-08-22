@@ -16,12 +16,12 @@ export default function Page() {
               id: 'Data akun: username, alamat email, dan password (disimpan sebagai salted hash, tidak pernah dalam bentuk teks biasa).',
             },
             {
-              en: 'Brief and document content: the client briefs you submit, and the PRDs, prototypes, specs, and quotations SANDWICH generates from them. Before you sign up, a brief you type on the landing page is saved only in your browser\'s local storage (as "sandwich_draft") so it survives the redirect into registration — it is not sent to our servers until you have an account.',
-              id: 'Konten brief dan dokumen: brief klien yang kamu kirim, serta PRD, prototype, specs, dan quotation yang dihasilkan SANDWICH darinya. Sebelum kamu mendaftar, brief yang kamu ketik di landing page hanya disimpan di local storage browser kamu (sebagai "sandwich_draft") agar tetap ada saat diarahkan ke halaman registrasi — data ini belum dikirim ke server kami sampai kamu punya akun.',
+              en: 'Brief and document content: the client briefs you submit, and the PRDs, prototypes, specs, and quotations SANDWICH generates from them. Before you sign up, a brief you type on the landing page is saved only in your browser\'s local storage (as "sandwich_draft") so it survives the redirect into registration. It is not sent to our servers until you have an account.',
+              id: 'Konten brief dan dokumen: brief klien yang kamu kirim, serta PRD, prototype, specs, dan quotation yang dihasilkan SANDWICH darinya. Sebelum kamu mendaftar, brief yang kamu ketik di landing page hanya disimpan di local storage browser kamu (sebagai "sandwich_draft") agar tetap ada saat diarahkan ke halaman registrasi. Data ini belum dikirim ke server kami sampai kamu punya akun.',
             },
             {
-              en: 'Usage and billing data: document/prototype/chat counts against your monthly quota, subscription plan and status, and payment confirmation state (we do not store your card or bank details — payments are processed by our payment provider).',
-              id: 'Data penggunaan dan billing: jumlah dokumen/prototype/chat terhadap kuota bulanan kamu, paket dan status langganan, serta status konfirmasi pembayaran (kami tidak menyimpan detail kartu atau rekening bank kamu — pembayaran diproses oleh payment provider kami).',
+              en: 'Usage and billing data: document/prototype/chat counts against your monthly quota, subscription plan and status, and payment confirmation state (we do not store your card or bank details; payments are processed by our payment provider).',
+              id: 'Data penggunaan dan billing: jumlah dokumen/prototype/chat terhadap kuota bulanan kamu, paket dan status langganan, serta status konfirmasi pembayaran (kami tidak menyimpan detail kartu atau rekening bank kamu; pembayaran diproses oleh payment provider kami).',
             },
           ],
         },

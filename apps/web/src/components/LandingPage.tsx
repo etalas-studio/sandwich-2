@@ -16,57 +16,49 @@ import { FAQS } from '../lib/faqs'
 const bowlby = "'Bowlby One', system-ui"
 const mousememoirs = "'Mouse Memoirs', sans-serif"
 
-const SAMPLE_OUTPUTS = [
-  {
-    type: 'PRD',
-    project: 'Padel court booking platform',
-    excerpt: `## 2. Business Requirements
+const PRD_SAMPLE = {
+  project: 'Padel court booking platform',
+  heading: 'Business Requirements',
+  rows: [
+    { req: 'Multi-location support', detail: 'Manage courts across multiple venues from one dashboard' },
+    { req: 'Phase 1: third-party booking API', detail: 'Use existing platform for availability + exposure' },
+    { req: 'Custom payment UI', detail: 'In-page checkout, no redirect to reduce drop-off' },
+    { req: 'Fraud / double-booking prevention', detail: 'Lock slot on payment start, auto-release after 10 min' },
+  ],
+}
 
-| Requirement | Details |
-|---|---|
-| Multi-location support | Manage courts across multiple venues from one dashboard |
-| Phase 1: third-party booking API | Use existing platform for availability + exposure |
-| Custom payment UI | In-page checkout, no redirect to reduce drop-off |
-| Fraud / double-booking prevention | Lock slot on payment start, auto-release after 10 min`,
-  },
-  {
-    type: 'Quotation',
-    project: 'Fleet management portal',
-    excerpt: `## Scope & Pricing
+const QUOTATION_SAMPLE = {
+  project: 'Fleet management portal',
+  heading: 'Scope & Pricing',
+  items: [
+    { module: 'Vehicle tracking dashboard', days: 8, price: 'Rp 12.000.000' },
+    { module: 'Driver assignment flow', days: 5, price: 'Rp 7.500.000' },
+    { module: 'Maintenance scheduling', days: 4, price: 'Rp 6.000.000' },
+  ],
+  assumptions: 'Client provides GPS API access.',
+  terms: '50% upfront, 50% on delivery.',
+}
 
-| Module | Est. days | Price (IDR) |
-|---|---|---|
-| Vehicle tracking dashboard | 8 | 12.000.000 |
-| Driver assignment flow | 5 | 7.500.000 |
-| Maintenance scheduling | 4 | 6.000.000 |
+const SPECS_SAMPLE = {
+  project: 'Housekeeping ops app',
+  feature: 'Room status sync',
+  scope: 'Housekeeper marks room clean/dirty from mobile; front desk sees live status.',
+  criteria: [
+    'Status updates reflect in front desk view within 5s',
+    'Offline updates queue and sync on reconnect',
+    'Only assigned housekeeper can update their rooms',
+  ],
+}
 
-**Assumptions:** client provides GPS API access.
-**Terms:** 50% upfront, 50% on delivery.`,
-  },
-  {
-    type: 'Specs',
-    project: 'Housekeeping ops app',
-    excerpt: `### Feature: Room status sync
-
-**Scope:** Housekeeper marks room clean/dirty from mobile; front desk sees live status.
-
-**Acceptance criteria:**
-- Status updates reflect in front desk view within 5s
-- Offline updates queue and sync on reconnect
-- Only assigned housekeeper can update their rooms`,
-  },
-  {
-    type: 'Prototype',
-    project: 'Restaurant table reservation',
-    excerpt: `<!-- dashboard.html -->
-<div class="booking-grid">
-  <div class="slot available" data-time="19:00">19:00</div>
-  <div class="slot booked" data-time="19:30">19:30</div>
-  <div class="slot available" data-time="20:00">20:00</div>
-</div>
-<!-- live-rendered in preview sidebar, not a static mock -->`,
-  },
-]
+const PROTOTYPE_SAMPLE = {
+  project: 'Restaurant table reservation',
+  file: 'dashboard.html',
+  slots: [
+    { time: '19:00', status: 'available' },
+    { time: '19:30', status: 'booked' },
+    { time: '20:00', status: 'available' },
+  ],
+}
 
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
@@ -181,6 +173,7 @@ export default function LandingPage() {
             {[
               { id: 'harnesses', label: t('nav_how') },
               { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'differentiators', label: t('nav_diff') },
               { id: 'pricing', label: t('nav_pricing') },
               { id: 'faq', label: t('nav_faq') },
             ].map(({ id, label }) => (
@@ -217,7 +210,7 @@ export default function LandingPage() {
           </button>
           <button
             onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-            className="shrink-0 ml-1 px-3 min-h-11 flex items-center rounded-full text-xs font-semibold transition-colors"
+            className="shrink-0 px-4 min-w-[52px] min-h-11 flex items-center justify-center rounded-full text-xs font-semibold transition-colors"
             style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
             title="Switch language"
           >
@@ -227,14 +220,14 @@ export default function LandingPage() {
             onClick={() => router.push('/login')}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
-            className="shrink-0 ml-1 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
+            className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
           >
             {t('nav_login')}
           </button>
           <button
             onClick={() => router.push('/register')}
-            className="shrink-0 ml-1 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
+            className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
             style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
           >
             {t('nav_get_started')}
@@ -248,6 +241,7 @@ export default function LandingPage() {
             {[
               { id: 'harnesses', label: t('nav_how') },
               { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'differentiators', label: t('nav_diff') },
               { id: 'pricing', label: t('nav_pricing') },
               { id: 'faq', label: t('nav_faq') },
             ].map(({ id, label }) => (
@@ -356,7 +350,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HARNESSES / HOW IT WORKS ── */}
-      <section id="harnesses" className="py-24 md:py-32 relative overflow-hidden bg-[#f91814]">
+      <section id="harnesses" className="py-24 md:py-32 relative overflow-hidden bg-[#f91814] scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <p
@@ -427,31 +421,45 @@ export default function LandingPage() {
       </section>
 
       {/* ── PIPELINE / HOW IT WORKS ── */}
-      <section id="pipeline" className="py-24 md:py-32 bg-black">
-        <div className="max-w-3xl mx-auto px-6">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('pipeline_kicker')}</p>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white mb-12" style={{ fontFamily: bowlby }}>
-            {t('pipeline_title_l1')}<br />{t('pipeline_title_l2')}
-          </h2>
+      <section id="pipeline" className="py-24 md:py-32 bg-black scroll-mt-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('pipeline_kicker')}</p>
+            <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white" style={{ fontFamily: bowlby }}>
+              {t('pipeline_title_l1')} {t('pipeline_title_l2')}
+            </h2>
+          </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 sm:auto-rows-[16rem] gap-6">
             {[
-              { n: '01', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc') },
-              { n: '02', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc') },
-              { n: '03', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc') },
-              { n: '04', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
+              { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), span: 'sm:col-span-1 sm:row-span-2' },
+              { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), span: 'sm:col-span-2 sm:row-span-1' },
+              { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), span: 'sm:col-span-1 sm:row-span-1' },
+              { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), span: 'sm:col-span-1 sm:row-span-1' },
             ].map((step) => (
-              <div key={step.n} className="flex items-start gap-5">
-                <span className="text-2xl font-bold text-[#f91814] tabular-nums shrink-0" style={{ fontFamily: bowlby }}>{step.n}</span>
+              <div
+                key={step.n}
+                className={`rounded-3xl p-8 h-64 sm:h-auto flex flex-col justify-between ${step.span}`}
+                style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.18)' }}
+              >
+                <div className="flex items-center justify-between">
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+                  >
+                    <iconify-icon icon={step.icon} width="24" style={{ color: '#ffffff' }} />
+                  </div>
+                  <span className="text-2xl font-bold text-[#f91814] tabular-nums" style={{ fontFamily: bowlby }}>{step.n}</span>
+                </div>
                 <div>
-                  <p className="text-white font-semibold text-base tracking-tight">{step.title}</p>
-                  <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight mt-1">{step.desc}</p>
+                  <p className="text-white font-semibold text-lg tracking-tight mb-2">{step.title}</p>
+                  <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight">{step.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-12">
+          <div className="mt-12 text-center">
             <button
               onClick={() => router.push('/register')}
               className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
@@ -464,9 +472,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── STACK / INGREDIENTS ── */}
-      <section id="about" className="py-24 md:py-32 bg-[#F4EBE1]">
+      <section id="about" className="py-24 md:py-32 bg-[#F4EBE1] scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#B3120E]" style={{ fontFamily: mousememoirs }}>
+          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>
             {t('stack_kicker')}
           </p>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-6 text-black" style={{ fontFamily: bowlby }}>
@@ -498,44 +506,174 @@ export default function LandingPage() {
       </section>
 
       {/* ── SAMPLE OUTPUTS ── */}
-      <section id="samples" className="py-24 md:py-32 bg-white">
+      <section id="samples" className="py-24 md:py-32 bg-white scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12 text-center">
-            <p className="text-2xl tracking-tight mb-4 uppercase text-[#B3120E]" style={{ fontFamily: mousememoirs }}>{t('samples_kicker')}</p>
+            <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('samples_kicker')}</p>
             <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-4 text-black" style={{ fontFamily: bowlby }}>
-              {t('samples_title_l1')}<br />{t('samples_title_l2')}
+              {t('samples_title_l1')} {t('samples_title_l2')}
             </h2>
             <p className="text-sm text-black/50 font-medium max-w-md mx-auto">{t('samples_desc')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-            {SAMPLE_OUTPUTS.map((sample) => (
-              <div key={sample.type} className="rounded-2xl border border-black/10 p-6 bg-[#F4EBE1]">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">{sample.type}</span>
-                  <span className="text-xs text-black/40 font-medium">{sample.project}</span>
-                </div>
-                <pre className="text-xs text-black/70 font-mono leading-relaxed whitespace-pre-wrap">{sample.excerpt}</pre>
+            {/* PRD */}
+            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">PRD</span>
+                <span className="text-xs text-black/40 font-medium">{PRD_SAMPLE.project}</span>
               </div>
-            ))}
+              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
+                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="ml-2 text-[11px] font-mono text-black/40">prd.md</span>
+                </div>
+                <div className="p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black/40 mb-2">{PRD_SAMPLE.heading}</p>
+                  <div className="rounded-lg overflow-hidden border border-black/8">
+                    {PRD_SAMPLE.rows.map((row, i) => (
+                      <div key={row.req} className={`px-3.5 py-3 ${i !== 0 ? 'border-t border-black/8' : ''}`}>
+                        <p className="text-xs font-semibold text-black tracking-tight">{row.req}</p>
+                        <p className="text-xs text-black/50 mt-0.5 leading-relaxed">{row.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quotation */}
+            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Quotation</span>
+                <span className="text-xs text-black/40 font-medium">{QUOTATION_SAMPLE.project}</span>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
+                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="ml-2 text-[11px] font-mono text-black/40">quotation.md</span>
+                </div>
+                <div className="p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black/40 mb-2">{QUOTATION_SAMPLE.heading}</p>
+                  <div className="rounded-lg overflow-hidden border border-black/8 mb-3">
+                    {QUOTATION_SAMPLE.items.map((item, i) => (
+                      <div key={item.module} className={`flex items-center justify-between gap-3 px-3.5 py-3 ${i !== 0 ? 'border-t border-black/8' : ''}`}>
+                        <div>
+                          <p className="text-xs font-semibold text-black tracking-tight">{item.module}</p>
+                          <p className="text-[11px] text-black/40 mt-0.5">{item.days} days</p>
+                        </div>
+                        <span className="text-xs font-semibold text-black shrink-0">{item.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-black/50 leading-relaxed"><span className="font-semibold text-black/70">Assumptions:</span> {QUOTATION_SAMPLE.assumptions}</p>
+                  <p className="text-[11px] text-black/50 leading-relaxed"><span className="font-semibold text-black/70">Terms:</span> {QUOTATION_SAMPLE.terms}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Specs */}
+            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Specs</span>
+                <span className="text-xs text-black/40 font-medium">{SPECS_SAMPLE.project}</span>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
+                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="ml-2 text-[11px] font-mono text-black/40">specs.md</span>
+                </div>
+                <div className="p-4">
+                  <p className="text-sm font-semibold text-black tracking-tight mb-1">{SPECS_SAMPLE.feature}</p>
+                  <p className="text-xs text-black/50 leading-relaxed mb-4">{SPECS_SAMPLE.scope}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 mb-2">Acceptance criteria</p>
+                  <div className="flex flex-col gap-2">
+                    {SPECS_SAMPLE.criteria.map((c) => (
+                      <div key={c} className="flex items-start gap-2">
+                        <iconify-icon icon="solar:check-circle-bold" width="15" style={{ color: '#f91814', flexShrink: 0, marginTop: '1px' }} />
+                        <p className="text-xs text-black/70 leading-relaxed">{c}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Prototype */}
+            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Prototype</span>
+                <span className="text-xs text-black/40 font-medium">{PROTOTYPE_SAMPLE.project}</span>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
+                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
+                  <span className="ml-2 text-[11px] font-mono text-black/40">{PROTOTYPE_SAMPLE.file}</span>
+                </div>
+                <div className="flex gap-2 p-4">
+                  {PROTOTYPE_SAMPLE.slots.map((slot) => (
+                    <div
+                      key={slot.time}
+                      className="flex-1 text-center rounded-lg py-2.5 text-xs font-semibold tracking-tight"
+                      style={
+                        slot.status === 'booked'
+                          ? { backgroundColor: '#0a0a0a', color: '#ffffff' }
+                          : { backgroundColor: 'rgba(0,0,0,0.05)', color: '#0a0a0a' }
+                      }
+                    >
+                      {slot.time}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── DIFFERENTIATORS ── */}
-      <section id="differentiators" className="py-24 md:py-32 bg-black">
+      <section id="differentiators" className="py-24 md:py-32 bg-black scroll-mt-24">
         <div className="max-w-5xl mx-auto px-6">
-          <p className="text-2xl tracking-tight mb-12 uppercase text-[#f91814] text-center" style={{ fontFamily: mousememoirs }}>{t('diff_kicker')}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814] text-center" style={{ fontFamily: mousememoirs }}>{t('diff_kicker')}</p>
+          <h2 className="text-3xl md:text-5xl tracking-tighter leading-tight text-white text-center mb-16" style={{ fontFamily: bowlby }}>
+            {t('diff_title')}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[
-              { title: t('diff_1_title'), desc: t('diff_1_desc') },
-              { title: t('diff_2_title'), desc: t('diff_2_desc') },
-              { title: t('diff_3_title'), desc: t('diff_3_desc') },
-              { title: t('diff_4_title'), desc: t('diff_4_desc') },
+              { icon: 'solar:history-linear', title: t('diff_1_title'), desc: t('diff_1_desc'), highlight: false },
+              { icon: 'solar:cloud-check-linear', title: t('diff_2_title'), desc: t('diff_2_desc'), highlight: true },
+              { icon: 'solar:link-round-linear', title: t('diff_3_title'), desc: t('diff_3_desc'), highlight: false },
+              { icon: 'solar:list-check-linear', title: t('diff_4_title'), desc: t('diff_4_desc'), highlight: false },
             ].map((d) => (
-              <div key={d.title}>
-                <p className="text-white font-semibold text-base tracking-tight">{d.title}</p>
-                <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight mt-1">{d.desc}</p>
+              <div
+                key={d.title}
+                className="rounded-3xl p-8 min-h-[260px] flex flex-col justify-between"
+                style={
+                  d.highlight
+                    ? { background: 'linear-gradient(160deg, #f91814 0%, #8a0f0c 100%)' }
+                    : { backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.18)' }
+                }
+              >
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: d.highlight ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)' }}
+                >
+                  <iconify-icon icon={d.icon} width="24" style={{ color: '#ffffff' }} />
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-lg tracking-tight mb-2">{d.title}</p>
+                  <p className="text-sm font-medium leading-relaxed tracking-tight" style={{ color: d.highlight ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)' }}>
+                    {d.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -543,22 +681,22 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-24 md:py-32 bg-[#F9CD25]">
+      <section id="pricing" className="py-24 md:py-32 bg-[#F9CD25] scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12 text-center">
             <p
-              className="text-2xl uppercase tracking-tight mb-4 text-black"
+              className="text-2xl uppercase tracking-tight mb-4 text-white"
               style={{ fontFamily: mousememoirs }}
             >
               {t('pricing_kicker')}
             </p>
             <h2
-              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-black"
+              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-white"
               style={{ fontFamily: bowlby }}
             >
               {t('pricing_title_l1')}<br />{t('pricing_title_l2')}
             </h2>
-            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-black/80">
+            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white/80">
               {t('pricing_desc')}
             </p>
           </div>
@@ -619,7 +757,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="py-24 md:py-32 bg-black">
+      <section id="faq" className="py-24 md:py-32 bg-black scroll-mt-24">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
             <p

@@ -12,8 +12,8 @@ export default function Page() {
           heading: { en: 'The service', id: 'Layanan' },
           body: [
             {
-              en: 'SANDWICH is operated by Etalas. It turns a client brief into a PRD, clickable prototype, feature specs, and a quotation via an AI-driven pipeline. Generated output is a starting point — review it before you send it to a client or act on it.',
-              id: 'SANDWICH dioperasikan oleh Etalas. Layanan ini mengubah brief klien menjadi PRD, prototype yang bisa diklik, feature specs, dan quotation lewat pipeline berbasis AI. Output yang dihasilkan adalah titik awal — periksa dulu sebelum kamu kirim ke klien atau tindak lanjuti.',
+              en: 'SANDWICH is operated by Etalas. It turns a client brief into a PRD, clickable prototype, feature specs, and a quotation via an AI-driven pipeline. Generated output is a starting point. Review it before you send it to a client or act on it.',
+              id: 'SANDWICH dioperasikan oleh Etalas. Layanan ini mengubah brief klien menjadi PRD, prototype yang bisa diklik, feature specs, dan quotation lewat pipeline berbasis AI. Output yang dihasilkan adalah titik awal. Periksa dulu sebelum kamu kirim ke klien atau tindak lanjuti.',
             },
           ],
         },
@@ -56,8 +56,8 @@ export default function Page() {
           heading: { en: 'Disclaimer and liability', id: 'Penyangkalan dan tanggung jawab' },
           body: [
             {
-              en: 'SANDWICH is provided "as is." AI-generated output can contain errors — we do not guarantee it is complete, accurate, or fit for a specific purpose. To the extent permitted by law, our liability for any claim relating to the service is limited to the amount you paid us in the 3 months before the claim.',
-              id: 'SANDWICH disediakan "apa adanya." Output hasil AI bisa mengandung kesalahan — kami tidak menjamin kelengkapan, akurasi, atau kesesuaiannya untuk tujuan tertentu. Sejauh diizinkan hukum, tanggung jawab kami atas klaim apa pun terkait layanan ini dibatasi sebesar jumlah yang kamu bayarkan ke kami dalam 3 bulan sebelum klaim diajukan.',
+              en: 'SANDWICH is provided "as is." AI-generated output can contain errors. We do not guarantee it is complete, accurate, or fit for a specific purpose. To the extent permitted by law, our liability for any claim relating to the service is limited to the amount you paid us in the 3 months before the claim.',
+              id: 'SANDWICH disediakan "apa adanya." Output hasil AI bisa mengandung kesalahan. Kami tidak menjamin kelengkapan, akurasi, atau kesesuaiannya untuk tujuan tertentu. Sejauh diizinkan hukum, tanggung jawab kami atas klaim apa pun terkait layanan ini dibatasi sebesar jumlah yang kamu bayarkan ke kami dalam 3 bulan sebelum klaim diajukan.',
             },
           ],
         },

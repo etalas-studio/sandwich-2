@@ -25,8 +25,8 @@ export default function Page() {
         </h1>
         <p className="text-sm text-zinc-600 leading-relaxed mb-8 max-w-md">
           {lang === 'id'
-            ? 'Ada pertanyaan soal SANDWICH, billing, atau data kamu? Kirim email ke kami — biasanya kami balas dalam 1-2 hari kerja.'
-            : "Questions about SANDWICH, billing, or your data? Email us — we usually reply within 1-2 business days."}
+            ? 'Ada pertanyaan soal SANDWICH, billing, atau data kamu? Kirim email ke kami, biasanya kami balas dalam 1-2 hari kerja.'
+            : "Questions about SANDWICH, billing, or your data? Email us, we usually reply within 1-2 business days."}
         </p>
 
         <a
@@ -39,7 +39,7 @@ export default function Page() {
         </a>
 
         <p className="text-xs text-zinc-500 mt-8">
-          {lang === 'id' ? 'Perusahaan: Etalas — ' : 'Company: Etalas — '}
+          {lang === 'id' ? 'Perusahaan: Etalas, ' : 'Company: Etalas, '}
           <a href="https://etalas.com" target="_blank" rel="noreferrer" className="underline hover:opacity-70">
             etalas.com
           </a>

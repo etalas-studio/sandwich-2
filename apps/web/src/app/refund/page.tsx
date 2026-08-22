@@ -12,8 +12,8 @@ export default function Page() {
           heading: { en: 'Starter plan', id: 'Paket Starter' },
           body: [
             {
-              en: "Starter is free — there is nothing to refund.",
-              id: 'Starter gratis — tidak ada yang perlu di-refund.',
+              en: "Starter is free. There is nothing to refund.",
+              id: 'Starter gratis. Tidak ada yang perlu di-refund.',
             },
           ],
         },
@@ -21,16 +21,16 @@ export default function Page() {
           heading: { en: 'Pro plan', id: 'Paket Pro' },
           body: [
             {
-              en: 'If a Pro payment is charged but never confirmed as successful (e.g. a failed or duplicate charge), we will refund it in full once verified — email support@etalas.ai with your account email and payment reference.',
-              id: 'Jika pembayaran Pro tertagih tapi tidak pernah terkonfirmasi berhasil (misalnya charge gagal atau duplikat), kami akan me-refund penuh setelah terverifikasi — email support@etalas.ai dengan email akun dan referensi pembayaran kamu.',
+              en: 'If a Pro payment is charged but never confirmed as successful (e.g. a failed or duplicate charge), we will refund it in full once verified. Email support@etalas.ai with your account email and payment reference.',
+              id: 'Jika pembayaran Pro tertagih tapi tidak pernah terkonfirmasi berhasil (misalnya charge gagal atau duplikat), kami akan me-refund penuh setelah terverifikasi. Email support@etalas.ai dengan email akun dan referensi pembayaran kamu.',
             },
             {
-              en: 'Pro is billed per period in advance. We do not prorate or refund partial periods for unused time — cancelling stops future renewal, and access continues until the current period ends.',
-              id: 'Pro ditagih per periode di muka. Kami tidak memberikan prorate atau refund parsial untuk waktu yang belum terpakai — pembatalan menghentikan perpanjangan berikutnya, dan akses tetap berlaku hingga periode berjalan berakhir.',
+              en: 'Pro is billed per period in advance. We do not prorate or refund partial periods for unused time. Cancelling stops future renewal, and access continues until the current period ends.',
+              id: 'Pro ditagih per periode di muka. Kami tidak memberikan prorate atau refund parsial untuk waktu yang belum terpakai. Pembatalan menghentikan perpanjangan berikutnya, dan akses tetap berlaku hingga periode berjalan berakhir.',
             },
             {
-              en: "If you believe your situation warrants an exception (e.g. you upgraded by mistake and haven't used the plan), email us — we review these on a case-by-case basis.",
-              id: 'Jika menurut kamu situasimu layak dapat pengecualian (misalnya salah upgrade dan belum sempat menggunakan paketnya), kirim email ke kami — kami tinjau kasus per kasus.',
+              en: "If you believe your situation warrants an exception (e.g. you upgraded by mistake and haven't used the plan), email us. We review these on a case-by-case basis.",
+              id: 'Jika menurut kamu situasimu layak dapat pengecualian (misalnya salah upgrade dan belum sempat menggunakan paketnya), kirim email ke kami. Kami tinjau kasus per kasus.',
             },
           ],
         },
