@@ -17,6 +17,9 @@ export function useAuth() {
     mutationFn: ({ username, password }: { username: string; password: string }) =>
       postLogin(username, password),
     onSuccess: () => {
+      // A different user may be logging in on a browser that still has another
+      // account's pending chat handoff from an unclean previous session.
+      localStorage.removeItem('sandwich_last_chat')
       queryClient.invalidateQueries({ queryKey: ['auth'] })
       // Drop any user-scoped subscription cache so the gate waits for a
       // fresh fetch for the newly-authenticated user (never a stale null).
@@ -32,6 +35,7 @@ export function useAuth() {
     }: { username: string; email: string; password: string }) =>
       postRegister(username, email, password),
     onSuccess: () => {
+      localStorage.removeItem('sandwich_last_chat')
       queryClient.invalidateQueries({ queryKey: ['auth'] })
       queryClient.removeQueries({ queryKey: ['subscription'] })
     },
@@ -40,6 +44,7 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: postLogout,
     onSuccess: () => {
+      localStorage.removeItem('sandwich_last_chat')
       clearConversationsCache()
       queryClient.invalidateQueries({ queryKey: ['auth'] })
       queryClient.removeQueries({ queryKey: ['subscription'] })
