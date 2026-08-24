@@ -91,7 +91,7 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    const ids = ['harnesses', 'pipeline', 'pricing', 'faq']
+    const ids = ['harnesses', 'pipeline', 'differentiators', 'pricing', 'faq']
     const observers = ids.map((id) => {
       const el = document.getElementById(id)
       if (!el) return null
@@ -102,7 +102,7 @@ export default function LandingPage() {
             setActiveSectionState(id)
           }
         },
-        { threshold: 0.3 }
+        { rootMargin: '-96px 0px -70% 0px', threshold: 0 }
       )
       obs.observe(el)
       return obs
@@ -171,8 +171,8 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-1">
             {[
-              { id: 'harnesses', label: t('nav_how') },
-              { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'harnesses', label: t('nav_pipeline') },
+              { id: 'pipeline', label: t('nav_how') },
               { id: 'differentiators', label: t('nav_diff') },
               { id: 'pricing', label: t('nav_pricing') },
               { id: 'faq', label: t('nav_faq') },
@@ -239,8 +239,8 @@ export default function LandingPage() {
             style={{ backgroundColor: '#F4EBE1', borderColor: 'rgba(0,0,0,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
           >
             {[
-              { id: 'harnesses', label: t('nav_how') },
-              { id: 'pipeline', label: t('nav_pipeline') },
+              { id: 'harnesses', label: t('nav_pipeline') },
+              { id: 'pipeline', label: t('nav_how') },
               { id: 'differentiators', label: t('nav_diff') },
               { id: 'pricing', label: t('nav_pricing') },
               { id: 'faq', label: t('nav_faq') },
@@ -842,8 +842,8 @@ export default function LandingPage() {
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">{t('footer_product')}</p>
                 <ul className="flex flex-col gap-3">
                   {[
-                    { label: t('nav_how'), id: 'harnesses' },
-                    { label: t('nav_pipeline'), id: 'pipeline' },
+                    { label: t('nav_pipeline'), id: 'harnesses' },
+                    { label: t('nav_how'), id: 'pipeline' },
                     { label: t('nav_pricing'), id: 'pricing' },
                     { label: t('nav_faq'), id: 'faq' },
                   ].map(({ label, id }) => (
