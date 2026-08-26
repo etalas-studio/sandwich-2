@@ -13,6 +13,7 @@ export interface FooterProps {
   footerContact: string
   footerPrivacy: string
   footerTerms: string
+  footerProductBy: string
   onNavClick: (id: string) => void
   onGetStartedClick: () => void
 }
@@ -51,9 +52,18 @@ export function Footer(props: FooterProps) {
 
       <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-xs" style={{ borderColor: 'rgba(255,255,255,0.1)', color: TEXT_MUTED }}>
         <p>© 2026 SANDWICH.</p>
-        <div className="flex gap-6">
+        <div className="flex items-center gap-6">
           <Link href="/privacy" className="hover:opacity-80 transition-opacity">{props.footerPrivacy}</Link>
           <Link href="/terms" className="hover:opacity-80 transition-opacity">{props.footerTerms}</Link>
+          <a
+            href="https://www.etalas.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span>{props.footerProductBy}</span>
+            <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-3.5 w-auto brightness-0 invert" />
+          </a>
         </div>
       </div>
     </footer>

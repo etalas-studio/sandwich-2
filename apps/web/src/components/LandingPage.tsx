@@ -113,12 +113,14 @@ export default function LandingPage() {
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         navGetStarted={t('nav_get_started')}
+        navLogin={t('nav_login')}
         navMenuOpen={t('nav_menu_open')}
         navMenuClose={t('nav_menu_close')}
         lang={lang}
         onToggleLang={() => setLang(lang === 'en' ? 'id' : 'en')}
         onNavClick={scrollToSection}
         onGetStartedClick={goToRegister}
+        onLoginClick={() => router.push('/login')}
         onScrollDownClick={() => scrollToSection('harnesses')}
         mobileNavOpen={mobileNavOpen}
         setMobileNavOpen={setMobileNavOpen}
@@ -191,6 +193,7 @@ export default function LandingPage() {
         footerContact={t('footer_contact')}
         footerPrivacy={t('footer_privacy')}
         footerTerms={t('footer_terms')}
+        footerProductBy={t('footer_product_by')}
         onNavClick={scrollToSection}
         onGetStartedClick={goToRegister}
       />

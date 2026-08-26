@@ -10,12 +10,14 @@ export interface HeroCardProps {
   navPricing: string
   navFaq: string
   navGetStarted: string
+  navLogin: string
   navMenuOpen: string
   navMenuClose: string
   lang: 'en' | 'id'
   onToggleLang: () => void
   onNavClick: (id: string) => void
   onGetStartedClick: () => void
+  onLoginClick: () => void
   onScrollDownClick: () => void
   mobileNavOpen: boolean
   setMobileNavOpen: (v: boolean) => void
@@ -99,6 +101,13 @@ export function HeroCard(props: HeroCardProps) {
                 {props.lang === 'en' ? 'EN' : 'ID'}
               </button>
               <button
+                onClick={props.onLoginClick}
+                className="px-4 py-2 rounded-full text-sm font-medium hover:opacity-80 transition-opacity"
+                style={{ color: TEXT_SECONDARY }}
+              >
+                {props.navLogin}
+              </button>
+              <button
                 onClick={props.onGetStartedClick}
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium hover:scale-105 transition-transform"
                 style={{ backgroundColor: '#ffffff', color: '#000000' }}
@@ -133,6 +142,14 @@ export function HeroCard(props: HeroCardProps) {
                   {label}
                 </a>
               ))}
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); props.onLoginClick(); props.setMobileNavOpen(false) }}
+                className="px-5 py-3.5 text-sm font-medium text-left border-b last:border-b-0"
+                style={{ color: TEXT_PRIMARY, borderColor: 'rgba(255,255,255,0.1)' }}
+              >
+                {props.navLogin}
+              </a>
               <div className="px-5 py-3.5 flex items-center gap-2">
                 <button
                   onClick={props.onToggleLang}
