@@ -1,0 +1,119 @@
+export const meta = {
+  title: 'Apa itu PRD (Product Requirements Document)?',
+  description: 'Penjelasan lengkap tentang PRD — apa itu, apa saja isinya, contoh nyata, dan kenapa setiap proyek digital butuh dokumen ini sebelum mulai development.',
+  date: '2026-08-26',
+  slug: 'apa-itu-prd',
+}
+
+Kalau kamu pernah terlibat dalam proyek pembuatan aplikasi atau website — baik sebagai klien, freelancer, maupun product manager — kemungkinan besar kamu pernah dengar istilah PRD. Tapi apa sebenarnya PRD itu, dan kenapa dokumen ini begitu penting?
+
+## Definisi PRD
+
+PRD adalah singkatan dari **Product Requirements Document** — dokumen yang menjelaskan apa yang harus dibangun dalam sebuah produk digital, kenapa produk itu dibutuhkan, dan bagaimana cara kerjanya dari sudut pandang pengguna.
+
+PRD bukan dokumen teknis yang berisi kode atau arsitektur sistem. PRD adalah dokumen yang bisa dibaca dan dipahami oleh semua pihak yang terlibat dalam proyek — klien, designer, developer, bahkan investor.
+
+Sederhananya: **PRD adalah kontrak tertulis tentang apa yang akan dibangun.**
+
+## Kenapa PRD Penting?
+
+Bayangkan kamu minta tukang untuk membangun rumah tanpa gambar arsitektur. Hasilnya mungkin jadi rumah, tapi belum tentu rumah yang kamu bayangkan. Sama halnya dengan produk digital — tanpa PRD, developer membangun berdasarkan interpretasi mereka sendiri tentang apa yang kamu inginkan.
+
+PRD menyelesaikan masalah ini dengan cara:
+
+- **Menyamakan ekspektasi** antara klien dan tim pengembang sebelum kerja dimulai
+- **Mencegah scope creep** — perluasan fitur di tengah proyek yang tidak direncanakan
+- **Menjadi acuan** saat ada pertanyaan atau perselisihan tentang apa yang seharusnya dibangun
+- **Mempermudah estimasi** biaya dan waktu karena scope sudah jelas
+
+## Komponen Utama PRD
+
+PRD yang baik tidak harus panjang. Yang penting, semua komponen berikut ada dan jelas:
+
+### Ringkasan Produk
+Deskripsi singkat — dua sampai tiga kalimat — tentang apa yang dibangun, untuk siapa, dan masalah apa yang diselesaikan.
+
+### Tujuan Bisnis
+Apa yang ingin dicapai klien dengan produk ini? Tulis dalam bentuk hasil yang terukur, bukan fitur.
+
+Contoh yang kurang baik: "Buat aplikasi yang bagus untuk toko."
+Contoh yang baik: "Mengurangi waktu pencatatan stok dari 2 jam per hari menjadi 15 menit."
+
+### Target Pengguna
+Siapa yang akan menggunakan produk ini? Makin spesifik makin baik. "Semua orang" bukan target pengguna — itu tanda bahwa produknya belum cukup difokuskan.
+
+### User Stories
+User story adalah cara mendeskripsikan fitur dari sudut pandang pengguna. Formatnya sederhana:
+
+> Sebagai **[siapa]**, saya ingin **[melakukan apa]**, supaya **[tujuan]**.
+
+Contoh:
+- Sebagai pemilik toko, saya ingin melihat notifikasi ketika stok hampir habis, supaya bisa reorder sebelum kehabisan.
+- Sebagai kasir, saya ingin mencatat transaksi dengan cepat tanpa perlu koneksi internet, supaya bisa tetap bekerja meski sinyal buruk.
+
+### Scope — Apa yang Masuk dan Tidak Masuk
+Ini bagian yang paling sering dilewati dan paling sering menjadi sumber konflik. Tulis secara eksplisit apa yang ada dan tidak ada dalam proyek ini.
+
+### Acceptance Criteria
+Untuk setiap fitur utama, tulis kondisi spesifik yang harus terpenuhi supaya fitur dianggap selesai. Ini yang akan jadi acuan saat testing dan demo ke klien.
+
+### Asumsi dan Risiko
+Apa yang kamu asumsikan benar saat menulis PRD ini? Apa yang bisa berubah dan mempengaruhi proyek?
+
+## Contoh PRD Sederhana
+
+Berikut contoh PRD ringkas untuk aplikasi manajemen stok toko:
+
+---
+
+**Ringkasan:** Aplikasi mobile untuk pemilik toko kelontong kecil yang memungkinkan pencatatan stok masuk dan keluar secara digital, menggantikan buku catatan manual.
+
+**Tujuan bisnis:** Mengurangi kasus kehabisan stok dan stok mati sebesar 30% dalam 3 bulan pertama.
+
+**Target pengguna:** Pemilik toko kelontong dengan 50–200 jenis produk, berusia 30–50 tahun, tidak terlalu melek teknologi.
+
+**Dalam scope:**
+- Login dengan nomor HP (OTP)
+- Manajemen produk (tambah, edit, hapus)
+- Catat stok masuk dan keluar
+- Notifikasi stok hampir habis
+- Laporan stok sederhana
+
+**Di luar scope:**
+- Integrasi mesin kasir
+- Fitur hutang pelanggan
+- Multi-cabang
+- Versi web
+
+**Acceptance criteria — Notifikasi stok:**
+- Pengguna bisa set batas minimum stok per produk
+- Notifikasi muncul di halaman utama ketika stok di bawah batas
+- Pengguna bisa dismiss notifikasi satu per satu
+
+---
+
+## PRD vs Dokumen Lain
+
+Sering ada kebingungan antara PRD dengan dokumen lain seperti BRD (Business Requirements Document) atau TRD (Technical Requirements Document).
+
+**BRD** fokus pada kebutuhan bisnis — mengapa produk ini perlu ada dari perspektif bisnis. BRD dibaca oleh stakeholder bisnis, bukan tim teknis.
+
+**PRD** fokus pada kebutuhan produk — apa yang dibangun dan bagaimana cara kerjanya. PRD adalah jembatan antara kebutuhan bisnis dan implementasi teknis.
+
+**TRD** fokus pada implementasi teknis — bagaimana developer akan membangun fitur tersebut. TRD dibaca oleh tim teknis.
+
+Untuk proyek freelance dan startup kecil, PRD saja biasanya sudah cukup.
+
+## Siapa yang Menulis PRD?
+
+Di perusahaan besar, PRD biasanya ditulis oleh Product Manager. Di startup atau proyek freelance, PRD bisa ditulis oleh siapa saja yang paling memahami kebutuhan pengguna dan bisnis — bisa founder, klien, atau freelancer yang mengerjakan proyeknya.
+
+Yang penting bukan siapa yang menulisnya, tapi bahwa dokumen ini **dibaca dan disetujui** oleh semua pihak yang terlibat sebelum development dimulai.
+
+## Cara Membuat PRD Lebih Cepat
+
+Menulis PRD dari nol bisa memakan waktu — terutama kalau kamu baru pertama kali. [SANDWICH](https://sandwich.etalas.com) membantu kamu mengubah brief klien yang masih mentah menjadi PRD terstruktur dalam hitungan menit. Kamu cukup masukkan brief, dan SANDWICH menghasilkan PRD lengkap yang siap kamu review dan sesuaikan.
+
+---
+
+Punya brief klien yang belum jadi PRD? [Coba SANDWICH gratis](https://sandwich.etalas.com/register) dan lihat hasilnya dalam hitungan menit.
