@@ -1,5 +1,5 @@
 import { and, eq, asc, inArray } from "drizzle-orm";
-import { chatMessages, attachments } from "../schema.js";
+import { chatMessages, attachments, documents, documentVersions } from "../schema.js";
 import type { Database } from "../connection.js";
 import { getAttachmentUrl } from "../../storage/r2.js";
 
@@ -13,12 +13,22 @@ export interface MessageAttachment {
   url: string;
 }
 
+export interface MessageDocumentRef {
+  id: string;
+  type: string;
+  title: string;
+  versionNo: number | null;
+}
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
   role: string;
   content: string;
   documentId: string | null;
+  // Enriched in getMessages so the frontend can render a proper result card
+  // after a reload (type/title/version drive the card UI).
+  document?: MessageDocumentRef | null;
   createdAt: Date;
   attachments: MessageAttachment[];
 }
@@ -140,15 +150,43 @@ export async function getMessages(
     byMessage.set(a.messageId, list);
   }
 
-  return msgs.map((m) => ({
-    id: m.id,
-    conversationId: m.conversationId,
-    role: m.role,
-    content: m.content,
-    documentId: m.documentId,
-    createdAt: m.createdAt,
-    attachments: byMessage.get(m.id) ?? [],
-  }));
+  // Enrich assistant messages that generated a document with the doc's
+  // type/title/latest version so the frontend can render a result card after
+  // a reload (the SSE "done" event carries it live, but reloads don't).
+  const docIds = [...new Set(msgs.map((m) => m.documentId).filter(Boolean))] as string[];
+  const docs = docIds.length > 0
+    ? await db.select().from(documents).where(inArray(documents.id, docIds))
+    : [];
+  const docVersions = docIds.length > 0
+    ? await db.select().from(documentVersions).where(inArray(documentVersions.documentId, docIds))
+    : [];
+  const docById = new Map(docs.map((d) => [d.id, d]));
+  const latestVersionNo = new Map<string, number>();
+  for (const v of docVersions) {
+    const cur = latestVersionNo.get(v.documentId) ?? 0;
+    if (v.versionNo > cur) latestVersionNo.set(v.documentId, v.versionNo);
+  }
+
+  return msgs.map((m) => {
+    const doc = m.documentId ? docById.get(m.documentId) : undefined;
+    return {
+      id: m.id,
+      conversationId: m.conversationId,
+      role: m.role,
+      content: m.content,
+      documentId: m.documentId,
+      document: doc
+        ? {
+            id: doc.id,
+            type: doc.type,
+            title: doc.title,
+            versionNo: latestVersionNo.get(doc.id) ?? null,
+          }
+        : null,
+      createdAt: m.createdAt,
+      attachments: byMessage.get(m.id) ?? [],
+    };
+  });
 }
 
 /** Lightweight role/content history for the AI engine (no attachment signing). */

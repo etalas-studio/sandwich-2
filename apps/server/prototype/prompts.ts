@@ -84,25 +84,30 @@ export function buildPrototypeSystemPrompt(
 /**
  * Refine-mode prompt. A working prototype already lives in the workspace;
  * the agent must apply ONE targeted change in place instead of regenerating.
+ *
+ * NOTE: we deliberately do NOT pass the full client brief here. The prototype
+ * engine seeds the workspace with the current version's files; feeding the
+ * brief back makes the model want to "improve" everything and regenerate the
+ * whole thing. The only context is the concrete feedback the user gave.
  */
 export function buildPrototypeRefinePrompt(brief: string, instruction: string): string {
   return [
-    `You are SANDWICH's prototype revision pass. A working multi-page static prototype already exists in the current working directory. Do NOT regenerate it from scratch.`,
+    `You are SANDWICH's prototype revision pass. A working multi-page static prototype already exists in the current working directory. Your ONLY job is to apply the client's feedback below to the EXISTING files. Do NOT regenerate, do NOT restyle, do NOT touch anything the feedback does not mention.`,
     ``,
-    `## Existing prototype`,
-    `The files in the working directory are the current version. Read them before editing so your change fits the existing structure, classes, and data.`,
-    ``,
-    `## Original context (for reference)`,
-    brief,
-    ``,
-    `## Refinement to apply`,
+    `## Client feedback`,
     instruction || "Apply the user's requested change.",
     ``,
-    `## Rules`,
-    `- Apply ONLY the requested refinement. Keep every other section, copy, data, feature, and file exactly as it is.`,
-    `- Edit the existing files in place with the write/edit tool. Do NOT create a new file set, do NOT rename or reorganize files.`,
+    `## Hard boundaries (MANDATORY)`,
+    `- Apply ONLY the change the feedback describes. If the feedback is "move the marquee section", move it — do not also "improve" the hero, colors, or other sections.`,
+    `- Keep every headline, paragraph, table row, label, chart, demo data, and other file exactly as it is. Restyle/rewrite NOTHING beyond the requested change.`,
+    `- Do NOT create new files, do NOT delete files, do NOT rename or reorganize files. Do NOT add new pages or sections.`,
     `- Preserve the CRUD flows, localStorage logic, Chart.js usage, the single styles.css + script.js structure, and the Lucide icon setup (no emoji).`,
-    `- If the request is unclear, make the smallest reasonable change and keep everything else intact.`,
+    `- If the feedback is unclear, make the smallest reasonable change and keep everything else intact.`,
+    ``,
+    `## Your Process`,
+    `1. Read the relevant existing file(s) first (use the read tool) so your edit fits the current structure, classes, and data.`,
+    `2. Make the minimal edit with the edit tool (or write tool for a whole file if the edit is structural).`,
+    `3. Check whether the change touches shared styles (styles.css) — if so, update only the specific selectors involved.`,
     ``,
     `## Output`,
     `After editing, respond with ONLY the text "DONE".`,

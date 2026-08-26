@@ -35,6 +35,12 @@ export interface ChatMessage {
   role: string
   content: string
   documentId: string | null
+  document?: {
+    id: string
+    type: string
+    title: string
+    versionNo: number | null
+  } | null
   createdAt: string
   attachments: Attachment[]
 }

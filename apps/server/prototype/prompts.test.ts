@@ -61,13 +61,20 @@ describe("buildPrototypeSystemPrompt", () => {
 });
 
 describe("buildPrototypeRefinePrompt", () => {
-  it("edits in place instead of regenerating and embeds the instruction", () => {
-    const prompt = buildPrototypeRefinePrompt("POS kasir", "ubah warnanya jadi biru");
-    assert.ok(prompt.includes("POS kasir"));
-    assert.ok(prompt.includes("ubah warnanya jadi biru"));
+  it("embeds the instruction and demands in-place edits, NOT regeneration", () => {
+    const prompt = buildPrototypeRefinePrompt("POS kasir", "pindahkan marquee ke bawah hero");
+    assert.ok(prompt.includes("pindahkan marquee ke bawah hero"));
     assert.ok(prompt.includes("Do NOT regenerate"));
+    assert.ok(prompt.includes("Hard boundaries"));
     assert.ok(prompt.includes("edit"));
     assert.ok(prompt.includes("DONE"));
+  });
+
+  it("does NOT leak the full original brief into the refine prompt", () => {
+    const prompt = buildPrototypeRefinePrompt("POS kasir dengan manajemen menu", "ubah warnanya jadi biru");
+    // The brief must not be fed back — it tempts the model to regenerate.
+    assert.ok(!prompt.includes("POS kasir dengan manajemen menu"));
+    assert.ok(prompt.includes("ubah warnanya jadi biru"));
   });
 
   it("falls back to a generic instruction when empty", () => {

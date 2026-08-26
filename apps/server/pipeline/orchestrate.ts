@@ -5,12 +5,15 @@ import type { DocumentType } from "../db/documents.js";
  * transitions; the AI only produces content for the current stage.
  *
  *   intake → choosing_deliverable → clarifying → generating → awaiting_next
+ *                                                      ↓ (feedback on existing doc)
+ *                                                   refining → generating (refine)
  */
 export type PipelineStage =
   | "intake"
   | "choosing_deliverable"
   | "clarifying"
   | "generating"
+  | "refining"
   | "awaiting_next";
 
 export const INITIAL_STAGE: PipelineStage = "intake";
@@ -54,7 +57,18 @@ export function detectPreviewIntent(message: string): boolean {
 
 /** "Change/add/fix" follow-up that should revise the existing deliverable. */
 export function detectRefineIntent(message: string): boolean {
-  return /\b(ubah|ganti|edit|revisi|refine|update|perbaiki|fix|tambah|tambahkan|add|hilangkan|hapus|remove|change|modif|perbarui|sesuaikan|rapihin|rapikan|benerin|betulin|revise|adjust|tweak|improve|poles)\b/i.test(
+  return /\b(ubah|ganti|edit|revisi|refine|update|perbaiki|fix|tambah|tambahkan|add|hilangkan|hapus|remove|change|modif|perbarui|sesuaikan|rapihin|rapikan|benerin|betulin|revise|adjust|tweak|improve|poles|feedback|masukan|saran|kurang|lebih|geser|pindah|pindahkan|taruh|letakkan|depan|belakang|atas|bawah|kiri|kanan|tengah|samping|posisi|layout|tata letak|marquee|navbar|hero|footer|section|bagian|tombol|button|warna|color|font|ukuran|besar|kecil|spacing|jarak)\b/i.test(
+    message,
+  );
+}
+
+/**
+ * Explicit "never mind" — cancels a pending refine (or any follow-up) and
+ * returns the conversation to awaiting_next. Keep this set narrow: the
+ * refine-by-default design intentionally treats everything else as feedback.
+ */
+export function detectCancelIntent(message: string): boolean {
+  return /\b(nggak (?:jadi|usah)|ga (?:jadi|usah)|tidak (?:jadi|usah)|batal|skip|cancel|gausah|nggausah|ga usah|lupakan|forget it|never mind|udah ga usah|udah nggak usah|jangan dulu|ntar aja|nanti aja)\b/i.test(
     message,
   );
 }
@@ -95,6 +109,8 @@ export function stageInstruction(stage: PipelineStage, pendingType: DocumentType
       return `You are clarifying requirements for the ${DELIVERABLE_LABEL[pendingType ?? "prd"]}. Ask 3-5 focused clarifying questions (target users, scope, constraints, timeline). Do NOT generate the document yet.`;
     case "generating":
       return `Generate the full ${DELIVERABLE_LABEL[pendingType ?? "prd"]} document now. Output ONLY the document content — no preamble, no meta-commentary.`;
+    case "refining":
+      return "You are refining an existing deliverable. The user just gave feedback on the document that was generated. Acknowledge the feedback concisely, restate what you understood, and ask whether there are any other revisions before you regenerate. Do NOT generate the document yet — wait for the user's confirmation or more feedback. If the user instead asks a question or just says thanks, answer normally and do not push for revisions.";
     case "awaiting_next":
       return "A deliverable was just generated. Ask the user what they want next: generate another deliverable (PRD, Quotation, Prototype, Specs) or refine the one just created.";
   }
