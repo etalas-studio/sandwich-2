@@ -6,6 +6,10 @@ import type { NextConfig } from 'next'
 // next-mdx-remote or a remark processor) when GFM is needed at build pipeline level.
 const withMDX = createMDX({})
 
-const config: NextConfig = {}
+const config: NextConfig = {
+  images: {
+    remotePatterns: [{ hostname: 'placehold.co' }],
+  },
+}
 
 export default withMDX(config)

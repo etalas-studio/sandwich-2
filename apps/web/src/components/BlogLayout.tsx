@@ -1,5 +1,8 @@
+import Link from 'next/link'
 import Header from './Header'
 import type { PostMeta } from '../lib/blog'
+
+const bowlby = "'Bowlby One', system-ui"
 
 export default function BlogLayout({
   meta,
@@ -19,11 +22,22 @@ export default function BlogLayout({
         <Header />
       </div>
       <main className="max-w-2xl mx-auto px-6 py-12">
+        <Link
+          href="/blog"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors mb-8"
+        >
+          ← Insights
+        </Link>
         <header className="mb-10">
           <time dateTime={meta.date} className="text-xs text-zinc-400 font-medium">
             {date}
           </time>
-          <h1 className="mt-2 text-3xl font-bold text-zinc-900 leading-tight">{meta.title}</h1>
+          <h1
+            className="mt-2 text-4xl md:text-5xl tracking-tighter leading-tight text-zinc-900"
+            style={{ fontFamily: bowlby }}
+          >
+            {meta.title}
+          </h1>
           <p className="mt-3 text-base text-zinc-500">{meta.description}</p>
         </header>
         <article className="blog-article">{children}</article>

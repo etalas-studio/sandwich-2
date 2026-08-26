@@ -7,6 +7,7 @@ export type PostMeta = {
   description: string
   date: string
   slug: string
+  image?: string
 }
 
 // ponytail: static import map — Turbopack cannot handle template-literal dynamic
