@@ -86,7 +86,7 @@ export default function ConfigPage() {
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Configuration</h1>
+        <h1 className="text-3xl tracking-wide text-white" style={{ fontFamily: "'Bowlby One', sans-serif" }}>Configuration</h1>
         <p className="mt-1 text-sm text-neutral-500">
           AI engine and provider settings. Changes apply immediately (no redeploy).
         </p>

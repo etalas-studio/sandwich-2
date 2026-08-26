@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, ChevronDown } from 'lucide-react'
+import { LogOut, ChevronDown, LayoutDashboard, Users, Settings, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import {
   DropdownMenu,
@@ -14,9 +14,9 @@ import {
 } from '../../components/ui/dropdown-menu'
 
 const NAV = [
-  { href: '/admin/dashboard', label: 'Dashboard' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/config', label: 'Configuration' },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/config', label: 'Configuration', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -75,18 +75,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Nav */}
         <nav className="flex flex-col gap-0.5">
-          {NAV.map(({ href, label }) => {
+          {NAV.map(({ href, label, icon: Icon }) => {
             const active = pathname === href
             return (
               <Link
                 key={href}
                 href={href}
-                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                   active
                     ? 'bg-neutral-800 text-neutral-100'
                     : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
                 }`}
               >
+                <Icon className="h-4 w-4 shrink-0" />
                 {label}
               </Link>
             )
@@ -97,9 +98,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="mt-auto space-y-1">
           <Link
             href="/dashboard"
-            className="block rounded-lg px-3 py-2 text-sm text-neutral-600 transition-colors hover:text-neutral-400"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-600 transition-colors hover:text-neutral-400"
           >
-            ← Dashboard
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+            Dashboard
           </Link>
 
           {/* User info + logout */}

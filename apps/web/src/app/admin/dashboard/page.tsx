@@ -285,7 +285,7 @@ export default function DashboardPage() {
       `}</style>
       <div className="space-y-12">
         <header className="animate-in" style={{ animationDelay: '0ms' }}>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
+          <h1 className="text-3xl tracking-wide text-white" style={{ fontFamily: "'Bowlby One', sans-serif" }}>Dashboard</h1>
           <p className="mt-1.5 text-sm text-neutral-500">Overview for this month.</p>
         </header>
 

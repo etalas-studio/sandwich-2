@@ -124,7 +124,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+        <h1 className="text-3xl tracking-wide text-white" style={{ fontFamily: "'Bowlby One', sans-serif" }}>Users</h1>
         {data && <p className="mt-1 text-sm text-neutral-500">{data.total} total</p>}
       </header>
 
