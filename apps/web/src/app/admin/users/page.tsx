@@ -86,11 +86,27 @@ function EditModal({
       <DialogContent showCloseButton className="max-w-sm overflow-y-auto max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Edit user</DialogTitle>
-          <DialogDescription>
-            {user.email}
-            <span className="ml-2 opacity-50">@{user.username}</span>
-          </DialogDescription>
         </DialogHeader>
+
+        {/* Email + username inputs */}
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Email</label>
+            <input
+              readOnly
+              value={user.email}
+              className="w-full rounded-lg bg-neutral-800/50 px-3 py-2 text-sm text-neutral-400 outline-none cursor-not-allowed select-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Username</label>
+            <input
+              readOnly
+              value={user.username}
+              className="w-full rounded-lg bg-neutral-800/50 px-3 py-2 text-sm text-neutral-300 outline-none cursor-not-allowed select-none"
+            />
+          </div>
+        </div>
 
         {/* Current status badges */}
         <div className="flex flex-wrap gap-2">
