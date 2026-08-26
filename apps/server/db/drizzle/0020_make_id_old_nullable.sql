@@ -1,0 +1,1 @@
+ALTER TABLE "conversations" ALTER COLUMN "id_old" DROP NOT NULL;
