@@ -3,11 +3,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchAdminUsers,
-  setUserRole,
   manageUserSubscription,
   type AdminUser,
   type AdminUsersResponse,
 } from '../../../api/admin'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../../../components/ui/dialog'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectContent,
+  SelectItem,
+} from '../../../components/ui/select'
+import { ChevronDown } from 'lucide-react'
 
 function Badge({
   text,
@@ -22,9 +38,7 @@ function Badge({
     yellow: 'bg-yellow-950 text-yellow-300',
     neutral: 'bg-neutral-800 text-neutral-400',
   }[color]
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>{text}</span>
-  )
+  return <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>{text}</span>
 }
 
 function planColor(planSlug: string | undefined): 'green' | 'blue' | 'neutral' {
@@ -45,9 +59,9 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<'' | 'admin' | 'user'>('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [actionMsg, setActionMsg] = useState<{ kind: 'error' | 'notice'; text: string } | null>(
-    null,
-  )
+  const [actionMsg, setActionMsg] = useState<{ kind: 'error' | 'notice'; text: string } | null>(null)
+  // confirm modal state
+  const [confirmTarget, setConfirmTarget] = useState<AdminUser | null>(null)
   const LIMIT = 50
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -69,11 +83,6 @@ export default function UsersPage() {
     debounceRef.current = setTimeout(() => void load(1, val, roleFilter), 350)
   }
 
-  const handleRoleFilter = (val: '' | 'admin' | 'user') => {
-    setRoleFilter(val)
-    setPage(1)
-  }
-
   const run = async (fn: () => Promise<unknown>, okMsg: string) => {
     setBusy(true)
     setActionMsg(null)
@@ -82,37 +91,23 @@ export default function UsersPage() {
       setActionMsg({ kind: 'notice', text: okMsg })
       await load(page, search, roleFilter)
     } catch (err) {
-      setActionMsg({
-        kind: 'error',
-        text: err instanceof Error ? err.message : 'Action failed',
-      })
+      setActionMsg({ kind: 'error', text: err instanceof Error ? err.message : 'Action failed' })
     } finally {
       setBusy(false)
     }
   }
 
-  const toggleRole = (user: AdminUser) => {
-    const newRole = user.role === 'admin' ? 'user' : 'admin'
-    if (
-      newRole === 'admin' &&
-      !window.confirm(`Promote ${user.email} to admin?`)
-    )
-      return
-    void run(() => setUserRole(user.id, newRole), `Role updated to ${newRole}`)
-  }
-
-  const cancelSub = (user: AdminUser) => {
-    if (!window.confirm(`Cancel subscription for ${user.email}?`)) return
-    void run(
-      () => manageUserSubscription(user.id, 'cancel'),
-      'Subscription cancelled',
-    )
-  }
-
   const grantPlan = (user: AdminUser, planSlug: 'starter' | 'pro') => {
     void run(
       () => manageUserSubscription(user.id, 'grant', planSlug),
-      `Granted ${planSlug}`,
+      `Granted ${planSlug} to ${user.email}`,
+    )
+  }
+
+  const cancelSub = (user: AdminUser) => {
+    void run(
+      () => manageUserSubscription(user.id, 'cancel'),
+      `Subscription cancelled for ${user.email}`,
     )
   }
 
@@ -130,9 +125,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
-        {data && (
-          <p className="mt-1 text-sm text-neutral-500">{data.total} total</p>
-        )}
+        {data && <p className="mt-1 text-sm text-neutral-500">{data.total} total</p>}
       </header>
 
       {/* Search + filter bar */}
@@ -144,15 +137,17 @@ export default function UsersPage() {
           onChange={(e) => handleSearch(e.target.value)}
           className="h-9 w-64 rounded-lg border border-neutral-700 bg-neutral-900 px-3 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-500"
         />
-        <select
-          value={roleFilter}
-          onChange={(e) => handleRoleFilter(e.target.value as '' | 'admin' | 'user')}
-          className="h-9 rounded-lg border border-neutral-700 bg-neutral-900 px-3 text-sm outline-none focus:border-neutral-500"
-        >
-          <option value="">All roles</option>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
+        <Select<'' | 'admin' | 'user'> value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1) }}>
+          <SelectTrigger className="h-9 gap-2 rounded-lg border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-300 outline-none focus:border-neutral-500">
+            <SelectValue placeholder="All roles" />
+            <SelectIcon><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All roles</SelectItem>
+            <SelectItem value="user">User</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {actionMsg && (
@@ -192,19 +187,13 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {data.users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-neutral-800/50 last:border-0"
-                  >
+                  <tr key={user.id} className="border-b border-neutral-800/50 last:border-0">
                     <td className="px-4 py-3">
-                      <div>{user.email}</div>
+                      <div className="text-neutral-200">{user.email}</div>
                       <div className="text-xs text-neutral-500">{user.username}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge
-                        text={user.role}
-                        color={user.role === 'admin' ? 'yellow' : 'neutral'}
-                      />
+                      <Badge text={user.role} color={user.role === 'admin' ? 'yellow' : 'neutral'} />
                     </td>
                     <td className="px-4 py-3">
                       {user.subscription ? (
@@ -213,40 +202,37 @@ export default function UsersPage() {
                           color={planColor(user.subscription.planSlug)}
                         />
                       ) : (
-                        <span className="text-neutral-500">—</span>
+                        <span className="text-neutral-600">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-neutral-400">
                       {formatExpiry(user.subscription?.expiresAt ?? null)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        <button
-                          onClick={() => toggleRole(user)}
-                          disabled={busy}
-                          className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800 disabled:opacity-50"
+                      <div className="flex flex-wrap gap-2">
+                        {/* Grant plan dropdown */}
+                        <Select<'pro' | 'starter'>
+                          onValueChange={(v) => grantPlan(user, v)}
                         >
-                          {user.role === 'admin' ? 'Demote' : 'Promote'}
-                        </button>
-                        <button
-                          onClick={() => grantPlan(user, 'pro')}
-                          disabled={busy}
-                          className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800 disabled:opacity-50"
-                        >
-                          Grant Pro
-                        </button>
-                        <button
-                          onClick={() => grantPlan(user, 'starter')}
-                          disabled={busy}
-                          className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800 disabled:opacity-50"
-                        >
-                          Grant Starter
-                        </button>
+                          <SelectTrigger
+                            disabled={busy}
+                            className="h-7 gap-1.5 rounded border border-neutral-700 bg-transparent px-2.5 text-xs text-neutral-400 outline-none hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-50"
+                          >
+                            <SelectValue placeholder="Grant plan" />
+                            <SelectIcon><ChevronDown className="h-3 w-3 text-neutral-500" /></SelectIcon>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pro">Pro</SelectItem>
+                            <SelectItem value="starter">Starter</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        {/* Cancel sub — only when active */}
                         {user.subscription?.status === 'active' && (
                           <button
-                            onClick={() => cancelSub(user)}
+                            onClick={() => setConfirmTarget(user)}
                             disabled={busy}
-                            className="rounded border border-red-900 px-2 py-1 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-50"
+                            className="h-7 rounded border border-red-900/60 px-2.5 text-xs text-red-400 transition-colors hover:bg-red-950/40 hover:border-red-800 disabled:opacity-50"
                           >
                             Cancel sub
                           </button>
@@ -275,9 +261,7 @@ export default function UsersPage() {
               >
                 Prev
               </button>
-              <span className="text-neutral-400">
-                {page} / {totalPages}
-              </span>
+              <span className="text-neutral-400">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
@@ -289,6 +273,40 @@ export default function UsersPage() {
           )}
         </>
       )}
+
+      {/* Cancel confirmation modal */}
+      <Dialog open={confirmTarget !== null} onOpenChange={(open) => { if (!open) setConfirmTarget(null) }}>
+        <DialogContent showCloseButton={false} className="max-w-sm bg-neutral-900 border-neutral-800">
+          <DialogHeader>
+            <DialogTitle>Cancel subscription</DialogTitle>
+            <DialogDescription>
+              This will immediately deactivate the subscription for{' '}
+              <span className="font-medium text-neutral-200">{confirmTarget?.email}</span>.
+              The user loses access to Pro features right away.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              onClick={() => setConfirmTarget(null)}
+              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800"
+            >
+              Keep subscription
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => {
+                if (confirmTarget) {
+                  cancelSub(confirmTarget)
+                  setConfirmTarget(null)
+                }
+              }}
+              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              Yes, cancel
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

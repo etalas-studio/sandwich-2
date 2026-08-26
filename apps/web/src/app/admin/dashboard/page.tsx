@@ -4,17 +4,10 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   Users,
   Crown,
-  UserCheck,
   TrendingUp,
-  FileText,
-  Layers,
-  MessageSquare,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  UserPlus,
-  UserMinus,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import { fetchAdminStats, type AdminStats, type AdminStatsPayment } from '../../../api/admin'
 
@@ -22,10 +15,6 @@ const css = `
   @keyframes animationIn {
     0% { opacity: 0; transform: translateY(16px); filter: blur(6px); }
     100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-  }
-  @keyframes float-card-elements {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-6px); }
   }
   @keyframes badge-glow {
     0%, 100% { box-shadow: 0 0 0 3px rgba(52,211,153,0.15), 0 0 8px rgba(52,211,153,0.3); }
@@ -35,29 +24,43 @@ const css = `
     0%, 100% { box-shadow: 0 0 0 3px rgba(251,191,36,0.12), 0 0 8px rgba(251,191,36,0.2); }
     50%       { box-shadow: 0 0 0 5px rgba(251,191,36,0.06), 0 0 14px rgba(251,191,36,0.35); }
   }
+  @keyframes bar-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes ring-fill {
+    from { stroke-dashoffset: 251; }
+  }
   .animate-in { animation: animationIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
-  .animate-float { animation: float-card-elements 4s ease-in-out infinite; }
   .status-glow { animation: badge-glow 2.4s ease-in-out infinite; }
   .warn-glow { animation: warn-pulse 2.4s ease-in-out infinite; }
+  .bar-animated { transform-origin: left; animation: bar-grow 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .ring-animated { animation: ring-fill 0.8s cubic-bezier(0.16,1,0.3,1) both; }
 `
 
 function formatRupiah(amount: number): string {
   return `Rp ${amount.toLocaleString('id-ID')}`
 }
 
-interface StatTileProps {
+/** Simple stat tile — used for 1-number metrics */
+function StatTile({
+  label,
+  value,
+  icon,
+  accent = 'text-neutral-400',
+  sub,
+  delay = 0,
+}: {
   label: string
   value: string | number
   icon: React.ReactNode
-  delay?: number
-  float?: boolean
   accent?: string
-}
-
-function StatTile({ label, value, icon, delay = 0, float = false, accent = 'text-neutral-400' }: StatTileProps) {
+  sub?: React.ReactNode
+  delay?: number
+}) {
   return (
     <div
-      className={`animate-in group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.10] hover:bg-white/[0.06] hover:shadow-xl hover:shadow-black/40 ${float ? 'animate-float' : ''}`}
+      className="animate-in group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.10] hover:bg-white/[0.06] hover:shadow-xl hover:shadow-black/40"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className={`mb-4 w-fit rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5 ${accent}`}>
@@ -65,6 +68,117 @@ function StatTile({ label, value, icon, delay = 0, float = false, accent = 'text
       </div>
       <div className="text-3xl font-semibold tracking-tight text-white">{value}</div>
       <div className="mt-1.5 text-sm text-neutral-500">{label}</div>
+      {sub && <div className="mt-2">{sub}</div>}
+    </div>
+  )
+}
+
+/** Horizontal bar chart for categorical data */
+function HorizontalBarChart({
+  rows,
+  delay = 0,
+}: {
+  rows: { label: string; value: number; color: string }[]
+  delay?: number
+}) {
+  const max = Math.max(...rows.map((r) => r.value), 1)
+  return (
+    <div className="space-y-3" style={{ animationDelay: `${delay}ms` }}>
+      {rows.map((row, i) => (
+        <div key={row.label} className="space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-neutral-400">{row.label}</span>
+            <span className="font-medium text-white">{row.value.toLocaleString()}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className={`h-full rounded-full bar-animated ${row.color}`}
+              style={{
+                width: `${(row.value / max) * 100}%`,
+                animationDelay: `${delay + i * 80}ms`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Ring / donut for a single rate (0–100) */
+function RingChart({
+  pct,
+  label,
+  sublabel,
+  color = 'text-emerald-400',
+  strokeColor = '#34d399',
+}: {
+  pct: number
+  label: string
+  sublabel: string
+  color?: string
+  strokeColor?: string
+}) {
+  const r = 40
+  const circ = 2 * Math.PI * r // ≈ 251
+  const offset = circ - (pct / 100) * circ
+  return (
+    <div className="flex items-center gap-5">
+      <div className="relative shrink-0">
+        <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+          <circle cx="48" cy="48" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          <circle
+            cx="48"
+            cy="48"
+            r={r}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            className="ring-animated"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`text-lg font-semibold ${color}`}>{pct}%</span>
+        </div>
+      </div>
+      <div>
+        <div className="text-base font-medium text-white">{label}</div>
+        <div className="mt-0.5 text-sm text-neutral-500">{sublabel}</div>
+      </div>
+    </div>
+  )
+}
+
+/** Vertical bar chart for funnel */
+function FunnelBars({
+  data,
+}: {
+  data: { label: string; value: number; color: string; bg: string }[]
+}) {
+  const max = Math.max(...data.map((d) => d.value), 1)
+  return (
+    <div className="flex h-36 items-end gap-3">
+      {data.map((d, i) => (
+        <div key={d.label} className="flex flex-1 flex-col items-center gap-2">
+          <span className="text-xs font-medium text-white">{d.value}</span>
+          <div className="relative w-full overflow-hidden rounded-t-lg" style={{ height: '80px', background: 'rgba(255,255,255,0.04)' }}>
+            <div
+              className={`absolute bottom-0 w-full rounded-t-lg bar-animated ${d.bg}`}
+              style={{
+                height: `${(d.value / max) * 100}%`,
+                animationDelay: `${i * 100}ms`,
+                transformOrigin: 'bottom',
+                animation: `bar-grow 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 100}ms both`,
+                animationName: 'bar-grow-y',
+              }}
+            />
+          </div>
+          <span className="text-[11px] text-neutral-500">{d.label}</span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -103,63 +217,29 @@ function PaymentsTable({ payments }: { payments: AdminStatsPayment[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/[0.06] text-left">
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Order</th>
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Email</th>
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Plan</th>
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Amount</th>
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Status</th>
-            <th className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">Fraud</th>
-            <th className="pb-3 text-xs font-medium uppercase tracking-widest text-neutral-600">Date</th>
+            {['Order', 'Email', 'Plan', 'Amount', 'Status', 'Fraud', 'Date'].map((h) => (
+              <th key={h} className="pb-3 pr-6 text-xs font-medium uppercase tracking-widest text-neutral-600">{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {payments.map((p) => (
-            <tr
-              key={p.orderId}
-              className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]"
-            >
-              <td className="py-3 pr-6 font-mono text-xs text-neutral-500">
-                {p.orderId.slice(0, 16)}…
-              </td>
+            <tr key={p.orderId} className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]">
+              <td className="py-3 pr-6 font-mono text-xs text-neutral-500">{p.orderId.slice(0, 16)}…</td>
               <td className="py-3 pr-6 text-neutral-300">{p.userEmail ?? '—'}</td>
               <td className="py-3 pr-6">
                 {p.planSlug ? (
-                  <span className="rounded-full border border-white/[0.08] bg-white/[0.06] px-2.5 py-0.5 text-xs text-neutral-300">
-                    {p.planSlug}
-                  </span>
+                  <span className="rounded-full border border-white/[0.08] bg-white/[0.06] px-2.5 py-0.5 text-xs text-neutral-300">{p.planSlug}</span>
                 ) : '—'}
               </td>
               <td className="py-3 pr-6 font-medium text-white">{formatRupiah(Number(p.grossAmount))}</td>
               <td className="py-3 pr-6">{statusDot(p.transactionStatus)}</td>
               <td className="py-3 pr-6 text-neutral-500">{p.fraudStatus ?? '—'}</td>
-              <td className="py-3 text-neutral-500">
-                {new Date(p.createdAt).toLocaleDateString('id-ID')}
-              </td>
+              <td className="py-3 text-neutral-500">{new Date(p.createdAt).toLocaleDateString('id-ID')}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-function SignupDelta({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
-  const delta = thisMonth - lastMonth
-  const up = delta >= 0
-  return (
-    <div className="animate-in flex items-center gap-4" style={{ animationDelay: '280ms' }}>
-      <div className={`w-fit rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5 ${up ? 'text-emerald-400' : 'text-red-400'}`}>
-        {up ? <UserPlus className="h-4 w-4" /> : <UserMinus className="h-4 w-4" />}
-      </div>
-      <div>
-        <div className="text-2xl font-semibold tracking-tight text-white">
-          {up ? '+' : ''}{delta}
-          <span className="ml-2 text-sm font-normal text-neutral-500">vs last month</span>
-        </div>
-        <div className="text-sm text-neutral-500">
-          {thisMonth} this month · {lastMonth} last month
-        </div>
-      </div>
     </div>
   )
 }
@@ -169,20 +249,15 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    try {
-      setStats(await fetchAdminStats())
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load stats')
-    }
+    try { setStats(await fetchAdminStats()) }
+    catch (err) { setError(err instanceof Error ? err.message : 'Failed to load stats') }
   }, [])
 
   useEffect(() => { void load() }, [load])
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-900/50 bg-red-950/30 px-5 py-4 text-sm text-red-300">
-        {error}
-      </div>
+      <div className="rounded-2xl border border-red-900/50 bg-red-950/30 px-5 py-4 text-sm text-red-300">{error}</div>
     )
   }
 
@@ -197,22 +272,26 @@ export default function DashboardPage() {
 
   const funnelTotal = stats.paymentFunnel.initiated + stats.paymentFunnel.settled + stats.paymentFunnel.failed
   const settleRate = funnelTotal > 0 ? Math.round((stats.paymentFunnel.settled / funnelTotal) * 100) : 0
+  const proRate = stats.totalUsers > 0 ? Math.round((stats.activeProSubs / stats.totalUsers) * 100) : 0
+  const signupDelta = stats.newUsersThisMonth - stats.newUsersLastMonth
+  const signupUp = signupDelta >= 0
 
   return (
     <>
-      <style>{css}</style>
+      <style>{css + `
+        @keyframes bar-grow-y {
+          from { height: 0 !important; }
+        }
+      `}</style>
       <div className="space-y-12">
         <header className="animate-in" style={{ animationDelay: '0ms' }}>
           <h1 className="text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
           <p className="mt-1.5 text-sm text-neutral-500">Overview for this month.</p>
         </header>
 
-        {/* Expiring subs alert */}
+        {/* Expiring alert */}
         {stats.expiringSubsCount > 0 && (
-          <div
-            className="animate-in warn-glow flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.06] px-5 py-4 text-sm text-yellow-200"
-            style={{ animationDelay: '40ms' }}
-          >
+          <div className="animate-in warn-glow flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.06] px-5 py-4 text-sm text-yellow-200" style={{ animationDelay: '40ms' }}>
             <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-400" />
             <span>
               <strong className="font-medium">{stats.expiringSubsCount}</strong> active subscription{stats.expiringSubsCount > 1 ? 's' : ''} expire within 7 days.
@@ -220,9 +299,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Users + Revenue bento */}
+        {/* ── Row 1: 4 stat tiles ─────────────────────────────────── */}
         <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Users &amp; Revenue</h2>
+          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Overview</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatTile
               label="Total users"
@@ -238,119 +317,97 @@ export default function DashboardPage() {
               delay={140}
             />
             <StatTile
-              label="Starter users"
-              value={stats.starterUsers}
-              icon={<UserCheck className="h-4 w-4" />}
-              delay={200}
-            />
-            <StatTile
               label="Revenue this month"
               value={formatRupiah(stats.revenueThisMonth)}
               icon={<TrendingUp className="h-4 w-4" />}
               accent="text-emerald-400"
+              delay={200}
+            />
+            <StatTile
+              label="New signups"
+              value={stats.newUsersThisMonth}
+              icon={signupUp ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              accent={signupUp ? 'text-emerald-400' : 'text-red-400'}
+              sub={
+                <span className={`text-xs ${signupUp ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {signupUp ? '+' : ''}{signupDelta} vs last month
+                </span>
+              }
               delay={260}
-              float
             />
           </div>
         </section>
 
-        {/* Signup delta */}
+        {/* ── Row 2: Pro conversion ring + usage bars ─────────────── */}
         <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">New signups</h2>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm">
-            <SignupDelta thisMonth={stats.newUsersThisMonth} lastMonth={stats.newUsersLastMonth} />
-          </div>
-        </section>
-
-        {/* Usage */}
-        <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Usage this month</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <StatTile
-              label="Docs generated"
-              value={stats.usageThisMonth.doc}
-              icon={<FileText className="h-4 w-4" />}
-              delay={320}
-            />
-            <StatTile
-              label="Prototypes"
-              value={stats.usageThisMonth.prototype}
-              icon={<Layers className="h-4 w-4" />}
-              delay={380}
-            />
-            <StatTile
-              label="Chat messages"
-              value={stats.usageThisMonth.chat}
-              icon={<MessageSquare className="h-4 w-4" />}
-              delay={440}
-            />
-          </div>
-        </section>
-
-        {/* Doc type breakdown */}
-        <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Documents by type (all-time)</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {([
-              { key: 'prd', label: 'PRD' },
-              { key: 'quotation', label: 'Quotation' },
-              { key: 'prototype', label: 'Prototype' },
-              { key: 'specs', label: 'Specs' },
-            ] as const).map(({ key, label }, i) => (
-              <StatTile
-                key={key}
-                label={label}
-                value={stats.docsByType[key]}
-                icon={<FileText className="h-4 w-4" />}
-                delay={480 + i * 60}
+          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Conversion &amp; Usage</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Pro conversion ring */}
+            <div className="animate-in rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm" style={{ animationDelay: '320ms' }}>
+              <div className="mb-4 text-xs font-medium uppercase tracking-widest text-neutral-600">Pro conversion</div>
+              <RingChart
+                pct={proRate}
+                label={`${stats.activeProSubs} Pro users`}
+                sublabel={`out of ${stats.totalUsers} total`}
+                strokeColor="#f59e0b"
+                color="text-amber-400"
               />
-            ))}
+            </div>
+
+            {/* Usage bars */}
+            <div className="animate-in rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm" style={{ animationDelay: '380ms' }}>
+              <div className="mb-4 text-xs font-medium uppercase tracking-widest text-neutral-600">Usage this month</div>
+              <HorizontalBarChart
+                rows={[
+                  { label: 'Docs', value: stats.usageThisMonth.doc, color: 'bg-blue-400' },
+                  { label: 'Prototypes', value: stats.usageThisMonth.prototype, color: 'bg-purple-400' },
+                  { label: 'Chat', value: stats.usageThisMonth.chat, color: 'bg-emerald-400' },
+                ]}
+                delay={400}
+              />
+            </div>
           </div>
         </section>
 
-        {/* Payment funnel */}
+        {/* ── Row 3: Payment funnel (vertical bars) + doc breakdown ── */}
         <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Payment funnel (this month)</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div
-              className="animate-in rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm"
-              style={{ animationDelay: '700ms' }}
-            >
-              <div className="mb-4 w-fit rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5 text-neutral-400">
-                <Clock className="h-4 w-4" />
-              </div>
-              <div className="text-3xl font-semibold tracking-tight text-white">{stats.paymentFunnel.initiated}</div>
-              <div className="mt-1.5 text-sm text-neutral-500">Initiated</div>
+          <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Documents &amp; Payments</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Doc type breakdown — horizontal bars */}
+            <div className="animate-in rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm" style={{ animationDelay: '440ms' }}>
+              <div className="mb-4 text-xs font-medium uppercase tracking-widest text-neutral-600">Documents by type (all-time)</div>
+              <HorizontalBarChart
+                rows={[
+                  { label: 'PRD', value: stats.docsByType.prd, color: 'bg-sky-400' },
+                  { label: 'Quotation', value: stats.docsByType.quotation, color: 'bg-violet-400' },
+                  { label: 'Prototype', value: stats.docsByType.prototype, color: 'bg-pink-400' },
+                  { label: 'Specs', value: stats.docsByType.specs, color: 'bg-orange-400' },
+                ]}
+                delay={460}
+              />
             </div>
-            <div
-              className="animate-in rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-6 backdrop-blur-sm"
-              style={{ animationDelay: '760ms' }}
-            >
-              <div className="mb-4 w-fit rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] p-2.5 text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" />
+
+            {/* Payment funnel + conversion ring */}
+            <div className="animate-in rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm" style={{ animationDelay: '500ms' }}>
+              <div className="mb-1 text-xs font-medium uppercase tracking-widest text-neutral-600">Payment funnel (this month)</div>
+              <div className="mb-4">
+                <span className={`text-xs font-medium ${settleRate >= 50 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                  {settleRate}% settlement rate
+                </span>
               </div>
-              <div className="text-3xl font-semibold tracking-tight text-white">{stats.paymentFunnel.settled}</div>
-              <div className="mt-1 text-sm text-neutral-500">Settled</div>
-              <div className="mt-2 text-xs font-medium text-emerald-500">{settleRate}% conversion</div>
-            </div>
-            <div
-              className="animate-in rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-6 backdrop-blur-sm"
-              style={{ animationDelay: '820ms' }}
-            >
-              <div className="mb-4 w-fit rounded-xl border border-red-500/20 bg-red-500/[0.08] p-2.5 text-red-400">
-                <XCircle className="h-4 w-4" />
-              </div>
-              <div className="text-3xl font-semibold tracking-tight text-white">{stats.paymentFunnel.failed}</div>
-              <div className="mt-1.5 text-sm text-neutral-500">Failed / cancelled</div>
+              <FunnelBars
+                data={[
+                  { label: 'Initiated', value: stats.paymentFunnel.initiated, color: 'text-neutral-300', bg: 'bg-neutral-600' },
+                  { label: 'Settled', value: stats.paymentFunnel.settled, color: 'text-emerald-300', bg: 'bg-emerald-600' },
+                  { label: 'Failed', value: stats.paymentFunnel.failed, color: 'text-red-300', bg: 'bg-red-700' },
+                ]}
+              />
             </div>
           </div>
         </section>
 
-        {/* Recent payments */}
-        <section
-          className="animate-in space-y-4"
-          style={{ animationDelay: '880ms' }}
-        >
+        {/* ── Recent payments ─────────────────────────────────────── */}
+        <section className="animate-in space-y-4" style={{ animationDelay: '560ms' }}>
           <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-600">Recent payments</h2>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6 backdrop-blur-sm">
             <PaymentsTable payments={stats.recentPayments} />
