@@ -206,7 +206,7 @@ export function registerAdminRoutes(router: Router, db: Database): void {
       })();
       const limit = (() => {
         const n = parseInt(url.searchParams.get("limit") ?? "50", 10);
-        return Number.isFinite(n) && n > 0 && n <= 100 ? n : 50;
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 100) : 50;
       })();
       const result = await getAdminUsers(db, page, limit);
       sendJson(res, 200, { ...result, page });

@@ -40,13 +40,13 @@ describe("admin route input validation", () => {
     }
     function parseLimit(raw: string | undefined): number {
       const n = parseInt(raw ?? "50", 10);
-      return Number.isFinite(n) && n > 0 && n <= 100 ? n : 50;
+      return Number.isFinite(n) && n > 0 ? Math.min(n, 100) : 50;
     }
     assert.equal(parsePage(undefined), 1);
     assert.equal(parsePage("0"), 1);
     assert.equal(parsePage("3"), 3);
     assert.equal(parseLimit(undefined), 50);
-    assert.equal(parseLimit("200"), 50);
+    assert.equal(parseLimit("200"), 100);
     assert.equal(parseLimit("20"), 20);
   });
 });
