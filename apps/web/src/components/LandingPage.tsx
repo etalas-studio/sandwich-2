@@ -2,9 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createConversationLocal } from '../lib/conversations'
-import { createMessage } from '../api/conversations'
-import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
@@ -17,18 +14,17 @@ import { UsVsThem } from './landing/UsVsThem'
 import { Ecosystem } from './landing/Ecosystem'
 import { Pipeline } from './landing/Pipeline'
 import { Pricing } from './landing/Pricing'
-import { FinalCta } from './landing/FinalCta'
+import { ContactForm } from './landing/ContactForm'
 import { Faq } from './landing/Faq'
 import { Footer } from './landing/Footer'
 import { FONT_SANS, BG } from './landing/tokens'
 
 const REVEAL_IDS = [
-  'harnesses-head', 'us-vs-them-head', 'about-head', 'pipeline-head', 'pricing-head', 'final-cta-head', 'faq-head',
+  'harnesses-head', 'us-vs-them-head', 'about-head', 'pipeline-head', 'pricing-head', 'application-head', 'faq-head',
 ]
 
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
-  const { state: authState } = useAuth()
   const router = useRouter()
   const PLANS = PLANS_META.map((p) => ({
     slug: p.slug,
@@ -42,10 +38,6 @@ export default function LandingPage() {
     oldPrice: p.oldPrice,
   }))
 
-  const [prompt, setPrompt] = useState('')
-  const [pendingType, setPendingType] = useState<string>('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const activeSectionRef = useRef<string>('')
   const [activeSectionState, setActiveSectionState] = useState<string>('')
@@ -59,7 +51,7 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    const ids = ['harnesses', 'differentiators', 'about', 'pipeline', 'pricing', 'faq']
+    const ids = ['harnesses', 'differentiators', 'about', 'pipeline', 'pricing', 'application', 'faq']
     const observers = ids.map((id) => {
       const el = document.getElementById(id)
       if (!el) return null
@@ -98,48 +90,13 @@ export default function LandingPage() {
 
   const reveal = (id: string, extra = '') => `reveal-on-scroll ${revealed.has(id) ? 'is-visible' : ''} ${extra}`
 
-  const handleSubmit = async () => {
-    if (!prompt.trim()) return
-    if (authState.status !== 'authenticated') {
-      try {
-        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
-      } catch { /* best-effort draft save, e.g. storage quota */ }
-      router.push('/register')
-      return
-    }
-    setIsSubmitting(true)
-    setError(null)
-    try {
-      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
-      await createMessage(local.id, { content: prompt.trim() })
-      try {
-        localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
-      } catch { /* ignore storage errors */ }
-      router.push('/dashboard')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : ''
-      if (msg === 'active subscription required') {
-        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
-        router.push('/pay?plan=pro')
-        return
-      }
-      setError(msg || t('hero_error_generic'))
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      void handleSubmit()
-    }
-  }
-
   const scrollToSection = (id: string) => {
     activeSectionRef.current = id
     setActiveSectionState(id)
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  const goToRegister = () => router.push('/register')
 
   const ingredientItems = [
     { img: '/ingredients/tomato.webp', name: 'PRD', desc: t('stack_order_desc') },
@@ -200,7 +157,7 @@ export default function LandingPage() {
         mobileNavOpen={mobileNavOpen}
         setMobileNavOpen={setMobileNavOpen}
         onLogin={() => router.push('/login')}
-        onGetStarted={() => router.push('/register')}
+        onGetStarted={goToRegister}
       />
 
       <main>
@@ -208,7 +165,7 @@ export default function LandingPage() {
           heroTagline={t('hero_tagline')}
           navGetStarted={t('nav_get_started')}
           navHow={t('nav_how')}
-          onGetStartedClick={() => scrollToSection('application')}
+          onGetStartedClick={goToRegister}
           onHowClick={() => scrollToSection('about')}
         />
 
@@ -241,7 +198,7 @@ export default function LandingPage() {
           titleL1={t('pipeline_title_l1')}
           titleL2={t('pipeline_title_l2')}
           cta={t('pipeline_cta')}
-          onCtaClick={() => scrollToSection('application')}
+          onCtaClick={goToRegister}
           reveal={reveal}
           steps={pipelineSteps}
         />
@@ -257,29 +214,13 @@ export default function LandingPage() {
           onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
         />
 
-        <div id="application" className="scroll-mt-24">
-          <FinalCta
-            title={t('nav_get_started')}
-            desc={t('hero_tagline')}
-            reveal={reveal}
-            prompt={prompt}
-            setPrompt={setPrompt}
-            pendingType={pendingType}
-            setPendingType={setPendingType}
-            isSubmitting={isSubmitting}
-            error={error}
-            onSubmit={() => void handleSubmit()}
-            onKeyDown={handleKeyDown}
-            placeholder={t('hero_prompt_placeholder')}
-            sendLabel={t('hero_send_label')}
-          />
-        </div>
+        <ContactForm reveal={reveal} lang={lang} />
 
         <Faq
           kicker={t('faq_kicker')}
           title={t('faq_title')}
           cta={t('faq_cta')}
-          onCtaClick={() => scrollToSection('application')}
+          onCtaClick={goToRegister}
           reveal={reveal}
           lang={lang}
           openFaq={openFaq}
