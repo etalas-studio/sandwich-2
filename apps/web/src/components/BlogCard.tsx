@@ -8,7 +8,7 @@ export default function BlogCard({ post }: { post: PostMeta }) {
   return (
     <Link href={`/blog/${post.slug}`} className="block group">
       <article className="border border-zinc-200 rounded-2xl p-6 hover:border-zinc-400 transition-colors">
-        <time className="text-xs text-zinc-400 font-medium">{date}</time>
+        <time dateTime={post.date} className="text-xs text-zinc-400 font-medium">{date}</time>
         <h2 className="mt-2 text-lg font-semibold text-zinc-900 group-hover:text-[#f91814] transition-colors leading-snug">
           {post.title}
         </h2>
