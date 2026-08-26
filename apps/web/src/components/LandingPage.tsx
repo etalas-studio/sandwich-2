@@ -65,15 +65,16 @@ export default function LandingPage() {
   const goToRegister = () => router.push('/register')
 
   const ingredientMeta = [
-    { key: 'PRD', icon: 'solar:document-text-linear' },
-    { key: 'Prototype', icon: 'solar:widget-2-linear' },
-    { key: 'Quotation', icon: 'solar:money-bag-linear' },
-    { key: 'Specs', icon: 'solar:list-check-linear' },
+    { key: 'PRD', icon: 'solar:document-text-linear', img: '/ingredients/tomato.webp' },
+    { key: 'Prototype', icon: 'solar:widget-2-linear', img: '/ingredients/cheese.webp' },
+    { key: 'Quotation', icon: 'solar:money-bag-linear', img: '/ingredients/meat.webp' },
+    { key: 'Specs', icon: 'solar:list-check-linear', img: '/ingredients/lettuce.webp' },
   ]
   const ingredientDescs = [t('stack_order_desc'), t('stack_prep_desc'), t('stack_recipe_desc'), t('stack_validate_desc')]
   const experienceItems = ingredientMeta.map((meta, i) => ({
     n: `0${i + 1}`,
     icon: meta.icon,
+    img: meta.img,
     title: meta.key,
     fullTitle: meta.key,
     desc: ingredientDescs[i],
@@ -81,8 +82,8 @@ export default function LandingPage() {
   }))
 
   const methodologyCards = [
-    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), note: t('pipeline_kicker') },
-    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), note: t('pipeline_kicker') },
+    { n: '01', title: t('pipeline_step_1_title') },
+    { n: '02', title: t('pipeline_step_2_title') },
   ]
 
   const studioCards = [

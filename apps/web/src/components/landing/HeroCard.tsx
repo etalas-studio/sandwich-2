@@ -40,7 +40,7 @@ export function HeroCard(props: HeroCardProps) {
         className="relative flex-1 rounded-3xl overflow-hidden border flex flex-col justify-center"
         style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: PANEL_2 }}
       >
-        {/* Background: CSS mesh gradient + grid, standing in for a photo */}
+        {/* Background: CSS mesh gradient + grid, plus the actual sandwich hero shot */}
         <div className="absolute inset-0 z-0">
           <div
             className="absolute inset-0"
@@ -57,6 +57,12 @@ export function HeroCard(props: HeroCardProps) {
               maskImage: 'linear-gradient(to bottom, black, transparent)',
               WebkitMaskImage: 'linear-gradient(to bottom, black, transparent)',
             }}
+          />
+          <img
+            src="/sandwich.webp"
+            alt=""
+            className="absolute bottom-[-8%] right-[-6%] w-[55%] max-w-2xl opacity-90 pointer-events-none select-none"
+            style={{ filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.6))' }}
           />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, #050505 0%, rgba(5,5,5,0.6) 60%, transparent 100%)' }} />
         </div>
