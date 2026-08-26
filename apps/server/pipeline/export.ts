@@ -66,7 +66,12 @@ export function parseQueryParam(url: string | undefined, key: string): string | 
 export function flattenInline(tokens: any[] | undefined, runs: InlineRun[] = []): InlineRun[] {
   if (!tokens) return runs;
   for (const t of tokens) {
-    if (t.type === "text" || t.type === "codespan") {
+    if (t.type === "text" && Array.isArray(t.tokens)) {
+      // marked wraps list-item inline content in an outer "text" token
+      // whose real inline tokens (strong/em/etc.) live in t.tokens — recurse
+      // into those instead of using the raw (still markdown-escaped) text.
+      flattenInline(t.tokens, runs);
+    } else if (t.type === "text" || t.type === "codespan") {
       runs.push({
         text: typeof t.text === "string" ? t.text : "",
         bold: false,
@@ -125,6 +130,19 @@ function addPdfRuns(
   baseFont = "Helvetica",
   baseSize = 11,
 ): void {
+  // pdfkit's `continued: true` chain undercounts the wrapped height of a
+  // paragraph once it spans more than one styled run (e.g. plain text next
+  // to **bold** text), leaving doc.y short of where the text actually
+  // rendered. That causes the next block (often a heading) to be drawn on
+  // top of the paragraph's last line. Measure the paragraph's real height
+  // up front and force doc.y forward to at least that point afterward.
+  const usableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const fullText = runs.map((r) => r.text).join("");
+  const startY = doc.y;
+  const expectedHeight = doc.font("Helvetica-Bold").fontSize(baseSize).heightOfString(fullText, {
+    width: usableWidth,
+  });
+
   for (const run of runs) {
     let font = baseFont;
     if (run.code) font = "Courier";
@@ -133,7 +151,11 @@ function addPdfRuns(
     else if (run.italic) font = "Helvetica-Oblique";
     doc.font(font).fontSize(baseSize).text(run.text, { continued: true });
   }
-  doc.text("");
+  doc.text("", { continued: false });
+
+  const minY = startY + expectedHeight;
+  if (doc.y < minY) doc.y = minY;
+  doc.x = doc.page.margins.left;
 }
 
 function blockToText(tokens: any[]): string {

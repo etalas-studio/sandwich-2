@@ -6,7 +6,19 @@
       "title": "PRD — Community Financial Management Platform",
       "language": "en",
       "industry": "community-fintech",
-      "tags": ["community", "dues", "donation", "finance", "admin-panel", "whatsapp-notification", "rt-rw", "web-app"],
+      "tags": [
+        "community",
+        "dues",
+        "donation",
+        "finance",
+        "admin-panel",
+        "whatsapp-notification",
+        "rt-rw",
+        "web-app",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "PRD for a community/neighborhood financial management app — dues, donations, admin panel, resident-facing features."
     },
     {
@@ -14,7 +26,18 @@
       "title": "PRD — P2P Escrow Payment Platform",
       "language": "en",
       "industry": "fintech-marketplace",
-      "tags": ["escrow", "marketplace", "c2c", "payment", "dispute-resolution", "mvp", "task-based-dod"],
+      "tags": [
+        "escrow",
+        "marketplace",
+        "c2c",
+        "payment",
+        "dispute-resolution",
+        "mvp",
+        "task-based-dod",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "PRD for a P2P escrow platform, structured as Context/Problem/DoD per task with buyer/seller journeys and MVP scope table."
     },
     {
@@ -22,7 +45,18 @@
       "title": "PRD — In-house Reservation Platform (Replacing 3rd-party Vendor)",
       "language": "en",
       "industry": "hospitality-saas-replacement",
-      "tags": ["reservation", "hospitality", "vendor-replacement", "migration", "personas", "multi-app-integration", "enterprise"],
+      "tags": [
+        "reservation",
+        "hospitality",
+        "vendor-replacement",
+        "migration",
+        "personas",
+        "multi-app-integration",
+        "enterprise",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "PRD for replacing a paid third-party SaaS with an in-house platform — strong personas/journeys section and phased migration strategy."
     },
     {
@@ -30,7 +64,20 @@
       "title": "PRD — Internal Hospitality Ops Platform (Housekeeping & Front Office)",
       "language": "en",
       "industry": "hospitality-internal-ops",
-      "tags": ["hospitality", "internal-tool", "housekeeping", "front-office", "sla", "personas", "workshop-questions", "glossary", "enterprise"],
+      "tags": [
+        "hospitality",
+        "internal-tool",
+        "housekeeping",
+        "front-office",
+        "sla",
+        "personas",
+        "workshop-questions",
+        "glossary",
+        "enterprise",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "PRD for an internal luxury-hospitality ops platform replacing manual/WhatsApp workflows — strong as-is/future-state narrative, SLA-driven requirements, and a categorized pre-workshop client questions section."
     },
     {
@@ -38,7 +85,18 @@
       "title": "PRD — Multi-site Sports Venue Booking & Payment Platform",
       "language": "en",
       "industry": "sports-venue-booking",
-      "tags": ["booking", "payment", "multi-site", "third-party-integration", "phased-rollout", "whatsapp-notification", "mvp"],
+      "tags": [
+        "booking",
+        "payment",
+        "multi-site",
+        "third-party-integration",
+        "phased-rollout",
+        "whatsapp-notification",
+        "mvp",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "Concise, business-driven PRD for a booking platform phased around a third-party API integration before owning the full stack — tight requirement tables over long prose."
     },
     {
@@ -46,7 +104,20 @@
       "title": "PRD — Enterprise Program Management Dashboard (BUMN/Government Program)",
       "language": "id",
       "industry": "enterprise-government-program",
-      "tags": ["enterprise", "government", "program-management", "okr", "scoring", "non-goals", "phasing", "compliance", "dashboard"],
+      "tags": [
+        "enterprise",
+        "government",
+        "program-management",
+        "okr",
+        "scoring",
+        "non-goals",
+        "phasing",
+        "compliance",
+        "dashboard",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "Bahasa Indonesia PRD for a large enterprise/government program platform — explicit Non-Goals section, per-persona journeys, phased release strategy, and compliance-driven non-functional requirements."
     }
   ]
