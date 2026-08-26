@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ACCENT, TEXT_PRIMARY, TEXT_SECONDARY } from './tokens'
+import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 
 export interface FooterProps {
   navPipeline: string
@@ -9,110 +9,51 @@ export interface FooterProps {
   navPricing: string
   navFaq: string
   footerDesc: string
-  footerProduct: string
-  footerLegal: string
+  navGetStarted: string
+  footerContact: string
   footerPrivacy: string
   footerTerms: string
-  footerRefund: string
-  footerContact: string
-  footerProductBy: string
   onNavClick: (id: string) => void
+  onGetStartedClick: () => void
 }
 
 export function Footer(props: FooterProps) {
   return (
-    <footer className="border-t border-black/10 pt-16 pb-10" style={{ color: TEXT_PRIMARY }}>
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row gap-12 md:gap-20 pb-12 border-b border-black/10">
-          <div className="flex-1 max-w-xs">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ACCENT }}>
-                <span className="text-white font-bold text-xs">S</span>
-              </div>
-              <span className="text-base font-medium tracking-tight uppercase">SANDWICH</span>
-            </div>
-            <p className="text-sm leading-relaxed" style={{ color: TEXT_SECONDARY }}>{props.footerDesc}</p>
-            <div className="flex items-center gap-3 mt-5">
-              {[
-                { icon: 'mdi:instagram', href: 'https://www.instagram.com/etalas.id/', label: 'Instagram' },
-                { icon: 'mdi:linkedin', href: 'https://www.linkedin.com/company/etalas/', label: 'LinkedIn' },
-              ].map(({ icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-black/5 border border-black/10"
-                  style={{ color: TEXT_SECONDARY }}
-                  aria-label={label}
-                >
-                  <iconify-icon icon={icon} width="15" />
-                </a>
-              ))}
-            </div>
+    <footer className="py-12 px-6 max-w-7xl mx-auto border-t text-sm" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+        <div className="col-span-1 md:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full border text-xs tracking-widest uppercase" style={{ borderColor: 'rgba(255,255,255,0.2)', backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
+            <span className="text-sm font-medium tracking-tight" style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
           </div>
+          <p className="max-w-sm leading-relaxed" style={{ color: TEXT_MUTED }}>{props.footerDesc}</p>
+        </div>
 
-          <div className="flex flex-col sm:flex-row gap-10 flex-1 justify-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>{props.footerProduct}</p>
-              <ul className="flex flex-col gap-3">
-                {[
-                  { label: props.navPipeline, id: 'harnesses' },
-                  { label: props.navHow, id: 'pipeline' },
-                  { label: props.navPricing, id: 'pricing' },
-                  { label: props.navFaq, id: 'faq' },
-                ].map(({ label, id }) => (
-                  <li key={id}>
-                    <a
-                      href={`#${id}`}
-                      onClick={(e) => { e.preventDefault(); props.onNavClick(id) }}
-                      className="text-sm transition-colors font-medium hover:text-blue-400"
-                      style={{ color: TEXT_SECONDARY }}
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>Sandwich</p>
-              <ul className="flex flex-col gap-3">
-                {[
-                  { label: 'Website', href: 'https://etalas.com' },
-                  { label: 'Instagram', href: 'https://www.instagram.com/etalas.id/' },
-                  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/etalas/' },
-                ].map(({ label, href }) => (
-                  <li key={label}>
-                    <a href={href} target="_blank" rel="noreferrer" className="text-sm transition-colors font-medium hover:text-blue-400" style={{ color: TEXT_SECONDARY }}>{label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>{props.footerLegal}</p>
-              <ul className="flex flex-col gap-3">
-                {[
-                  { label: props.footerPrivacy, href: '/privacy' },
-                  { label: props.footerTerms, href: '/terms' },
-                  { label: props.footerRefund, href: '/refund' },
-                  { label: props.footerContact, href: '/contact' },
-                ].map(({ label, href }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-sm transition-colors font-medium hover:text-blue-400" style={{ color: TEXT_SECONDARY }}>{label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <div>
+          <p className="font-medium mb-4" style={{ color: TEXT_PRIMARY }}>Navigate</p>
+          <div className="flex flex-col gap-3" style={{ color: TEXT_MUTED }}>
+            <a href="#harnesses" onClick={(e) => { e.preventDefault(); props.onNavClick('harnesses') }} className="hover:opacity-80 transition-opacity w-fit">{props.navPipeline}</a>
+            <a href="#experiences" onClick={(e) => { e.preventDefault(); props.onNavClick('experiences') }} className="hover:opacity-80 transition-opacity w-fit">{props.navHow}</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); props.onNavClick('pricing') }} className="hover:opacity-80 transition-opacity w-fit">{props.navPricing}</a>
+            <a href="#faq" onClick={(e) => { e.preventDefault(); props.onNavClick('faq') }} className="hover:opacity-80 transition-opacity w-fit">{props.navFaq}</a>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
-          <p className="text-xs" style={{ color: 'rgba(10,14,20,0.4)' }}>© 2026 SANDWICH</p>
-          <a href="https://www.etalas.com/" target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors hover:text-blue-400" style={{ color: TEXT_SECONDARY }}>
-            <span className="text-sm">{props.footerProductBy}</span>
-            <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto" />
-          </a>
+        <div>
+          <p className="font-medium mb-4" style={{ color: TEXT_PRIMARY }}>Connect</p>
+          <div className="flex flex-col gap-3" style={{ color: TEXT_MUTED }}>
+            <button onClick={props.onGetStartedClick} className="hover:opacity-80 transition-opacity w-fit text-left">{props.navGetStarted}</button>
+            <Link href="/contact" className="hover:opacity-80 transition-opacity w-fit">{props.footerContact}</Link>
+            <a href="https://www.instagram.com/etalas.id/" target="_blank" rel="noreferrer" className="hover:opacity-80 transition-opacity w-fit">Instagram</a>
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-xs" style={{ borderColor: 'rgba(255,255,255,0.1)', color: TEXT_MUTED }}>
+        <p>© 2026 SANDWICH.</p>
+        <div className="flex gap-6">
+          <Link href="/privacy" className="hover:opacity-80 transition-opacity">{props.footerPrivacy}</Link>
+          <Link href="/terms" className="hover:opacity-80 transition-opacity">{props.footerTerms}</Link>
         </div>
       </div>
     </footer>

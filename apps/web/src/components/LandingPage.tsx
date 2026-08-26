@@ -5,23 +5,15 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
-import { Nav } from './landing/Nav'
-import { Hero } from './landing/Hero'
-import { HeroBackground } from './landing/HeroBackground'
-import { FormatMarquee } from './landing/FormatMarquee'
-import { Harnesses } from './landing/Harnesses'
-import { UsVsThem } from './landing/UsVsThem'
-import { Ecosystem } from './landing/Ecosystem'
-import { Pipeline } from './landing/Pipeline'
-import { Pricing } from './landing/Pricing'
-import { ContactForm } from './landing/ContactForm'
-import { Faq } from './landing/Faq'
+import { HeroCard } from './landing/HeroCard'
+import { Methodology } from './landing/Methodology'
+import { Experiences } from './landing/Experiences'
+import { Studio } from './landing/Studio'
+import { Membership } from './landing/Membership'
+import { Proof } from './landing/Proof'
+import { FaqCta } from './landing/FaqCta'
 import { Footer } from './landing/Footer'
-import { FONT_SANS } from './landing/tokens'
-
-const REVEAL_IDS = [
-  'harnesses-head', 'us-vs-them-head', 'about-head', 'pipeline-head', 'pricing-head', 'application-head', 'faq-head',
-]
+import { FONT_SANS, BG, TEXT_MUTED } from './landing/tokens'
 
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
@@ -39,10 +31,9 @@ export default function LandingPage() {
   }))
 
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const activeSectionRef = useRef<string>('')
-  const [activeSectionState, setActiveSectionState] = useState<string>('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [revealed, setRevealed] = useState<Set<string>>(new Set())
+  const [revealed, setRevealed] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (window.location.hash === '#pricing') {
@@ -51,188 +42,144 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    const ids = ['harnesses', 'differentiators', 'about', 'pipeline', 'pricing', 'application', 'faq']
-    const observers = ids.map((id) => {
-      const el = document.getElementById(id)
-      if (!el) return null
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            activeSectionRef.current = id
-            setActiveSectionState(id)
-          }
-        },
-        { rootMargin: '-96px 0px -70% 0px', threshold: 0 }
-      )
-      obs.observe(el)
-      return obs
-    })
-    return () => observers.forEach((obs) => obs?.disconnect())
+    const root = rootRef.current
+    if (!root) return
+    const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, observerOptions)
+    root.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+    setRevealed(true)
+    return () => observer.disconnect()
   }, [])
-
-  useEffect(() => {
-    const observers = REVEAL_IDS.map((id) => {
-      const el = document.getElementById(id)
-      if (!el) return null
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setRevealed((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
-          }
-        },
-        { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
-      )
-      obs.observe(el)
-      return obs
-    })
-    return () => observers.forEach((obs) => obs?.disconnect())
-  }, [])
-
-  const reveal = (id: string, extra = '') => `reveal-on-scroll ${revealed.has(id) ? 'is-visible' : ''} ${extra}`
 
   const scrollToSection = (id: string) => {
-    activeSectionRef.current = id
-    setActiveSectionState(id)
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const goToRegister = () => router.push('/register')
 
-  const ingredientItems = [
-    { img: '/ingredients/tomato.webp', name: 'PRD', desc: t('stack_order_desc') },
-    { img: '/ingredients/cheese.webp', name: 'Prototype', desc: t('stack_prep_desc') },
-    { img: '/ingredients/meat.webp', name: 'Quotation', desc: t('stack_recipe_desc') },
-    { img: '/ingredients/lettuce.webp', name: 'Specs', desc: t('stack_validate_desc') },
+  const ingredientMeta = [
+    { key: 'PRD', icon: 'solar:document-text-linear' },
+    { key: 'Prototype', icon: 'solar:widget-2-linear' },
+    { key: 'Quotation', icon: 'solar:money-bag-linear' },
+    { key: 'Specs', icon: 'solar:list-check-linear' },
+  ]
+  const ingredientDescs = [t('stack_order_desc'), t('stack_prep_desc'), t('stack_recipe_desc'), t('stack_validate_desc')]
+  const experienceItems = ingredientMeta.map((meta, i) => ({
+    n: `0${i + 1}`,
+    icon: meta.icon,
+    title: meta.key,
+    fullTitle: meta.key,
+    desc: ingredientDescs[i],
+    tags: ingredientDescs[i].split('&').map((s) => s.trim()).filter(Boolean),
+  }))
+
+  const methodologyCards = [
+    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), note: t('pipeline_kicker') },
+    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), note: t('pipeline_kicker') },
   ]
 
-  const pipelineSteps = [
-    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc') },
-    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc') },
-    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc') },
-    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
+  const studioCards = [
+    { n: '01', title: t('diff_1_title'), desc: t('diff_1_desc') },
+    { n: '02', title: t('diff_2_title'), desc: t('diff_2_desc') },
+  ]
+  const studioNumbered = [
+    { n: '01', text: t('diff_3_desc') },
+    { n: '02', text: t('diff_4_desc') },
   ]
 
-  const usVsThemItems = [
-    t('diff_1_title'),
-    t('diff_2_title'),
-    t('diff_3_title'),
-    t('diff_4_title'),
-  ]
+  const includedLabel = lang === 'id' ? 'Yang Termasuk' : 'Included Access'
+  const ctaKicker = lang === 'id' ? 'Langkah Selanjutnya' : 'Next Step'
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, color: 'rgba(10,14,20,0.68)' }}>
+    <div ref={rootRef} className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: TEXT_MUTED }}>
       <style>{`
-        ::selection { background: #3b82f64d; color: #3b82f6; }
-        @keyframes sw-reveal { from { opacity: 0; transform: translateY(20px); filter: blur(8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
-        @keyframes sw-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .reveal-on-scroll { animation: sw-reveal 0.8s cubic-bezier(0.2,0.8,0.2,1) both; animation-play-state: paused; }
-        .reveal-on-scroll.is-visible { animation-play-state: running; }
-        .sw-marquee-track { animation: sw-marquee 32s linear infinite; }
-        .sw-grain {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
+        ::selection { background: rgba(255,255,255,0.2); color: #ffffff; }
+        .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .reveal.is-revealed { opacity: 1; transform: translateY(0); }
       `}</style>
-      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.025] sw-grain" />
 
-      {/* Full-page white base — a sibling of the aurora layer below (not a
-          background on this same root element), otherwise a negative
-          z-index child would paint behind this element's own background
-          fill and never be visible at all. */}
-      <div className="absolute inset-0 bg-white -z-10" />
-
-      {/* Page-level hero background — spans behind the nav + hero, matching
-          the reference template's full-bleed "aura-background-component". */}
-      <div className="absolute top-0 left-0 w-full h-[1040px] -z-10">
-        <HeroBackground />
-      </div>
-
-      <Nav
-        navGetStarted={t('nav_get_started')}
-        navLogin={t('nav_login')}
+      <HeroCard
+        heroTagline={t('hero_tagline')}
         navPipeline={t('nav_pipeline')}
         navHow={t('nav_how')}
         navDiff={t('nav_diff')}
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
+        navGetStarted={t('nav_get_started')}
         navMenuOpen={t('nav_menu_open')}
         navMenuClose={t('nav_menu_close')}
         lang={lang}
         onToggleLang={() => setLang(lang === 'en' ? 'id' : 'en')}
-        activeSection={activeSectionState}
         onNavClick={scrollToSection}
+        onGetStartedClick={goToRegister}
+        onScrollDownClick={() => scrollToSection('harnesses')}
         mobileNavOpen={mobileNavOpen}
         setMobileNavOpen={setMobileNavOpen}
-        onLogin={() => router.push('/login')}
-        onGetStarted={goToRegister}
       />
 
-      <main>
-        <Hero
-          heroTagline={t('hero_tagline')}
-          navGetStarted={t('nav_get_started')}
-          navHow={t('nav_how')}
-          onGetStartedClick={goToRegister}
-          onHowClick={() => scrollToSection('about')}
-        />
+      <Methodology
+        kicker={t('harnesses_kicker')}
+        title={t('harnesses_title')}
+        desc={t('harnesses_desc')}
+        bodyText={t('stack_desc')}
+        ctaLabel={t('nav_how')}
+        onCtaClick={() => scrollToSection('experiences')}
+        cards={methodologyCards}
+      />
 
-        <FormatMarquee label={t('nav_pipeline')} />
+      <Experiences
+        kicker={t('stack_kicker')}
+        title={t('stack_title')}
+        desc={t('stack_desc')}
+        items={experienceItems}
+      />
 
-        <Harnesses
-          kicker={t('harnesses_kicker')}
-          title={t('harnesses_title')}
-          desc={t('harnesses_desc')}
-          reveal={reveal}
-        />
+      <Studio
+        kicker={t('diff_kicker')}
+        title={t('diff_title')}
+        body={t('footer_desc')}
+        badge={t('pipeline_kicker')}
+        cards={studioCards}
+        numbered={studioNumbered}
+      />
 
-        <UsVsThem
-          title={t('diff_title')}
-          reveal={reveal}
-          lang={lang}
-          sandwichItems={usVsThemItems}
-        />
+      <Membership
+        kicker={t('pricing_kicker')}
+        titleL1={t('pricing_title_l1')}
+        titleL2={t('pricing_title_l2')}
+        desc={t('pricing_desc')}
+        bestValue={t('pricing_best_value')}
+        includedLabel={includedLabel}
+        plans={PLANS}
+        onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
+      />
 
-        <Ecosystem
-          kicker={t('stack_kicker')}
-          title={t('stack_title')}
-          desc={t('stack_desc')}
-          reveal={reveal}
-          ingredients={ingredientItems}
-        />
+      <Proof
+        kicker={t('samples_kicker')}
+        title={`${t('samples_title_l1')} ${t('samples_title_l2')}`}
+      />
 
-        <Pipeline
-          kicker={t('pipeline_kicker')}
-          titleL1={t('pipeline_title_l1')}
-          titleL2={t('pipeline_title_l2')}
-          cta={t('pipeline_cta')}
-          onCtaClick={goToRegister}
-          reveal={reveal}
-          steps={pipelineSteps}
-        />
-
-        <Pricing
-          kicker={t('pricing_kicker')}
-          titleL1={t('pricing_title_l1')}
-          titleL2={t('pricing_title_l2')}
-          desc={t('pricing_desc')}
-          bestValue={t('pricing_best_value')}
-          reveal={reveal}
-          plans={PLANS}
-          onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
-        />
-
-        <ContactForm reveal={reveal} lang={lang} />
-
-        <Faq
-          kicker={t('faq_kicker')}
-          title={t('faq_title')}
-          cta={t('faq_cta')}
-          onCtaClick={goToRegister}
-          reveal={reveal}
-          lang={lang}
-          openFaq={openFaq}
-          setOpenFaq={setOpenFaq}
-        />
-      </main>
+      <FaqCta
+        title={t('faq_title')}
+        desc={t('hero_tagline')}
+        lang={lang}
+        openFaq={openFaq}
+        setOpenFaq={setOpenFaq}
+        ctaKicker={ctaKicker}
+        ctaTitle={t('nav_get_started')}
+        ctaDesc={t('footer_desc')}
+        ctaPrimary={t('nav_get_started')}
+        ctaSecondary={t('nav_pricing')}
+        onCtaPrimaryClick={goToRegister}
+        onCtaSecondaryClick={() => scrollToSection('pricing')}
+      />
 
       <Footer
         navPipeline={t('nav_pipeline')}
@@ -240,14 +187,12 @@ export default function LandingPage() {
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         footerDesc={t('footer_desc')}
-        footerProduct={t('footer_product')}
-        footerLegal={t('footer_legal')}
+        navGetStarted={t('nav_get_started')}
+        footerContact={t('footer_contact')}
         footerPrivacy={t('footer_privacy')}
         footerTerms={t('footer_terms')}
-        footerRefund={t('footer_refund')}
-        footerContact={t('footer_contact')}
-        footerProductBy={t('footer_product_by')}
         onNavClick={scrollToSection}
+        onGetStartedClick={goToRegister}
       />
     </div>
   )
