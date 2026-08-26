@@ -160,6 +160,10 @@ export function setUserRole(
   return postJson(apiUrl(`/api/admin/users/${userId}/role`), { role })
 }
 
+export function deleteAdminUser(userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(apiUrl(`/api/admin/users/${userId}`), { method: 'DELETE' })
+}
+
 export function manageUserSubscription(
   userId: string,
   action: 'cancel' | 'grant',

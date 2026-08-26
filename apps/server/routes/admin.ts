@@ -21,7 +21,7 @@ import {
   getAdminStats,
   getAdminUsers,
 } from "../db/repo/admin-stats.js";
-import { updateUserRole } from "../db/users.js";
+import { updateUserRole, deleteUser } from "../db/users.js";
 import {
   cancelSubscription,
   activateSubscription,
@@ -270,6 +270,21 @@ export function registerAdminRoutes(router: Router, db: Database): void {
       } catch (err) {
         sendCaughtError(res, err, "admin user cancel subscription");
       }
+    }
+  });
+
+  // ── Delete user ───────────────────────────────────────────────────────────
+
+  router.delete("/api/admin/users/:id", async (req, res, params) => {
+    if (!(await requireAdmin(db, req))) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    try {
+      await deleteUser(db, params.id!);
+      sendJson(res, 200, { ok: true });
+    } catch (err) {
+      sendCaughtError(res, err, "admin user delete");
     }
   });
 }
