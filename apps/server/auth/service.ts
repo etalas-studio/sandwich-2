@@ -24,7 +24,7 @@ export interface RegisterInput extends Credentials {
 }
 
 export interface AuthResult {
-  user: Pick<User, "id" | "username" | "email">;
+  user: Pick<User, "id" | "username" | "email" | "role">;
   session: Session;
 }
 
@@ -96,7 +96,7 @@ export async function login(db: Database, input: Credentials): Promise<AuthResul
   }
 
   const session = await createSession(db, user.id, sessionExpiryIso());
-  return { user: { id: user.id, username: user.username, email: user.email }, session };
+  return { user: { id: user.id, username: user.username, email: user.email, role: user.role }, session };
 }
 
 export async function logout(db: Database, token: string): Promise<void> {
