@@ -78,6 +78,24 @@ export const metadata: Metadata = {
     'ChatGPT for Prototype',
     'Claude for Prototype',
     'generative AI tools',
+    // Pain-point based
+    'cara bikin PRD',
+    'template brief klien',
+    'contoh scope of work proyek IT',
+    'cara ngitung harga project freelance',
+    'contoh PRD aplikasi',
+    'template proposal proyek IT',
+    // Competitor comparison
+    'bolt alternative',
+    'v0 alternative',
+    'cursor alternative',
+    'replit alternative',
+    'lovable vs bolt',
+    // Job title + task
+    'product manager PRD template',
+    'freelance developer proposal',
+    'web developer quotation template',
+    'web developer quotation template indonesia',
   ],
   metadataBase: new URL('https://sandwich.etalas.com'),
   alternates: { canonical: '/' },
@@ -95,6 +113,19 @@ export const metadata: Metadata = {
     description:
       'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
   },
+  authors: [{ name: 'Etalas', url: 'https://etalas.com' }],
+}
+
+const appJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'SANDWICH',
+  description: 'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
+  url: 'https://sandwich.etalas.com',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Organization', name: 'Etalas', url: 'https://etalas.com' },
 }
 
 const faqJsonLd = {
@@ -110,6 +141,10 @@ const faqJsonLd = {
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
