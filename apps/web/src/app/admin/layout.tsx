@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-neutral-950 text-neutral-100">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-neutral-800/60 px-3 py-5">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-neutral-800/60 px-3 py-5">
         {/* Brand */}
         <div className="mb-7 px-2">
           <span
