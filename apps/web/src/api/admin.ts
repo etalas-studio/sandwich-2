@@ -93,3 +93,84 @@ export function disconnectProvider(
 ): Promise<{ ok: boolean; message: string }> {
   return postJson(apiUrl(`/api/admin/integrations/${providerId}/disconnect`), {})
 }
+
+// ── Admin stats ───────────────────────────────────────────────────────────
+
+export interface AdminStatsPayment {
+  orderId: string
+  userEmail: string | null
+  planSlug: string | null
+  grossAmount: string
+  transactionStatus: string
+  fraudStatus: string | null
+  createdAt: string
+}
+
+export interface AdminStats {
+  totalUsers: number
+  activeProSubs: number
+  starterUsers: number
+  revenueThisMonth: number
+  usageThisMonth: { doc: number; prototype: number; chat: number }
+  recentPayments: AdminStatsPayment[]
+  docsByType: { prd: number; quotation: number; prototype: number; specs: number }
+  paymentFunnel: { initiated: number; settled: number; failed: number }
+  expiringSubsCount: number
+  newUsersThisMonth: number
+  newUsersLastMonth: number
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  username: string
+  role: string
+  emailVerified: boolean
+  createdAt: string
+  subscription: { planSlug: string; status: string; expiresAt: string | null } | null
+  usageThisMonth: { doc: number; prototype: number; chat: number }
+}
+
+export interface AdminUsersResponse {
+  users: AdminUser[]
+  total: number
+  page: number
+}
+
+export function fetchAdminStats(): Promise<AdminStats> {
+  return request<AdminStats>(apiUrl('/api/admin/stats'))
+}
+
+export function fetchAdminUsers(
+  page = 1,
+  limit = 50,
+  search?: string,
+  role?: string,
+): Promise<AdminUsersResponse> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (search) params.set('search', search)
+  if (role) params.set('role', role)
+  return request<AdminUsersResponse>(apiUrl(`/api/admin/users?${params}`))
+}
+
+export function setUserRole(
+  userId: string,
+  role: 'user' | 'admin',
+): Promise<{ ok: boolean }> {
+  return postJson(apiUrl(`/api/admin/users/${userId}/role`), { role })
+}
+
+export function deleteAdminUser(userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(apiUrl(`/api/admin/users/${userId}`), { method: 'DELETE' })
+}
+
+export function manageUserSubscription(
+  userId: string,
+  action: 'cancel' | 'grant',
+  planSlug?: string,
+): Promise<{ ok: boolean }> {
+  return postJson(apiUrl(`/api/admin/users/${userId}/subscription`), {
+    action,
+    ...(planSlug ? { planSlug } : {}),
+  })
+}
