@@ -43,7 +43,7 @@ function Badge({ text, color }: { text: string; color: 'green' | 'blue' | 'yello
     yellow: 'bg-yellow-950 text-yellow-300',
     neutral: 'bg-neutral-800 text-neutral-400',
   }[color]
-  return <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>{text}</span>
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-medium tracking-wide ${cls}`}>{text}</span>
 }
 
 function planColor(planSlug: string | undefined): 'green' | 'blue' | 'neutral' {
