@@ -7,19 +7,22 @@
 
 ## Overview
 
-Replace the current single-page `/admin` (AI engine config only) with a three-tab panel: **Dashboard**, **Users**, and **Configuration**. Configuration is the current page content, moved verbatim. Dashboard and Users are new.
-
-Tab state lives in the `?tab=` query param so URLs are bookmarkable and back-navigable.
+Replace the current single-page `/admin` (AI engine config only) with three separate routes: **Dashboard**, **Users**, and **Configuration**. Configuration is the current page content, moved verbatim. Dashboard and Users are new.
 
 ---
 
 ## Architecture
 
-### Tab routing
+### Routes
 
-`/admin?tab=dashboard` (default) | `?tab=users` | `?tab=config`
+| URL | Description |
+|---|---|
+| `/admin` | Redirects to `/admin/dashboard` |
+| `/admin/dashboard` | Stats overview + recent payments |
+| `/admin/users` | Paginated user management table |
+| `/admin/config` | Current AI engine + provider config (existing content) |
 
-The existing `page.tsx` becomes a tab shell. Each tab is a separate component rendered conditionally. No new Next.js routes — single page, client-side tab switching via `router.replace` on tab click, reading `searchParams`.
+A shared `apps/web/src/app/admin/layout.tsx` wraps all three with the auth guard and a nav sidebar/header linking between the three pages. The existing `apps/web/src/app/admin/page.tsx` becomes a simple redirect to `/admin/dashboard`.
 
 ### New server routes (`apps/server/routes/admin.ts`)
 
@@ -97,15 +100,16 @@ Returns `{ ok: true }`.
 
 | File | Change |
 |---|---|
-| `apps/web/src/app/admin/page.tsx` | Refactor into tab shell; extract current content to `ConfigTab` |
+| `apps/web/src/app/admin/page.tsx` | Replace with redirect to `/admin/dashboard` |
+| `apps/web/src/app/admin/layout.tsx` | New — shared auth guard + nav links |
+| `apps/web/src/app/admin/dashboard/page.tsx` | New — stat tiles + recent payments |
+| `apps/web/src/app/admin/users/page.tsx` | New — paginated user table + row actions |
+| `apps/web/src/app/admin/config/page.tsx` | New — current page.tsx content, extracted verbatim |
 | `apps/web/src/api/admin.ts` | Add `fetchAdminStats`, `fetchAdminUsers`, `setUserRole`, `manageUserSubscription` |
-| `apps/web/src/app/admin/DashboardTab.tsx` | New — stat tiles + recent payments |
-| `apps/web/src/app/admin/UsersTab.tsx` | New — paginated user table + row actions |
-| `apps/web/src/app/admin/ConfigTab.tsx` | New — current page.tsx content, extracted verbatim |
 
-### Tab shell (`page.tsx`)
+### Layout (`layout.tsx`)
 
-Reads `searchParams.tab`, defaults to `dashboard`. Renders `<TabBar>` + the active tab component. Auth guard stays in `page.tsx`.
+Wraps all admin routes. Handles the `unauthenticated` and `non-admin` redirects/guards that currently live in `page.tsx`. Renders a simple nav bar with links to Dashboard, Users, Configuration — active link highlighted by current pathname.
 
 ### DashboardTab
 
@@ -123,9 +127,9 @@ Reads `searchParams.tab`, defaults to `dashboard`. Renders `<TabBar>` + the acti
   - Grant Starter — resets to starter
 - Pagination controls at bottom (Prev / page N of M / Next)
 
-### ConfigTab
+### `/admin/config`
 
-Current `page.tsx` body cut-pasted, no logic changes. Only the auth guard and tab shell remain in `page.tsx`.
+Current `page.tsx` body moved verbatim. Auth guard moves to `layout.tsx`; this page has no guard logic of its own.
 
 ---
 
