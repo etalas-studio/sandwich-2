@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from './Header'
 import type { PostMeta } from '../lib/blog'
 
@@ -39,6 +40,17 @@ export default function BlogLayout({
             {meta.title}
           </h1>
           <p className="mt-3 text-base text-zinc-500">{meta.description}</p>
+          {meta.image && (
+            <div className="relative w-full aspect-[16/9] mt-8 rounded-2xl overflow-hidden">
+              <Image
+                src={meta.image}
+                alt={meta.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
         </header>
         <article className="blog-article">{children}</article>
       </main>
