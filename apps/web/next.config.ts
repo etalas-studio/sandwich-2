@@ -1,5 +1,15 @@
+import createMDX from '@next/mdx'
 import type { NextConfig } from 'next'
 
-const config: NextConfig = {}
+// ponytail: remarkGfm omitted — Turbopack (default in Next.js 16) cannot serialize
+// function-valued loader options. Apply remarkGfm at content-parse time (e.g. via
+// next-mdx-remote or a remark processor) when GFM is needed at build pipeline level.
+const withMDX = createMDX({})
 
-export default config
+const config: NextConfig = {
+  images: {
+    remotePatterns: [{ hostname: 'placehold.co' }],
+  },
+}
+
+export default withMDX(config)

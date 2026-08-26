@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createConversationLocal } from '../lib/conversations'
 import { createMessage } from '../api/conversations'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../lib/i18n'
+import Header from './Header'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
 import { DeliverableTypeSelect } from './DeliverableTypeSelect'
@@ -80,34 +81,10 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const activeSectionRef = useRef<string>('')
-  const [activeSectionState, setActiveSectionState] = useState<string>('')
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-
   useEffect(() => {
     if (window.location.hash === '#pricing') {
       document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [])
-
-  useEffect(() => {
-    const ids = ['harnesses', 'pipeline', 'differentiators', 'pricing', 'faq']
-    const observers = ids.map((id) => {
-      const el = document.getElementById(id)
-      if (!el) return null
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            activeSectionRef.current = id
-            setActiveSectionState(id)
-          }
-        },
-        { rootMargin: '-96px 0px -70% 0px', threshold: 0 }
-      )
-      obs.observe(el)
-      return obs
-    })
-    return () => observers.forEach((obs) => obs?.disconnect())
   }, [])
 
   const handleSubmit = async () => {
@@ -157,113 +134,7 @@ export default function LandingPage() {
     >
       {/* ── NAV ── */}
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-        <div className="relative flex justify-center w-full">
-        <nav
-          className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full border max-w-full"
-          style={{
-            backgroundColor: '#F4EBE1',
-            borderColor: 'rgba(0,0,0,0.1)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}
-        >
-          <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
-            <span className="text-white font-black text-[10px]" style={{ fontFamily: bowlby }}>S</span>
-          </div>
-          <div className="hidden md:flex items-center gap-1">
-            {[
-              { id: 'harnesses', label: t('nav_pipeline') },
-              { id: 'pipeline', label: t('nav_how') },
-              { id: 'differentiators', label: t('nav_diff') },
-              { id: 'pricing', label: t('nav_pricing') },
-              { id: 'faq', label: t('nav_faq') },
-            ].map(({ id, label }) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  activeSectionRef.current = id
-                  setActiveSectionState(id)
-                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors"
-                style={{ color: activeSectionState === id ? '#0a0a0a' : '#6b7280', fontWeight: activeSectionState === id ? 600 : 500 }}
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-          <button
-            onClick={() => setMobileNavOpen((v) => !v)}
-            aria-label={mobileNavOpen ? t('nav_menu_close') : t('nav_menu_open')}
-            aria-expanded={mobileNavOpen}
-            className="md:hidden shrink-0 w-11 h-11 flex items-center justify-center rounded-full"
-            style={{ color: '#0a0a0a' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              {mobileNavOpen ? (
-                <path d="M6 6l12 12M18 6L6 18" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              )}
-            </svg>
-          </button>
-          <button
-            onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-            className="shrink-0 px-4 min-w-[52px] min-h-11 flex items-center justify-center rounded-full text-xs font-semibold transition-colors"
-            style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
-            title="Switch language"
-          >
-            {lang === 'en' ? 'EN' : 'ID'}
-          </button>
-          <button
-            onClick={() => router.push('/login')}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
-            className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
-            style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
-          >
-            {t('nav_login')}
-          </button>
-          <button
-            onClick={() => router.push('/register')}
-            className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
-            style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
-          >
-            {t('nav_get_started')}
-          </button>
-        </nav>
-        {mobileNavOpen && (
-          <div
-            className="md:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100%-2rem)] max-w-sm rounded-2xl border flex flex-col overflow-hidden"
-            style={{ backgroundColor: '#F4EBE1', borderColor: 'rgba(0,0,0,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-          >
-            {[
-              { id: 'harnesses', label: t('nav_pipeline') },
-              { id: 'pipeline', label: t('nav_how') },
-              { id: 'differentiators', label: t('nav_diff') },
-              { id: 'pricing', label: t('nav_pricing') },
-              { id: 'faq', label: t('nav_faq') },
-            ].map(({ id, label }) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  activeSectionRef.current = id
-                  setActiveSectionState(id)
-                  setMobileNavOpen(false)
-                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="px-5 py-3.5 text-sm font-medium text-left border-b last:border-b-0"
-                style={{ color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.06)' }}
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-        )}
-        </div>
+        <Header />
       </div>
 
       <main>
@@ -857,6 +728,11 @@ export default function LandingPage() {
                       </a>
                     </li>
                   ))}
+                  <li>
+                    <Link href="/blog" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
+                      Blog
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div>
