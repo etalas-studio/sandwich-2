@@ -103,7 +103,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatTile label="Total users" value={stats.totalUsers} />
           <StatTile label="Active Pro" value={stats.activeProSubs} />
-          <StatTile label="Starter" value={stats.starterUsers} />
+          <StatTile label="Starter Users" value={stats.starterUsers} />
         </div>
       </section>
 
