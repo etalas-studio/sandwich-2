@@ -25,6 +25,11 @@ const ALLOWED_EXTENSIONS = new Set([
 
 const ENGINE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
+/** Format a `+Xs` elapsed marker (same style as glowup's event log). */
+function elapsed(startMs: number): string {
+  return `+${((Date.now() - startMs) / 1000).toFixed(1)}s`;
+}
+
 function listFilesRecursive(dir: string): string[] {
   const results: string[] = [];
   for (const entry of readdirSync(dir)) {
@@ -73,11 +78,16 @@ export async function generatePrototypeDocument(
   signal?: AbortSignal,
 ): Promise<PrototypeGenerationResult> {
   const workspace = mkdtempSync(join(tmpdir(), "prototype-"));
+  const startedAt = Date.now();
+  console.log(
+    `[prototype] run start ${input.refine ? "refine" : "generate"} doc=${input.documentId} v${input.versionNo}`,
+  );
 
   try {
     // Refine mode: seed the workspace with the current version's files so the
     // agent edits them in place instead of regenerating from scratch.
     if (input.refine) {
+      const t0 = Date.now();
       const doc = await getDocument(db, input.documentId);
       const current = doc?.currentVersionId
         ? await getVersion(db, doc.currentVersionId)
@@ -89,6 +99,7 @@ export async function generatePrototypeDocument(
         mkdirSync(dirname(target), { recursive: true });
         writeFileSync(target, file.content);
       }
+      console.log(`[prototype] seeded ${existing.length} files from v${sourceVersionNo} in ${elapsed(t0)}`);
     }
 
     // Reference URL style (best-effort, multiple URLs + screenshot vision).
@@ -96,6 +107,7 @@ export async function generatePrototypeDocument(
     const styles: ReferenceStyle[] = [];
     const urls = input.refine ? [] : findReferenceUrls(input.brief);
     if (urls.length > 0) {
+      const t0 = Date.now();
       try {
         const fetched = await Promise.race([
           fetchReferenceStyles(urls),
@@ -105,8 +117,10 @@ export async function generatePrototypeDocument(
         ]);
         styles.push(...fetched);
         if (styles.length > 0) writeReferencesToWorkspace(workspace, styles);
+        console.log(`[prototype] reference fetch done urls=${urls.length} matched=${styles.length} in ${elapsed(t0)}`);
       } catch {
         // ignore reference failures — fall back to the getokui library
+        console.warn(`[prototype] reference fetch failed in ${elapsed(t0)}`);
       }
     }
 
@@ -117,7 +131,7 @@ export async function generatePrototypeDocument(
     const pi = await import("@earendil-works/pi-coding-agent");
     const { resolveModel } = await import("../model-runtime.js");
     const { runtime, model } = await resolveModel("prototype");
-    console.log(`[prototype] start model=${model.provider}/${model.id}`);
+    console.log(`[prototype] start model=${model.provider}/${model.id} ${input.refine ? "refine" : "generate"} at ${new Date().toISOString()}`);
 
     const { session } = await pi.createAgentSession({
       cwd: workspace,
@@ -129,9 +143,14 @@ export async function generatePrototypeDocument(
     });
 
     let errorMessage = "";
+    const sessionStart = Date.now();
     session.subscribe((event: any) => {
       if (signal?.aborted) return;
-      if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
+      if (event.type === "tool_execution_start") {
+        console.log(`[prototype] ${elapsed(sessionStart)} tool_start=${event.toolName ?? "?"}`);
+      } else if (event.type === "tool_execution_end") {
+        console.log(`[prototype] ${elapsed(sessionStart)} tool_end=${event.toolName ?? "?"} isError=${event.isError ?? false}`);
+      } else if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
         errorMessage = event.errorMessage;
       }
     });
@@ -148,8 +167,10 @@ export async function generatePrototypeDocument(
       await new Promise((r) => setTimeout(r, 500));
       session.dispose();
       if (errorMessage) throw new Error(errorMessage);
+      console.log(`[prototype] session done in ${elapsed(sessionStart)}`);
     } catch (err) {
       session.dispose();
+      console.warn(`[prototype] session FAILED in ${elapsed(sessionStart)}:`, err instanceof Error ? err.message : err);
       throw err;
     }
 
@@ -158,16 +179,19 @@ export async function generatePrototypeDocument(
     // re-polish could overwrite it.
     let glowupWarning: string | undefined;
     if (!input.refine) {
+      const t0 = Date.now();
       try {
         copyReferencesTo(workspace);
         await polishWorkspace(workspace, input.brief, signal);
+        console.log(`[prototype] glowup done in ${elapsed(t0)}`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         glowupWarning = `polish desain (glowup) gagal dijalankan: ${msg}. Menampilkan hasil dasar.`;
-        console.warn("[prototype] glowup failed, keeping pass-1 output:", msg);
+        console.warn(`[prototype] glowup FAILED in ${elapsed(t0)}:`, msg);
       }
     }
 
+    const t0 = Date.now();
     const files = listFilesRecursive(workspace);
     if (files.length === 0) throw new Error("no files generated");
 
@@ -179,9 +203,12 @@ export async function generatePrototypeDocument(
       const ext = dot >= 0 ? relPath.slice(dot).toLowerCase() : "";
       if (!ALLOWED_EXTENSIONS.has(ext)) continue;
       const content = readFileSync(fullPath, "utf-8");
+      const tFile = Date.now();
       await saveDocumentFile(db, input.documentId, input.versionNo, relPath, content);
+      console.log(`[prototype] saved ${relPath} (${(content.length / 1024).toFixed(1)}KB) in ${elapsed(tFile)}`);
       saved.push(relPath);
     }
+    console.log(`[prototype] saved ${saved.length} files total in ${elapsed(t0)}`);
 
     return {
       summary: `${input.refine ? "Refined" : "Generated"} ${saved.length} files: ${saved.join(", ")}`,
@@ -190,5 +217,6 @@ export async function generatePrototypeDocument(
     };
   } finally {
     rmSync(workspace, { recursive: true, force: true });
+    console.log(`[prototype] run end total ${elapsed(startedAt)}`);
   }
 }
