@@ -27,7 +27,7 @@ export interface PricingProps {
 
 export function Pricing(props: PricingProps) {
   return (
-    <section id="pricing" className="py-24 md:py-32 relative overflow-hidden border-t border-white/5 scroll-mt-24">
+    <section id="pricing" className="py-24 md:py-32 relative overflow-hidden border-t border-black/5 scroll-mt-24">
       <div
         className="absolute top-0 left-0 right-0 h-[400px] pointer-events-none"
         style={{ background: `radial-gradient(600px circle at top center, ${ACCENT}14, transparent 60%)` }}
@@ -47,8 +47,8 @@ export function Pricing(props: PricingProps) {
               key={plan.slug}
               className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl p-6 flex flex-col h-full transition-colors duration-300 ${
                 plan.highlight
-                  ? 'border-blue-500/30 bg-blue-900/10 shadow-[0_0_30px_-5px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20'
-                  : 'border-white/10 bg-white/5 hover:bg-white/[0.07]'
+                  ? 'border-blue-500/30 bg-blue-50 shadow-[0_0_30px_-15px_rgba(59,130,246,0.4)] ring-1 ring-blue-500/20'
+                  : 'border-black/10 bg-black/[0.015] hover:bg-black/[0.03]'
               }`}
             >
               <div className="relative flex flex-col gap-1 mb-6">
@@ -65,7 +65,7 @@ export function Pricing(props: PricingProps) {
                 <div className="flex items-end gap-1 flex-wrap">
                   <p className="text-3xl lg:text-4xl tracking-tighter" style={{ color: TEXT_PRIMARY }}>{plan.price}</p>
                   <span className="text-xs mb-1.5 uppercase tracking-wide" style={{ color: TEXT_MUTED }}>{plan.priceNote}</span>
-                  {plan.oldPrice && <span className="text-sm line-through mb-1.5" style={{ color: 'rgba(255,255,255,0.25)' }}>{plan.oldPrice}</span>}
+                  {plan.oldPrice && <span className="text-sm line-through mb-1.5" style={{ color: 'rgba(10,14,20,0.3)' }}>{plan.oldPrice}</span>}
                 </div>
               </div>
 
@@ -83,7 +83,7 @@ export function Pricing(props: PricingProps) {
                 className="w-full inline-flex items-center justify-center h-10 rounded-lg text-sm font-semibold transition"
                 style={plan.highlight
                   ? { backgroundColor: ACCENT, color: '#ffffff', boxShadow: '0 0 30px rgba(59,130,246,0.3)' }
-                  : { backgroundColor: 'rgba(255,255,255,0.1)', color: TEXT_PRIMARY }}
+                  : { backgroundColor: 'rgba(10,14,20,0.06)', color: TEXT_PRIMARY }}
               >
                 {plan.cta}
               </button>

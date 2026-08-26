@@ -120,7 +120,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, color: 'rgba(255,255,255,0.7)' }}>
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, color: 'rgba(10,14,20,0.68)' }}>
       <style>{`
         ::selection { background: #3b82f64d; color: #3b82f6; }
         @keyframes sw-reveal { from { opacity: 0; transform: translateY(20px); filter: blur(8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
@@ -133,6 +133,12 @@ export default function LandingPage() {
         }
       `}</style>
       <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.025] sw-grain" />
+
+      {/* Full-page white base — a sibling of the aurora layer below (not a
+          background on this same root element), otherwise a negative
+          z-index child would paint behind this element's own background
+          fill and never be visible at all. */}
+      <div className="absolute inset-0 bg-white -z-10" />
 
       {/* Page-level hero background — spans behind the nav + hero, matching
           the reference template's full-bleed "aura-background-component". */}

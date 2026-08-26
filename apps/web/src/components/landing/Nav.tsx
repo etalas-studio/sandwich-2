@@ -1,6 +1,6 @@
 'use client'
 
-import { ACCENT, TEXT_PRIMARY } from './tokens'
+import { ACCENT, TEXT_PRIMARY, TEXT_SECONDARY } from './tokens'
 
 export interface NavProps {
   navGetStarted: string
@@ -48,21 +48,21 @@ export function Nav(props: NavProps) {
           <span className="hidden sm:inline text-sm font-semibold tracking-tight uppercase" style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
         </a>
 
-        <div className="hidden md:flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-lg">
+        <div className="hidden md:flex items-center gap-1 bg-black/[0.03] border border-black/10 rounded-full p-1 backdrop-blur-lg shadow-sm">
           {links.map(({ id, label }) => (
             <a
               key={id}
               href={`#${id}`}
               onClick={(e) => { e.preventDefault(); onNavClick(id) }}
               className="shrink-0 px-3.5 py-2 text-sm font-medium rounded-full transition-colors"
-              style={{ color: activeSection === id ? TEXT_PRIMARY : 'rgba(255,255,255,0.6)', backgroundColor: activeSection === id ? 'rgba(255,255,255,0.08)' : 'transparent' }}
+              style={{ color: activeSection === id ? TEXT_PRIMARY : TEXT_SECONDARY, backgroundColor: activeSection === id ? 'rgba(10,14,20,0.06)' : 'transparent' }}
             >
               {label}
             </a>
           ))}
           <button
             onClick={props.onToggleLang}
-            className="shrink-0 ml-1 px-3.5 py-2 min-w-[44px] flex items-center justify-center rounded-full text-xs font-semibold transition-colors bg-white/10"
+            className="shrink-0 ml-1 px-3.5 py-2 min-w-[44px] flex items-center justify-center rounded-full text-xs font-semibold transition-colors bg-black/5"
             style={{ color: TEXT_PRIMARY }}
             title="Switch language"
           >
@@ -70,8 +70,8 @@ export function Nav(props: NavProps) {
           </button>
           <button
             onClick={onLogin}
-            className="shrink-0 px-3.5 py-2 text-sm font-medium rounded-full transition-colors hover:text-white"
-            style={{ color: 'rgba(255,255,255,0.7)' }}
+            className="shrink-0 px-3.5 py-2 text-sm font-medium rounded-full transition-colors hover:opacity-80"
+            style={{ color: TEXT_SECONDARY }}
           >
             {props.navLogin}
           </button>
@@ -89,7 +89,7 @@ export function Nav(props: NavProps) {
           onClick={() => setMobileNavOpen(!mobileNavOpen)}
           aria-label={mobileNavOpen ? props.navMenuClose : props.navMenuOpen}
           aria-expanded={mobileNavOpen}
-          className="md:hidden inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm font-medium backdrop-blur"
+          className="md:hidden inline-flex items-center gap-2 bg-black/[0.03] border border-black/10 rounded-lg px-3 py-2 text-sm font-medium backdrop-blur shadow-sm"
           style={{ color: TEXT_PRIMARY }}
         >
           <iconify-icon icon={mobileNavOpen ? 'solar:close-circle-linear' : 'solar:hamburger-menu-linear'} width="20" />
@@ -99,15 +99,15 @@ export function Nav(props: NavProps) {
 
       {mobileNavOpen && (
         <div
-          className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-lg flex flex-col overflow-hidden"
-          style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+          className="md:hidden max-w-7xl mx-auto mt-2 rounded-2xl border border-black/10 bg-white/95 backdrop-blur-lg flex flex-col overflow-hidden"
+          style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
         >
           {links.map(({ id, label }) => (
             <a
               key={id}
               href={`#${id}`}
               onClick={(e) => { e.preventDefault(); onNavClick(id); setMobileNavOpen(false) }}
-              className="px-5 py-3.5 text-sm font-medium text-left border-b border-white/10 last:border-b-0"
+              className="px-5 py-3.5 text-sm font-medium text-left border-b border-black/10 last:border-b-0"
               style={{ color: TEXT_PRIMARY }}
             >
               {label}
@@ -116,12 +116,12 @@ export function Nav(props: NavProps) {
           <div className="flex items-center gap-2 px-5 py-3.5">
             <button
               onClick={props.onToggleLang}
-              className="px-4 py-2 rounded-full text-xs font-semibold bg-white/10"
+              className="px-4 py-2 rounded-full text-xs font-semibold bg-black/5"
               style={{ color: TEXT_PRIMARY }}
             >
               {props.lang === 'en' ? 'EN' : 'ID'}
             </button>
-            <button onClick={onLogin} className="px-4 py-2 rounded-full text-xs font-medium border border-white/10" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            <button onClick={onLogin} className="px-4 py-2 rounded-full text-xs font-medium border border-black/10" style={{ color: TEXT_SECONDARY }}>
               {props.navLogin}
             </button>
             <button onClick={onGetStarted} className="px-4 py-2 rounded-full text-xs font-semibold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>

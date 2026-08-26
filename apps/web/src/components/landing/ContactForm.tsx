@@ -68,16 +68,16 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
   }
 
   return (
-    <section id="application" className="relative overflow-hidden py-24 border-t border-white/5 scroll-mt-24">
+    <section id="application" className="relative overflow-hidden py-24 border-t border-black/5 scroll-mt-24">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 60% at 50% 0%, rgba(59,130,246,0.12), transparent 70%)' }} />
       <div className="relative z-10 max-w-3xl mx-auto px-6">
         <div id="application-head" className={reveal('application-head', 'text-center mb-10')}>
-          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium backdrop-blur" style={{ color: TEXT_SECONDARY }}>{l.kicker}</span>
+          <span className="inline-flex items-center rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-[11px] font-medium backdrop-blur" style={{ color: TEXT_SECONDARY }}>{l.kicker}</span>
           <h2 className="mt-4 text-3xl sm:text-4xl md:text-5xl font-light tracking-tighter" style={{ color: TEXT_PRIMARY }}>{l.title}</h2>
           <p className="mt-4 text-base" style={{ color: TEXT_SECONDARY }}>{l.desc}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-black/50 border border-white/10 p-6 sm:p-10 rounded-2xl backdrop-blur-xl">
+        <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 sm:p-10 rounded-2xl shadow-sm">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="col-span-1">
               <label htmlFor="name" className="block text-xs font-medium mb-2" style={{ color: TEXT_SECONDARY }}>{l.name}</label>
@@ -87,7 +87,7 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-white/20"
+                className="w-full bg-black/[0.02] border border-black/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-black/30"
                 style={{ color: TEXT_PRIMARY }}
                 placeholder={l.namePlaceholder}
               />
@@ -100,7 +100,7 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-white/20"
+                className="w-full bg-black/[0.02] border border-black/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-black/30"
                 style={{ color: TEXT_PRIMARY }}
                 placeholder={l.emailPlaceholder}
               />
@@ -112,12 +112,12 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
                 value={form.plan}
                 onChange={handleChange}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none"
+                className="w-full bg-black/[0.02] border border-black/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none"
                 style={{ color: TEXT_PRIMARY }}
               >
-                <option value="" className="bg-black">{l.planPlaceholder}</option>
+                <option value="" className="bg-white">{l.planPlaceholder}</option>
                 {l.planOptions.map((opt) => (
-                  <option key={opt} value={opt} className="bg-black">{opt}</option>
+                  <option key={opt} value={opt} className="bg-white">{opt}</option>
                 ))}
               </select>
             </div>
@@ -128,12 +128,12 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
                 value={form.topic}
                 onChange={handleChange}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none"
+                className="w-full bg-black/[0.02] border border-black/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none"
                 style={{ color: TEXT_PRIMARY }}
               >
-                <option value="" className="bg-black">{l.topicPlaceholder}</option>
+                <option value="" className="bg-white">{l.topicPlaceholder}</option>
                 {l.topicOptions.map((opt) => (
-                  <option key={opt} value={opt} className="bg-black">{opt}</option>
+                  <option key={opt} value={opt} className="bg-white">{opt}</option>
                 ))}
               </select>
             </div>
@@ -145,7 +145,7 @@ export function ContactForm({ reveal, lang }: ContactFormProps) {
                 onChange={handleChange}
                 rows={3}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-white/20 resize-none"
+                className="w-full bg-black/[0.02] border border-black/10 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-black/30 resize-none"
                 style={{ color: TEXT_PRIMARY }}
                 placeholder={l.detailsPlaceholder}
               />

@@ -16,14 +16,14 @@ export interface FaqProps {
 
 export function Faq(props: FaqProps) {
   return (
-    <section id="faq" className="py-24 md:py-32 border-t border-white/5 scroll-mt-24">
+    <section id="faq" className="py-24 md:py-32 border-t border-black/5 scroll-mt-24">
       <div className="max-w-3xl mx-auto px-6">
         <div id="faq-head" className={props.reveal('faq-head', 'text-center mb-16')}>
           <p className="font-mono text-xs tracking-widest uppercase" style={{ color: ACCENT }}>{props.kicker}</p>
           <h2 className="mt-4 text-4xl md:text-6xl font-light tracking-tighter leading-tight" style={{ color: TEXT_PRIMARY }}>{props.title}</h2>
         </div>
 
-        <div className="flex flex-col divide-y divide-white/10">
+        <div className="flex flex-col divide-y divide-black/10">
           {FAQS.map((faq, i) => (
             <details
               key={i}

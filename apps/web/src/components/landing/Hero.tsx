@@ -35,7 +35,7 @@ export function Hero(props: HeroProps) {
           </button>
           <button
             onClick={props.onHowClick}
-            className="inline-flex items-center gap-2 hover:bg-white/10 text-sm font-medium bg-white/5 border border-white/10 rounded-full px-8 py-3.5 backdrop-blur transition-colors"
+            className="inline-flex items-center gap-2 hover:bg-black/[0.06] text-sm font-medium bg-black/[0.03] border border-black/10 rounded-full px-8 py-3.5 backdrop-blur transition-colors"
             style={{ color: TEXT_PRIMARY }}
           >
             {props.navHow}

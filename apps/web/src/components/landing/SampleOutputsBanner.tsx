@@ -48,13 +48,13 @@ const PROTOTYPE_SAMPLE = {
 
 function BannerFrame({ badge, project, file, children }: { badge: string; project: string; file: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 hover:bg-white/[0.07] transition-colors p-6 sm:p-8">
+    <div className="rounded-2xl border border-black/10 bg-black/[0.02] hover:bg-black/[0.04] transition-colors p-6 sm:p-8">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full" style={{ backgroundColor: `${ACCENT}26`, color: ACCENT }}>{badge}</span>
         <span className="text-xs" style={{ color: TEXT_MUTED }}>{project}</span>
       </div>
-      <div className="rounded-lg overflow-hidden border border-white/10" style={{ backgroundColor: PANEL_2 }}>
-        <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-white/10">
+      <div className="rounded-lg overflow-hidden border border-black/10" style={{ backgroundColor: PANEL_2 }}>
+        <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/10">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
           <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
           <span className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
@@ -71,9 +71,9 @@ export function SampleBanners() {
         <div className="flex flex-col gap-6">
           <BannerFrame badge="PRD" project={PRD_SAMPLE.project} file="prd.md">
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: TEXT_MUTED }}>{PRD_SAMPLE.heading}</p>
-            <div className="rounded-lg overflow-hidden border border-white/10">
+            <div className="rounded-lg overflow-hidden border border-black/10">
               {PRD_SAMPLE.rows.map((row, i) => (
-                <div key={row.req} className={`px-3.5 py-3 ${i !== 0 ? 'border-t border-dashed border-white/10' : ''}`}>
+                <div key={row.req} className={`px-3.5 py-3 ${i !== 0 ? 'border-t border-dashed border-black/10' : ''}`}>
                   <p className="text-xs font-semibold tracking-tight" style={{ color: TEXT_PRIMARY }}>{row.req}</p>
                   <p className="text-xs mt-0.5 leading-relaxed" style={{ color: TEXT_MUTED }}>{row.detail}</p>
                 </div>
@@ -83,9 +83,9 @@ export function SampleBanners() {
 
           <BannerFrame badge="Quotation" project={QUOTATION_SAMPLE.project} file="quotation.md">
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: TEXT_MUTED }}>{QUOTATION_SAMPLE.heading}</p>
-            <div className="rounded-lg overflow-hidden border border-white/10">
+            <div className="rounded-lg overflow-hidden border border-black/10">
               {QUOTATION_SAMPLE.items.map((item, i) => (
-                <div key={item.module} className={`flex items-center justify-between gap-3 px-3.5 py-3 ${i !== 0 ? 'border-t border-dashed border-white/10' : ''}`}>
+                <div key={item.module} className={`flex items-center justify-between gap-3 px-3.5 py-3 ${i !== 0 ? 'border-t border-dashed border-black/10' : ''}`}>
                   <div>
                     <p className="text-xs font-semibold tracking-tight" style={{ color: TEXT_PRIMARY }}>{item.module}</p>
                     <p className="text-[11px] mt-0.5" style={{ color: TEXT_MUTED }}>{item.days} days</p>
@@ -118,7 +118,7 @@ export function SampleBanners() {
                 <div
                   key={slot.time}
                   className="flex-1 text-center rounded-lg py-2.5 text-xs font-semibold tracking-tight"
-                  style={slot.status === 'booked' ? { backgroundColor: ACCENT, color: '#ffffff' } : { backgroundColor: 'rgba(255,255,255,0.05)', color: TEXT_PRIMARY }}
+                  style={slot.status === 'booked' ? { backgroundColor: ACCENT, color: '#ffffff' } : { backgroundColor: 'rgba(10,14,20,0.05)', color: TEXT_PRIMARY }}
                 >
                   {slot.time}
                 </div>

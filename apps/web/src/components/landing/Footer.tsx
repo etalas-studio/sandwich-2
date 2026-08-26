@@ -21,9 +21,9 @@ export interface FooterProps {
 
 export function Footer(props: FooterProps) {
   return (
-    <footer className="border-t border-white/10 pt-16 pb-10" style={{ color: TEXT_PRIMARY }}>
+    <footer className="border-t border-black/10 pt-16 pb-10" style={{ color: TEXT_PRIMARY }}>
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row gap-12 md:gap-20 pb-12 border-b border-white/10">
+        <div className="flex flex-col md:flex-row gap-12 md:gap-20 pb-12 border-b border-black/10">
           <div className="flex-1 max-w-xs">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ACCENT }}>
@@ -42,7 +42,7 @@ export function Footer(props: FooterProps) {
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 border border-white/10"
+                  className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-black/5 border border-black/10"
                   style={{ color: TEXT_SECONDARY }}
                   aria-label={label}
                 >
@@ -54,7 +54,7 @@ export function Footer(props: FooterProps) {
 
           <div className="flex flex-col sm:flex-row gap-10 flex-1 justify-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>{props.footerProduct}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>{props.footerProduct}</p>
               <ul className="flex flex-col gap-3">
                 {[
                   { label: props.navPipeline, id: 'harnesses' },
@@ -76,7 +76,7 @@ export function Footer(props: FooterProps) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Sandwich</p>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>Sandwich</p>
               <ul className="flex flex-col gap-3">
                 {[
                   { label: 'Website', href: 'https://etalas.com' },
@@ -90,7 +90,7 @@ export function Footer(props: FooterProps) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>{props.footerLegal}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(10,14,20,0.4)' }}>{props.footerLegal}</p>
               <ul className="flex flex-col gap-3">
                 {[
                   { label: props.footerPrivacy, href: '/privacy' },
@@ -108,10 +108,10 @@ export function Footer(props: FooterProps) {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2026 SANDWICH</p>
+          <p className="text-xs" style={{ color: 'rgba(10,14,20,0.4)' }}>© 2026 SANDWICH</p>
           <a href="https://www.etalas.com/" target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors hover:text-blue-400" style={{ color: TEXT_SECONDARY }}>
             <span className="text-sm">{props.footerProductBy}</span>
-            <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto brightness-0 invert" />
+            <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto" />
           </a>
         </div>
       </div>

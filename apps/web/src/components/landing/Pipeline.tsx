@@ -21,7 +21,7 @@ export interface PipelineProps {
 
 export function Pipeline(props: PipelineProps) {
   return (
-    <section id="pipeline" className="py-24 md:py-32 border-t border-white/5 scroll-mt-24">
+    <section id="pipeline" className="py-24 md:py-32 border-t border-black/5 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6">
         <div id="pipeline-head" className={props.reveal('pipeline-head', 'text-center mb-16')}>
           <p className="font-mono text-xs tracking-widest uppercase" style={{ color: ACCENT }}>{props.kicker}</p>
@@ -31,11 +31,11 @@ export function Pipeline(props: PipelineProps) {
         </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
           {props.steps.map((step) => (
             <div key={step.n} className="relative flex flex-col items-center text-center">
               <div
-                className="w-14 h-14 rounded-full flex items-center justify-center relative z-10 mb-5 border border-white/15"
+                className="w-14 h-14 rounded-full flex items-center justify-center relative z-10 mb-5 border border-black/10 shadow-sm"
                 style={{ backgroundColor: PANEL, boxShadow: `0 0 20px -6px ${ACCENT}55` }}
               >
                 <iconify-icon icon={step.icon} width="22" style={{ color: ACCENT }} />

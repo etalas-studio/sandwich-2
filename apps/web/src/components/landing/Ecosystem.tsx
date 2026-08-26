@@ -14,7 +14,7 @@ export interface EcosystemProps {
 
 export function Ecosystem(props: EcosystemProps) {
   return (
-    <section id="about" className="py-24 md:py-32 border-t border-white/5 scroll-mt-24">
+    <section id="about" className="py-24 md:py-32 border-t border-black/5 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6">
         <div id="about-head" className={props.reveal('about-head', 'text-center mb-14')}>
           <p className="font-mono text-xs tracking-widest uppercase" style={{ color: ACCENT }}>{props.kicker}</p>
