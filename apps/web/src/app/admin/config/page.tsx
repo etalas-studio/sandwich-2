@@ -1,8 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../../hooks/useAuth'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectContent,
+  SelectItem,
+} from '../../../components/ui/select'
 import {
   fetchAdminEngine,
   updateAdminEngine,
@@ -110,21 +118,21 @@ export default function ConfigPage() {
                   <div className="text-sm font-medium">{label}</div>
                   <div className="text-xs text-neutral-500">{stage}</div>
                 </div>
-                <select
+                <Select<string>
                   value={stageValues[stage] ?? ''}
-                  onChange={(e) => setStageValues((prev) => ({ ...prev, [stage]: e.target.value }))}
+                  onValueChange={(v) => setStageValues((prev) => ({ ...prev, [stage]: v }))}
                   disabled={models.length === 0}
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-neutral-500"
                 >
-                  {models.length === 0 && (
-                    <option value="">Connect a provider first</option>
-                  )}
-                  {models.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.id}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-300 outline-none focus:border-neutral-500 disabled:opacity-50">
+                    <SelectValue placeholder={models.length === 0 ? 'Connect a provider first' : 'Select model'} />
+                    <SelectIcon className="ml-auto"><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.id}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             ))}
           </div>
