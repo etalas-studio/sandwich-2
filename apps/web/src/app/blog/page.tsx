@@ -27,7 +27,7 @@ export default async function BlogIndexPage() {
             Insights
           </h1>
           <p className="mt-3 text-base text-zinc-500 max-w-xl">
-            Guides on scoping projects, writing PRDs, and working with AI tools — for freelancers and founders.
+            Thoughts on building better products, faster.
           </p>
         </div>
         {posts.length === 0 ? (
