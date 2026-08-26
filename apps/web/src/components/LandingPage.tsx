@@ -10,12 +10,12 @@ import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
 import { Nav } from './landing/Nav'
 import { Hero } from './landing/Hero'
+import { HeroBackgroundVideo } from './landing/HeroBackgroundVideo'
 import { FormatMarquee } from './landing/FormatMarquee'
 import { Harnesses } from './landing/Harnesses'
+import { UsVsThem } from './landing/UsVsThem'
+import { Ecosystem } from './landing/Ecosystem'
 import { Pipeline } from './landing/Pipeline'
-import { Ingredients } from './landing/Ingredients'
-import { SampleOutputsBanner } from './landing/SampleOutputsBanner'
-import { Differentiators } from './landing/Differentiators'
 import { Pricing } from './landing/Pricing'
 import { FinalCta } from './landing/FinalCta'
 import { Faq } from './landing/Faq'
@@ -23,7 +23,7 @@ import { Footer } from './landing/Footer'
 import { FONT_SANS, BG } from './landing/tokens'
 
 const REVEAL_IDS = [
-  'harnesses-head', 'pipeline-head', 'about-head', 'samples-head', 'diff-head', 'pricing-head', 'faq-head', 'final-cta-head',
+  'harnesses-head', 'us-vs-them-head', 'about-head', 'pipeline-head', 'pricing-head', 'final-cta-head', 'faq-head',
 ]
 
 export default function LandingPage() {
@@ -59,7 +59,7 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    const ids = ['harnesses', 'pipeline', 'differentiators', 'pricing', 'faq']
+    const ids = ['harnesses', 'differentiators', 'about', 'pipeline', 'pricing', 'faq']
     const observers = ids.map((id) => {
       const el = document.getElementById(id)
       if (!el) return null
@@ -155,15 +155,15 @@ export default function LandingPage() {
     { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
   ]
 
-  const differentiatorItems = [
-    { icon: 'solar:history-linear', title: t('diff_1_title'), desc: t('diff_1_desc'), highlight: false },
-    { icon: 'solar:cloud-check-linear', title: t('diff_2_title'), desc: t('diff_2_desc'), highlight: true },
-    { icon: 'solar:link-round-linear', title: t('diff_3_title'), desc: t('diff_3_desc'), highlight: false },
-    { icon: 'solar:list-check-linear', title: t('diff_4_title'), desc: t('diff_4_desc'), highlight: false },
+  const usVsThemItems = [
+    t('diff_1_title'),
+    t('diff_2_title'),
+    t('diff_3_title'),
+    t('diff_4_title'),
   ]
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: 'rgba(255,255,255,0.7)' }}>
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: 'rgba(255,255,255,0.7)' }}>
       <style>{`
         ::selection { background: #3b82f64d; color: #3b82f6; }
         @keyframes sw-reveal { from { opacity: 0; transform: translateY(20px); filter: blur(8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
@@ -176,6 +176,12 @@ export default function LandingPage() {
         }
       `}</style>
       <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.025] sw-grain" />
+
+      {/* Page-level hero background — spans behind the nav + hero, matching
+          the reference template's full-bleed "aura-background-component". */}
+      <div className="absolute top-0 left-0 w-full h-[1040px] -z-10">
+        <HeroBackgroundVideo />
+      </div>
 
       <Nav
         navGetStarted={t('nav_get_started')}
@@ -202,16 +208,8 @@ export default function LandingPage() {
           heroTagline={t('hero_tagline')}
           navGetStarted={t('nav_get_started')}
           navHow={t('nav_how')}
-          heroPromptPlaceholder={t('hero_prompt_placeholder')}
-          heroSendLabel={t('hero_send_label')}
-          prompt={prompt}
-          setPrompt={setPrompt}
-          pendingType={pendingType}
-          setPendingType={setPendingType}
-          isSubmitting={isSubmitting}
-          error={error}
-          onSubmit={() => void handleSubmit()}
-          onKeyDown={handleKeyDown}
+          onGetStartedClick={() => scrollToSection('application')}
+          onHowClick={() => scrollToSection('about')}
         />
 
         <FormatMarquee label={t('nav_pipeline')} />
@@ -221,9 +219,21 @@ export default function LandingPage() {
           title={t('harnesses_title')}
           desc={t('harnesses_desc')}
           reveal={reveal}
-          rightWriteSpec={t('right_write_spec')}
-          rightStructureBrief={t('right_structure_brief')}
-          rightQuotation={t('right_quotation')}
+        />
+
+        <UsVsThem
+          title={t('diff_title')}
+          reveal={reveal}
+          lang={lang}
+          sandwichItems={usVsThemItems}
+        />
+
+        <Ecosystem
+          kicker={t('stack_kicker')}
+          title={t('stack_title')}
+          desc={t('stack_desc')}
+          reveal={reveal}
+          ingredients={ingredientItems}
         />
 
         <Pipeline
@@ -231,32 +241,9 @@ export default function LandingPage() {
           titleL1={t('pipeline_title_l1')}
           titleL2={t('pipeline_title_l2')}
           cta={t('pipeline_cta')}
-          onCtaClick={() => router.push('/register')}
+          onCtaClick={() => scrollToSection('application')}
           reveal={reveal}
           steps={pipelineSteps}
-        />
-
-        <Ingredients
-          kicker={t('stack_kicker')}
-          title={t('stack_title')}
-          desc={t('stack_desc')}
-          reveal={reveal}
-          items={ingredientItems}
-        />
-
-        <SampleOutputsBanner
-          kicker={t('samples_kicker')}
-          titleL1={t('samples_title_l1')}
-          titleL2={t('samples_title_l2')}
-          desc={t('samples_desc')}
-          reveal={reveal}
-        />
-
-        <Differentiators
-          kicker={t('diff_kicker')}
-          title={t('diff_title')}
-          reveal={reveal}
-          items={differentiatorItems}
         />
 
         <Pricing
@@ -270,27 +257,29 @@ export default function LandingPage() {
           onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
         />
 
-        <FinalCta
-          title={t('nav_get_started')}
-          desc={t('hero_tagline')}
-          reveal={reveal}
-          prompt={prompt}
-          setPrompt={setPrompt}
-          pendingType={pendingType}
-          setPendingType={setPendingType}
-          isSubmitting={isSubmitting}
-          error={error}
-          onSubmit={() => void handleSubmit()}
-          onKeyDown={handleKeyDown}
-          placeholder={t('hero_prompt_placeholder')}
-          sendLabel={t('hero_send_label')}
-        />
+        <div id="application" className="scroll-mt-24">
+          <FinalCta
+            title={t('nav_get_started')}
+            desc={t('hero_tagline')}
+            reveal={reveal}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            pendingType={pendingType}
+            setPendingType={setPendingType}
+            isSubmitting={isSubmitting}
+            error={error}
+            onSubmit={() => void handleSubmit()}
+            onKeyDown={handleKeyDown}
+            placeholder={t('hero_prompt_placeholder')}
+            sendLabel={t('hero_send_label')}
+          />
+        </div>
 
         <Faq
           kicker={t('faq_kicker')}
           title={t('faq_title')}
           cta={t('faq_cta')}
-          onCtaClick={() => router.push('/register')}
+          onCtaClick={() => scrollToSection('application')}
           reveal={reveal}
           lang={lang}
           openFaq={openFaq}

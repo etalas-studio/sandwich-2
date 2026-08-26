@@ -66,26 +66,8 @@ function BannerFrame({ badge, project, file, children }: { badge: string; projec
   )
 }
 
-export interface SampleOutputsBannerProps {
-  kicker: string
-  titleL1: string
-  titleL2: string
-  desc: string
-  reveal: (id: string, extra?: string) => string
-}
-
-export function SampleOutputsBanner(props: SampleOutputsBannerProps) {
+export function SampleBanners() {
   return (
-    <section id="samples" className="py-24 md:py-32 border-t border-white/5 scroll-mt-24">
-      <div className="max-w-4xl mx-auto px-6">
-        <div id="samples-head" className={props.reveal('samples-head', 'mb-12 text-center')}>
-          <p className="font-mono text-xs tracking-widest uppercase" style={{ color: ACCENT }}>{props.kicker}</p>
-          <h2 className="mt-4 text-4xl md:text-6xl font-light tracking-tighter leading-tight mb-4" style={{ color: TEXT_PRIMARY }}>
-            {props.titleL1} {props.titleL2}
-          </h2>
-          <p className="text-sm max-w-md mx-auto" style={{ color: TEXT_SECONDARY }}>{props.desc}</p>
-        </div>
-
         <div className="flex flex-col gap-6">
           <BannerFrame badge="PRD" project={PRD_SAMPLE.project} file="prd.md">
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: TEXT_MUTED }}>{PRD_SAMPLE.heading}</p>
@@ -144,7 +126,5 @@ export function SampleOutputsBanner(props: SampleOutputsBannerProps) {
             </div>
           </BannerFrame>
         </div>
-      </div>
-    </section>
   )
 }
