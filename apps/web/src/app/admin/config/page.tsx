@@ -92,62 +92,24 @@ export default function ConfigPage() {
   }
 
   return (
+    <>
+      <style>{`
+        @keyframes animationIn {
+          0% { opacity: 0; transform: translateY(16px); filter: blur(6px); }
+          100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+        .animate-in { animation: animationIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+      `}</style>
     <div className="space-y-10">
-      <header>
+      <header className="animate-in" style={{ animationDelay: '0ms' }}>
         <h1 className="text-3xl tracking-wide text-white" style={{ fontFamily: "'Bowlby One', sans-serif" }}>Configuration</h1>
         <p className="mt-1 text-sm text-neutral-500">
           AI engine and provider settings. Changes apply immediately (no redeploy).
         </p>
       </header>
 
-      {/* ── Engine config ─────────────────────────────────────────────── */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-medium">Provider / model per stage</h2>
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
-          {msgs['engine'] && (
-            <SectionBanner
-              kind={msgs['engine']!.kind}
-              text={msgs['engine']!.text}
-              onDismiss={() => setMsgs((prev) => omitKey(prev, 'engine'))}
-            />
-          )}
-          <div className={msgs['engine'] ? 'mt-4 space-y-4' : 'space-y-4'}>
-            {Object.entries(STAGE_LABELS).map(([stage, label]) => (
-              <div key={stage} className="grid gap-2 sm:grid-cols-[220px_1fr] sm:items-center">
-                <div>
-                  <div className="text-sm font-medium">{label}</div>
-                  <div className="text-xs text-neutral-500">{stage}</div>
-                </div>
-                <Select<string>
-                  value={stageValues[stage] ?? ''}
-                  onValueChange={(v) => setStageValues((prev) => ({ ...prev, [stage]: v }))}
-                  disabled={models.length === 0}
-                >
-                  <SelectTrigger className="w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-300 outline-none focus:border-neutral-500 disabled:opacity-50">
-                    <SelectValue placeholder={models.length === 0 ? 'Connect a provider first' : 'Select model'} />
-                    <SelectIcon className="ml-auto"><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {models.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.id}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => run('engine', () => updateAdminEngine(stageValues))}
-            disabled={busy || models.length === 0}
-            className="mt-5 rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-white disabled:opacity-50"
-          >
-            {busy ? 'Saving…' : 'Save engine config'}
-          </button>
-        </div>
-      </section>
-
       {/* ── Integrations ──────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      <section className="animate-in space-y-4" style={{ animationDelay: '80ms' }}>
         <h2 className="text-lg font-medium">Providers</h2>
         {(config?.integrations ?? []).map((integration) => (
           <ProviderCard
@@ -203,7 +165,54 @@ export default function ConfigPage() {
           />
         ))}
       </section>
+
+      {/* ── Engine config ─────────────────────────────────────────────── */}
+      <section className="animate-in space-y-4" style={{ animationDelay: '160ms' }}>
+        <h2 className="text-lg font-medium">Provider / model per stage</h2>
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
+          {msgs['engine'] && (
+            <SectionBanner
+              kind={msgs['engine']!.kind}
+              text={msgs['engine']!.text}
+              onDismiss={() => setMsgs((prev) => omitKey(prev, 'engine'))}
+            />
+          )}
+          <div className={msgs['engine'] ? 'mt-4 space-y-4' : 'space-y-4'}>
+            {Object.entries(STAGE_LABELS).map(([stage, label]) => (
+              <div key={stage} className="grid gap-2 sm:grid-cols-[220px_1fr] sm:items-center">
+                <div>
+                  <div className="text-sm font-medium">{label}</div>
+                  <div className="text-xs text-neutral-500">{stage}</div>
+                </div>
+                <Select<string>
+                  value={stageValues[stage] ?? ''}
+                  onValueChange={(v) => { if (v) setStageValues((prev) => ({ ...prev, [stage]: v })) }}
+                  disabled={models.length === 0}
+                >
+                  <SelectTrigger className="w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-300 outline-none focus:border-neutral-500 disabled:opacity-50">
+                    <SelectValue placeholder={models.length === 0 ? 'Connect a provider first' : 'Select model'} />
+                    <SelectIcon className="ml-auto"><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.id}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => run('engine', () => updateAdminEngine(stageValues))}
+            disabled={busy || models.length === 0}
+            className="mt-5 rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-white disabled:opacity-50"
+          >
+            {busy ? 'Saving…' : 'Save engine config'}
+          </button>
+        </div>
+      </section>
     </div>
+    </>
   )
 }
 
