@@ -25,7 +25,13 @@ export async function generateMetadata({
         description: post.meta.description,
         type: 'article',
         publishedTime: post.meta.date,
-        url: `/blog/${slug}`,
+        url: `https://sandwich.etalas.com/blog/${slug}`,
+        siteName: 'SANDWICH',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.meta.title,
+        description: post.meta.description,
       },
     }
   } catch {
