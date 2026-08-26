@@ -6,7 +6,19 @@
       "title": "Quotation Pengembangan LMS (Program Pembinaan UMK)",
       "language": "id",
       "industry": "education-government-program",
-      "tags": ["lms", "e-learning", "pemerintah", "program-pembinaan", "multi-role", "kurasi", "milestone-payment", "web-app"],
+      "tags": [
+        "lms",
+        "e-learning",
+        "pemerintah",
+        "program-pembinaan",
+        "multi-role",
+        "kurasi",
+        "milestone-payment",
+        "web-app",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "Quotation Bahasa Indonesia untuk platform LMS & program management multi-role dengan skema milestone payment dan person-day breakdown."
     },
     {
@@ -14,7 +26,19 @@
       "title": "Commercial Quotation — Fleet Partnership Portal",
       "language": "en",
       "industry": "logistics-enterprise-b2b",
-      "tags": ["enterprise", "b2b", "fleet", "logistics", "mvp", "fixed-price", "integration-heavy", "web-app"],
+      "tags": [
+        "enterprise",
+        "b2b",
+        "fleet",
+        "logistics",
+        "mvp",
+        "fixed-price",
+        "integration-heavy",
+        "web-app",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "English commercial quotation for an enterprise B2B MVP with heavy third-party API integrations, fixed-price per module, and formal T&C section."
     },
     {
@@ -22,7 +46,18 @@
       "title": "Effort Estimation — Detailed Functional Requirements",
       "language": "id",
       "industry": "enterprise-dashboard",
-      "tags": ["effort-estimation", "user-story", "acceptance-criteria", "detailed-spec", "dashboard", "scoring-engine", "rbac"],
+      "tags": [
+        "effort-estimation",
+        "user-story",
+        "acceptance-criteria",
+        "detailed-spec",
+        "dashboard",
+        "scoring-engine",
+        "rbac",
+        "web",
+        "mobile",
+        "desktop"
+      ],
       "description": "Bahasa Indonesia functional requirements doc styled as User Story + Acceptance Criteria per feature — use when the ask is a detailed technical breakdown rather than a priced quotation."
     }
   ]

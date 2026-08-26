@@ -760,9 +760,11 @@ export function registerConversationRunRoutes(
                 pendingType === "prototype" ? "prototype" : "doc",
               );
               const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
-              chatOutput = documentSummary(pendingType, versionNo);
+              // Prototype output is raw HTML — not chat-safe, so collapse it to
+              // a short summary + preview link. Other doc types keep the full
+              // markdown in chat, with the document card appended below it.
               if (isPrototype) {
-                chatOutput = `${chatOutput}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
+                chatOutput = `${documentSummary(pendingType, versionNo)}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
               }
               documentRef = {
                 id: documentId,
