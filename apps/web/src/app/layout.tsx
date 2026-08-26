@@ -6,6 +6,7 @@ import ErrorBoundary from '../components/ErrorBoundary'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sandwich.etalas.com'),
   title: 'SANDWICH',
   description: 'From a messy brief to an execution-ready spec.',
 }
