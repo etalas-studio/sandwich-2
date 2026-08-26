@@ -208,7 +208,9 @@ export function registerAdminRoutes(router: Router, db: Database): void {
         const n = parseInt(url.searchParams.get("limit") ?? "50", 10);
         return Number.isFinite(n) && n > 0 ? Math.min(n, 100) : 50;
       })();
-      const result = await getAdminUsers(db, page, limit);
+      const search = url.searchParams.get("search")?.trim() || undefined;
+      const role = url.searchParams.get("role") || undefined;
+      const result = await getAdminUsers(db, page, limit, search, role);
       sendJson(res, 200, { ...result, page });
     } catch (err) {
       sendCaughtError(res, err, "admin users");

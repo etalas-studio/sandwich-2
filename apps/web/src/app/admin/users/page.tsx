@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchAdminUsers,
   setUserRole,
@@ -41,23 +41,38 @@ function formatExpiry(iso: string | null): string {
 export default function UsersPage() {
   const [data, setData] = useState<AdminUsersResponse | null>(null)
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<'' | 'admin' | 'user'>('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [actionMsg, setActionMsg] = useState<{ kind: 'error' | 'notice'; text: string } | null>(
     null,
   )
   const LIMIT = 50
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const load = useCallback(async (p: number) => {
+  const load = useCallback(async (p: number, q: string, r: string) => {
     try {
       setError(null)
-      setData(await fetchAdminUsers(p, LIMIT))
+      setData(await fetchAdminUsers(p, LIMIT, q || undefined, r || undefined))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users')
     }
   }, [])
 
-  useEffect(() => { void load(page) }, [load, page])
+  useEffect(() => { void load(page, search, roleFilter) }, [load, page, search, roleFilter])
+
+  const handleSearch = (val: string) => {
+    setSearch(val)
+    setPage(1)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => void load(1, val, roleFilter), 350)
+  }
+
+  const handleRoleFilter = (val: '' | 'admin' | 'user') => {
+    setRoleFilter(val)
+    setPage(1)
+  }
 
   const run = async (fn: () => Promise<unknown>, okMsg: string) => {
     setBusy(true)
@@ -65,7 +80,7 @@ export default function UsersPage() {
     try {
       await fn()
       setActionMsg({ kind: 'notice', text: okMsg })
-      await load(page)
+      await load(page, search, roleFilter)
     } catch (err) {
       setActionMsg({
         kind: 'error',
@@ -120,6 +135,26 @@ export default function UsersPage() {
         )}
       </header>
 
+      {/* Search + filter bar */}
+      <div className="flex flex-wrap gap-3">
+        <input
+          type="search"
+          placeholder="Search email or username…"
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="h-9 w-64 rounded-lg border border-neutral-700 bg-neutral-900 px-3 text-sm outline-none placeholder:text-neutral-600 focus:border-neutral-500"
+        />
+        <select
+          value={roleFilter}
+          onChange={(e) => handleRoleFilter(e.target.value as '' | 'admin' | 'user')}
+          className="h-9 rounded-lg border border-neutral-700 bg-neutral-900 px-3 text-sm outline-none focus:border-neutral-500"
+        >
+          <option value="">All roles</option>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
       {actionMsg && (
         <div
           className={`flex items-start justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${
@@ -152,9 +187,6 @@ export default function UsersPage() {
                   <th className="px-4 py-3 font-normal">Role</th>
                   <th className="px-4 py-3 font-normal">Plan</th>
                   <th className="px-4 py-3 font-normal">Expires</th>
-                  <th className="px-4 py-3 font-normal">Doc</th>
-                  <th className="px-4 py-3 font-normal">Proto</th>
-                  <th className="px-4 py-3 font-normal">Chat</th>
                   <th className="px-4 py-3 font-normal">Actions</th>
                 </tr>
               </thead>
@@ -186,15 +218,6 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-neutral-400">
                       {formatExpiry(user.subscription?.expiresAt ?? null)}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-400">
-                      {user.usageThisMonth.doc}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-400">
-                      {user.usageThisMonth.prototype}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-400">
-                      {user.usageThisMonth.chat}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
@@ -232,6 +255,13 @@ export default function UsersPage() {
                     </td>
                   </tr>
                 ))}
+                {data.users.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-neutral-600">
+                      No users found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

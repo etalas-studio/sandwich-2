@@ -1,5 +1,5 @@
-import { sql, desc, and, eq, gt, isNull, or, inArray } from "drizzle-orm";
-import { users, subscriptions, payments, usage } from "../schema.js";
+import { sql, desc, and, eq, gt, lt, isNull, or, inArray } from "drizzle-orm";
+import { users, subscriptions, payments, usage, documents } from "../schema.js";
 import type { Database } from "../connection.js";
 
 export interface AdminStatsPayment {
@@ -19,6 +19,11 @@ export interface AdminStats {
   revenueThisMonth: number;
   usageThisMonth: { doc: number; prototype: number; chat: number };
   recentPayments: AdminStatsPayment[];
+  docsByType: { prd: number; quotation: number; prototype: number; specs: number };
+  paymentFunnel: { initiated: number; settled: number; failed: number };
+  expiringSubsCount: number;
+  newUsersThisMonth: number;
+  newUsersLastMonth: number;
 }
 
 export interface AdminUser {
@@ -95,6 +100,51 @@ export async function getAdminStats(db: Database): Promise<AdminStats> {
     .orderBy(desc(payments.createdAt))
     .limit(10);
 
+  // Doc breakdown by type (all-time)
+  const docTypeRows = await db
+    .select({ type: documents.type, count: sql<number>`cast(count(*) as int)` })
+    .from(documents)
+    .groupBy(documents.type);
+  const docMap: Record<string, number> = {};
+  for (const r of docTypeRows) docMap[r.type] = r.count;
+
+  // Payment funnel this month
+  const funnelRows = await db
+    .select({ status: payments.transactionStatus, count: sql<number>`cast(count(*) as int)` })
+    .from(payments)
+    .where(gt(payments.createdAt, monthStart))
+    .groupBy(payments.transactionStatus);
+  const funnelMap: Record<string, number> = {};
+  for (const r of funnelRows) funnelMap[r.status] = r.count;
+  const failedCount =
+    (funnelMap["expire"] ?? 0) + (funnelMap["cancel"] ?? 0) + (funnelMap["deny"] ?? 0);
+
+  // Subscriptions expiring within 7 days
+  const sevenDaysOut = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const [expiringRow] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.status, "active"),
+        gt(subscriptions.expiresAt, now),
+        lt(subscriptions.expiresAt, sevenDaysOut),
+      ),
+    );
+
+  // New signups this month vs last month
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const [[newThisRow], [newLastRow]] = await Promise.all([
+    db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(users)
+      .where(gt(users.createdAt, monthStart)),
+    db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(users)
+      .where(and(gt(users.createdAt, lastMonthStart), lt(users.createdAt, monthStart))),
+  ]);
+
   return {
     totalUsers,
     activeProSubs,
@@ -114,6 +164,20 @@ export async function getAdminStats(db: Database): Promise<AdminStats> {
       fraudStatus: r.fraudStatus,
       createdAt: r.createdAt.toISOString(),
     })),
+    docsByType: {
+      prd: docMap["prd"] ?? 0,
+      quotation: docMap["quotation"] ?? 0,
+      prototype: docMap["prototype"] ?? 0,
+      specs: docMap["specs"] ?? 0,
+    },
+    paymentFunnel: {
+      initiated: funnelMap["pending"] ?? 0,
+      settled: funnelMap["settlement"] ?? 0,
+      failed: failedCount,
+    },
+    expiringSubsCount: expiringRow?.count ?? 0,
+    newUsersThisMonth: newThisRow?.count ?? 0,
+    newUsersLastMonth: newLastRow?.count ?? 0,
   };
 }
 
@@ -121,13 +185,35 @@ export async function getAdminUsers(
   db: Database,
   page: number,
   limit: number,
+  search?: string,
+  role?: string,
 ): Promise<{ users: AdminUser[]; total: number }> {
   const ym = currentYearMonth();
   const offset = (page - 1) * limit;
 
+  const buildWhere = () => {
+    const conds = [];
+    if (search) {
+      const pattern = `%${search}%`;
+      conds.push(
+        or(
+          sql`${users.email} ilike ${pattern}`,
+          sql`${users.username} ilike ${pattern}`,
+        ),
+      );
+    }
+    if (role === "admin" || role === "user") {
+      conds.push(eq(users.role, role));
+    }
+    return conds.length === 0 ? undefined : conds.length === 1 ? conds[0] : and(...conds);
+  };
+
+  const whereClause = buildWhere();
+
   const [totalRow] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
-    .from(users);
+    .from(users)
+    .where(whereClause);
   const total = totalRow!.count;
 
   const userRows = await db
@@ -147,6 +233,7 @@ export async function getAdminUsers(
       subscriptions,
       and(eq(users.id, subscriptions.userId), eq(subscriptions.status, "active")),
     )
+    .where(whereClause)
     .orderBy(desc(users.createdAt))
     .limit(limit)
     .offset(offset);

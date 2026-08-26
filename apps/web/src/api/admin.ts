@@ -113,6 +113,11 @@ export interface AdminStats {
   revenueThisMonth: number
   usageThisMonth: { doc: number; prototype: number; chat: number }
   recentPayments: AdminStatsPayment[]
+  docsByType: { prd: number; quotation: number; prototype: number; specs: number }
+  paymentFunnel: { initiated: number; settled: number; failed: number }
+  expiringSubsCount: number
+  newUsersThisMonth: number
+  newUsersLastMonth: number
 }
 
 export interface AdminUser {
@@ -139,10 +144,13 @@ export function fetchAdminStats(): Promise<AdminStats> {
 export function fetchAdminUsers(
   page = 1,
   limit = 50,
+  search?: string,
+  role?: string,
 ): Promise<AdminUsersResponse> {
-  return request<AdminUsersResponse>(
-    apiUrl(`/api/admin/users?page=${page}&limit=${limit}`),
-  )
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (search) params.set('search', search)
+  if (role) params.set('role', role)
+  return request<AdminUsersResponse>(apiUrl(`/api/admin/users?${params}`))
 }
 
 export function setUserRole(
