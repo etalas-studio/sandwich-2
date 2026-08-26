@@ -1,6 +1,6 @@
 'use client'
 
-import { TEXT_PRIMARY, TEXT_MUTED } from './tokens'
+import { ACCENT, PANEL, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 
 export interface MethodologyProps {
   kicker: string
@@ -9,7 +9,7 @@ export interface MethodologyProps {
   bodyText: string
   ctaLabel: string
   onCtaClick: () => void
-  cards: { n: string; title: string }[]
+  cards: { n: string; icon: string; title: string; note: string }[]
 }
 
 export function Methodology(props: MethodologyProps) {
@@ -35,15 +35,25 @@ export function Methodology(props: MethodologyProps) {
         <div className="flex flex-col gap-8">
           <p className="text-base leading-relaxed" style={{ color: TEXT_MUTED }}>{props.bodyText}</p>
 
-          <div className="rounded-2xl overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-            <img src="/spec-illustration.webp" alt="" className="w-full h-auto block" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {props.cards.map((card) => (
-              <div key={card.n} className="flex items-baseline gap-2">
-                <span className="text-xs shrink-0" style={{ color: TEXT_MUTED }}>{card.n}</span>
-                <span className="text-sm font-medium tracking-tight" style={{ color: TEXT_PRIMARY }}>{card.title}</span>
+              <div
+                key={card.n}
+                className="group relative h-72 rounded-2xl overflow-hidden border flex flex-col justify-end p-5"
+                style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: PANEL }}
+              >
+                <div
+                  className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-700"
+                  style={{ background: `radial-gradient(80% 60% at 30% 20%, ${ACCENT}33, transparent 70%)` }}
+                />
+                <iconify-icon icon={card.icon} width="28" className="relative z-10 mb-auto mt-1" style={{ color: ACCENT }} />
+                <div className="relative z-10 flex justify-between items-end">
+                  <div>
+                    <span className="text-xs block mb-1" style={{ color: TEXT_MUTED }}>{card.n}</span>
+                    <h3 className="text-base font-medium tracking-tight" style={{ color: TEXT_PRIMARY }}>{card.title}</h3>
+                  </div>
+                  <span className="text-xs" style={{ color: TEXT_MUTED }}>{card.note}</span>
+                </div>
               </div>
             ))}
           </div>

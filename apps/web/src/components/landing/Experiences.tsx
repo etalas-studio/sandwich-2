@@ -5,7 +5,6 @@ import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 export interface ExperienceItem {
   n: string
   icon: string
-  img: string
   title: string
   fullTitle: string
   desc: string
@@ -41,13 +40,8 @@ export function Experiences(props: ExperiencesProps) {
             }}
           >
             <div
-              className="absolute inset-0 opacity-30 group-hover:opacity-10 transition-opacity duration-700"
+              className="absolute inset-0 opacity-50 group-hover:opacity-70 transition-opacity duration-700"
               style={{ background: `radial-gradient(70% 60% at 50% 30%, ${ACCENT}22, transparent 70%)` }}
-            />
-            <img
-              src={item.img}
-              alt=""
-              className="absolute inset-0 w-full h-full object-contain p-10 md:p-14 transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 60%, #000000)' }} />
 
