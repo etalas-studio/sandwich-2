@@ -1,6 +1,7 @@
 'use client'
 
-import { TEXT_PRIMARY, TEXT_MUTED } from './tokens'
+import { GridLines } from './GridLines'
+import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 
 export interface IngredientsGridProps {
   kicker: string
@@ -15,8 +16,11 @@ export function IngredientsGrid(props: IngredientsGridProps) {
   const [prd, prototype, quotation, specs] = props.items
 
   return (
-    <section id="ingredients" className="relative z-10 py-32 px-6 lg:px-12 scroll-mt-24">
-      <div className="max-w-7xl mr-auto ml-auto">
+    <section id="ingredients" className="overflow-hidden relative z-10 py-32 px-6 lg:px-12 scroll-mt-24">
+      <GridLines />
+      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: `radial-gradient(50% 40% at 90% 0%, ${ACCENT}1a, transparent 70%)` }} />
+
+      <div className="relative max-w-7xl mr-auto ml-auto">
         <div className="flex flex-col lg:flex-row justify-between items-start mb-16 gap-12">
           <div>
             <p className="text-xs uppercase tracking-widest mb-3" style={{ color: TEXT_MUTED }}>{props.kicker}</p>

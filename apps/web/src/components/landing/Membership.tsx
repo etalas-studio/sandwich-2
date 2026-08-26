@@ -1,7 +1,7 @@
 'use client'
 
 import { GridLines } from './GridLines'
-import { TEXT_PRIMARY, TEXT_MUTED, TEXT_SECONDARY } from './tokens'
+import { ACCENT, TEXT_PRIMARY, TEXT_MUTED, TEXT_SECONDARY } from './tokens'
 
 export interface MembershipPlan {
   slug: string
@@ -28,6 +28,7 @@ export function Membership(props: MembershipProps) {
   return (
     <section id="pricing" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
       <GridLines />
+      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: `radial-gradient(45% 55% at 50% 0%, ${ACCENT}1a, transparent 70%)` }} />
 
       <div className="z-10 md:px-8 max-w-7xl mr-auto ml-auto pr-6 pl-6 relative">
         <div className="text-center max-w-3xl mx-auto">
