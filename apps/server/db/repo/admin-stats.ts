@@ -73,7 +73,7 @@ export async function getAdminStats(db: Database): Promise<AdminStats> {
   const revenueThisMonth = revRow!.total;
 
   const usageRows = await db
-    .select({ kind: usage.kind, total: sql<number>`cast(sum(count) as int)` })
+    .select({ kind: usage.kind, total: sql<number>`cast(sum(${usage.count}) as int)` })
     .from(usage)
     .where(eq(usage.yearMonth, ym))
     .groupBy(usage.kind);
@@ -143,7 +143,10 @@ export async function getAdminUsers(
       subExpiresAt: subscriptions.expiresAt,
     })
     .from(users)
-    .leftJoin(subscriptions, eq(users.id, subscriptions.userId))
+    .leftJoin(
+      subscriptions,
+      and(eq(users.id, subscriptions.userId), eq(subscriptions.status, "active")),
+    )
     .orderBy(desc(users.createdAt))
     .limit(limit)
     .offset(offset);
