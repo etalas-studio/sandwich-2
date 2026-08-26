@@ -21,7 +21,7 @@ export default async function BlogIndexPage() {
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
           <h1
-            className="text-5xl md:text-6xl tracking-tighter leading-none text-zinc-900"
+            className="text-5xl md:text-6xl tracking-tight leading-none text-zinc-900"
             style={{ fontFamily: bowlby }}
           >
             Insights

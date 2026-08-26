@@ -34,7 +34,7 @@ export default function BlogLayout({
             {date}
           </time>
           <h1
-            className="mt-2 text-4xl md:text-5xl tracking-tighter leading-tight text-zinc-900"
+            className="mt-2 text-4xl md:text-5xl tracking-tight leading-tight text-zinc-900"
             style={{ fontFamily: bowlby }}
           >
             {meta.title}
