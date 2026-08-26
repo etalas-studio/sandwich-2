@@ -12,14 +12,16 @@ export type PostMeta = {
 // ponytail: static import map — Turbopack cannot handle template-literal dynamic
 // imports at build time. When adding a new MDX post, register it here. Switch to
 // template-literal dynamic import once Turbopack supports it.
-const BLOG_MODULES: Record<string, () => Promise<{ meta: PostMeta; default: React.ComponentType }>> = {
-  'apa-itu-brief-klien': () => import('../../content/blog/apa-itu-brief-klien.mdx') as never,
-  'apa-itu-prd': () => import('../../content/blog/apa-itu-prd.mdx') as never,
-  'apa-itu-prototype': () => import('../../content/blog/apa-itu-prototype.mdx') as never,
-  'apa-itu-scope-of-work': () => import('../../content/blog/apa-itu-scope-of-work.mdx') as never,
-  'cara-bikin-prd': () => import('../../content/blog/cara-bikin-prd.mdx') as never,
-  'kenapa-vibe-coding-butuh-prd': () => import('../../content/blog/kenapa-vibe-coding-butuh-prd.mdx') as never,
-  'lovable-alternative': () => import('../../content/blog/lovable-alternative.mdx') as never,
+type BlogModule = Promise<{ meta: PostMeta; default: React.ComponentType }>
+
+const BLOG_MODULES: Record<string, () => BlogModule> = {
+  'apa-itu-brief-klien': () => import('../../content/blog/apa-itu-brief-klien.mdx') as BlogModule,
+  'apa-itu-prd': () => import('../../content/blog/apa-itu-prd.mdx') as BlogModule,
+  'apa-itu-prototype': () => import('../../content/blog/apa-itu-prototype.mdx') as BlogModule,
+  'apa-itu-scope-of-work': () => import('../../content/blog/apa-itu-scope-of-work.mdx') as BlogModule,
+  'cara-bikin-prd': () => import('../../content/blog/cara-bikin-prd.mdx') as BlogModule,
+  'kenapa-vibe-coding-butuh-prd': () => import('../../content/blog/kenapa-vibe-coding-butuh-prd.mdx') as BlogModule,
+  'lovable-alternative': () => import('../../content/blog/lovable-alternative.mdx') as BlogModule,
 }
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
@@ -32,7 +34,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
       const loader = BLOG_MODULES[slug]
       if (!loader) throw new Error(`No import registered for slug: ${slug}`)
       const mod = await loader()
-      return mod.meta
+      return { ...mod.meta, slug }
     }),
   )
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1))
