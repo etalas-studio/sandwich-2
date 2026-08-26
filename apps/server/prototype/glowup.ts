@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export interface GlowupPromptInput {
@@ -133,10 +133,6 @@ export function glowupEventLogLine(
   }
 }
 
-export function glowupModelId(): string {
-  return process.env.GLOWUP_MODEL ?? process.env.OPENCODE_MODEL ?? "cc/claude-sonnet-4-6";
-}
-
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
   const dnaSection =
     input.refs && input.refs.length > 0
@@ -214,51 +210,18 @@ export async function polishWorkspace(
   brief: string,
   signal?: AbortSignal,
 ): Promise<void> {
-  const modelId = glowupModelId();
   const refs = resolveReferences(workspace, brief);
   const systemPrompt = buildGlowupSystemPrompt({ brief, refs });
-  console.log(`[glowup] start model=${modelId} workspace=${workspace} refs=${refs.map((r) => r.slug).join(",") || "none"}`);
-
-  if (process.env.NINEROUTER_URL) {
-    const { runAnthropicAgent } = await import("../anthropic-agent.js");
-
-    // Pre-load files so the agent skips read turns entirely.
-    const indexHtml = readWorkspaceFile(workspace, "index.html");
-    const stylesCss = readWorkspaceFile(workspace, "styles.css");
-    const userPrompt = [
-      "Polish the prototype as described in the system prompt.",
-      "",
-      indexHtml ? `<index.html>\n${indexHtml}\n</index.html>` : "(index.html not found)",
-      "",
-      stylesCss ? `<styles.css>\n${stylesCss}\n</styles.css>` : "(styles.css not found)",
-    ].join("\n");
-
-    await runAnthropicAgent({
-      cwd: workspace,
-      model: modelId,
-      systemPrompt,
-      userPrompt,
-      signal,
-      timeoutMs: GLOWUP_TIMEOUT_MS,
-      onEvent: (type, detail) => {
-        const line = glowupEventLogLine({ type, toolName: detail }, Date.now());
-        if (line) console.log(line);
-      },
-    });
-    return;
-  }
 
   const pi = await import("@earendil-works/pi-coding-agent");
-  const { getModelRuntime } = await import("../model-runtime.js");
-  const modelRuntime = await getModelRuntime();
-  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-  const model = modelRuntime.getModel(provider, modelId);
-  if (!model) throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+  const { resolveModel } = await import("../model-runtime.js");
+  const { runtime, model } = await resolveModel("glowup");
+  console.log(`[glowup] start model=${model.provider}/${model.id} workspace=${workspace} refs=${refs.map((r) => r.slug).join(",") || "none"}`);
 
   const { session } = await pi.createAgentSession({
     cwd: workspace,
     model: model as any,
-    modelRuntime: modelRuntime as any,
+    modelRuntime: runtime as any,
     tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
     sessionManager: pi.SessionManager.inMemory(workspace),
     settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),

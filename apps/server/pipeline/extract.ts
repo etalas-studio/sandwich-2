@@ -30,18 +30,12 @@ const pdfParse = require("pdf-parse") as (
  * resulting text.
  */
 
-// Vision runs through the user's OpenCode subscription (Gemini flash-lite);
-// if it fails or OpenCode isn't configured, fall back to local OCR.
-const OPENCODE_VISION_PROVIDER =
-  process.env.OPENCODE_VISION_PROVIDER ?? "opencode";
-const OPENCODE_VISION_MODEL =
-  process.env.OPENCODE_VISION_MODEL ?? "gemini-3.5-flash-lite";
+// Vision runs through the configured vision engine (engine_settings);
+// if it fails, fall back to local OCR.
 const OCR_LANGS = process.env.OCR_LANGS ?? "eng";
 
 const VISION_PROMPT =
   "Extract every piece of text in this image verbatim, then describe the layout, UI elements, and visual design in detail. If there is no text, just describe what you see.";
-
-import { getModelRuntime } from "../model-runtime.js";
 
 export interface ExtractResult {
   text: string;
@@ -92,24 +86,14 @@ async function extractImageWithVision(
   buffer: Buffer,
   mimeType: string,
 ): Promise<string> {
-  if (process.env.NINEROUTER_URL) {
-    const { runAnthropicVision } = await import("../anthropic-agent.js");
-    const modelId = process.env.OPENCODE_MODEL ?? "cc/claude-haiku-4-5-20251001";
-    return runAnthropicVision(buffer, mimeType as any, VISION_PROMPT, modelId);
-  }
-
-  const rt = await getModelRuntime();
-  const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
-  if (!model) {
-    throw new Error(
-      `vision model not available: ${OPENCODE_VISION_PROVIDER}/${OPENCODE_VISION_MODEL}`,
-    );
-  }
+  const { resolveModel } = await import("../model-runtime.js");
+  const { runtime: rt, model } = await resolveModel("vision");
 
   const stream = rt.stream(model, {
     messages: [
       {
         role: "user",
+        timestamp: Date.now(),
         content: [
           { type: "text", text: VISION_PROMPT },
           { type: "image", data: buffer.toString("base64"), mimeType },

@@ -110,65 +110,47 @@ export async function generatePrototypeDocument(
       }
     }
 
-    const modelId = process.env.NINEROUTER_URL
-      ? (process.env.NINEROUTER_MODEL ?? "cc/claude-haiku-4-5-20251001")
-      : (process.env.OPENCODE_MODEL ?? "cc/claude-haiku-4-5-20251001");
     const systemPrompt = input.refine
       ? buildPrototypeRefinePrompt(input.brief, input.refine.instruction)
       : buildPrototypeSystemPrompt(input.brief, styles);
 
-    if (process.env.NINEROUTER_URL) {
-      const { runAnthropicAgent } = await import("../anthropic-agent.js");
-      await runAnthropicAgent({
-        cwd: workspace,
-        model: modelId,
-        systemPrompt,
-        userPrompt: "Generate the prototype now as described in the system prompt.",
-        signal,
-        timeoutMs: ENGINE_TIMEOUT_MS,
-        onEvent: (type, detail) => console.log(`[prototype] ${type}${detail ? ` tool=${detail}` : ""}`),
-      });
-    } else {
-      const pi = await import("@earendil-works/pi-coding-agent");
-      const { getModelRuntime } = await import("../model-runtime.js");
-      const modelRuntime = await getModelRuntime();
-      const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-      const model = modelRuntime.getModel(provider, modelId);
-      if (!model) throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
+    const pi = await import("@earendil-works/pi-coding-agent");
+    const { resolveModel } = await import("../model-runtime.js");
+    const { runtime, model } = await resolveModel("prototype");
+    console.log(`[prototype] start model=${model.provider}/${model.id}`);
 
-      const { session } = await pi.createAgentSession({
-        cwd: workspace,
-        model: model as any,
-        modelRuntime: modelRuntime as any,
-        tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
-        sessionManager: pi.SessionManager.inMemory(workspace),
-        settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
-      });
+    const { session } = await pi.createAgentSession({
+      cwd: workspace,
+      model: model as any,
+      modelRuntime: runtime as any,
+      tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
+      sessionManager: pi.SessionManager.inMemory(workspace),
+      settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
+    });
 
-      let errorMessage = "";
-      session.subscribe((event: any) => {
-        if (signal?.aborted) return;
-        if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
-          errorMessage = event.errorMessage;
-        }
-      });
-
-      try {
-        const promptPromise = session.prompt(systemPrompt);
-        promptPromise.catch(() => {});
-        await Promise.race([
-          promptPromise,
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Prototype generation timed out")), ENGINE_TIMEOUT_MS),
-          ),
-        ]);
-        await new Promise((r) => setTimeout(r, 500));
-        session.dispose();
-        if (errorMessage) throw new Error(errorMessage);
-      } catch (err) {
-        session.dispose();
-        throw err;
+    let errorMessage = "";
+    session.subscribe((event: any) => {
+      if (signal?.aborted) return;
+      if (event.type === "agent_end" && typeof event.errorMessage === "string" && event.errorMessage) {
+        errorMessage = event.errorMessage;
       }
+    });
+
+    try {
+      const promptPromise = session.prompt(systemPrompt);
+      promptPromise.catch(() => {});
+      await Promise.race([
+        promptPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Prototype generation timed out")), ENGINE_TIMEOUT_MS),
+        ),
+      ]);
+      await new Promise((r) => setTimeout(r, 500));
+      session.dispose();
+      if (errorMessage) throw new Error(errorMessage);
+    } catch (err) {
+      session.dispose();
+      throw err;
     }
 
     // Glowup pass (best-effort, non-destructive): polish index.html + styles.css.

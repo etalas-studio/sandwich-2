@@ -1,23 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { buildGlowupSystemPrompt, glowupEventLogLine, glowupModelId, selectReferences } from "./glowup.js";
-
-describe("glowupModelId", () => {
-  it("defaults to deepseek-v4-flash", () => {
-    const prev = process.env.GLOWUP_MODEL;
-    delete process.env.GLOWUP_MODEL;
-    assert.equal(glowupModelId(), "deepseek-v4-flash");
-    if (prev !== undefined) process.env.GLOWUP_MODEL = prev;
-  });
-
-  it("honors GLOWUP_MODEL override", () => {
-    const prev = process.env.GLOWUP_MODEL;
-    process.env.GLOWUP_MODEL = "deepseek-v4-pro";
-    assert.equal(glowupModelId(), "deepseek-v4-pro");
-    if (prev !== undefined) process.env.GLOWUP_MODEL = prev;
-    else delete process.env.GLOWUP_MODEL;
-  });
-});
+import { buildGlowupSystemPrompt, glowupEventLogLine, selectReferences } from "./glowup.js";
 
 describe("buildGlowupSystemPrompt", () => {
   const prompt = buildGlowupSystemPrompt({ brief: "A SaaS for warehouse inventory" });
@@ -86,8 +69,9 @@ describe("buildGlowupSystemPrompt", () => {
     assert.ok(prompt.includes("Do NOT touch dashboard.html, module pages, or script.js"));
   });
 
-  it("ends with the DONE protocol", () => {
-    assert.ok(prompt.includes("DONE"));
+  it("ends with the write-then-stop protocol", () => {
+    assert.ok(prompt.includes("write tool"));
+    assert.ok(prompt.includes("When both writes are done, stop."));
   });
 });
 

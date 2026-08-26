@@ -1,10 +1,5 @@
 const SCREENSHOT_API = "https://api.screenshotone.com/take";
 
-const OPENCODE_VISION_PROVIDER =
-  process.env.OPENCODE_VISION_PROVIDER ?? "opencode";
-const OPENCODE_VISION_MODEL =
-  process.env.OPENCODE_VISION_MODEL ?? "gemini-3.5-flash-lite";
-
 const DESIGN_PROMPT =
   "Describe this webpage's visual design in detail for a designer to replicate it: " +
   "color palette (specific hex values when visible), typography (font styles and sizes), " +
@@ -12,8 +7,6 @@ const DESIGN_PROMPT =
   "decisions, not page content. Be specific and concise.";
 
 const VISION_TIMEOUT_MS = 30_000;
-
-import { getModelRuntime } from "../model-runtime.js";
 
 /** Take a screenshot of a URL via ScreenshotOne. Null when unconfigured/failed. */
 export async function screenshotUrl(url: string): Promise<Buffer | null> {
@@ -36,26 +29,14 @@ export async function screenshotUrl(url: string): Promise<Buffer | null> {
 /** Describe the visual design of a screenshot via vision model. */
 export async function describeVisual(buffer: Buffer): Promise<string | null> {
   try {
-    if (process.env.NINEROUTER_URL) {
-      const { runAnthropicVision } = await import("../anthropic-agent.js");
-      const modelId = process.env.OPENCODE_MODEL ?? "cc/claude-haiku-4-5-20251001";
-      const text = await Promise.race([
-        runAnthropicVision(buffer, "image/png", DESIGN_PROMPT, modelId),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("vision timed out")), VISION_TIMEOUT_MS),
-        ),
-      ]);
-      return text || null;
-    }
-
-    const rt = await getModelRuntime();
-    const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
-    if (!model) return null;
+    const { resolveModel } = await import("../model-runtime.js");
+    const { runtime: rt, model } = await resolveModel("vision");
 
     const stream = rt.stream(model, {
       messages: [
         {
           role: "user",
+          timestamp: Date.now(),
           content: [
             { type: "text", text: DESIGN_PROMPT },
             { type: "image", data: buffer.toString("base64"), mimeType: "image/png" },

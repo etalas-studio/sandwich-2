@@ -125,75 +125,26 @@ const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
 
 // ── Engine selection ─────────────────────────────────────────────────────────
-// Priority: 9router > OpenCode (Pi SDK).
-// Owner sets via env vars — users never pick.
-//   9router:   NINEROUTER_URL + NINEROUTER_KEY + NINEROUTER_MODEL
-//   OpenCode:  OPENCODE_API_KEY (+ optional OPENCODE_PROVIDER / OPENCODE_MODEL)
-
-function getEngine(): "9router" | "opencode" | null {
-  if (process.env.NINEROUTER_URL) return "9router";
-  if (process.env.OPENCODE_API_KEY) return "opencode";
-  return null;
-}
+// Single harness (Pi SDK). The provider/model per stage comes from
+// engine_settings (admin panel) with 9router/Claude defaults — see model-runtime.ts.
 
 const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engine call
 
-// ── 9router provider ─────────────────────────────────────────────────────────
-// Env vars: NINEROUTER_URL, NINEROUTER_KEY, NINEROUTER_MODEL
-
-async function runWith9Router(
-  history: ConversationTurn[],
-  signal: AbortSignal,
-  stage: PipelineStage,
-  pendingType: DocumentType | null,
-): Promise<string> {
-  const rawUrl = process.env.NINEROUTER_URL!.replace(/\/+$/, "");
-  const baseUrl = rawUrl.endsWith("/v1") ? rawUrl : `${rawUrl}/v1`;
-  const apiKey = process.env.NINEROUTER_KEY ?? "no-key";
-  const modelId = process.env.NINEROUTER_MODEL ?? "ocg/deepseek-v4-pro";
-  const messages = buildMessages(history, stage, pendingType);
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ model: modelId, messages, max_tokens: 4000, stream: false }),
-    signal: AbortSignal.any([signal, AbortSignal.timeout(ENGINE_TIMEOUT_MS)]),
-  });
-  if (!res.ok) {
-    throw new Error(`9router ${res.status}: ${await res.text().catch(() => res.statusText)}`);
-  }
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return json.choices?.[0]?.message?.content ?? "";
-}
-
-// ── OpenCode provider (Pi SDK) ────────────────────────────────────────────────
-// Env vars: OPENCODE_API_KEY, OPENCODE_PROVIDER, OPENCODE_MODEL
-
-async function runWithOpenCode(
+async function runTextGeneration(
   history: ConversationTurn[],
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
 ): Promise<string> {
   const pi = await import("@earendil-works/pi-coding-agent");
-  const { getModelRuntime } = await import("../model-runtime.js");
+  const { resolveModel } = await import("../model-runtime.js");
 
-  const modelRuntime = await getModelRuntime();
-  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
-  const model = modelRuntime.getModel(provider, modelId);
-  if (!model) {
-    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
-  }
+  const { runtime, model } = await resolveModel("chat");
 
   const { session } = await pi.createAgentSession({
     cwd: process.cwd(),
     model: model as any,
-    modelRuntime: modelRuntime as any,
+    modelRuntime: runtime as any,
     tools: [],
     sessionManager: pi.SessionManager.inMemory(),
     settingsManager: pi.SettingsManager.inMemory({
@@ -493,15 +444,6 @@ export function registerConversationRunRoutes(
       }
     }
 
-    const engine = getEngine();
-    if (!engine) {
-      sendJson(res, 503, {
-        error:
-          "No AI engine configured. Set NINEROUTER_URL or OPENCODE_API_KEY env var.",
-      });
-      return;
-    }
-
     const controller = new AbortController();
     inFlight.set(conversationId, controller);
     void markInFlight(conversationId);
@@ -670,12 +612,8 @@ export function registerConversationRunRoutes(
           prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
         }
 
-        const runText = (): Promise<string> => {
-          if (engine === "9router") {
-            return runWith9Router(turns, controller.signal, stage, pendingType);
-          }
-          return runWithOpenCode(turns, controller.signal, stage, pendingType);
-        };
+        const runText = (): Promise<string> =>
+          runTextGeneration(turns, controller.signal, stage, pendingType);
 
         const run = prototypeDocId
           ? async () => {
