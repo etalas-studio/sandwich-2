@@ -8,7 +8,9 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (state.status === 'authenticated') router.push('/dashboard')
+    if (state.status === 'authenticated') {
+      router.push(state.role === 'admin' ? '/admin/dashboard' : '/dashboard')
+    }
   }, [state.status, router])
 
   return (
