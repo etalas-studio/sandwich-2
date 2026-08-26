@@ -40,10 +40,19 @@ export function Hero(props: HeroProps) {
     <div className="relative h-screen overflow-hidden">
       <GridLines />
 
-      {/* CSS gradient standing in for a hero photo */}
+      {/* Photo backdrop: sandwich ingredients (not the sandwich itself), dimmed + blurred behind the gradient tint */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(59,130,246,0.18), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(59,130,246,0.1), transparent 65%)' }} />
         <div className="absolute inset-0" style={{ backgroundColor: '#020617' }} />
+
+        <div className="absolute inset-0 opacity-25" style={{ filter: 'blur(2px) saturate(0.6)' }}>
+          <img src="/ingredients/tomato.webp" alt="" aria-hidden="true" className="absolute -top-10 right-[8%] w-64 md:w-80 rotate-[8deg] blur-md" />
+          <img src="/ingredients/cheese.webp" alt="" aria-hidden="true" className="absolute top-[28%] -right-10 w-72 md:w-96 -rotate-[6deg] blur-md" />
+          <img src="/ingredients/lettuce.webp" alt="" aria-hidden="true" className="absolute -bottom-16 right-[20%] w-64 md:w-80 rotate-[4deg] blur-md" />
+          <img src="/ingredients/meat.webp" alt="" aria-hidden="true" className="absolute top-[6%] left-[4%] w-56 md:w-72 -rotate-[10deg] blur-md" />
+        </div>
+
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(2,6,23,0.55), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(2,6,23,0.5), transparent 65%), linear-gradient(180deg, rgba(2,6,23,0.85) 0%, rgba(2,6,23,0.65) 40%, rgba(2,6,23,0.95) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(59,130,246,0.18), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(59,130,246,0.1), transparent 65%)' }} />
       </div>
 
       {/* Header / Nav */}
