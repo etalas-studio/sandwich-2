@@ -83,7 +83,7 @@ function EditModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent showCloseButton className="max-w-sm">
+      <DialogContent showCloseButton className="max-w-sm overflow-y-auto max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Edit user</DialogTitle>
           <DialogDescription>
@@ -92,77 +92,85 @@ function EditModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-1">
-          {/* Current status badges */}
-          <div className="flex flex-wrap gap-2">
-            <Badge text={user.role} color={user.role === 'admin' ? 'yellow' : 'neutral'} />
-            {user.subscription
-              ? <Badge text={user.subscription.planSlug} color={planColor(user.subscription.planSlug)} />
-              : <Badge text="no plan" color="neutral" />
-            }
-            {user.subscription?.expiresAt && (
-              <span className="text-xs text-muted-foreground">
-                expires {formatExpiry(user.subscription.expiresAt)}
-              </span>
-            )}
-          </div>
-
-          {/* Grant plan — two buttons, no Select portal */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Grant plan</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => { onGrant(user, 'starter'); onClose() }}
-                disabled={busy}
-                className="flex-1 rounded-lg border border-blue-900/60 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-950/40 disabled:opacity-50"
-              >
-                Starter
-              </button>
-              <button
-                onClick={() => { onGrant(user, 'pro'); onClose() }}
-                disabled={busy}
-                className="flex-1 rounded-lg border border-amber-900/60 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-950/40 disabled:opacity-50"
-              >
-                Pro
-              </button>
-            </div>
-          </div>
-
-          {/* Cancel subscription */}
-          {user.subscription?.status === 'active' && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Subscription</p>
-              {!confirmCancel ? (
-                <button
-                  onClick={() => setConfirmCancel(true)}
-                  disabled={busy}
-                  className="w-full rounded-lg border border-red-900/60 py-2 text-sm text-red-400 transition-colors hover:bg-red-950/30 disabled:opacity-50"
-                >
-                  Cancel subscription
-                </button>
-              ) : (
-                <div className="space-y-2 rounded-lg border border-red-900/50 bg-red-950/20 p-3">
-                  <p className="text-xs text-red-300">Removes access immediately. Confirm?</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setConfirmCancel(false)}
-                      className="flex-1 rounded border border-neutral-700 py-1.5 text-xs hover:bg-neutral-800"
-                    >
-                      Keep it
-                    </button>
-                    <button
-                      onClick={() => { onCancel(user); onClose() }}
-                      disabled={busy}
-                      className="flex-1 rounded bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
-                    >
-                      Yes, cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Current status badges */}
+        <div className="flex flex-wrap gap-2">
+          <Badge text={user.role} color={user.role === 'admin' ? 'yellow' : 'neutral'} />
+          {user.subscription
+            ? <Badge text={user.subscription.planSlug} color={planColor(user.subscription.planSlug)} />
+            : <Badge text="no plan" color="neutral" />
+          }
+          {user.subscription?.expiresAt && (
+            <span className="text-xs text-muted-foreground">
+              expires {formatExpiry(user.subscription.expiresAt)}
+            </span>
           )}
         </div>
+
+        {/* Grant plan — two buttons, no Select portal */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Grant plan</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { onGrant(user, 'starter'); onClose() }}
+              disabled={busy}
+              className="flex-1 rounded-lg bg-blue-950/40 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-950/70 disabled:opacity-50"
+            >
+              Starter
+            </button>
+            <button
+              onClick={() => { onGrant(user, 'pro'); onClose() }}
+              disabled={busy}
+              className="flex-1 rounded-lg bg-amber-950/40 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-950/70 disabled:opacity-50"
+            >
+              Pro
+            </button>
+          </div>
+        </div>
+
+        {/* Cancel subscription */}
+        {user.subscription?.status === 'active' && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Subscription</p>
+            {!confirmCancel ? (
+              <button
+                onClick={() => setConfirmCancel(true)}
+                disabled={busy}
+                className="w-full rounded-lg bg-red-950/30 py-2 text-sm text-red-400 transition-colors hover:bg-red-950/50 disabled:opacity-50"
+              >
+                Cancel subscription
+              </button>
+            ) : (
+              <div className="space-y-2 rounded-lg bg-red-950/20 p-3 ring-1 ring-red-900/50">
+                <p className="text-xs text-red-300">Removes access immediately. Confirm?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmCancel(false)}
+                    className="flex-1 rounded bg-neutral-800 py-1.5 text-xs hover:bg-neutral-700"
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    onClick={() => { onCancel(user); onClose() }}
+                    disabled={busy}
+                    className="flex-1 rounded bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                  >
+                    Yes, cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="mx-0 mb-0 border-t-0 bg-transparent p-0">
+          <DialogClose
+            render={
+              <button className="rounded-lg bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700" />
+            }
+          >
+            Close
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
@@ -393,7 +401,7 @@ export default function UsersPage() {
                             onClick={() => setEditTarget(user)}
                             title="Edit user"
                             aria-label="Edit user"
-                            className="flex h-7 w-7 items-center justify-center rounded border border-neutral-700 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+                            className="flex h-7 w-7 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -401,7 +409,7 @@ export default function UsersPage() {
                             onClick={() => setDeleteTarget(user)}
                             title="Delete user"
                             aria-label="Delete user"
-                            className="flex h-7 w-7 items-center justify-center rounded border border-red-900/50 text-red-500/60 transition-colors hover:border-red-800 hover:bg-red-950/30 hover:text-red-400"
+                            className="flex h-7 w-7 items-center justify-center rounded text-red-500/50 transition-colors hover:bg-red-950/30 hover:text-red-400"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
