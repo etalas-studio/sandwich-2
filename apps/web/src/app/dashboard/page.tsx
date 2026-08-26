@@ -12,8 +12,6 @@ export default function Page() {
     if (isLoading) return
     if (state?.status === 'unauthenticated') {
       router.replace('/login')
-    } else if (state?.status === 'authenticated' && state.role === 'admin') {
-      router.replace('/admin/dashboard')
     }
   }, [isLoading, state, router])
 
