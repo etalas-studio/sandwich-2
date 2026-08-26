@@ -18,6 +18,10 @@ apps/web/.next/
 .env
 .gstack/
 
+# agent tooling (local, not part of the repo)
+.claude/
+.commandcode/
+
 # tesseract.js OCR cache
 *.traineddata
 .tesseract-cache/
