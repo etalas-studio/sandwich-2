@@ -27,11 +27,17 @@ export async function generateMetadata({
         publishedTime: post.meta.date,
         url: `https://sandwich.etalas.com/blog/${slug}`,
         siteName: 'SANDWICH',
+        ...(post.meta.image && {
+          images: [{ url: `https://sandwich.etalas.com${post.meta.image}` }],
+        }),
       },
       twitter: {
         card: 'summary_large_image',
         title: post.meta.title,
         description: post.meta.description,
+        ...(post.meta.image && {
+          images: [`https://sandwich.etalas.com${post.meta.image}`],
+        }),
       },
     }
   } catch {
