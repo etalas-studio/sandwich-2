@@ -23,7 +23,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../pipeline/plans.js";
-import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectRefineIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
+import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
 import {
   createDocument,
   createDocumentVersion,
@@ -69,6 +69,7 @@ function buildMessages(
   history: ConversationTurn[],
   stage: PipelineStage,
   pendingType: DocumentType | null,
+  refineInstruction?: string | null,
 ): ConversationTurn[] {
   const instruction = stageInstruction(stage, pendingType);
 
@@ -80,40 +81,56 @@ function buildMessages(
 
   let system: string;
   if (stage === "generating" && pendingType) {
-    const guideKind: "prototype" | "quotation" | "specs" | "prd" =
-      pendingType === "prototype"
-        ? "prototype"
-        : pendingType === "quotation"
-          ? "quotation"
-          : pendingType === "specs"
-            ? "specs"
-            : "prd";
+    // Refine pass: the user gave feedback on the document that was just
+    // generated. Feed ONLY that feedback, not the original brief — the full
+    // brief is what makes the model regenerate everything from scratch.
+    if (refineInstruction) {
+      system = [
+        ...base,
+        ``,
+        `You are revising the ${DELIVERABLE_LABEL[pendingType]} document that was just generated in this conversation.`,
+        ``,
+        `## Client feedback`,
+        refineInstruction,
+        ``,
+        `Revise the EXISTING document in place based on this feedback. Change ONLY what the feedback asks for. Keep all other sections, structure, copy, and details exactly as they are. Do NOT regenerate the whole document from scratch. Output ONLY the revised document content — no preamble, no meta-commentary.`,
+      ].join("\n");
+    } else {
+      const guideKind: "prototype" | "quotation" | "specs" | "prd" =
+        pendingType === "prototype"
+          ? "prototype"
+          : pendingType === "quotation"
+            ? "quotation"
+            : pendingType === "specs"
+              ? "specs"
+              : "prd";
 
-    const docGuide =
-      guideKind === "prototype"
-        ? GETOKUI_PROTOTYPE_GUIDE
-        : guideKind === "quotation"
-          ? SANDWICH_QUOTATION_GUIDE
-          : guideKind === "specs"
-            ? SANDWICH_SPECS_GUIDE
-            : SANDWICH_PRD_GUIDE;
+      const docGuide =
+        guideKind === "prototype"
+          ? GETOKUI_PROTOTYPE_GUIDE
+          : guideKind === "quotation"
+            ? SANDWICH_QUOTATION_GUIDE
+            : guideKind === "specs"
+              ? SANDWICH_SPECS_GUIDE
+              : SANDWICH_PRD_GUIDE;
 
-    const outputInstruction =
-      guideKind === "prototype"
-        ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
-        : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
+      const outputInstruction =
+        guideKind === "prototype"
+          ? `Output a complete, self-contained HTML prototype file. Include all CSS and JS inline. Follow ALL quality standards above. NO preamble — start with <!DOCTYPE html>.`
+          : `Output the full document in markdown. Be thorough and professional. Return ONLY the document content — no meta-commentary.`;
 
-    const briefText = history
-      .filter((turn) => turn.role === "user")
-      .map((turn) => turn.content)
-      .join("\n");
-    const referenceBlock =
-      guideKind === "prd" || guideKind === "quotation" ? buildReferenceBlock(guideKind, briefText) : "";
+      const briefText = history
+        .filter((turn) => turn.role === "user")
+        .map((turn) => turn.content)
+        .join("\n");
+      const referenceBlock =
+        guideKind === "prd" || guideKind === "quotation" ? buildReferenceBlock(guideKind, briefText) : "";
 
-    const parts = [...base, ``, instruction, ``, docGuide];
-    if (referenceBlock) parts.push(``, referenceBlock);
-    parts.push(``, outputInstruction);
-    system = parts.join("\n");
+      const parts = [...base, ``, instruction, ``, docGuide];
+      if (referenceBlock) parts.push(``, referenceBlock);
+      parts.push(``, outputInstruction);
+      system = parts.join("\n");
+    }
   } else {
     system = [...base, ``, instruction].join("\n");
   }
@@ -135,6 +152,7 @@ async function runTextGeneration(
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
+  refineInstruction?: string | null,
 ): Promise<string> {
   const pi = await import("@earendil-works/pi-coding-agent");
   const { resolveModel } = await import("../model-runtime.js");
@@ -194,7 +212,7 @@ async function runTextGeneration(
     }
   });
 
-  const messages = buildMessages(history, stage, pendingType);
+  const messages = buildMessages(history, stage, pendingType, refineInstruction);
   const prompt = messages
     .map((m) => {
       if (m.role === "system") return m.content;
@@ -286,6 +304,40 @@ export function composePrototypeBrief(turns: ConversationTurn[]): string {
     const text = turn.content.trim();
     if (!text) continue;
     if (parts.length > 0 && parts[parts.length - 1] === text) continue;
+    parts.push(text);
+  }
+  return parts.join("\n\n");
+}
+
+/**
+ * Compose the refine instruction handed to the prototype engine. Unlike
+ * composePrototypeBrief (which folds the WHOLE brief), refine must contain only
+ * the feedback that arrived AFTER the most recent document was generated —
+ * feeding the original brief back into a refine pass is what causes the model
+ * to regenerate the whole thing. We walk the turns backwards until we hit the
+ * assistant message that produced the last document, then take every user
+ * message after it.
+ */
+export function composeRefineInstruction(turns: ConversationTurn[]): string {
+  // Find the last assistant turn that generated a document ("Prototype
+  // generated — vN" / "PRD generated"). Turns don't carry documentId, so we
+  // detect the summary marker as the boundary.
+  let boundary = 0;
+  for (let i = turns.length - 1; i >= 0; i--) {
+    const t = turns[i];
+    if (t && t.role === "assistant" && /generated — v\d+/i.test(t.content)) {
+      boundary = i;
+      break;
+    }
+  }
+
+  const parts: string[] = [];
+  for (let i = boundary + 1; i < turns.length; i++) {
+    const t = turns[i]!;
+    if (t.role !== "user") continue;
+    const text = t.content.trim();
+    if (!text) continue;
+    if (parts[parts.length - 1] === text) continue;
     parts.push(text);
   }
   return parts.join("\n\n");
@@ -537,6 +589,11 @@ export function registerConversationRunRoutes(
         let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
         let refineInstruction: string | null = null;
 
+        const existingDocs = await listConversationDocuments(db, conversationId);
+        const mostRecentDoc = existingDocs.length > 0
+          ? [...existingDocs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0]!
+          : null;
+
         if (stage === "choosing_deliverable") {
           // A pre-selected type (dropdown) means the deliverable is already
           // known — skip detection and go straight to clarifying questions.
@@ -548,7 +605,10 @@ export function registerConversationRunRoutes(
         } else if (stage === "clarifying") {
           // Prototype-only hard gate: don't advance to generating until the
           // conversation has covered both logo and color/palette — keeps the
-          // model asking instead of silently skipping ahead.
+          // model asking instead of silently skipping ahead. The stage stays
+          // in clarifying until the gate passes (or the pending type isn't a
+          // prototype), and ONLY the current user turn advances it — there is
+          // no silent auto-advance after the assistant's clarifying reply.
           const readyToGenerate =
             pendingType !== "prototype" ||
             hasLogoAndColorDetails(composePrototypeBrief(turns));
@@ -556,23 +616,52 @@ export function registerConversationRunRoutes(
             stage = "generating";
           }
         } else if (stage === "awaiting_next") {
-          // Check refine intent first — feedback on an existing deliverable often
-          // contains words that also match detectDeliverableType (e.g. "UI layout"
-          // → prototype, "harga" → quotation), which would send the conversation
-          // back to clarifying instead of revising.
-          const existingDocs = await listConversationDocuments(db, conversationId);
-          const isRefine = detectRefineIntent(lastUserMessage) && existingDocs.length > 0;
-          if (isRefine) {
-            existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-            pendingType = existingDocs[0]!.type as DocumentType;
-            stage = "generating";
-            refineInstruction = lastUserMessage;
+          // Refine-by-default: a conversation that already produced a document
+          // treats follow-ups as refinements UNLESS the user explicitly asks
+          // for a deliverable that doesn't exist here yet, or cancels. This is
+          // deliberate — feedback wording is unbounded ("marquee salah",
+          // "geser dong", "itu dulu aja") and can't be covered by regex.
+          if (detectCancelIntent(lastUserMessage)) {
+            // stay in awaiting_next — no-op turn, handled by the AI below
+          } else if (mostRecentDoc) {
+            const detected = detectDeliverableType(lastUserMessage);
+            const docExists = detected !== null && existingDocs.some((d) => d.type === detected);
+            if (detected && !docExists) {
+              // Explicit new deliverable that isn't here yet — start fresh.
+              pendingType = detected;
+              stage = "clarifying";
+            } else {
+              // Any other follow-up with an existing doc = refine it.
+              pendingType = mostRecentDoc.type as DocumentType;
+              stage = "refining";
+              refineInstruction = lastUserMessage;
+            }
           } else {
             const detected = detectDeliverableType(lastUserMessage);
             if (detected) {
               pendingType = detected;
               stage = "clarifying";
             }
+          }
+        } else if (stage === "refining") {
+          // The assistant already acknowledged feedback and asked "anything
+          // else?". The user now either confirms ("itu dulu aja"), adds more
+          // feedback, or cancels.
+          if (detectCancelIntent(lastUserMessage)) {
+            stage = "awaiting_next";
+          } else if (detectDeliverableType(lastUserMessage) && !existingDocs.some((d) => d.type === detectDeliverableType(lastUserMessage)!)) {
+            // Mid-refine pivot to a brand-new deliverable.
+            const detected = detectDeliverableType(lastUserMessage)!;
+            pendingType = detected;
+            stage = "clarifying";
+          } else {
+            // Confirmation ("itu dulu aja"), more feedback, anything else —
+            // accumulate ALL feedback since the last generation into the
+            // refine instruction and generate. Fall back to the last message
+            // if no prior generation marker exists in the history.
+            stage = "generating";
+            pendingType = mostRecentDoc?.type as DocumentType ?? pendingType;
+            refineInstruction = composeRefineInstruction(turns) || lastUserMessage;
           }
         }
 
@@ -613,7 +702,7 @@ export function registerConversationRunRoutes(
         }
 
         const runText = (): Promise<string> =>
-          runTextGeneration(turns, controller.signal, stage, pendingType);
+          runTextGeneration(turns, controller.signal, stage, pendingType, refineInstruction);
 
         const run = prototypeDocId
           ? async () => {
@@ -704,9 +793,11 @@ export function registerConversationRunRoutes(
               pendingType = null;
             } else if (stage === "intake") {
               nextStage = "choosing_deliverable";
-            } else if (stage === "clarifying") {
-              nextStage = "generating";
             }
+            // NOTE: no auto-advance from clarifying here. The stage stays in
+            // clarifying until the user's next turn passes the gate (or the
+            // deliverable isn't a prototype), so the assistant's clarifying
+            // reply never silently bumps the conversation into generating.
 
             await updateConversation(db, conversationId, {
               pipelineStage: nextStage,
@@ -822,7 +913,21 @@ export function registerConversationRunRoutes(
         })
       : () => {};
 
+    // Heartbeat: prototype generation can run 10+ minutes. Proxies (Railway,
+    // nginx) kill idle connections after a few minutes, which silently drops
+    // the stream before the "done" event arrives — the user then sees nothing
+    // and has to ask "mana hasilnya?". A comment ping keeps the connection
+    // alive (SSE clients ignore comment lines).
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(": ping\n\n");
+      } catch {
+        /* connection gone — cleaned up on close */
+      }
+    }, 25_000);
+
     req.on("close", () => {
+      clearInterval(heartbeat);
       unsubscribe();
       sseClients.get(conversationId)?.delete(res);
       res.end();
