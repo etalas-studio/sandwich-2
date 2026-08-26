@@ -7,7 +7,7 @@ import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
 import { Nav } from './landing/Nav'
 import { Hero } from './landing/Hero'
-import { HeroBackgroundVideo } from './landing/HeroBackgroundVideo'
+import { HeroBackground } from './landing/HeroBackground'
 import { FormatMarquee } from './landing/FormatMarquee'
 import { Harnesses } from './landing/Harnesses'
 import { UsVsThem } from './landing/UsVsThem'
@@ -137,7 +137,7 @@ export default function LandingPage() {
       {/* Page-level hero background — spans behind the nav + hero, matching
           the reference template's full-bleed "aura-background-component". */}
       <div className="absolute top-0 left-0 w-full h-[1040px] -z-10">
-        <HeroBackgroundVideo />
+        <HeroBackground />
       </div>
 
       <Nav
