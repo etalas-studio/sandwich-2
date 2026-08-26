@@ -64,17 +64,14 @@ function EditModal({
   open,
   onClose,
   onSave,
-  onCancel,
 }: {
   user: AdminUser | null
   open: boolean
   onClose: () => void
   onSave: (user: AdminUser, changes: { role: 'user' | 'admin'; plan: 'pro' | 'starter' | '' }) => Promise<void>
-  onCancel: (user: AdminUser) => void
 }) {
   const [role, setRole] = useState<'user' | 'admin'>('user')
   const [plan, setPlan] = useState<'pro' | 'starter' | ''>('')
-  const [confirmCancel, setConfirmCancel] = useState(false)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -82,7 +79,6 @@ function EditModal({
     if (!open || !user) return
     setRole(user.role as 'user' | 'admin')
     setPlan((user.subscription?.planSlug as 'pro' | 'starter') ?? '')
-    setConfirmCancel(false)
     setErr(null)
   }, [open, user])
 
@@ -159,41 +155,6 @@ function EditModal({
               </SelectContent>
             </Select>
           </div>
-
-          {/* Cancel subscription (destructive, separate from save) */}
-          {user.subscription?.status === 'active' && (
-            <div className="space-y-2 pt-1">
-              <p className="text-xs text-muted-foreground">
-                Active until {formatExpiry(user.subscription.expiresAt ?? null)}
-              </p>
-              {!confirmCancel ? (
-                <button
-                  onClick={() => setConfirmCancel(true)}
-                  className="w-full rounded-lg bg-red-950/30 py-2 text-sm text-red-400 transition-colors hover:bg-red-950/50"
-                >
-                  Cancel subscription
-                </button>
-              ) : (
-                <div className="space-y-2 rounded-lg bg-red-950/20 p-3 ring-1 ring-red-900/50">
-                  <p className="text-xs text-red-300">Removes access immediately. Confirm?</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setConfirmCancel(false)}
-                      className="flex-1 rounded bg-neutral-800 py-1.5 text-xs hover:bg-neutral-700"
-                    >
-                      Keep it
-                    </button>
-                    <button
-                      onClick={() => { onCancel(user); onClose() }}
-                      className="flex-1 rounded bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500"
-                    >
-                      Yes, cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {err && <p className="text-xs text-red-400">{err}</p>}
         </div>
@@ -329,13 +290,6 @@ export default function UsersPage() {
     await Promise.all(ops)
     await load(page, search, roleFilter)
     setActionMsg({ kind: 'notice', text: `Saved ${user.email}` })
-  }
-
-  const cancelSub = (user: AdminUser) => {
-    void run(
-      () => manageUserSubscription(user.id, 'cancel'),
-      `Subscription cancelled for ${user.email}`,
-    )
   }
 
   const deleteUser = (user: AdminUser) => {
@@ -510,7 +464,6 @@ export default function UsersPage() {
           open={editTarget !== null}
           onClose={() => setEditTarget(null)}
           onSave={saveUser}
-          onCancel={cancelSub}
         />
 
         <DeleteModal
