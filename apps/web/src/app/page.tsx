@@ -33,14 +33,19 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://sandwich.etalas.com'),
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'SANDWICH — Brief to Spec',
+    title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
     description:
-      'From a messy brief to a validated PRD, prototype, quotation, and specs.',
+      'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
     url: 'https://sandwich.etalas.com',
     siteName: 'SANDWICH',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
-  twitter: { card: 'summary_large_image' },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+    description:
+      'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
+  },
 }
 
 const faqJsonLd = {
