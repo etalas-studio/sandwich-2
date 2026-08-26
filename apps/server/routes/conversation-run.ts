@@ -125,82 +125,26 @@ const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
 
 // ── Engine selection ─────────────────────────────────────────────────────────
-// OpenCode (Pi SDK) is primary. Groq is dev fallback.
-// Owner sets via env vars — users never pick.
-
-function getEngine(): "opencode" | "groq" | null {
-  if (process.env.OPENCODE_API_KEY) return "opencode";
-  if (process.env.GROQ_API_KEY) return "groq";
-  return null;
-}
+// Single harness (Pi SDK). The provider/model per stage comes from
+// engine_settings (admin panel) with 9router/Claude defaults — see model-runtime.ts.
 
 const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engine call
 
-async function runWithGroq(
-  history: ConversationTurn[],
-  signal: AbortSignal,
-  stage: PipelineStage,
-  pendingType: DocumentType | null,
-  isRegenerate = false,
-): Promise<string> {
-  const groqKey = process.env.GROQ_API_KEY!;
-  const messages = buildMessages(history, stage, pendingType);
-  if (isRegenerate && messages.length > 0) {
-    const last = messages[messages.length - 1];
-    if (last && last.role === "user") {
-      last.content = `${last.content}\n\n[Try a different structure or angle than your previous response, but stay accurate and grounded in the context. Do not repeat the same phrasing or order as before.]`;
-    }
-  }
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${groqKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "qwen/qwen3.6-27b",
-      messages,
-      max_tokens: 4000,
-      reasoning_effort: "none",
-      temperature: 0.7,
-    }),
-    signal: AbortSignal.any([signal, AbortSignal.timeout(ENGINE_TIMEOUT_MS)]),
-  });
-  if (!res.ok) {
-    throw new Error(
-      `Groq ${res.status}: ${await res.text().catch(() => res.statusText)}`,
-    );
-  }
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return json.choices?.[0]?.message?.content ?? "";
-}
-
-async function runWithOpenCode(
+async function runTextGeneration(
   history: ConversationTurn[],
   signal: AbortSignal,
   stage: PipelineStage,
   pendingType: DocumentType | null,
 ): Promise<string> {
-  // Dynamic import Pi SDK — only loaded when OpenCode is configured
   const pi = await import("@earendil-works/pi-coding-agent");
+  const { resolveModel } = await import("../model-runtime.js");
 
-  const modelRuntime = await pi.ModelRuntime.create({
-    modelsPath: null,
-  });
-
-  const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-  const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
-  const model = modelRuntime.getModel(provider, modelId);
-  if (!model) {
-    throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
-  }
+  const { runtime, model } = await resolveModel("chat");
 
   const { session } = await pi.createAgentSession({
     cwd: process.cwd(),
     model: model as any,
-    modelRuntime: modelRuntime as any,
+    modelRuntime: runtime as any,
     tools: [],
     sessionManager: pi.SessionManager.inMemory(),
     settingsManager: pi.SettingsManager.inMemory({
@@ -500,15 +444,6 @@ export function registerConversationRunRoutes(
       }
     }
 
-    const engine = getEngine();
-    if (!engine) {
-      sendJson(res, 503, {
-        error:
-          "No AI engine configured. Set OPENCODE_API_KEY or GROQ_API_KEY env var.",
-      });
-      return;
-    }
-
     const controller = new AbortController();
     inFlight.set(conversationId, controller);
     void markInFlight(conversationId);
@@ -621,19 +556,22 @@ export function registerConversationRunRoutes(
             stage = "generating";
           }
         } else if (stage === "awaiting_next") {
-          const detected = detectDeliverableType(lastUserMessage);
-          if (detected) {
-            pendingType = detected;
-            stage = "clarifying";
+          // Check refine intent first — feedback on an existing deliverable often
+          // contains words that also match detectDeliverableType (e.g. "UI layout"
+          // → prototype, "harga" → quotation), which would send the conversation
+          // back to clarifying instead of revising.
+          const existingDocs = await listConversationDocuments(db, conversationId);
+          const isRefine = detectRefineIntent(lastUserMessage) && existingDocs.length > 0;
+          if (isRefine) {
+            existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+            pendingType = existingDocs[0]!.type as DocumentType;
+            stage = "generating";
+            refineInstruction = lastUserMessage;
           } else {
-            // Refine intent — revise the most recently updated deliverable as
-            // a new version (same document), using the full conversation context.
-            const existingDocs = await listConversationDocuments(db, conversationId);
-            if (detectRefineIntent(lastUserMessage) && existingDocs.length > 0) {
-              existingDocs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-              pendingType = existingDocs[0]!.type as DocumentType;
-              stage = "generating";
-              refineInstruction = lastUserMessage;
+            const detected = detectDeliverableType(lastUserMessage);
+            if (detected) {
+              pendingType = detected;
+              stage = "clarifying";
             }
           }
         }
@@ -674,8 +612,8 @@ export function registerConversationRunRoutes(
           prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
         }
 
-        const useOpenCode = engine === "opencode";
-        const hasGroqFallback = !!process.env.GROQ_API_KEY;
+        const runText = (): Promise<string> =>
+          runTextGeneration(turns, controller.signal, stage, pendingType);
 
         const run = prototypeDocId
           ? async () => {
@@ -691,18 +629,7 @@ export function registerConversationRunRoutes(
               );
               return formatPrototypeSummary(result.summary, result.glowupWarning);
             }
-          : useOpenCode
-            ? () =>
-                runWithOpenCode(turns, controller.signal, stage, pendingType).catch((err) => {
-                  if (hasGroqFallback) {
-                    console.log(
-                      `OpenCode failed, falling back to Groq: ${err instanceof Error ? err.message : "unknown"}`,
-                    );
-                    return runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
-                  }
-                  throw err;
-                })
-            : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
+          : runText;
 
         run()
           .then(async (output) => {
@@ -800,7 +727,6 @@ export function registerConversationRunRoutes(
           })
           .catch(async (err) => {
             const msg = err instanceof Error ? err.message : "generation failed";
-            await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
             broadcast({
               type: "error",
               conversation: (await getConversation(db, conversationId))!,

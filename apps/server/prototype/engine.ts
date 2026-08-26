@@ -110,20 +110,19 @@ export async function generatePrototypeDocument(
       }
     }
 
-    const pi = await import("@earendil-works/pi-coding-agent");
+    const systemPrompt = input.refine
+      ? buildPrototypeRefinePrompt(input.brief, input.refine.instruction)
+      : buildPrototypeSystemPrompt(input.brief, styles);
 
-    const modelRuntime = await pi.ModelRuntime.create({ modelsPath: null });
-    const provider = process.env.OPENCODE_PROVIDER ?? "opencode-go";
-    const modelId = process.env.OPENCODE_MODEL ?? "deepseek-v4-pro";
-    const model = modelRuntime.getModel(provider, modelId);
-    if (!model) {
-      throw new Error(`OpenCode model not available: ${provider}/${modelId}`);
-    }
+    const pi = await import("@earendil-works/pi-coding-agent");
+    const { resolveModel } = await import("../model-runtime.js");
+    const { runtime, model } = await resolveModel("prototype");
+    console.log(`[prototype] start model=${model.provider}/${model.id}`);
 
     const { session } = await pi.createAgentSession({
       cwd: workspace,
       model: model as any,
-      modelRuntime: modelRuntime as any,
+      modelRuntime: runtime as any,
       tools: ["read", "bash", "edit", "write", "grep", "find", "ls"],
       sessionManager: pi.SessionManager.inMemory(workspace),
       settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
@@ -137,13 +136,9 @@ export async function generatePrototypeDocument(
       }
     });
 
-    const systemPrompt = input.refine
-      ? buildPrototypeRefinePrompt(input.brief, input.refine.instruction)
-      : buildPrototypeSystemPrompt(input.brief, styles);
-
     try {
       const promptPromise = session.prompt(systemPrompt);
-      promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
+      promptPromise.catch(() => {});
       await Promise.race([
         promptPromise,
         new Promise<never>((_, reject) =>

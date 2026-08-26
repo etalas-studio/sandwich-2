@@ -22,6 +22,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   emailVerified: boolean("email_verified").notNull().default(false),
+  // "user" | "admin" — admin gates the internal operator panel (/admin).
+  role: text("role").notNull().default("user"),
   createdAt: ts("created_at").notNull(),
 });
 
@@ -192,6 +194,34 @@ export const userPreferences = pgTable(
     ),
   }),
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin / integrations config (Etalas operator panel).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * AI-provider credentials (API keys, base URLs) keyed by provider id, mirroring
+ * Pi's auth.json shape so the DB can back Pi's CredentialStore. Values are
+ * JSON-serialized pi-ai Credentials; special names like `9router:baseUrl` hold
+ * provider-scoped config strings.
+ */
+export const integrationCredentials = pgTable("integration_credentials", {
+  name: text("name").primaryKey(),
+  value: text("value").notNull(),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+});
+
+/**
+ * Per-stage engine selection (provider/model strings) editable from the admin
+ * panel without redeploying. Keys: engine.chat | engine.prototype |
+ * engine.glowup | engine.vision.
+ */
+export const engineSettings = pgTable("engine_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Document model (chat-based, versioned deliverables). Documents are

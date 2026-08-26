@@ -10,6 +10,7 @@ function fakeUser(overrides: Partial<User> = {}): User {
     email: "isanaziz34@gmail.com",
     passwordHash: "unused",
     emailVerified: true,
+    role: "user",
     createdAt: new Date(),
     ...overrides,
   };

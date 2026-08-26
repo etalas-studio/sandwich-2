@@ -1,10 +1,5 @@
 const SCREENSHOT_API = "https://api.screenshotone.com/take";
 
-const OPENCODE_VISION_PROVIDER =
-  process.env.OPENCODE_VISION_PROVIDER ?? "opencode";
-const OPENCODE_VISION_MODEL =
-  process.env.OPENCODE_VISION_MODEL ?? "gemini-3.5-flash-lite";
-
 const DESIGN_PROMPT =
   "Describe this webpage's visual design in detail for a designer to replicate it: " +
   "color palette (specific hex values when visible), typography (font styles and sizes), " +
@@ -12,16 +7,6 @@ const DESIGN_PROMPT =
   "decisions, not page content. Be specific and concise.";
 
 const VISION_TIMEOUT_MS = 30_000;
-
-let modelRuntimePromise: Promise<any> | null = null;
-function getModelRuntime(): Promise<any> {
-  if (!modelRuntimePromise) {
-    modelRuntimePromise = import("@earendil-works/pi-coding-agent").then((pi) =>
-      pi.ModelRuntime.create({ modelsPath: null }),
-    );
-  }
-  return modelRuntimePromise;
-}
 
 /** Take a screenshot of a URL via ScreenshotOne. Null when unconfigured/failed. */
 export async function screenshotUrl(url: string): Promise<Buffer | null> {
@@ -41,17 +26,17 @@ export async function screenshotUrl(url: string): Promise<Buffer | null> {
   }
 }
 
-/** Describe the visual design of a screenshot via OpenCode vision. */
+/** Describe the visual design of a screenshot via vision model. */
 export async function describeVisual(buffer: Buffer): Promise<string | null> {
   try {
-    const rt = await getModelRuntime();
-    const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
-    if (!model) return null;
+    const { resolveModel } = await import("../model-runtime.js");
+    const { runtime: rt, model } = await resolveModel("vision");
 
     const stream = rt.stream(model, {
       messages: [
         {
           role: "user",
+          timestamp: Date.now(),
           content: [
             { type: "text", text: DESIGN_PROMPT },
             { type: "image", data: buffer.toString("base64"), mimeType: "image/png" },
