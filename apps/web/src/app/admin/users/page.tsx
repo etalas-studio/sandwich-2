@@ -6,6 +6,7 @@ import {
   fetchAdminUsers,
   manageUserSubscription,
   deleteAdminUser,
+  setUserRole,
   type AdminUser,
   type AdminUsersResponse,
 } from '../../../api/admin'
@@ -57,29 +58,48 @@ function formatExpiry(iso: string | null): string {
 }
 
 // ── Edit modal ─────────────────────────────────────────────────────────────
-// No Select inside this modal — nested base-ui portals break. Use plain buttons.
+// Uses native <select> elements — avoids nested base-ui portal breakage.
 function EditModal({
   user,
   open,
-  busy,
   onClose,
-  onGrant,
+  onSave,
   onCancel,
 }: {
   user: AdminUser | null
   open: boolean
-  busy: boolean
   onClose: () => void
-  onGrant: (user: AdminUser, plan: 'pro' | 'starter') => void
+  onSave: (user: AdminUser, changes: { role: 'user' | 'admin'; plan: 'pro' | 'starter' | '' }) => Promise<void>
   onCancel: (user: AdminUser) => void
 }) {
+  const [role, setRole] = useState<'user' | 'admin'>('user')
+  const [plan, setPlan] = useState<'pro' | 'starter' | ''>('')
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) setConfirmCancel(false)
-  }, [open])
+    if (!open || !user) return
+    setRole(user.role as 'user' | 'admin')
+    setPlan((user.subscription?.planSlug as 'pro' | 'starter') ?? '')
+    setConfirmCancel(false)
+    setErr(null)
+  }, [open, user])
 
   if (!user) return null
+
+  const handleSave = async () => {
+    setSaving(true)
+    setErr(null)
+    try {
+      await onSave(user, { role, plan })
+      onClose()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
@@ -88,104 +108,109 @@ function EditModal({
           <DialogTitle>Edit user</DialogTitle>
         </DialogHeader>
 
-        {/* Email + username inputs */}
-        <div className="space-y-2">
+        <div className="space-y-3">
+          {/* Email — locked */}
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Email</label>
             <input
               readOnly
               value={user.email}
-              className="w-full rounded-lg bg-neutral-800/50 px-3 py-2 text-sm text-neutral-400 outline-none cursor-not-allowed select-none"
+              className="w-full rounded-lg bg-neutral-800/40 px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed select-none"
             />
           </div>
+
+          {/* Username — locked */}
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Username</label>
             <input
               readOnly
               value={user.username}
-              className="w-full rounded-lg bg-neutral-800/50 px-3 py-2 text-sm text-neutral-300 outline-none cursor-not-allowed select-none"
+              className="w-full rounded-lg bg-neutral-800/40 px-3 py-2 text-sm text-neutral-400 outline-none cursor-not-allowed select-none"
             />
           </div>
-        </div>
 
-        {/* Current status badges */}
-        <div className="flex flex-wrap gap-2">
-          <Badge text={user.role} color={user.role === 'admin' ? 'yellow' : 'neutral'} />
-          {user.subscription
-            ? <Badge text={user.subscription.planSlug} color={planColor(user.subscription.planSlug)} />
-            : <Badge text="no plan" color="neutral" />
-          }
-          {user.subscription?.expiresAt && (
-            <span className="text-xs text-muted-foreground">
-              expires {formatExpiry(user.subscription.expiresAt)}
-            </span>
-          )}
-        </div>
-
-        {/* Grant plan — two buttons, no Select portal */}
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Grant plan</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { onGrant(user, 'starter'); onClose() }}
-              disabled={busy}
-              className="flex-1 rounded-lg bg-blue-950/40 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-950/70 disabled:opacity-50"
-            >
-              Starter
-            </button>
-            <button
-              onClick={() => { onGrant(user, 'pro'); onClose() }}
-              disabled={busy}
-              className="flex-1 rounded-lg bg-amber-950/40 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-950/70 disabled:opacity-50"
-            >
-              Pro
-            </button>
+          {/* Role */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Role</label>
+            <Select<'user' | 'admin'> value={role} onValueChange={(v) => { if (v) setRole(v) }}>
+              <SelectTrigger className="h-9 w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-200 outline-none focus:border-neutral-500">
+                <SelectValue />
+                <SelectIcon className="ml-auto"><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">user</SelectItem>
+                <SelectItem value="admin">admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-        {/* Cancel subscription */}
-        {user.subscription?.status === 'active' && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Subscription</p>
-            {!confirmCancel ? (
-              <button
-                onClick={() => setConfirmCancel(true)}
-                disabled={busy}
-                className="w-full rounded-lg bg-red-950/30 py-2 text-sm text-red-400 transition-colors hover:bg-red-950/50 disabled:opacity-50"
-              >
-                Cancel subscription
-              </button>
-            ) : (
-              <div className="space-y-2 rounded-lg bg-red-950/20 p-3 ring-1 ring-red-900/50">
-                <p className="text-xs text-red-300">Removes access immediately. Confirm?</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setConfirmCancel(false)}
-                    className="flex-1 rounded bg-neutral-800 py-1.5 text-xs hover:bg-neutral-700"
-                  >
-                    Keep it
-                  </button>
-                  <button
-                    onClick={() => { onCancel(user); onClose() }}
-                    disabled={busy}
-                    className="flex-1 rounded bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
-                  >
-                    Yes, cancel
-                  </button>
+          {/* Plan */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Plan</label>
+            <Select<'pro' | 'starter' | ''> value={plan} onValueChange={(v) => setPlan(v ?? '')}>
+              <SelectTrigger className="h-9 w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-200 outline-none focus:border-neutral-500">
+                <SelectValue placeholder="No plan" />
+                <SelectIcon className="ml-auto"><ChevronDown className="h-3.5 w-3.5 text-neutral-500" /></SelectIcon>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No plan</SelectItem>
+                <SelectItem value="starter">Starter</SelectItem>
+                <SelectItem value="pro">Pro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Cancel subscription (destructive, separate from save) */}
+          {user.subscription?.status === 'active' && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                Active until {formatExpiry(user.subscription.expiresAt ?? null)}
+              </p>
+              {!confirmCancel ? (
+                <button
+                  onClick={() => setConfirmCancel(true)}
+                  className="w-full rounded-lg bg-red-950/30 py-2 text-sm text-red-400 transition-colors hover:bg-red-950/50"
+                >
+                  Cancel subscription
+                </button>
+              ) : (
+                <div className="space-y-2 rounded-lg bg-red-950/20 p-3 ring-1 ring-red-900/50">
+                  <p className="text-xs text-red-300">Removes access immediately. Confirm?</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setConfirmCancel(false)}
+                      className="flex-1 rounded bg-neutral-800 py-1.5 text-xs hover:bg-neutral-700"
+                    >
+                      Keep it
+                    </button>
+                    <button
+                      onClick={() => { onCancel(user); onClose() }}
+                      className="flex-1 rounded bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+                    >
+                      Yes, cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+
+          {err && <p className="text-xs text-red-400">{err}</p>}
+        </div>
 
         <DialogFooter className="mx-0 mb-0 border-t-0 bg-transparent p-0">
           <DialogClose
-            render={
-              <button className="rounded-lg bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700" />
-            }
+            render={<button className="rounded-lg bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700" />}
           >
-            Close
+            Cancel
           </DialogClose>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-lg bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-white disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -285,11 +310,25 @@ export default function UsersPage() {
     }
   }
 
-  const grantPlan = (user: AdminUser, planSlug: 'starter' | 'pro') => {
-    void run(
-      () => manageUserSubscription(user.id, 'grant', planSlug),
-      `Granted ${planSlug} to ${user.email}`,
-    )
+  const saveUser = async (
+    user: AdminUser,
+    changes: { role: 'user' | 'admin'; plan: 'pro' | 'starter' | '' },
+  ) => {
+    const ops: Promise<unknown>[] = []
+    if (changes.role !== user.role) {
+      ops.push(setUserRole(user.id, changes.role))
+    }
+    const currentPlan = (user.subscription?.planSlug ?? '') as 'pro' | 'starter' | ''
+    if (changes.plan !== currentPlan) {
+      if (changes.plan) {
+        ops.push(manageUserSubscription(user.id, 'grant', changes.plan))
+      } else {
+        ops.push(manageUserSubscription(user.id, 'cancel'))
+      }
+    }
+    await Promise.all(ops)
+    await load(page, search, roleFilter)
+    setActionMsg({ kind: 'notice', text: `Saved ${user.email}` })
   }
 
   const cancelSub = (user: AdminUser) => {
@@ -469,9 +508,8 @@ export default function UsersPage() {
         <EditModal
           user={editTarget}
           open={editTarget !== null}
-          busy={busy}
           onClose={() => setEditTarget(null)}
-          onGrant={grantPlan}
+          onSave={saveUser}
           onCancel={cancelSub}
         />
 
