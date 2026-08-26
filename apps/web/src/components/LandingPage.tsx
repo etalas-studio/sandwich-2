@@ -17,7 +17,7 @@ import { Pricing } from './landing/Pricing'
 import { ContactForm } from './landing/ContactForm'
 import { Faq } from './landing/Faq'
 import { Footer } from './landing/Footer'
-import { FONT_SANS, BG } from './landing/tokens'
+import { FONT_SANS } from './landing/tokens'
 
 const REVEAL_IDS = [
   'harnesses-head', 'us-vs-them-head', 'about-head', 'pipeline-head', 'pricing-head', 'application-head', 'faq-head',
@@ -120,7 +120,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: 'rgba(255,255,255,0.7)' }}>
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden antialiased" style={{ fontFamily: FONT_SANS, color: 'rgba(255,255,255,0.7)' }}>
       <style>{`
         ::selection { background: #3b82f64d; color: #3b82f6; }
         @keyframes sw-reveal { from { opacity: 0; transform: translateY(20px); filter: blur(8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
