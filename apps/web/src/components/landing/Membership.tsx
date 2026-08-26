@@ -1,6 +1,7 @@
 'use client'
 
-import { ACCENT, PANEL_2, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
+import { GridLines } from './GridLines'
+import { TEXT_PRIMARY, TEXT_MUTED, TEXT_SECONDARY } from './tokens'
 
 export interface MembershipPlan {
   slug: string
@@ -16,76 +17,71 @@ export interface MembershipPlan {
 
 export interface MembershipProps {
   kicker: string
-  titleL1: string
-  titleL2: string
+  title: string
   desc: string
   bestValue: string
-  includedLabel: string
   plans: MembershipPlan[]
   onSelectPlan: (slug: string) => void
 }
 
 export function Membership(props: MembershipProps) {
   return (
-    <section id="pricing" className="py-24 md:py-32 px-6 max-w-7xl mx-auto scroll-mt-24">
-      <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16">
-        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: TEXT_MUTED }}>{props.kicker}</p>
-        <h2 className="text-4xl md:text-5xl tracking-tight font-medium leading-tight mb-6" style={{ color: TEXT_PRIMARY }}>
-          {props.titleL1} {props.titleL2}
-        </h2>
-        <p className="text-base leading-relaxed" style={{ color: TEXT_MUTED }}>{props.desc}</p>
-      </div>
+    <section id="pricing" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
+      <GridLines />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        {props.plans.map((plan) => (
-          <div
-            key={plan.slug}
-            className="flex flex-col p-8 rounded-3xl border"
-            style={{
-              backgroundColor: PANEL_2,
-              borderColor: plan.highlight ? `${ACCENT}55` : 'rgba(255,255,255,0.08)',
-              boxShadow: plan.highlight ? `0 0 40px -20px ${ACCENT}` : undefined,
-            }}
-          >
-            <div className="flex items-center justify-between mb-8">
-              <span className="text-xs uppercase tracking-widest" style={{ color: TEXT_MUTED }}>{plan.name}</span>
-              {plan.highlight && (
-                <span
-                  className="text-[10px] uppercase tracking-widest border px-3 py-1 rounded-full"
-                  style={{ borderColor: `${ACCENT}55`, backgroundColor: `${ACCENT}1a`, color: ACCENT }}
-                >
-                  {props.bestValue}
-                </span>
-              )}
-            </div>
-            <h3 className="text-3xl tracking-tight font-medium mb-2" style={{ color: TEXT_PRIMARY }}>{plan.name}</h3>
-            <div className="flex items-baseline gap-1 mb-1 flex-wrap">
-              <span className="text-5xl font-medium tracking-tighter" style={{ color: TEXT_PRIMARY }}>{plan.price}</span>
-              <span className="text-sm" style={{ color: TEXT_MUTED }}>{plan.priceNote}</span>
-              {plan.oldPrice && <span className="text-sm line-through ml-1" style={{ color: 'rgba(237,237,237,0.3)' }}>{plan.oldPrice}</span>}
-            </div>
-            <p className="text-sm mb-8 flex-1 mt-3" style={{ color: TEXT_MUTED }}>{plan.desc}</p>
-            <button
-              onClick={() => props.onSelectPlan(plan.slug)}
-              className="w-full py-3.5 rounded-full text-sm font-medium text-center transition-colors mb-8"
-              style={plan.highlight
-                ? { backgroundColor: '#ffffff', color: '#000000' }
-                : { backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: TEXT_PRIMARY }}
-            >
-              {plan.cta}
-            </button>
-
-            <div className="space-y-4 pt-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-              <p className="text-xs uppercase tracking-widest" style={{ color: TEXT_MUTED }}>{props.includedLabel}</p>
-              {plan.features.map((f) => (
-                <div key={f} className="flex items-start gap-3">
-                  <iconify-icon icon="solar:check-circle-linear" className="mt-0.5" style={{ color: TEXT_MUTED }} />
-                  <span className="text-sm" style={{ color: TEXT_PRIMARY, opacity: 0.85 }}>{f}</span>
-                </div>
-              ))}
-            </div>
+      <div className="z-10 md:px-8 max-w-7xl mr-auto ml-auto pr-6 pl-6 relative">
+        <div className="text-center max-w-3xl mx-auto">
+          <div className="inline-flex text-[11px] ring-1 ring-white/10 font-medium bg-white/5 rounded-full pt-1.5 pr-3 pb-1.5 pl-3 gap-x-2 gap-y-2 items-center" style={{ color: TEXT_MUTED }}>
+            <iconify-icon icon="solar:layers-minimalistic-linear" width="14" />
+            <span>{props.kicker}</span>
           </div>
-        ))}
+          <h2 className="mt-4 sm:text-5xl md:text-6xl text-4xl font-normal tracking-tighter" style={{ color: TEXT_PRIMARY }}>{props.title}</h2>
+          <p className="md:mt-4 mt-3 md:text-lg text-base leading-relaxed" style={{ color: TEXT_MUTED }}>{props.desc}</p>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
+          {props.plans.map((plan) => (
+            <div
+              key={plan.slug}
+              className={`relative rounded-3xl backdrop-blur-md p-6 md:p-8 flex flex-col overflow-hidden ${
+                plan.highlight ? 'ring-2 ring-blue-400/50 bg-gradient-to-b from-white/10 to-white/5' : 'bg-slate-900/50 ring-1 ring-white/10'
+              }`}
+            >
+              {plan.highlight && (
+                <div className="absolute top-4 right-4">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-400/20 ring-1 ring-blue-400/40 px-2.5 py-1 text-[10px] font-medium text-blue-200">{props.bestValue}</span>
+                </div>
+              )}
+
+              <div className="flex-1">
+                <h3 className="text-xl font-normal tracking-tight" style={{ color: TEXT_PRIMARY }}>{plan.name}</h3>
+                <div className="flex items-baseline gap-1 mt-3 mb-1 flex-wrap">
+                  <span className="text-4xl font-medium tracking-tighter" style={{ color: TEXT_PRIMARY }}>{plan.price}</span>
+                  <span className="text-sm" style={{ color: TEXT_MUTED }}>{plan.priceNote}</span>
+                  {plan.oldPrice && <span className="text-sm line-through ml-1" style={{ color: 'rgba(148,163,184,0.6)' }}>{plan.oldPrice}</span>}
+                </div>
+                <p className="mt-2 text-sm" style={{ color: TEXT_SECONDARY }}>{plan.desc}</p>
+                <ul className="mt-8 space-y-3">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.highlight ? TEXT_SECONDARY : TEXT_MUTED }}>
+                      <iconify-icon icon="solar:check-circle-linear" width="20" className="text-blue-300 shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                onClick={() => props.onSelectPlan(plan.slug)}
+                className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition w-full ${
+                  plan.highlight ? 'bg-white text-neutral-900 ring-1 ring-white/20 hover:bg-neutral-100' : 'bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/15'
+                }`}
+              >
+                {plan.cta}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

@@ -1,19 +1,28 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../lib/i18n'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
-import { HeroCard } from './landing/HeroCard'
-import { Methodology } from './landing/Methodology'
-import { Experiences } from './landing/Experiences'
-import { Studio } from './landing/Studio'
+import { Hero } from './landing/Hero'
+import { IngredientsGrid } from './landing/IngredientsGrid'
+import { FormatTicker } from './landing/FormatTicker'
+import { Harnesses } from './landing/Harnesses'
+import { Pipeline } from './landing/Pipeline'
 import { Membership } from './landing/Membership'
 import { Proof } from './landing/Proof'
-import { FaqCta } from './landing/FaqCta'
+import { Faq } from './landing/Faq'
+import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
 import { FONT_SANS, BG, TEXT_MUTED } from './landing/tokens'
+
+const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
+const FOOTER_NOTE = {
+  en: 'Email us, we usually reply within 1-2 business days.',
+  id: 'Kirim email ke kami, biasanya kami balas dalam 1-2 hari kerja.',
+}
+const FOOTER_RIGHTS = { en: 'All rights reserved.', id: 'Hak cipta dilindungi.' }
 
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
@@ -32,83 +41,35 @@ export default function LandingPage() {
 
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [revealed, setRevealed] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (window.location.hash === '#pricing') {
-      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [])
-
-  useEffect(() => {
-    const root = rootRef.current
-    if (!root) return
-    const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed')
-          observer.unobserve(entry.target)
-        }
-      })
-    }, observerOptions)
-    root.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
-    setRevealed(true)
-    return () => observer.disconnect()
-  }, [])
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
-
   const goToRegister = () => router.push('/register')
 
-  const ingredientMeta = [
-    { key: 'PRD', icon: 'solar:document-text-linear' },
-    { key: 'Prototype', icon: 'solar:widget-2-linear' },
-    { key: 'Quotation', icon: 'solar:money-bag-linear' },
-    { key: 'Specs', icon: 'solar:list-check-linear' },
-  ]
-  const ingredientDescs = [t('stack_order_desc'), t('stack_prep_desc'), t('stack_recipe_desc'), t('stack_validate_desc')]
-  const experienceItems = ingredientMeta.map((meta, i) => ({
-    n: `0${i + 1}`,
-    icon: meta.icon,
-    title: meta.key,
-    fullTitle: meta.key,
-    desc: ingredientDescs[i],
-    tags: ingredientDescs[i].split('&').map((s) => s.trim()).filter(Boolean),
-  }))
-
-  const methodologyCards = [
-    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), note: t('pipeline_kicker') },
-    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), note: t('pipeline_kicker') },
+  const ingredientItems = [
+    { title: 'PRD', desc: t('stack_order_desc') },
+    { title: 'Prototype', desc: t('stack_prep_desc') },
+    { title: 'Quotation', desc: t('stack_recipe_desc') },
+    { title: 'Specs', desc: t('stack_validate_desc') },
   ]
 
-  const studioCards = [
-    { n: '01', title: t('diff_1_title'), desc: t('diff_1_desc') },
-    { n: '02', title: t('diff_2_title'), desc: t('diff_2_desc') },
+  const pipelineSteps = [
+    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc') },
+    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc') },
+    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc') },
+    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
   ]
-  const studioNumbered = [
-    { n: '01', text: t('diff_3_desc') },
-    { n: '02', text: t('diff_4_desc') },
-  ]
-
-  const includedLabel = lang === 'id' ? 'Yang Termasuk' : 'Included Access'
-  const ctaKicker = lang === 'id' ? 'Langkah Selanjutnya' : 'Next Step'
 
   return (
-    <div ref={rootRef} className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: TEXT_MUTED }}>
-      <style>{`
-        ::selection { background: rgba(255,255,255,0.2); color: #ffffff; }
-        .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-        .reveal.is-revealed { opacity: 1; transform: translateY(0); }
-      `}</style>
+    <div className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: TEXT_MUTED }}>
+      <style>{`::selection { background: rgba(59,130,246,0.3); color: #ffffff; }`}</style>
 
-      <HeroCard
+      <Hero
         heroTagline={t('hero_tagline')}
-        navPipeline={t('nav_pipeline')}
-        navHow={t('nav_how')}
+        heroBenefit={t('nav_how')}
+        navPipeline={t('stack_kicker')}
+        navHow={t('harnesses_kicker')}
         navDiff={t('nav_diff')}
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
@@ -121,66 +82,67 @@ export default function LandingPage() {
         onNavClick={scrollToSection}
         onGetStartedClick={goToRegister}
         onLoginClick={() => router.push('/login')}
-        onScrollDownClick={() => scrollToSection('harnesses')}
+        onSecondaryClick={() => scrollToSection('pipeline')}
         mobileNavOpen={mobileNavOpen}
         setMobileNavOpen={setMobileNavOpen}
       />
 
-      <Methodology
-        kicker={t('harnesses_kicker')}
-        title={t('harnesses_title')}
-        desc={t('harnesses_desc')}
-        bodyText={t('stack_desc')}
-        ctaLabel={t('nav_how')}
-        onCtaClick={() => scrollToSection('experiences')}
-        cards={methodologyCards}
-      />
-
-      <Experiences
+      <IngredientsGrid
         kicker={t('stack_kicker')}
         title={t('stack_title')}
         desc={t('stack_desc')}
-        items={experienceItems}
+        linkLabel={t('nav_pricing')}
+        onLinkClick={() => scrollToSection('pricing')}
+        items={ingredientItems}
       />
 
-      <Studio
-        kicker={t('diff_kicker')}
-        title={t('diff_title')}
-        body={t('footer_desc')}
-        badge={t('pipeline_kicker')}
-        cards={studioCards}
-        numbered={studioNumbered}
+      <FormatTicker label={t('nav_pipeline')} />
+
+      <Harnesses
+        kicker={t('harnesses_kicker')}
+        title={t('harnesses_title')}
+        desc={t('harnesses_desc')}
+        linkLabel={t('nav_how')}
+        onLinkClick={() => scrollToSection('pipeline')}
+      />
+
+      <Pipeline
+        kicker={t('pipeline_kicker')}
+        title={`${t('pipeline_title_l1')} ${t('pipeline_title_l2')}`}
+        desc={t('diff_title')}
+        steps={pipelineSteps}
+        ctaLabel={t('pipeline_cta')}
+        onCtaClick={goToRegister}
       />
 
       <Membership
         kicker={t('pricing_kicker')}
-        titleL1={t('pricing_title_l1')}
-        titleL2={t('pricing_title_l2')}
+        title={`${t('pricing_title_l1')} ${t('pricing_title_l2')}`}
         desc={t('pricing_desc')}
         bestValue={t('pricing_best_value')}
-        includedLabel={includedLabel}
         plans={PLANS}
         onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
       />
 
-      <Proof
-        kicker={t('samples_kicker')}
-        title={`${t('samples_title_l1')} ${t('samples_title_l2')}`}
-      />
+      <Proof kicker={t('samples_kicker')} title={`${t('samples_title_l1')} ${t('samples_title_l2')}`} />
 
-      <FaqCta
+      <Faq
+        kicker={t('faq_kicker')}
         title={t('faq_title')}
-        desc={t('hero_tagline')}
         lang={lang}
         openFaq={openFaq}
         setOpenFaq={setOpenFaq}
-        ctaKicker={ctaKicker}
-        ctaTitle={t('nav_get_started')}
-        ctaDesc={t('footer_desc')}
+      />
+
+      <ClosingCta
+        kicker={t('faq_cta')}
+        title={t('diff_title')}
+        desc={t('hero_tagline')}
         ctaPrimary={t('nav_get_started')}
         ctaSecondary={t('nav_pricing')}
-        onCtaPrimaryClick={goToRegister}
-        onCtaSecondaryClick={() => scrollToSection('pricing')}
+        onPrimaryClick={goToRegister}
+        onSecondaryClick={() => scrollToSection('pricing')}
+        bullets={[t('diff_1_title'), t('diff_2_title'), t('diff_3_title')]}
       />
 
       <Footer
@@ -189,13 +151,15 @@ export default function LandingPage() {
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         footerDesc={t('footer_desc')}
-        navGetStarted={t('nav_get_started')}
+        footerProductTitle={t('footer_product')}
+        footerContactTitle={CONTACT_TITLE[lang]}
         footerContact={t('footer_contact')}
         footerPrivacy={t('footer_privacy')}
         footerTerms={t('footer_terms')}
         footerProductBy={t('footer_product_by')}
+        footerNote={FOOTER_NOTE[lang]}
+        footerRights={FOOTER_RIGHTS[lang]}
         onNavClick={scrollToSection}
-        onGetStartedClick={goToRegister}
       />
     </div>
   )

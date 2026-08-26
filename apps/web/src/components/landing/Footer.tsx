@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { GridLines } from './GridLines'
 import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 
 export interface FooterProps {
@@ -9,61 +10,89 @@ export interface FooterProps {
   navPricing: string
   navFaq: string
   footerDesc: string
-  navGetStarted: string
+  footerProductTitle: string
+  footerContactTitle: string
   footerContact: string
   footerPrivacy: string
   footerTerms: string
   footerProductBy: string
+  footerNote: string
+  footerRights: string
   onNavClick: (id: string) => void
-  onGetStartedClick: () => void
 }
 
 export function Footer(props: FooterProps) {
   return (
-    <footer className="py-12 px-6 max-w-7xl mx-auto border-t text-sm" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-        <div className="col-span-1 md:col-span-2">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full border text-xs tracking-widest uppercase" style={{ borderColor: 'rgba(255,255,255,0.2)', backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
-            <span className="text-sm font-medium tracking-tight" style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
+    <footer className="overflow-hidden bg-slate-950 border-white/5 border-t relative z-20">
+      <GridLines />
+
+      <div className="z-10 md:px-8 lg:py-20 max-w-7xl mr-auto ml-auto pt-16 pr-6 pb-16 pl-6 relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+          <div className="col-span-2">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
+              <span className="text-sm font-medium tracking-tight uppercase" style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed max-w-xs" style={{ color: TEXT_MUTED }}>{props.footerDesc}</p>
+            <div className="mt-6 flex items-center gap-3">
+              <a href="https://www.instagram.com/etalas.id/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/5 ring-1 ring-white/10 flex items-center justify-center transition hover:bg-white/10 hover:text-white" style={{ color: TEXT_MUTED }} aria-label="Instagram">
+                <iconify-icon icon="mdi:instagram" width="18" />
+              </a>
+              <a href="https://www.linkedin.com/company/etalas/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/5 ring-1 ring-white/10 flex items-center justify-center transition hover:bg-white/10 hover:text-white" style={{ color: TEXT_MUTED }} aria-label="LinkedIn">
+                <iconify-icon icon="mdi:linkedin" width="18" />
+              </a>
+            </div>
           </div>
-          <p className="max-w-sm leading-relaxed" style={{ color: TEXT_MUTED }}>{props.footerDesc}</p>
+
+          <div>
+            <h3 className="text-sm font-medium" style={{ color: TEXT_PRIMARY }}>{props.footerProductTitle}</h3>
+            <ul className="mt-4 space-y-3">
+              <li><a href="#harnesses" onClick={(e) => { e.preventDefault(); props.onNavClick('harnesses') }} className="text-sm hover:text-white transition" style={{ color: TEXT_MUTED }}>{props.navPipeline}</a></li>
+              <li><a href="#ingredients" onClick={(e) => { e.preventDefault(); props.onNavClick('ingredients') }} className="text-sm hover:text-white transition" style={{ color: TEXT_MUTED }}>{props.navHow}</a></li>
+              <li><a href="#pricing" onClick={(e) => { e.preventDefault(); props.onNavClick('pricing') }} className="text-sm hover:text-white transition" style={{ color: TEXT_MUTED }}>{props.navPricing}</a></li>
+              <li><a href="#faq" onClick={(e) => { e.preventDefault(); props.onNavClick('faq') }} className="text-sm hover:text-white transition" style={{ color: TEXT_MUTED }}>{props.navFaq}</a></li>
+            </ul>
+          </div>
+
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-sm font-medium" style={{ color: TEXT_PRIMARY }}>{props.footerContactTitle}</h3>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <a href="mailto:support@etalas.ai" className="text-sm hover:text-white transition inline-flex items-center gap-2" style={{ color: TEXT_MUTED }}>
+                  <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+                    <iconify-icon icon="solar:letter-linear" width="14" />
+                  </span>
+                  <span>support@etalas.ai</span>
+                </a>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm hover:text-white transition inline-flex items-center gap-2" style={{ color: TEXT_MUTED }}>
+                  <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+                    <iconify-icon icon="solar:chat-round-linear" width="14" />
+                  </span>
+                  <span>{props.footerContact}</span>
+                </Link>
+              </li>
+            </ul>
+            <p className="mt-6 text-[11px]" style={{ color: 'rgba(148,163,184,0.6)' }}>{props.footerNote}</p>
+          </div>
         </div>
 
-        <div>
-          <p className="font-medium mb-4" style={{ color: TEXT_PRIMARY }}>Navigate</p>
-          <div className="flex flex-col gap-3" style={{ color: TEXT_MUTED }}>
-            <a href="#harnesses" onClick={(e) => { e.preventDefault(); props.onNavClick('harnesses') }} className="hover:opacity-80 transition-opacity w-fit">{props.navPipeline}</a>
-            <a href="#experiences" onClick={(e) => { e.preventDefault(); props.onNavClick('experiences') }} className="hover:opacity-80 transition-opacity w-fit">{props.navHow}</a>
-            <a href="#pricing" onClick={(e) => { e.preventDefault(); props.onNavClick('pricing') }} className="hover:opacity-80 transition-opacity w-fit">{props.navPricing}</a>
-            <a href="#faq" onClick={(e) => { e.preventDefault(); props.onNavClick('faq') }} className="hover:opacity-80 transition-opacity w-fit">{props.navFaq}</a>
-          </div>
-        </div>
+        <div className="mt-14 pt-8 border-t border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <p className="text-xs" style={{ color: 'rgba(148,163,184,0.6)' }}>
+            © {new Date().getFullYear()} SANDWICH <span style={{ color: 'rgba(148,163,184,0.4)' }}>•</span> {props.footerRights}
+          </p>
 
-        <div>
-          <p className="font-medium mb-4" style={{ color: TEXT_PRIMARY }}>Connect</p>
-          <div className="flex flex-col gap-3" style={{ color: TEXT_MUTED }}>
-            <button onClick={props.onGetStartedClick} className="hover:opacity-80 transition-opacity w-fit text-left">{props.navGetStarted}</button>
-            <Link href="/contact" className="hover:opacity-80 transition-opacity w-fit">{props.footerContact}</Link>
-            <a href="https://www.instagram.com/etalas.id/" target="_blank" rel="noreferrer" className="hover:opacity-80 transition-opacity w-fit">Instagram</a>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/privacy" className="text-xs hover:text-white transition" style={{ color: 'rgba(148,163,184,0.6)' }}>{props.footerPrivacy}</Link>
+            <span style={{ color: 'rgba(148,163,184,0.4)' }}>•</span>
+            <Link href="/terms" className="text-xs hover:text-white transition" style={{ color: 'rgba(148,163,184,0.6)' }}>{props.footerTerms}</Link>
+            <span style={{ color: 'rgba(148,163,184,0.4)' }}>•</span>
+            <a href="https://www.etalas.com/" target="_blank" rel="noreferrer" className="text-xs hover:text-white transition inline-flex items-center gap-1.5" style={{ color: 'rgba(148,163,184,0.6)' }}>
+              {props.footerProductBy}
+              <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-3 w-auto brightness-0 invert opacity-70" />
+            </a>
           </div>
-        </div>
-      </div>
-
-      <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-xs" style={{ borderColor: 'rgba(255,255,255,0.1)', color: TEXT_MUTED }}>
-        <p>© 2026 SANDWICH.</p>
-        <div className="flex items-center gap-6">
-          <Link href="/privacy" className="hover:opacity-80 transition-opacity">{props.footerPrivacy}</Link>
-          <Link href="/terms" className="hover:opacity-80 transition-opacity">{props.footerTerms}</Link>
-          <a
-            href="https://www.etalas.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <span>{props.footerProductBy}</span>
-            <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-3.5 w-auto brightness-0 invert" />
-          </a>
         </div>
       </div>
     </footer>
