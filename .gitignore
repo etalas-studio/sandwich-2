@@ -3,6 +3,7 @@ node_modules/
 dist/
 .work/
 runs/
+# local project workspaces — PROJECTS_ROOT dev fallback (<repo>/data/projects)
 data/
 queue.json
 *.log

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
-  users, sessions, conversations, chatMessages, attachments,
+  users, sessions, projects, conversations, chatMessages, attachments,
   payments, subscriptions, usage, userPreferences, documents,
   documentVersions, documentFiles, conversationDocuments,
   passwordResetTokens, emailVerificationTokens,
@@ -95,6 +95,9 @@ export async function deleteUser(db: Database, userId: string): Promise<void> {
   await db.delete(payments).where(eq(payments.userId, userId));
   await db.delete(attachments).where(eq(attachments.userId, userId));
   await db.delete(conversations).where(eq(conversations.userId, userId));
+  // projects.user_id → users.id, and conversations.project_id → projects.id,
+  // so projects must go after conversations and before users.
+  await db.delete(projects).where(eq(projects.userId, userId));
   await db.delete(documents).where(eq(documents.userId, userId));
   await db.delete(sessions).where(eq(sessions.userId, userId));
   await db.delete(users).where(eq(users.id, userId));

@@ -134,13 +134,14 @@ Open `http://localhost:3000` in your browser.
 
 ### Schema
 
-9 tables managed by Drizzle ORM (`apps/server/db/schema.ts`):
+Core tables managed by Drizzle ORM (`apps/server/db/schema.ts`):
 
 | Table | Purpose |
 |-------|---------|
 | `users` | User accounts (auth) |
 | `sessions` | Session tokens (7-day expiry) |
-| `conversations` | Briefs/chats + generated documents (PRD, prototype, MOM, etc.) |
+| `projects` | Groups conversations + documents; one on-disk workspace per project |
+| `conversations` | Briefs/chats + generated documents (PRD, prototype, MOM, etc.); each belongs to a project |
 | `chat_messages` | Per-conversation message history |
 | `attachments` | Uploaded file metadata (bytes live in Cloudflare R2) |
 | `payments` | Midtrans payment records |
@@ -215,7 +216,11 @@ See [`ROADMAP.md`](./ROADMAP.md) for planned work. It is generated — edit
 | `POST` | `/api/auth/register` | No | Create account |
 | `POST` | `/api/auth/login` | No | Login |
 | `POST` | `/api/auth/logout` | No | Logout |
-| `GET` | `/api/conversations` | Yes | List the user's conversations |
+| `GET` | `/api/projects` | Yes | List the user's projects |
+| `GET` | `/api/projects/:id` | Yes | Get project |
+| `PATCH` | `/api/projects/:id` | Yes | Rename project |
+| `DELETE` | `/api/projects/:id` | Yes | Delete an empty project (409 if it still has conversations) |
+| `GET` | `/api/conversations` | Yes | List the user's conversations (`?groupBy=project` to group) |
 | `POST` | `/api/conversations` | Yes | Create conversation |
 | `GET` | `/api/conversations/:id` | Yes | Get conversation |
 | `PUT` | `/api/conversations/:id` | Yes | Update conversation |
