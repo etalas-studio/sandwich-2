@@ -114,19 +114,19 @@ const PUBLIC_API_PATHS = new Set([
 
 /**
  * Preconditions for the per-project git workspace (M1-05+):
- *  - `git` on PATH — every generation shells out to it
- *  - `PROJECTS_ROOT` a mounted, writable dir in production — an ephemeral-disk
- *    fallback would silently lose every artifact on redeploy
- * Fail loud at boot rather than on the first chat.
+ *  - `git` on PATH — every generation shells out to it. A WARNING, not fatal:
+ *    the rest of the app (auth, billing, viewing) should stay up, and a
+ *    generation attempt fails gracefully with a chat error (conversation-run).
+ *  - `PROJECTS_ROOT` a mounted, writable dir in production — FATAL, because an
+ *    ephemeral-disk fallback would silently lose every artifact on redeploy.
  */
 function assertWorkspacePrereqs(): void {
   try {
     execFileSync("git", ["--version"], { stdio: "ignore" });
   } catch {
     console.error(
-      "FATAL: `git` is not available. The server needs it for per-project version control. Install it in the runtime image (see nixpacks.toml).",
+      "WARNING: `git` is not on PATH. Document generation will fail until it is installed in the runtime image (see nixpacks.toml). The rest of the app still works.",
     );
-    process.exit(1);
   }
 
   const root = projectsRoot();
