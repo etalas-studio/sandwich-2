@@ -38,16 +38,17 @@ export function Hero(props: HeroProps) {
 
   return (
     <div className="relative z-0 h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
-      {/* Photo backdrop: sandwich ingredients (not the sandwich itself), dimmed behind the gradient tint. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
+      {/* Photo backdrop: brief-to-deliverables desk flatlay, dimmed behind the gradient tint. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 opacity-70" style={{ filter: 'saturate(0.7)' }}>
-          <img src="/ingredients/tomato.webp" alt="" aria-hidden="true" className="absolute -top-10 right-[8%] w-64 md:w-80 rotate-[8deg] blur-sm" />
-          <img src="/ingredients/cheese.webp" alt="" aria-hidden="true" className="absolute top-[28%] -right-10 w-72 md:w-96 -rotate-[6deg] blur-sm" />
-          <img src="/ingredients/lettuce.webp" alt="" aria-hidden="true" className="absolute -bottom-16 right-[20%] w-64 md:w-80 rotate-[4deg] blur-sm" />
-          <img src="/ingredients/meat.webp" alt="" aria-hidden="true" className="absolute top-[6%] left-[4%] w-56 md:w-72 -rotate-[10deg] blur-sm" />
-        </div>
+        <img
+          src="/hero-bg.webp"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+          style={{ filter: 'saturate(0.6)' }}
+        />
 
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(55% 45% at 78% 15%, transparent 0%, rgba(2,6,23,0.35) 60%, rgba(2,6,23,0.85) 100%), linear-gradient(100deg, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.7) 32%, rgba(2,6,23,0.35) 60%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(55% 45% at 78% 15%, transparent 0%, rgba(2,6,23,0.35) 60%, rgba(2,6,23,0.85) 100%), linear-gradient(100deg, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.8) 32%, rgba(2,6,23,0.45) 60%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(59,130,246,0.22), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(59,130,246,0.12), transparent 65%)' }} />
       </div>
 
