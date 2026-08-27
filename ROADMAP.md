@@ -12,9 +12,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
-| M1-01 | `projects` table + repository | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M1-02 | Attach conversations to a project; auto-create on first chat | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M1-03 | Project directory manager + path guard | Project entity & storage foundation | ⚪ Planned | unassigned |
 | M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
 | M1-05 | Retire `document_versions` / `document_files`; slim `documents` to an index | Project entity & storage foundation | ⚪ Planned | unassigned |
 | M2-01 | Run all engines with `cwd = project dir` + tools | Pi SDK on the project workspace | ⚪ Planned | unassigned |
@@ -39,53 +36,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 ## M1 — Project entity & storage foundation
 
 **Goal:** Introduce a first-class `projects` entity and a persistent per-project directory on disk that becomes the source of truth for every generated artifact. Postgres keeps only an index.
-
-### M1-01 · `projects` table + repository
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Add a `projects` table (id, user_id, title, created_at, updated_at) with a Drizzle repo for create / list / get / rename / delete, every call scoped to the owning user. One project owns many conversations and many documents.
-
-**Why:** Today conversations attach straight to the user with no grouping. Everything else in this plan — the on-disk directory, git versioning, shared deliverables — hangs off a project entity that does not exist yet.
-
-**Acceptance criteria:**
-- [ ] `projects` table + migration created
-- [ ] Repo functions: createProject, listProjects(userId), getProject, renameProject, deleteProject — all user-scoped
-- [ ] Ownership checks covered by unit tests
-
-**Notes:** Mirror the style of `apps/server/db/conversations.ts`. Keep `id` as text `gen_random_uuid()` like conversations.
-
-### M1-02 · Attach conversations to a project; auto-create on first chat
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Add a `project_id` FK on `conversations`. When a user starts a conversation without naming a project, create a fresh project (title seeded from the first prompt / conversation title, renameable later) and attach the conversation. When they pick an existing project, attach to that one.
-
-**Why:** The product intent is that the first chat transparently spins up a project directory; subsequent chats either continue in that project or open a new one. 1 project : many conversations.
-
-**Acceptance criteria:**
-- [ ] `conversations.project_id` column + FK
-- [ ] New-conversation route accepts an optional `projectId`; absent → a new project is created and returned
-- [ ] Project title editable via renameProject
-- [ ] Conversation listing can be grouped by project
-
-**Notes:** Touches `createConversation` in `apps/server/db/conversations.ts` and `apps/server/routes/conversations.ts`. Fold the existing `conversation_documents` link into `documents.conversation_id` (see M1-05).
-
-### M1-03 · Project directory manager + path guard
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-A module that resolves and creates `${PROJECTS_ROOT}/${userId}/${projectId}`, runs `git init` (with an initial empty commit) on first creation, and exposes `resolveInsideProject(projectId, relPath)` that rejects any path escaping the project root.
-
-**Why:** Single choke point for all filesystem access so engines and preview routes can never read or write outside one project. This is where the "sebisanya jangan keluar project directory" isolation guard lives.
-
-**Acceptance criteria:**
-- [ ] `getProjectDir(userId, projectId)` creates the dir + `git init` + initial commit if absent
-- [ ] `resolveInsideProject` throws on `..`, absolute paths, and symlink escape
-- [ ] `PROJECTS_ROOT` env var (default `/data/projects`; dev fallback under the repo, git-ignored)
-- [ ] Path-guard unit tests
-
-**Notes:** New file, e.g. `apps/server/projects/workspace.ts`. Use `git` via `child_process`, not a heavy dependency.
 
 ### M1-04 · Railway Volume provisioning + single-instance constraint
 

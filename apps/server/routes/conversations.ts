@@ -8,6 +8,10 @@ import {
   getConversation,
   type UpdateConversationInput,
 } from "../db/conversations.js";
+import {
+  listProjectsWithConversations,
+  ProjectNotFoundError,
+} from "../db/projects.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
 import { authenticateRequest } from "../auth/middleware.js";
@@ -58,6 +62,10 @@ export function registerConversationRoutes(router: Router, db: Database): void {
       typeof body.prompt === "string" && body.prompt.trim() !== ""
         ? body.prompt.trim()
         : null;
+    const projectId =
+      typeof body.projectId === "string" && body.projectId.trim() !== ""
+        ? body.projectId.trim()
+        : undefined;
 
     // The brief text is required; title falls back to the prompt.
     if (!prompt) {
@@ -79,9 +87,14 @@ export function registerConversationRoutes(router: Router, db: Database): void {
         title: title ?? prompt,
         prompt,
         pendingType,
+        projectId,
       });
       sendJson(res, 201, conversation);
     } catch (err) {
+      if (err instanceof ProjectNotFoundError) {
+        sendJson(res, 404, { error: "project not found" });
+        return;
+      }
       sendCaughtError(res, err, "conversation creation");
     }
   });
@@ -90,6 +103,11 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthorized" });
+      return;
+    }
+    const url = new URL(req.url ?? "", "http://localhost");
+    if (url.searchParams.get("groupBy") === "project") {
+      sendJson(res, 200, await listProjectsWithConversations(db, auth.userId));
       return;
     }
     sendJson(res, 200, await listConversations(db, auth.userId));

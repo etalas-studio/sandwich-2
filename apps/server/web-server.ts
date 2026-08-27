@@ -17,6 +17,7 @@ import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPasswordResetRoutes } from "./routes/password-reset.js";
 import { registerEmailVerificationRoutes } from "./routes/email-verification.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
+import { registerProjectRoutes } from "./routes/projects.js";
 import { registerConversationRunRoutes } from "./routes/conversation-run.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
 import { registerUsageRoutes } from "./routes/usage.js";
@@ -145,6 +146,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerPasswordResetRoutes(router, db);
   registerEmailVerificationRoutes(router, db);
   registerConversationRoutes(router, db);
+  registerProjectRoutes(router, db);
   registerConversationRunRoutes(router, db);
   registerAttachmentRoutes(router, db);
   registerUsageRoutes(router, db);

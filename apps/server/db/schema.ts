@@ -43,6 +43,30 @@ export const sessions = pgTable(
 );
 
 /**
+ * A project: one on-disk directory + git repo, owning many conversations and
+ * many documents. Created implicitly on the first chat (see the auto-create in
+ * `createConversation`) and renameable afterwards.
+ */
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    title: text("title").notNull(),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index("idx_projects_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  }),
+);
+
+/**
  * A chat session + its generated document: a title/prompt, an optional
  * AI-generated `output`, and a multi-turn message history (see `chatMessages`).
  */
@@ -54,6 +78,9 @@ export const conversations = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
+    // Nullable during rollout; backfilled to one project per conversation by
+    // migration 0021. Every conversation created after that always has one.
+    projectId: text("project_id").references(() => projects.id),
     title: text("title").notNull(),
     prompt: text("prompt").notNull(),
     // Guided-pipeline state machine (model-driven):
@@ -74,6 +101,10 @@ export const conversations = pgTable(
   (table) => ({
     userCreatedIdx: index("idx_conversations_user_created").on(
       table.userId,
+      table.createdAt,
+    ),
+    projectCreatedIdx: index("idx_conversations_project_created").on(
+      table.projectId,
       table.createdAt,
     ),
   }),

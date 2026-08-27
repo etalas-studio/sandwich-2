@@ -1,8 +1,19 @@
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { conversations, chatMessages, attachments } from "./schema.js";
+import {
+  conversations,
+  chatMessages,
+  attachments,
+  conversationDocuments,
+} from "./schema.js";
 import type { Database } from "./connection.js";
 import type { DocumentType } from "./documents.js";
+import {
+  createProject,
+  getProject,
+  deriveProjectTitle,
+  ProjectNotFoundError,
+} from "./projects.js";
 
 export type ConversationType =
   | "prd"
@@ -18,6 +29,7 @@ export type ConversationStatus = "backlog" | "in_progress" | "done";
 export interface Conversation {
   id: string;
   userId: string;
+  projectId: string | null;
   title: string;
   prompt: string;
   pipelineStage: string;
@@ -38,6 +50,9 @@ export interface CreateConversationInput {
   // Pre-selected deliverable (dropdown). Skips the "which deliverable?"
   // prompt; the next generate run asks clarifying questions for this type.
   pendingType?: DocumentType;
+  // Existing project to attach to. Absent → a fresh project is created and
+  // attached (title seeded from this conversation's title/prompt).
+  projectId?: string;
 }
 
 export interface UpdateConversationInput {
@@ -58,6 +73,7 @@ function normaliseConversation(
   return {
     id: row.id,
     userId: row.userId,
+    projectId: row.projectId,
     title: row.title,
     prompt: row.prompt,
     pipelineStage: row.pipelineStage,
@@ -79,16 +95,38 @@ export async function createConversation(
 ): Promise<Conversation> {
   const id = input.id?.trim() || randomUUID();
   const now = new Date();
-  await db.insert(conversations).values({
-    id,
-    userId,
-    title: input.title,
-    prompt: input.prompt,
-    pipelineStage: input.pendingType ? "choosing_deliverable" : "intake",
-    pendingType: input.pendingType ?? null,
-    createdAt: now,
-    updatedAt: now,
+
+  await db.transaction(async (tx) => {
+    const txDb = tx as unknown as Database;
+
+    // Resolve the owning project. An explicit projectId must belong to this
+    // user — otherwise the conversation (and, later, an agent with cwd set to
+    // the project dir) would attach to someone else's workspace.
+    let projectId: string;
+    if (input.projectId) {
+      const owned = await getProject(txDb, userId, input.projectId);
+      if (!owned) throw new ProjectNotFoundError();
+      projectId = owned.id;
+    } else {
+      const project = await createProject(txDb, userId, {
+        title: deriveProjectTitle(input.title, input.prompt),
+      });
+      projectId = project.id;
+    }
+
+    await tx.insert(conversations).values({
+      id,
+      userId,
+      projectId,
+      title: input.title,
+      prompt: input.prompt,
+      pipelineStage: input.pendingType ? "choosing_deliverable" : "intake",
+      pendingType: input.pendingType ?? null,
+      createdAt: now,
+      updatedAt: now,
+    });
   });
+
   return (await getConversation(db, id))!;
 }
 
@@ -147,9 +185,12 @@ export async function updateConversation(
 }
 
 /**
- * Deletes a conversation and its dependents (attachments first, then
- * messages, then the conversation) inside a single transaction. FK
- * constraints use ON DELETE NO ACTION, so ordering matters.
+ * Deletes a conversation and its dependents (conversation_documents links,
+ * attachments, then messages, then the conversation) inside a single
+ * transaction. FK constraints use ON DELETE NO ACTION, so ordering matters.
+ *
+ * The owning project is left intact — deleting a conversation never deletes
+ * its project or the project's other conversations.
  */
 export async function deleteConversation(
   db: Database,
@@ -159,6 +200,9 @@ export async function deleteConversation(
   if (!existing) return false;
 
   await db.transaction(async (tx) => {
+    await tx
+      .delete(conversationDocuments)
+      .where(eq(conversationDocuments.conversationId, id));
     await tx.delete(attachments).where(eq(attachments.conversationId, id));
     await tx.delete(chatMessages).where(eq(chatMessages.conversationId, id));
     await tx.delete(conversations).where(eq(conversations.id, id));
