@@ -31,11 +31,22 @@ export class ProjectPathError extends Error {
 export class ProjectGitError extends Error {
   readonly args: readonly string[];
   readonly stderr: string;
-  constructor(args: readonly string[], stderr: string) {
-    super(`git ${args.join(" ")} failed: ${stderr.trim() || "(no stderr)"}`);
+  readonly code: number | string | null;
+  constructor(
+    args: readonly string[],
+    detail: { stderr?: string; stdout?: string; code?: number | string | null; message?: string },
+  ) {
+    const parts = [
+      detail.stderr?.trim(),
+      detail.stdout?.trim(),
+      detail.code != null ? `exit=${detail.code}` : undefined,
+      detail.message,
+    ].filter(Boolean);
+    super(`git ${args.join(" ")} failed: ${parts.join(" | ") || "(no output)"}`);
     this.name = "ProjectGitError";
     this.args = args;
-    this.stderr = stderr;
+    this.stderr = detail.stderr ?? "";
+    this.code = detail.code ?? null;
   }
 }
 
@@ -131,9 +142,13 @@ export async function runGit(
         GIT_COMMITTER_NAME: GIT_AUTHOR_NAME,
         GIT_COMMITTER_EMAIL: GIT_AUTHOR_EMAIL,
         // Deterministic behaviour regardless of the host's global/system config.
-        GIT_CONFIG_GLOBAL: "/dev/null",
-        GIT_CONFIG_SYSTEM: "/dev/null",
+        // Empty string = "no file" and avoids the "/dev/null is not a regular
+        // file" errors some git builds emit.
+        GIT_CONFIG_GLOBAL: "",
+        GIT_CONFIG_SYSTEM: "",
         GIT_TERMINAL_PROMPT: "0",
+        // A writable HOME so git never fails statting ~ (containers may not set it).
+        HOME: process.env.HOME || cwd,
       },
       timeout: 15_000,
       maxBuffer: 8 * 1024 * 1024,
@@ -141,11 +156,18 @@ export async function runGit(
     });
     return { stdout, stderr };
   } catch (err) {
-    const stderr =
-      typeof err === "object" && err && "stderr" in err
-        ? String((err as { stderr: unknown }).stderr)
-        : String(err);
-    throw new ProjectGitError(args, stderr);
+    const e = (err ?? {}) as {
+      stderr?: unknown;
+      stdout?: unknown;
+      code?: number | string | null;
+      message?: string;
+    };
+    throw new ProjectGitError(args, {
+      stderr: e.stderr != null ? String(e.stderr) : undefined,
+      stdout: e.stdout != null ? String(e.stdout) : undefined,
+      code: e.code ?? null,
+      message: e.message,
+    });
   }
 }
 
@@ -202,15 +224,16 @@ export function getProjectDir(userId: string, projectId: string): Promise<string
   const task = (async () => {
     if (!isInitialised(dir)) {
       mkdirSync(dir, { recursive: true });
-      // `-c init.defaultBranch=main` works on every git version; the
-      // `--initial-branch` flag needs >= 2.28. `--template=` skips the system
-      // template dir (sample hooks, or real hooks from a custom templateDir).
-      await runGit(dir, ["-c", "init.defaultBranch=main", "init", "--template="]);
-      await runGit(dir, ["config", "user.name", GIT_AUTHOR_NAME]);
-      await runGit(dir, ["config", "user.email", GIT_AUTHOR_EMAIL]);
+      // `-c init.defaultBranch=main` works on every git version (the
+      // `--initial-branch` flag needs >= 2.28). No `--template=` — an empty
+      // template path is rejected by some git builds; the default sample hooks
+      // it would have avoided are inert anyway.
+      await runGit(dir, ["-c", "init.defaultBranch=main", "init", "-q"]);
+      await runGit(dir, ["config", "--local", "user.name", GIT_AUTHOR_NAME]);
+      await runGit(dir, ["config", "--local", "user.email", GIT_AUTHOR_EMAIL]);
       ensureGitignore(dir);
       await runGit(dir, ["add", "--", ".gitignore"]);
-      await runGit(dir, ["commit", "-m", "chore: initialise project workspace"]);
+      await runGit(dir, ["commit", "-q", "-m", "chore: initialise project workspace"]);
     } else {
       ensureGitignore(dir);
     }
