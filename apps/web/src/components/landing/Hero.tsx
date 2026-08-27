@@ -37,13 +37,9 @@ export function Hero(props: HeroProps) {
   const links = LINKS(props)
 
   return (
-    <div className="relative h-screen overflow-hidden">
-      <GridLines />
-
-      {/* Photo backdrop: sandwich ingredients (not the sandwich itself), dimmed + blurred behind the gradient tint */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0" style={{ backgroundColor: '#020617' }} />
-
+    <div className="relative z-0 h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
+      {/* Photo backdrop: sandwich ingredients (not the sandwich itself), dimmed behind the gradient tint. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
+      <div className="absolute inset-0">
         <div className="absolute inset-0 opacity-70" style={{ filter: 'saturate(0.7)' }}>
           <img src="/ingredients/tomato.webp" alt="" aria-hidden="true" className="absolute -top-10 right-[8%] w-64 md:w-80 rotate-[8deg] blur-sm" />
           <img src="/ingredients/cheese.webp" alt="" aria-hidden="true" className="absolute top-[28%] -right-10 w-72 md:w-96 -rotate-[6deg] blur-sm" />
@@ -54,6 +50,8 @@ export function Hero(props: HeroProps) {
         <div className="absolute inset-0" style={{ background: 'radial-gradient(55% 45% at 78% 15%, transparent 0%, rgba(2,6,23,0.35) 60%, rgba(2,6,23,0.85) 100%), linear-gradient(100deg, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.7) 32%, rgba(2,6,23,0.35) 60%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(59,130,246,0.22), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(59,130,246,0.12), transparent 65%)' }} />
       </div>
+
+      <GridLines />
 
       {/* Header / Nav */}
       <header className="z-20 border-white/5 border-b relative">
