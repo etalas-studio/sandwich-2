@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import {
   users, sessions, conversations, chatMessages, attachments,
   payments, subscriptions, usage, userPreferences, documents,
+  documentVersions, documentFiles, conversationDocuments,
   passwordResetTokens, emailVerificationTokens,
 } from "./schema.js";
 import type { Database } from "./connection.js";
@@ -66,8 +67,26 @@ export async function markEmailVerified(db: Database, userId: string): Promise<v
 }
 
 export async function deleteUser(db: Database, userId: string): Promise<void> {
-  const u = eq(sessions.userId, userId);
-  // delete leaf tables first, then parent rows, then the user
+  const { inArray } = await import("drizzle-orm");
+
+  // collect user's conversation and document ids for child-table cleanup
+  const userConvIds = (await db.select({ id: conversations.id }).from(conversations).where(eq(conversations.userId, userId))).map(r => r.id);
+  const userDocIds = (await db.select({ id: documents.id }).from(documents).where(eq(documents.userId, userId))).map(r => r.id);
+
+  // leaf tables referencing conversations
+  if (userConvIds.length > 0) {
+    await db.delete(chatMessages).where(inArray(chatMessages.conversationId, userConvIds));
+    await db.delete(conversationDocuments).where(inArray(conversationDocuments.conversationId, userConvIds));
+  }
+
+  // leaf tables referencing documents
+  if (userDocIds.length > 0) {
+    await db.delete(documentVersions).where(inArray(documentVersions.documentId, userDocIds));
+    await db.delete(documentFiles).where(inArray(documentFiles.documentId, userDocIds));
+    await db.delete(conversationDocuments).where(inArray(conversationDocuments.documentId, userDocIds));
+  }
+
+  // tables directly referencing users
   await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
   await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
   await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
@@ -75,15 +94,9 @@ export async function deleteUser(db: Database, userId: string): Promise<void> {
   await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
   await db.delete(payments).where(eq(payments.userId, userId));
   await db.delete(attachments).where(eq(attachments.userId, userId));
-  // chat messages reference conversations — delete messages first
-  const userConvIds = (await db.select({ id: conversations.id }).from(conversations).where(eq(conversations.userId, userId))).map(r => r.id);
-  if (userConvIds.length > 0) {
-    const { inArray } = await import("drizzle-orm");
-    await db.delete(chatMessages).where(inArray(chatMessages.conversationId, userConvIds));
-  }
   await db.delete(conversations).where(eq(conversations.userId, userId));
   await db.delete(documents).where(eq(documents.userId, userId));
-  await db.delete(sessions).where(u);
+  await db.delete(sessions).where(eq(sessions.userId, userId));
   await db.delete(users).where(eq(users.id, userId));
 }
 
