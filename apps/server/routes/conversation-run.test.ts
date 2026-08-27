@@ -1,6 +1,73 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { composePrototypeBrief, composeRefineInstruction, prototypePreviewUrl } from "./conversation-run.js";
+import {
+  composePrototypeBrief,
+  composeRefineInstruction,
+  prototypePreviewUrl,
+  deliverablePathFor,
+  textEngineTools,
+  commitMessageFor,
+  chatOutputFor,
+  CHAT_INLINE_CAP,
+} from "./conversation-run.js";
+
+describe("deliverablePathFor", () => {
+  it("maps each type to its fixed on-disk filename", () => {
+    assert.equal(deliverablePathFor("prd"), "prd.md");
+    assert.equal(deliverablePathFor("quotation"), "quotation.md");
+    assert.equal(deliverablePathFor("specs"), "spec.md");
+    assert.equal(deliverablePathFor("mom"), "mom.md");
+    assert.equal(deliverablePathFor("prototype"), "prototype/index.html");
+  });
+});
+
+describe("textEngineTools", () => {
+  it("is read-only for chat stages, writable while generating", () => {
+    assert.deepEqual([...textEngineTools("clarifying")].sort(), ["find", "grep", "ls", "read"]);
+    assert.ok([...textEngineTools("generating")].includes("write"));
+  });
+
+  it("honours the TEXT_ENGINE_TOOLS=off kill switch", () => {
+    const prev = process.env.TEXT_ENGINE_TOOLS;
+    process.env.TEXT_ENGINE_TOOLS = "off";
+    try {
+      assert.deepEqual(textEngineTools("generating"), []);
+    } finally {
+      if (prev === undefined) delete process.env.TEXT_ENGINE_TOOLS;
+      else process.env.TEXT_ENGINE_TOOLS = prev;
+    }
+  });
+});
+
+describe("commitMessageFor", () => {
+  it("has a typed subject and trailer body for git-log parsing", () => {
+    const m = commitMessageFor("prd", "generate", "conv-123", "generating", "Build a POS  \n for a cafe");
+    assert.equal(m.subject, "prd: generate");
+    assert.match(m.body, /Prompt: Build a POS for a cafe/);
+    assert.match(m.body, /Sandwich-Deliverable: prd/);
+    assert.match(m.body, /Sandwich-Conversation: conv-123/);
+    assert.match(m.body, /Sandwich-Stage: generating/);
+  });
+});
+
+describe("chatOutputFor", () => {
+  it("inlines a short text deliverable verbatim", () => {
+    assert.equal(chatOutputFor("prd", "# Short PRD", null), "# Short PRD");
+  });
+
+  it("summarises an over-cap deliverable instead of dumping it", () => {
+    const big = "x".repeat(CHAT_INLINE_CAP + 1);
+    const out = chatOutputFor("prd", big, null);
+    assert.ok(!out.includes(big));
+    assert.match(out, /panel dokumen/);
+  });
+
+  it("gives the prototype a preview link, not its HTML", () => {
+    const out = chatOutputFor("prototype", "<html>...</html>", "/p/abc/");
+    assert.doesNotMatch(out, /<html>/);
+    assert.match(out, /\/p\/abc\//);
+  });
+});
 
 describe("composePrototypeBrief", () => {
   it("folds all user turns and skips assistant turns", () => {

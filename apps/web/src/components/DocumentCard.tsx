@@ -5,7 +5,7 @@ export interface DocumentRefMeta {
   id: string
   type: string
   title: string
-  versionNo: number
+  commitSha: string | null
 }
 
 const TYPE_META: Record<string, { label: string; color: string; ic: string; icon: string }> = {
@@ -13,6 +13,7 @@ const TYPE_META: Record<string, { label: string; color: string; ic: string; icon
   quotation: { label: 'Quotation', color: '#dcfce7', ic: '#16a34a', icon: 'solar:dollar-minimalistic-linear' },
   specs: { label: 'Specs', color: '#fce7f3', ic: '#db2777', icon: 'solar:checklist-linear' },
   prototype: { label: 'Prototype', color: '#ede9fe', ic: '#7c3aed', icon: 'solar:widget-linear' },
+  mom: { label: 'MOM', color: '#e0f2fe', ic: '#0284c7', icon: 'solar:notes-linear' },
 }
 
 export default function DocumentCard({
@@ -50,7 +51,7 @@ export default function DocumentCard({
     icon: 'solar:notes-linear',
   }
   const title = doc?.title ?? initial?.title ?? 'Document'
-  const versionNo = doc?.latestVersion?.versionNo ?? initial?.versionNo ?? null
+  const commitSha = doc?.lastCommitSha ?? initial?.commitSha ?? null
 
   return (
     <button
@@ -69,9 +70,9 @@ export default function DocumentCard({
           </span>
           <p className="text-sm font-semibold truncate mt-0.5" style={{ color: '#111827' }}>{title}</p>
         </div>
-        {versionNo != null && (
-          <span className="text-xs shrink-0 px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: '#6b7280' }}>
-            v{versionNo}
+        {commitSha && (
+          <span className="text-xs shrink-0 px-2 py-0.5 rounded-full font-mono" style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: '#6b7280' }}>
+            {commitSha.slice(0, 7)}
           </span>
         )}
       </div>

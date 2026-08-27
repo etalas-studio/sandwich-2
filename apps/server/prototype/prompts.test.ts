@@ -1,6 +1,11 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { buildReferenceContext, buildPrototypeSystemPrompt, buildPrototypeRefinePrompt } from "./prompts.js";
+import {
+  buildReferenceContext,
+  buildPrototypeSystemPrompt,
+  buildPrototypeRefinePrompt,
+  PROTOTYPE_FILE,
+} from "./prompts.js";
 
 describe("buildReferenceContext", () => {
   it("returns an empty string when there are no references", () => {
@@ -26,7 +31,6 @@ describe("buildReferenceContext", () => {
     assert.ok(ctx.includes("#111827"));
     assert.ok(ctx.includes("Inter"));
     assert.ok(ctx.includes("Clean minimal layout with red accents."));
-    // Raw HTML must never be injected into the prompt.
     assert.ok(!ctx.includes("<script>"));
     assert.ok(!ctx.includes("alert('inject')"));
   });
@@ -50,29 +54,35 @@ describe("buildPrototypeSystemPrompt", () => {
     assert.ok(!prompt.includes("## Reference Style"));
   });
 
-  it("mandates icon library, no emoji, table quality, and custom modals in pass 1", () => {
+  it("mandates a single self-contained file and forbids extra files", () => {
     const prompt = buildPrototypeSystemPrompt("bikinin dashboard admin");
-    assert.ok(prompt.includes("lucide"));
+    assert.ok(prompt.includes(PROTOTYPE_FILE));
+    assert.ok(prompt.includes("ONE FILE ONLY"));
+    assert.ok(prompt.includes("Do NOT create any other file"));
+    assert.ok(/no .*styles\.css/i.test(prompt));
+  });
+
+  it("keeps the craft rules: no emoji, Lucide, quality tables, custom modals", () => {
+    const prompt = buildPrototypeSystemPrompt("bikinin dashboard admin");
     assert.ok(prompt.includes("lucide.createIcons()"));
     assert.ok(prompt.includes("NEVER use emoji"));
     assert.ok(prompt.includes("<table>"));
-    assert.ok(prompt.includes("NEVER use window.confirm()"));
+    assert.ok(prompt.includes("NEVER `window.confirm()`"));
   });
 });
 
 describe("buildPrototypeRefinePrompt", () => {
-  it("embeds the instruction and demands in-place edits, NOT regeneration", () => {
+  it("names the one file, embeds the instruction, and demands in-place edits", () => {
     const prompt = buildPrototypeRefinePrompt("POS kasir", "pindahkan marquee ke bawah hero");
+    assert.ok(prompt.includes(PROTOTYPE_FILE));
     assert.ok(prompt.includes("pindahkan marquee ke bawah hero"));
     assert.ok(prompt.includes("Do NOT regenerate"));
     assert.ok(prompt.includes("Hard boundaries"));
-    assert.ok(prompt.includes("edit"));
     assert.ok(prompt.includes("DONE"));
   });
 
   it("does NOT leak the full original brief into the refine prompt", () => {
     const prompt = buildPrototypeRefinePrompt("POS kasir dengan manajemen menu", "ubah warnanya jadi biru");
-    // The brief must not be fed back — it tempts the model to regenerate.
     assert.ok(!prompt.includes("POS kasir dengan manajemen menu"));
     assert.ok(prompt.includes("ubah warnanya jadi biru"));
   });

@@ -28,8 +28,9 @@ Core promise: *"From a messy brief to an execution-ready spec."*
 - **Deliverables:** PRD, Quotation, Prototype, Specs.
 - **Prototype is chat-generated** with a **live-preview sidebar** (no separate
   form).
-- **Every document is a versioned file** stored in the database; the user can ask
-  about it later in the same or a new session.
+- **Every document is a file in the project's git repository**; Postgres keeps
+  only an index row (path + latest commit). The user can ask about it later in
+  the same or a new session.
 - **Attachments:** image / audio / PDF / docx → extracted to text (Cloudflare R2).
 - **Share links:** read-only public view of a conversation.
 - **Subscriptions:** Starter and Pro plans, paid via Midtrans Snap.
@@ -40,11 +41,12 @@ Core promise: *"From a messy brief to an execution-ready spec."*
 |------|------------------------|
 | `prd` | Canonical requirements: modules, features, constraints, confidence markers. Includes **user flows** and **technical notes** as sections. |
 | `quotation` | Client cost estimate: scope, timeline, pricing, assumptions, terms. |
-| `prototype` | Multi-file static prototype (`index.html`, `dashboard.html`, `styles.css`, `script.js`, + one page per module), rendered in the live-preview sidebar. |
+| `prototype` | **Single self-contained `prototype/index.html`** (inline CSS/JS, Chart.js + Lucide from CDN), rendered in the live-preview sidebar. Multi-view UIs use in-page sections, not separate files. |
 | `specs` | Feature queue + one spec per feature (scope + acceptance criteria), like v1. |
 
-**Not deliverables (explicit):** `mom` is an *input* (meeting notes a user pastes),
-not an output. `workflow` and `general` are not standalone document types.
+**`mom`** started as an *input* (meeting notes a user pastes). It now also has a
+fixed on-disk slot (`mom.md`) alongside the other deliverables so a run can read
+or write it. `workflow` and `general` are not standalone document types.
 
 ## 4. Generation flow (model-driven)
 
@@ -64,40 +66,75 @@ intake → choosing_deliverable → clarifying → generating → awaiting_next
 
 Documents are generated **one at a time**, never dumped as a batch.
 
-## 5. Data model (title-scoped)
+## 5. Data model
 
 ```
-conversations            thread (no single type/output)
-documents                id, user_id, type, title, current_version_id
-document_versions        id, document_id, version_no, content, prompt_used, created_at
-conversation_documents   conversation_id, document_id   (generated-in / opened-in)
-document_files           prototype multi-file (path + content)
-chat_messages            the conversation history
+projects       id, user_id, title            — owns one on-disk git repo
+conversations  thread; project_id             — many per project
+documents      id, project_id, conversation_id (generated-in, nullable),
+               type, title, relative_path, last_commit_sha
+chat_messages  the conversation history
 ```
 
-- Documents are **user-scoped**, not conversation-scoped.
-- **Title-scoped retrieval:** the AI proposes a title on generation (user can
-  rename); a later session finds the document by `user_id + title/type`.
+Postgres stores **no document content**. Each `documents` row points at a file
+in the project's git working tree.
+
+**On-disk layout** — `${PROJECTS_ROOT}/<userId>/<projectId>/`:
+
+```
+.git/                  version history (one commit per generation run)
+BRIEF.md               consolidated brief + Q&A + attachment summaries (M2-02)
+prd.md  quotation.md  spec.md  mom.md
+prototype/index.html
+.gitignore             engine scratch (.getokui/ .reference/ .pi/) — never committed
+```
+
+- Documents are **project-scoped: one per type per project.** Generating a
+  second PRD in a project overwrites the first (as a new commit). Two PRDs → two
+  projects.
+- **Title-scoped retrieval** stays as a convenience lookup (`user + title`), no
+  longer the identity.
 - Retrieval is **explicit** ("buka PRD X" / click in the sidebar), not semantic.
+- Pi agent sessions live **outside** the project dir under `PI_SESSIONS_ROOT`
+  (keyed by conversation) so no session file is committed (M2-05).
 
 ## 6. Engine strategy
 
-One **orchestrator**, two engines:
+One **orchestrator**, two engines. Both run **like a local coding agent**: `cwd`
+is the project directory, context comes from the files there (`BRIEF.md`, sibling
+deliverables), and output is written back as files.
 
-| Engine | For | Mode |
-|--------|-----|------|
-| Text engine | `prd`, `quotation`, `specs` | tool-free, Groq fallback |
-| Prototype engine | `prototype` | OpenCode + tools (write files) |
+| Engine | For | Tools |
+|--------|-----|-------|
+| Text engine | `prd`, `quotation`, `specs`, `mom` | read-only (`read`/`ls`/`grep`/`find`) while chatting; `write`/`edit` added only while generating. **No `bash`.** |
+| Prototype engine | `prototype` | `read`/`write`/`edit`/`ls`/`grep`/`find` + `bash` (env-scrubbed) |
 
-The orchestrator picks the engine from the requested deliverable. The text agent
-stays **tool-free** (tools caused hangs/misbehavior); the prototype engine uses
-tools to emit files into a workspace.
+**On the text engine's tools:** it used to be tool-free — tools once caused
+hangs. They are back because (a) an **inactivity watchdog** (`engine/tool-budget.ts`)
+aborts a run that stops emitting events, catching the actual historical failure
+mode, which was a stall; (b) a **tool-call ceiling** caps runaway loops; (c) chat
+stages get read-only tools so a stall can't corrupt the tree; (d) `TEXT_ENGINE_TOOLS=off`
+forces tool-free operation without a redeploy.
+
+**Isolation caveat:** Pi's tools resolve *relative* paths to `cwd` but pass
+absolute paths through — there is no sandbox. `bash` is dropped from the text
+engine and env-scrubbed for the prototype engine (`engine/bash-tool.ts`); real
+per-tenant isolation is **M5-05**, required before multi-tenant launch.
+
+**Glowup** (the prototype polish pass) is retained in the codebase but **not
+wired into the pipeline** (`GLOWUP_ENABLED` defaults off) — its prompt targets
+the retired multi-file model.
 
 ## 7. Versioning
 
-- Every generation / revision = a **new `document_versions` row** (immutable).
-- Revising a document creates a new version of the *same* document.
-- The sidebar shows the version history (and, later, per-prompt diffs).
+- Every successful generation / revision = **one git commit** in the project repo
+  (structured message with `Sandwich-Deliverable` / `Sandwich-Conversation`
+  trailers). `documents.last_commit_sha` points at the latest.
+- An **empty diff produces no commit** and a "nothing changed" reply.
+- Rollback ("rollback ke versi sebelumnya") is a `git checkout` of the file + a
+  new commit — no history rewrite. Ordinal rollback, history and diff APIs, and
+  the sidebar version picker arrive with **M3**; until then the UI shows the
+  short commit sha, not a version number.
 
 ## 8. UI
 
@@ -153,7 +190,8 @@ tools to emit files into a workspace.
 - **Fallback:** Groq — text only, chat flow only.
 - **Default model:** `deepseek-v4-pro` (reasoning, slow). Recommended for speed:
   `deepseek-v4-flash`.
-- **Timeouts:** 3 minutes (text), 10 minutes (prototype).
+- **Timeouts:** 5 minutes (text, outer backstop), 10 minutes (prototype). Plus a
+  per-run tool-call ceiling and an inactivity watchdog (see §6).
 
 ## 12. Architecture (summary)
 
@@ -164,8 +202,8 @@ tools to emit files into a workspace.
 | Frontend | React 19, Vite, Tailwind CSS 4, React Query |
 | AI | Pi SDK (OpenCode) primary, Groq fallback |
 | Payment | Midtrans Snap |
-| Storage | Cloudflare R2 (attachments) |
-| Deploy | Railway (API) + separate frontend host |
+| Storage | Cloudflare R2 (attachments) · per-project git repo on a persistent volume (deliverables) |
+| Deploy | Railway (API, **single instance** — the volume is single-attach) + separate frontend host |
 
 Key backend areas:
 
@@ -198,3 +236,10 @@ Midtrans webhook: `https://api.sandwich.etalas.com/api/midtrans/notification`.
 - `apps/server/routes/integrations.test.ts` fails when `GROQ_API_KEY` is set
   locally (env-dependent, unrelated to payment).
 - GitHub flags 1 high-severity Dependabot alert on the default branch.
+- **No version history in the UI** between this milestone and M3-03 — the sidebar
+  shows a short commit sha instead of a version dropdown, and the old
+  `POST /api/documents/:id/rollback` endpoint is gone (chat "rollback" still works).
+- **`PROJECTS_ROOT` must be a mounted volume in production.** The server refuses
+  to boot if it is unset with `NODE_ENV=production`, or if the path is not
+  writable — an ephemeral-disk fallback would lose every artifact on redeploy.
+- Engine tool execution is **not yet tenant-isolated** (M5-05).

@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import {
   users, sessions, projects, conversations, chatMessages, attachments,
   payments, subscriptions, usage, userPreferences, documents,
-  documentVersions, documentFiles, conversationDocuments,
   passwordResetTokens, emailVerificationTokens,
 } from "./schema.js";
 import type { Database } from "./connection.js";
@@ -69,21 +68,17 @@ export async function markEmailVerified(db: Database, userId: string): Promise<v
 export async function deleteUser(db: Database, userId: string): Promise<void> {
   const { inArray } = await import("drizzle-orm");
 
-  // collect user's conversation and document ids for child-table cleanup
   const userConvIds = (await db.select({ id: conversations.id }).from(conversations).where(eq(conversations.userId, userId))).map(r => r.id);
-  const userDocIds = (await db.select({ id: documents.id }).from(documents).where(eq(documents.userId, userId))).map(r => r.id);
+  const userProjectIds = (await db.select({ id: projects.id }).from(projects).where(eq(projects.userId, userId))).map(r => r.id);
 
-  // leaf tables referencing conversations
+  // chat_messages FK both conversations and documents — clear them first so the
+  // document rows below (and conversations later) can go.
   if (userConvIds.length > 0) {
     await db.delete(chatMessages).where(inArray(chatMessages.conversationId, userConvIds));
-    await db.delete(conversationDocuments).where(inArray(conversationDocuments.conversationId, userConvIds));
   }
-
-  // leaf tables referencing documents
-  if (userDocIds.length > 0) {
-    await db.delete(documentVersions).where(inArray(documentVersions.documentId, userDocIds));
-    await db.delete(documentFiles).where(inArray(documentFiles.documentId, userDocIds));
-    await db.delete(conversationDocuments).where(inArray(conversationDocuments.documentId, userDocIds));
+  // documents FK projects and conversations — must precede both.
+  if (userProjectIds.length > 0) {
+    await db.delete(documents).where(inArray(documents.projectId, userProjectIds));
   }
 
   // tables directly referencing users
@@ -96,9 +91,8 @@ export async function deleteUser(db: Database, userId: string): Promise<void> {
   await db.delete(attachments).where(eq(attachments.userId, userId));
   await db.delete(conversations).where(eq(conversations.userId, userId));
   // projects.user_id → users.id, and conversations.project_id → projects.id,
-  // so projects must go after conversations and before users.
+  // so projects go after conversations and documents, before users.
   await db.delete(projects).where(eq(projects.userId, userId));
-  await db.delete(documents).where(eq(documents.userId, userId));
   await db.delete(sessions).where(eq(sessions.userId, userId));
   await db.delete(users).where(eq(users.id, userId));
 }

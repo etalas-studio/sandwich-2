@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Select } from '@base-ui/react'
 import { apiUrl } from '../api/base'
 
 const bowlby = "'Bowlby One', system-ui"
@@ -8,9 +7,7 @@ interface DocumentItem {
   id: string
   type: string
   title: string
-  currentVersionId: string | null
-  latestVersionNo: number | null
-  currentVersionNo: number | null
+  lastCommitSha: string | null
   previewUrl: string | null
   conversationId: string | null
   createdAt?: string
@@ -22,6 +19,7 @@ const TYPE_LABEL: Record<string, string> = {
   quotation: 'Quotation',
   prototype: 'Prototype',
   specs: 'Specs',
+  mom: 'MOM',
 }
 
 function truncateWords(text: string, n: number) {
@@ -29,55 +27,12 @@ function truncateWords(text: string, n: number) {
   return words.length <= n ? text : words.slice(0, n).join(' ') + '…'
 }
 
-// ponytail: no global stylesheet; inline styles only
-const selectStyles = {
-  trigger: {
-    display: 'flex', alignItems: 'center', gap: 6,
-    padding: '8px 14px', borderRadius: 20,
-    border: '1.5px solid rgba(0,0,0,0.15)',
-    backgroundColor: '#ffffff', color: '#111827',
-    fontSize: 13, fontWeight: 500, cursor: 'pointer',
-    outline: 'none', whiteSpace: 'nowrap',
-  } as React.CSSProperties,
-  popup: {
-    backgroundColor: '#ffffff', borderRadius: 12,
-    border: '1px solid rgba(0,0,0,0.1)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-    padding: '4px', minWidth: 140, zIndex: 50,
-  } as React.CSSProperties,
-  item: (highlighted: boolean): React.CSSProperties => ({
-    padding: '8px 12px', borderRadius: 8, fontSize: 13,
-    cursor: 'pointer', color: '#111827',
-    backgroundColor: highlighted ? 'rgba(0,0,0,0.05)' : 'transparent',
-  }),
-}
-
-function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentItem; onChanged: () => void; onOpenConversation: (conversationId: string | null, docTitle: string) => void; onOpenDocument: (id: string) => void }) {
-  const latest = doc.latestVersionNo ?? 1
-  const current = doc.currentVersionNo ?? latest
-  const [version, setVersion] = useState(current)
-  const [setting, setSetting] = useState(false)
-  const base = doc.previewUrl?.replace(/\/$/, '') ?? ''
-  const previewUrl = base ? `${base}/v/${version}/` : null
+function PrototypeCard({ doc, onOpenConversation }: { doc: DocumentItem; onChanged: () => void; onOpenConversation: (conversationId: string | null, docTitle: string) => void; onOpenDocument: (id: string) => void }) {
+  const previewUrl = doc.previewUrl?.replace(/\/$/, '') || null
 
   const dateStr = new Date(doc.createdAt ?? doc.updatedAt).toLocaleDateString('id-ID', {
     day: 'numeric', month: 'short', year: 'numeric',
   })
-
-  const setCurrent = async () => {
-    setSetting(true)
-    try {
-      await fetch(apiUrl(`/api/documents/${doc.id}/rollback`), {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ versionNo: version }),
-      })
-      onChanged()
-    } finally {
-      setSetting(false)
-    }
-  }
 
   return (
     <div
@@ -116,7 +71,7 @@ function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentIt
           <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{dateStr}</p>
         </div>
 
-        {/* Preview button + version select */}
+        {/* Preview button */}
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {previewUrl && (
             <a
@@ -134,49 +89,6 @@ function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentIt
               <iconify-icon icon="solar:eye-bold" width="14" />
               Preview
             </a>
-          )}
-          <Select.Root
-            value={String(version)}
-            onValueChange={(v) => {
-              setVersion(Number(v))
-            }}
-          >
-            <Select.Trigger style={{ ...selectStyles.trigger, marginLeft: 'auto' }}>
-              <Select.Value>{`v${version}${version === current ? ' (current)' : ''}`}</Select.Value>
-              <iconify-icon icon="solar:alt-arrow-down-linear" width="12" />
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner sideOffset={6}>
-                <Select.Popup style={selectStyles.popup}>
-                  {Array.from({ length: latest }, (_, i) => latest - i).map((v) => (
-                    <Select.Item
-                      key={v}
-                      value={String(v)}
-                      style={selectStyles.item(false)}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.05)' }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
-                    >
-                      <Select.ItemText>v{v}{v === current ? ' (current)' : ''}</Select.ItemText>
-                    </Select.Item>
-                  ))}
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-          {version !== current && (
-            <button
-              onClick={() => void setCurrent()}
-              disabled={setting}
-              style={{
-                padding: '8px 12px', borderRadius: 20,
-                border: '1.5px solid rgba(0,0,0,0.15)',
-                backgroundColor: '#ffffff', color: '#374151',
-                fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                opacity: setting ? 0.5 : 1, flexShrink: 0,
-              }}
-            >
-              {setting ? 'Setting…' : 'Set current'}
-            </button>
           )}
         </div>
       </div>
@@ -226,8 +138,8 @@ export default function DocumentsPanel({ onOpenDocument, onOpenConversation }: {
                     {TYPE_LABEL[d.type] ?? d.type}
                   </span>
                   <span className="font-semibold truncate" style={{ color: '#111827' }}>{d.title}</span>
-                  {d.latestVersionNo != null && (
-                    <span className="text-xs" style={{ color: '#9ca3af' }}>v{d.latestVersionNo}</span>
+                  {d.lastCommitSha && (
+                    <span className="text-xs font-mono" style={{ color: '#9ca3af' }}>{d.lastCommitSha.slice(0, 7)}</span>
                   )}
                   <span className="inline-flex items-center gap-1 text-xs text-blue-600">
                     <iconify-icon icon="solar:eye-linear" width="12" />

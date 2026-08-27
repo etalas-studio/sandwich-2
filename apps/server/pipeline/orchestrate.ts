@@ -94,6 +94,7 @@ const DELIVERABLE_LABEL: Record<DocumentType, string> = {
   quotation: "Quotation",
   prototype: "Prototype",
   specs: "Specs",
+  mom: "MOM",
 };
 
 /** The instruction injected into the system prompt for the current stage. */
