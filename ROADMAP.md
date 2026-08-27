@@ -13,7 +13,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
 | M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M2-02 | `BRIEF.md` builder | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M2-05 | Persist the Pi session per conversation | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M3-01 | Commit per generation | Versioning via git | ⚪ Planned | unassigned |
 | M3-02 | Rollback via git | Versioning via git | ⚪ Planned | unassigned |
@@ -51,21 +50,6 @@ Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and docum
 ## M2 — Pi SDK on the project workspace
 
 **Goal:** Every engine runs like Pi / Claude Code in a local checkout: `cwd` is the project directory, context comes from the files there, and output is written back as files.
-
-### M2-02 · `BRIEF.md` builder
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Before each run the backend (re)writes `BRIEF.md` at the project root: the consolidated brief, clarifying Q&A, and short summaries of any uploaded attachments. This is the only user-originated context that lands on disk.
-
-**Why:** Gives every engine grounding without dumping raw chat logs or raw uploads into `cwd`, which would be context noise the agent picks up via `ls` / `read`.
-
-**Acceptance criteria:**
-- [ ] `BRIEF.md` regenerated on each generate run and committed with that run
-- [ ] Chat transcript, intake, and pipeline/session state stay in Postgres
-- [ ] Raw attachment bytes stay in R2; only extracted-text summaries go into `BRIEF.md`
-
-**Notes:** Replaces the current inline attachment injection (`enrichMessageContent`) for large attachments; small ones can still be inlined into the prompt.
 
 ### M2-05 · Persist the Pi session per conversation
 

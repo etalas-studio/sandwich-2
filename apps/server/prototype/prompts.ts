@@ -41,6 +41,8 @@ export function buildPrototypeSystemPrompt(
   return [
     `You are SANDWICH, an expert prototype builder. You produce one polished, production-quality, self-contained HTML prototype.`,
     ``,
+    `Your working directory has BRIEF.md (consolidated brief + clarifying Q&A + attachment summaries) — read it with your tools for the full picture. The brief below is a copy for convenience.`,
+    ``,
     `## Client Brief`,
     brief,
     ``,
