@@ -175,24 +175,14 @@ export function Hero(props: HeroProps) {
       {/* Hero content */}
       <main className="z-20 flex h-[calc(100vh-80px)] relative items-center">
         <section className="md:px-8 w-full max-w-4xl mr-auto ml-auto pr-6 pl-6 text-center">
-          <div className="inline-flex text-xs font-medium text-white/80 bg-white/5 ring-white/10 ring-1 rounded-full mb-5 pt-1.5 pr-3 pb-1.5 pl-3 backdrop-blur-sm gap-x-2 gap-y-2 items-center">
-            <iconify-icon icon="solar:sparkles-linear" width="16" className="text-white/80" />
-            <span>SANDWICH</span>
-          </div>
-
-          <h1 className="leading-tight sm:text-5xl md:text-5xl lg:text-6xl text-4xl tracking-tighter">
+          <h1 className="leading-tight sm:text-4xl md:text-4xl lg:text-5xl text-3xl tracking-tighter">
             <span style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
             <span className="block tracking-tighter" style={{ color: TEXT_PRIMARY }}>
               {props.heroTagline}
             </span>
           </h1>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-white/50 mt-6 mb-6">
-            <iconify-icon icon="solar:bolt-linear" width="16" className="opacity-50" />
-            <span>{props.heroBenefit}</span>
-          </div>
-
-          <div className="flex flex-row items-center justify-center gap-x-3 gap-y-3">
+          <div className="flex flex-row items-center justify-center gap-x-3 gap-y-3 mt-8">
             <button
               onClick={props.onGetStartedClick}
               className="inline-flex items-center justify-center gap-2 transition hover:bg-white/15 hover:ring-white/25 whitespace-nowrap text-sm font-medium text-white/90 bg-white/10 ring-white/15 ring-1 rounded-full pt-2.5 pr-4 pb-2.5 pl-4 backdrop-blur-sm"
