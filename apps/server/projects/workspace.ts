@@ -1,6 +1,12 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { existsSync, mkdirSync, realpathSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const execFileAsync = promisify(execFile);
@@ -78,8 +84,11 @@ export function projectsRoot(): string {
   return resolve(process.cwd(), "data/projects");
 }
 
-/** Reject a path segment that isn't a single safe directory name. */
-function assertSafeSegment(value: string, label: string): void {
+/**
+ * Reject a path segment that isn't a single safe directory name. Exported —
+ * userId / projectId / conversationId all flow into filesystem paths.
+ */
+export function assertSafeSegment(value: string, label: string): void {
   if (
     !value ||
     value === "." ||
@@ -144,6 +153,35 @@ function isInitialised(dir: string): boolean {
   return existsSync(join(dir, ".git", "HEAD"));
 }
 
+// Scratch dirs the engines write into `cwd` (reference styles, getokui library,
+// pi internals, logs). They must never be committed — a committed `.getokui/`
+// bloats every project repo permanently.
+const GITIGNORE_ENTRIES = [
+  "# SANDWICH — engine scratch, never committed",
+  ".getokui/",
+  ".reference/",
+  ".pi/",
+  "*.log",
+  "",
+];
+
+/**
+ * Ensures the project has a `.gitignore` covering engine scratch dirs. Idempotent
+ * and cheap — called on `getProjectDir` init and healed on every resolve so
+ * repos created before this existed pick it up.
+ */
+export function ensureGitignore(projectDir: string): void {
+  const path = resolveInsideProject(projectDir, ".gitignore");
+  const wanted = GITIGNORE_ENTRIES.join("\n");
+  if (existsSync(path)) {
+    const current = readFileSync(path, "utf8");
+    if (current.includes(".getokui/")) return;
+    writeFileSync(path, current.replace(/\n*$/, "\n") + "\n" + wanted, "utf8");
+    return;
+  }
+  writeFileSync(path, wanted, "utf8");
+}
+
 // In-process guard so two concurrent getProjectDir calls for the same project
 // don't both run `git init`. Covers the single-instance deployment (M1-04);
 // M2-06 / M5-02 add the real cross-request lock.
@@ -170,7 +208,11 @@ export function getProjectDir(userId: string, projectId: string): Promise<string
       await runGit(dir, ["-c", "init.defaultBranch=main", "init", "--template="]);
       await runGit(dir, ["config", "user.name", GIT_AUTHOR_NAME]);
       await runGit(dir, ["config", "user.email", GIT_AUTHOR_EMAIL]);
-      await runGit(dir, ["commit", "--allow-empty", "-m", "chore: initialise project workspace"]);
+      ensureGitignore(dir);
+      await runGit(dir, ["add", "--", ".gitignore"]);
+      await runGit(dir, ["commit", "-m", "chore: initialise project workspace"]);
+    } else {
+      ensureGitignore(dir);
     }
     return dir;
   })().finally(() => initInFlight.delete(key));
@@ -237,4 +279,101 @@ export function resolveInsideProject(projectDir: string, relPath: string): strin
 /** The path guard without the return value — for callers that only need the check. */
 export function assertInsideProject(projectDir: string, relPath: string): void {
   resolveInsideProject(projectDir, relPath);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Commits (minimal M3-01 — M3 adds history / diff / ordinal rollback / R2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CommitMessage {
+  subject: string;
+  body?: string;
+}
+
+export interface CommitResult {
+  sha: string;
+  /** false when the staged diff was empty — no commit was made. */
+  changed: boolean;
+}
+
+/** The current HEAD sha. */
+export async function headSha(projectDir: string): Promise<string> {
+  const { stdout } = await runGit(projectDir, ["rev-parse", "HEAD"]);
+  return stdout.trim();
+}
+
+/**
+ * Stages `relPaths` and commits them. An empty staged diff produces no commit
+ * and returns `{ changed: false, sha: <current HEAD> }` — the caller replies
+ * "nothing changed" (M3-01 acceptance criterion).
+ *
+ * Every path is run through the guard before it reaches `git add` — a
+ * model-supplied path must never escape the project dir.
+ */
+export async function commitPaths(
+  projectDir: string,
+  relPaths: readonly string[],
+  message: CommitMessage,
+): Promise<CommitResult> {
+  const safe = relPaths.map((p) => {
+    resolveInsideProject(projectDir, p);
+    return p;
+  });
+  if (safe.length === 0) return { changed: false, sha: await headSha(projectDir) };
+
+  await runGit(projectDir, ["add", "--", ...safe]);
+
+  // Not `--quiet`: runGit throws on any non-zero exit, and `--quiet` signals
+  // "differences exist" with exit 1. Test for empty stdout instead.
+  const { stdout: staged } = await runGit(projectDir, [
+    "diff",
+    "--cached",
+    "--name-only",
+  ]);
+  if (staged.trim() === "") {
+    return { changed: false, sha: await headSha(projectDir) };
+  }
+
+  const args = ["commit", "-m", message.subject];
+  if (message.body) args.push("-m", message.body);
+  await runGit(projectDir, args);
+  return { changed: true, sha: await headSha(projectDir) };
+}
+
+/**
+ * Restores one deliverable file to a previous state and commits the restore
+ * (never rewrites history).
+ *
+ *   "previous" → the file as of the commit before the one that last touched it
+ *   "latest"   → the file as of the most recent commit that touched it (undo
+ *                uncommitted local edits — rare, but matches today's semantics)
+ *
+ * Ordinal rollback ("v2"), cross-deliverable restore, history and diff are M3.
+ */
+export async function rollbackDeliverable(
+  projectDir: string,
+  relPath: string,
+  intent: "previous" | "latest",
+): Promise<{ sha: string; restored: boolean }> {
+  resolveInsideProject(projectDir, relPath);
+
+  const { stdout: log } = await runGit(projectDir, [
+    "log",
+    "--format=%H",
+    "--",
+    relPath,
+  ]);
+  const commits = log.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (commits.length === 0) return { sha: await headSha(projectDir), restored: false };
+
+  // commits[0] = most recent touch. "previous" wants the one before it.
+  const ref = intent === "latest" ? commits[0]! : commits[1];
+  if (!ref) return { sha: await headSha(projectDir), restored: false };
+
+  await runGit(projectDir, ["checkout", ref, "--", relPath]);
+  const result = await commitPaths(projectDir, [relPath], {
+    subject: `${relPath}: rollback (${intent})`,
+    body: `Restored from ${ref.slice(0, 12)}`,
+  });
+  return { sha: result.sha, restored: result.changed };
 }

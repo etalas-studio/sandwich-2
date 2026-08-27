@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it, before, after } from "node:test";
-import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, symlinkSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -10,6 +10,10 @@ import {
   resolveInsideProject,
   getProjectDir,
   runGit,
+  commitPaths,
+  headSha,
+  rollbackDeliverable,
+  ensureGitignore,
   ProjectPathError,
   DELIVERABLE_FILES,
 } from "./workspace.js";
@@ -188,5 +192,93 @@ describe("getProjectDir", { skip: GIT ? false : "git not available" }, () => {
     assert.equal(a, b);
     const { stdout } = await runGit(a, ["rev-list", "--count", "HEAD"]);
     assert.equal(stdout.trim(), "1");
+  });
+
+  it("commits a .gitignore covering engine scratch dirs", async () => {
+    const dir = await getProjectDir("u3", "p3");
+    const { stdout } = await runGit(dir, ["show", "HEAD:.gitignore"]);
+    assert.match(stdout, /\.getokui\//);
+  });
+});
+
+describe("ensureGitignore", () => {
+  it("creates .gitignore when absent, is idempotent, and appends to a partial one", () => {
+    const dir = mkdtempSync(join(tmpdir(), "gi-"));
+    try {
+      ensureGitignore(dir);
+      const first = readFileSync(join(dir, ".gitignore"), "utf8");
+      assert.match(first, /\.getokui\//);
+      ensureGitignore(dir);
+      assert.equal(readFileSync(join(dir, ".gitignore"), "utf8"), first);
+
+      const dir2 = mkdtempSync(join(tmpdir(), "gi2-"));
+      try {
+        writeFileSync(join(dir2, ".gitignore"), "node_modules/\n");
+        ensureGitignore(dir2);
+        const merged = readFileSync(join(dir2, ".gitignore"), "utf8");
+        assert.match(merged, /node_modules\//);
+        assert.match(merged, /\.getokui\//);
+      } finally {
+        rmSync(dir2, { recursive: true, force: true });
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("commitPaths / rollbackDeliverable", { skip: GIT ? false : "git not available" }, () => {
+  let tmpRoot: string;
+  let prevRoot: string | undefined;
+
+  before(() => {
+    prevRoot = process.env.PROJECTS_ROOT;
+    tmpRoot = mkdtempSync(join(tmpdir(), "ws-commit-"));
+    process.env.PROJECTS_ROOT = tmpRoot;
+  });
+  after(() => {
+    if (prevRoot === undefined) delete process.env.PROJECTS_ROOT;
+    else process.env.PROJECTS_ROOT = prevRoot;
+    rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  it("commits a changed file with subject + body, and no-ops on an empty diff", async () => {
+    const dir = await getProjectDir("c1", "d1");
+    writeFileSync(join(dir, "prd.md"), "# PRD v1\n");
+    const first = await commitPaths(dir, ["prd.md"], { subject: "prd: generate", body: "Prompt: build X" });
+    assert.equal(first.changed, true);
+    assert.match(first.sha, /^[0-9a-f]{40}$/);
+
+    const { stdout: subj } = await runGit(dir, ["log", "-1", "--format=%s"]);
+    assert.equal(subj.trim(), "prd: generate");
+
+    const again = await commitPaths(dir, ["prd.md"], { subject: "prd: generate" });
+    assert.equal(again.changed, false);
+    assert.equal(again.sha, first.sha);
+  });
+
+  it("rejects a traversal path before staging", async () => {
+    const dir = await getProjectDir("c2", "d2");
+    await assert.rejects(
+      () => commitPaths(dir, ["../escape.md"], { subject: "x" }),
+      ProjectPathError,
+    );
+  });
+
+  it("rollbackDeliverable restores previous content as a NEW commit", async () => {
+    const dir = await getProjectDir("c3", "d3");
+    const file = join(dir, "prd.md");
+    writeFileSync(file, "v1\n");
+    await commitPaths(dir, ["prd.md"], { subject: "prd: v1" });
+    writeFileSync(file, "v2\n");
+    await commitPaths(dir, ["prd.md"], { subject: "prd: v2" });
+
+    const before = await headSha(dir);
+    const r = await rollbackDeliverable(dir, "prd.md", "previous");
+    assert.equal(r.restored, true);
+    assert.notEqual(r.sha, before);
+    assert.equal(readFileSync(file, "utf8"), "v1\n");
+    const { stdout: count } = await runGit(dir, ["rev-list", "--count", "HEAD"]);
+    assert.equal(count.trim(), "4"); // init + v1 + v2 + rollback
   });
 });
