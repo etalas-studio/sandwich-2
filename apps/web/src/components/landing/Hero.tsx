@@ -37,7 +37,7 @@ export function Hero(props: HeroProps) {
   const links = LINKS(props)
 
   return (
-    <div className="relative z-0 h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
+    <div className="relative h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
       {/* Photo backdrop, shown at full strength like the reference - the photo's own shadow on the left carries text legibility, no added scrim. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
       <div className="absolute inset-0">
         <img
