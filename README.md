@@ -201,6 +201,11 @@ await db.transaction(async (tx) => {
 | `npm run test` | Run test suite |
 | `npm run format` | Format code with Prettier |
 | `npm run lint` | Lint with ESLint |
+| `npm run roadmap:generate` | Rebuild `ROADMAP.md` from `registry/roadmap.json` |
+| `npm run roadmap:check` | Verify `ROADMAP.md` is in sync with the registry (CI/pre-commit) |
+
+See [`ROADMAP.md`](./ROADMAP.md) for planned work. It is generated — edit
+`registry/roadmap.json` and regenerate.
 
 ## API Endpoints
 
