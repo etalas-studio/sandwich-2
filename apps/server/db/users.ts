@@ -71,6 +71,11 @@ export async function deleteUser(db: Database, userId: string): Promise<void> {
   const userConvIds = (await db.select({ id: conversations.id }).from(conversations).where(eq(conversations.userId, userId))).map(r => r.id);
   const userProjectIds = (await db.select({ id: projects.id }).from(projects).where(eq(projects.userId, userId))).map(r => r.id);
 
+  // Best-effort: remove each conversation's on-disk Pi session store. The
+  // project directories themselves are M5-03's job.
+  const { deleteConversationSession } = await import("../projects/sessions.js");
+  for (const id of userConvIds) deleteConversationSession(id);
+
   // chat_messages FK both conversations and documents — clear them first so the
   // document rows below (and conversations later) can go.
   if (userConvIds.length > 0) {

@@ -1,5 +1,6 @@
 import type { Router } from "../router.js";
 import { closeInFlight } from "./conversation-run.js";
+import { deleteConversationSession } from "../projects/sessions.js";
 import {
   createConversation,
   listConversations,
@@ -191,6 +192,8 @@ export function registerConversationRoutes(router: Router, db: Database): void {
     }
     closeInFlight(params.id!);
     await deleteConversation(db, params.id!);
+    // Filesystem cleanup after the DB transaction — never inside it.
+    deleteConversationSession(params.id!);
     res.writeHead(204).end();
   });
 }

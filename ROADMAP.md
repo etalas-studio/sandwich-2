@@ -13,7 +13,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
 | M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M2-05 | Persist the Pi session per conversation | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M3-01 | Commit per generation | Versioning via git | ⚪ Planned | unassigned |
 | M3-02 | Rollback via git | Versioning via git | ⚪ Planned | unassigned |
 | M3-03 | Version history + diff API | Versioning via git | ⚪ Planned | unassigned |
@@ -46,25 +45,6 @@ Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and docum
 - [ ] README.md / PRODUCT.md updated with the single-instance constraint
 
 **Notes:** The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.
-
-## M2 — Pi SDK on the project workspace
-
-**Goal:** Every engine runs like Pi / Claude Code in a local checkout: `cwd` is the project directory, context comes from the files there, and output is written back as files.
-
-### M2-05 · Persist the Pi session per conversation
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Swap `SessionManager.inMemory` for a disk-backed session keyed by `conversation_id`, stored OUTSIDE the project directory (e.g. `${PI_SESSIONS_ROOT}/${conversationId}`). One project can have several conversations, hence several sessions, all sharing the same `cwd`.
-
-**Why:** Matches "session per conversation, context from the folder": the agent keeps conversational continuity while the project files are the shared substrate.
-
-**Acceptance criteria:**
-- [ ] Session store path is outside `cwd` — no session files pollute the project directory
-- [ ] Resuming a conversation resumes its Pi session
-- [ ] Deleting a conversation removes its session store
-
-**Notes:** Check whether `pi.SessionManager` ships a disk-backed manager; otherwise wrap one.
 
 ## M3 — Versioning via git
 

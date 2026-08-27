@@ -8,6 +8,7 @@ import {
   type ReferenceStyle,
 } from "./webref.js";
 import { resolveInsideProject } from "../projects/workspace.js";
+import { openConversationSession } from "../projects/sessions.js";
 import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
 import { scrubbedBashTool } from "../engine/bash-tool.js";
 
@@ -113,7 +114,10 @@ export async function generatePrototypeDocument(
       modelRuntime: runtime as never,
       tools: ["read", "edit", "write", "grep", "find", "ls"],
       customTools: [await scrubbedBashTool(projectDir)] as never,
-      sessionManager: pi.SessionManager.inMemory(projectDir),
+      // Persistent session per conversation (M2-05), shared cwd with the text
+      // engine. Compaction stays OFF — a prototype run is effectively single-shot
+      // and its context (one HTML file) doesn't grow across turns.
+      sessionManager: (await openConversationSession(input.conversationId, projectDir)) as never,
       settingsManager: pi.SettingsManager.inMemory({ compaction: { enabled: false } }),
     });
 

@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { existsSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { assertSafeSegment } from "./workspace.js";
 
@@ -30,6 +30,21 @@ export function piSessionsRoot(): string {
 export function conversationSessionDir(conversationId: string): string {
   assertSafeSegment(conversationId, "conversationId");
   return join(piSessionsRoot(), conversationId);
+}
+
+/**
+ * True when a conversation already has a persisted session on disk — i.e. this
+ * is a resumed turn, not the first. Callers send only the new turn's content
+ * when resuming (the session carries the rest).
+ */
+export function sessionExists(conversationId: string): boolean {
+  const dir = conversationSessionDir(conversationId);
+  if (!existsSync(dir)) return false;
+  try {
+    return readdirSync(dir).some((f) => f.endsWith(".jsonl"));
+  } catch {
+    return false;
+  }
 }
 
 type SessionManagerModule = {

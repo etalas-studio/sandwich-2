@@ -42,6 +42,7 @@ import {
 } from "../projects/workspace.js";
 import { buildBriefMarkdown, writeBrief, type BriefRole } from "../projects/brief.js";
 import { acquireProjectLease, isLease, type ProjectLease } from "../projects/locks.js";
+import { openConversationSession, sessionExists } from "../projects/sessions.js";
 import { ensureProjectForConversation } from "../db/projects.js";
 import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
 import { readFile } from "node:fs/promises";
@@ -174,13 +175,14 @@ export function textEngineTools(stage: PipelineStage): readonly string[] {
 
 async function runTextGeneration(opts: {
   projectDir: string;
+  conversationId: string;
   history: ConversationTurn[];
   signal: AbortSignal;
   stage: PipelineStage;
   pendingType: DocumentType | null;
   refineInstruction?: string | null;
 }): Promise<{ text: string; wroteFile: boolean }> {
-  const { projectDir, history, signal, stage, pendingType, refineInstruction } = opts;
+  const { projectDir, conversationId, history, signal, stage, pendingType, refineInstruction } = opts;
   const pi = await import("@earendil-works/pi-coding-agent");
   const { resolveModel } = await import("../model-runtime.js");
 
@@ -189,14 +191,20 @@ async function runTextGeneration(opts: {
   const isFileWrite = stage === "generating" && !!pendingType && pendingType !== "prototype";
   const relPath = isFileWrite ? deliverablePathFor(pendingType!) : null;
 
+  // Disk-backed session per conversation (M2-05). On a resumed turn the session
+  // already carries the transcript, so we send only the new turn's content —
+  // re-sending the whole history would double-feed it. Compaction is ON: a
+  // persistent chat session grows unbounded otherwise and eventually dies on a
+  // context-window error with no recovery.
+  const resume = sessionExists(conversationId);
   const { session } = await pi.createAgentSession({
     cwd: projectDir,
     model: model as never,
     modelRuntime: runtime as never,
     tools: tools as string[],
-    sessionManager: pi.SessionManager.inMemory(projectDir),
+    sessionManager: (await openConversationSession(conversationId, projectDir)) as never,
     settingsManager: pi.SettingsManager.inMemory({
-      compaction: { enabled: false },
+      compaction: { enabled: true },
     }),
   });
 
@@ -259,11 +267,19 @@ async function runTextGeneration(opts: {
     }
   });
 
-  const messages = buildMessages(history, stage, pendingType, refineInstruction);
-  const parts = messages.map((m) => {
-    if (m.role === "system") return m.content;
-    return `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`;
-  });
+  const built = buildMessages(history, stage, pendingType, refineInstruction);
+  const systemContent = built[0]!.content;
+  const lastUser =
+    [...history].reverse().find((t) => t.role === "user")?.content ?? "";
+  const parts = resume
+    ? // Resumed turn: system block (carries the stage instruction + any
+      // deliverable guide) + only the new user message. The session has the rest.
+      [systemContent, `User: ${lastUser}`]
+    : built.map((m) =>
+        m.role === "system"
+          ? m.content
+          : `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`,
+      );
   if (relPath) {
     parts.push(
       refineInstruction
@@ -860,6 +876,7 @@ export function registerConversationRunRoutes(
             } else {
               const r = await runTextGeneration({
                 projectDir,
+                conversationId,
                 history: turns,
                 signal: controller.signal,
                 stage,
@@ -908,6 +925,7 @@ export function registerConversationRunRoutes(
           // Non-generating stages: a plain chat reply (read-only tools).
           const r = await runTextGeneration({
             projectDir,
+            conversationId,
             history: turns,
             signal: controller.signal,
             stage,
