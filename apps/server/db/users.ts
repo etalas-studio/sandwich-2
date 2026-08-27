@@ -1,6 +1,10 @@
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { users } from "./schema.js";
+import {
+  users, sessions, conversations, chatMessages, attachments,
+  payments, subscriptions, usage, userPreferences, documents,
+  passwordResetTokens, emailVerificationTokens,
+} from "./schema.js";
 import type { Database } from "./connection.js";
 
 export interface User {
@@ -62,6 +66,24 @@ export async function markEmailVerified(db: Database, userId: string): Promise<v
 }
 
 export async function deleteUser(db: Database, userId: string): Promise<void> {
+  const u = eq(sessions.userId, userId);
+  // delete leaf tables first, then parent rows, then the user
+  await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
+  await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+  await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
+  await db.delete(usage).where(eq(usage.userId, userId));
+  await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+  await db.delete(payments).where(eq(payments.userId, userId));
+  await db.delete(attachments).where(eq(attachments.userId, userId));
+  // chat messages reference conversations — delete messages first
+  const userConvIds = (await db.select({ id: conversations.id }).from(conversations).where(eq(conversations.userId, userId))).map(r => r.id);
+  if (userConvIds.length > 0) {
+    const { inArray } = await import("drizzle-orm");
+    await db.delete(chatMessages).where(inArray(chatMessages.conversationId, userConvIds));
+  }
+  await db.delete(conversations).where(eq(conversations.userId, userId));
+  await db.delete(documents).where(eq(documents.userId, userId));
+  await db.delete(sessions).where(u);
   await db.delete(users).where(eq(users.id, userId));
 }
 
