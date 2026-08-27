@@ -38,18 +38,14 @@ export function Hero(props: HeroProps) {
 
   return (
     <div className="relative z-0 h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
-      {/* Photo backdrop, dimmed behind the gradient tint. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
+      {/* Photo backdrop, shown at full strength like the reference - the photo's own shadow on the left carries text legibility, no added scrim. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
       <div className="absolute inset-0">
         <img
           src="/hero-bg-face.webp"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover opacity-90"
-          style={{ filter: 'saturate(0.85)' }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(55% 45% at 78% 15%, transparent 0%, rgba(2,6,23,0.15) 60%, rgba(2,6,23,0.6) 100%), linear-gradient(100deg, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.7) 32%, rgba(2,6,23,0.25) 60%)' }} />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 80% 10%, rgba(59,130,246,0.22), transparent 60%), radial-gradient(45% 40% at 10% 90%, rgba(59,130,246,0.12), transparent 65%)' }} />
       </div>
 
       <GridLines />
