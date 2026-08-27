@@ -1,7 +1,7 @@
 'use client'
 
 import { GridLines } from './GridLines'
-import { TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED } from './tokens'
+import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_SECONDARY, LIGHT_TEXT_MUTED } from './tokens'
 
 export interface HarnessesProps {
   kicker: string
@@ -33,19 +33,19 @@ export function Harnesses(props: HarnessesProps) {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium ring-1 ring-white/10 w-fit" style={{ color: TEXT_SECONDARY }}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-black/5 px-3 py-1.5 text-xs font-medium ring-1 ring-black/10 w-fit" style={{ color: LIGHT_TEXT_SECONDARY }}>
               {props.kicker}
             </div>
 
-            <h2 className="sm:text-5xl md:text-6xl md:font-normal md:tracking-tighter text-4xl font-semibold tracking-tight mt-4" style={{ color: TEXT_PRIMARY }}>
+            <h2 className="sm:text-5xl md:text-6xl md:font-normal md:tracking-tighter text-4xl font-semibold tracking-tight mt-4" style={{ color: LIGHT_TEXT_PRIMARY }}>
               {props.title}
             </h2>
 
-            <p className="md:mt-5 md:text-lg leading-relaxed text-base mt-5" style={{ color: TEXT_MUTED }}>
+            <p className="md:mt-5 md:text-lg leading-relaxed text-base mt-5" style={{ color: LIGHT_TEXT_MUTED }}>
               {props.desc}
             </p>
 
-            <button onClick={props.onLinkClick} className="group inline-flex items-center gap-2 mt-6 text-sm font-medium underline decoration-white/30 underline-offset-4 hover:decoration-white/60" style={{ color: TEXT_PRIMARY }}>
+            <button onClick={props.onLinkClick} className="group inline-flex items-center gap-2 mt-6 text-sm font-medium underline decoration-black/30 underline-offset-4 hover:decoration-black/60" style={{ color: LIGHT_TEXT_PRIMARY }}>
               <span>{props.linkLabel}</span>
               <iconify-icon icon="solar:arrow-right-linear" width="16" className="transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>

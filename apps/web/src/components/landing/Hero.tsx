@@ -48,7 +48,7 @@ export function Hero(props: HeroProps) {
         />
       </div>
 
-      <GridLines />
+      <GridLines dark />
 
       {/* Header / Nav - fixed so it stays in place while the rest of the page scrolls underneath */}
       <header className="fixed top-0 inset-x-0 z-30 border-white/5 border-b">

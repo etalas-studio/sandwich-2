@@ -1,6 +1,6 @@
 'use client'
 
-import { TEXT_MUTED, TEXT_PRIMARY } from './tokens'
+import { LIGHT_TEXT_MUTED, LIGHT_TEXT_PRIMARY } from './tokens'
 
 const FORMATS = ['PRD', 'SPECS', 'PROTOTYPE', 'QUOTATION', 'MOM']
 
@@ -8,8 +8,8 @@ export function FormatTicker({ label }: { label: string }) {
   const track = (
     <div className="flex items-center gap-16 shrink-0">
       {FORMATS.map((f) => (
-        <div key={f} className="flex items-center gap-3 transition-colors duration-300" style={{ color: TEXT_MUTED }}>
-          <span className="text-lg font-medium tracking-tighter" style={{ color: TEXT_PRIMARY }}>{f}</span>
+        <div key={f} className="flex items-center gap-3 transition-colors duration-300" style={{ color: LIGHT_TEXT_MUTED }}>
+          <span className="text-lg font-medium tracking-tighter" style={{ color: LIGHT_TEXT_PRIMARY }}>{f}</span>
         </div>
       ))}
     </div>
@@ -24,7 +24,7 @@ export function FormatTicker({ label }: { label: string }) {
       `}</style>
       <div className="sm:px-6 lg:px-8 max-w-7xl mr-auto ml-auto pr-4 pl-4">
         <div className="text-center mb-12">
-          <p className="uppercase text-xs font-medium tracking-wide" style={{ color: TEXT_MUTED }}>{label}</p>
+          <p className="uppercase text-xs font-medium tracking-wide" style={{ color: LIGHT_TEXT_MUTED }}>{label}</p>
         </div>
 
         <div

@@ -15,7 +15,7 @@ import { Proof } from './landing/Proof'
 import { Faq } from './landing/Faq'
 import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
-import { FONT_SANS, BG, TEXT_MUTED } from './landing/tokens'
+import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
 const FOOTER_NOTE = {
@@ -62,7 +62,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: BG, color: TEXT_MUTED }}>
+    <div className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: LIGHT_BG, color: LIGHT_TEXT_MUTED }}>
       <style>{`::selection { background: rgba(59,130,246,0.3); color: #ffffff; }`}</style>
 
       <Hero
