@@ -38,12 +38,14 @@ export function Hero(props: HeroProps) {
 
   return (
     <div className="relative h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
-      {/* Photo backdrop, shown at full strength like the reference - the photo's own shadow on the left carries text legibility, no added scrim. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
+      {/* Video backdrop, shown at full strength - no added scrim. No negative z-index here - painted first in DOM order, header/main below carry explicit z-20 so they stack above naturally. */}
       <div className="absolute inset-0">
-        <img
-          src="/hero-bg-face.webp"
-          alt=""
-          aria-hidden="true"
+        <video
+          src="/hero-bg.webm"
+          autoPlay
+          muted
+          loop
+          playsInline
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
