@@ -51,6 +51,7 @@ export function Footer(props: FooterProps) {
               <li><a href="#ingredients" onClick={(e) => { e.preventDefault(); props.onNavClick('ingredients') }} className="text-sm hover:text-neutral-900 transition" style={{ color: LIGHT_TEXT_MUTED }}>{props.navHow}</a></li>
               <li><a href="#pricing" onClick={(e) => { e.preventDefault(); props.onNavClick('pricing') }} className="text-sm hover:text-neutral-900 transition" style={{ color: LIGHT_TEXT_MUTED }}>{props.navPricing}</a></li>
               <li><a href="#faq" onClick={(e) => { e.preventDefault(); props.onNavClick('faq') }} className="text-sm hover:text-neutral-900 transition" style={{ color: LIGHT_TEXT_MUTED }}>{props.navFaq}</a></li>
+              <li><Link href="/blog" className="text-sm hover:text-neutral-900 transition" style={{ color: LIGHT_TEXT_MUTED }}>Blog</Link></li>
             </ul>
           </div>
 

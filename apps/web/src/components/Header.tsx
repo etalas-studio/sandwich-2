@@ -1,42 +1,31 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../lib/i18n'
-
-const bowlby = "'Bowlby One', system-ui"
+import { ACCENT, LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 export default function Header() {
   const { lang, setLang, t } = useLanguage()
   const router = useRouter()
-  const activeSectionRef = useRef<string>('')
-  const [activeSectionState, setActiveSectionState] = useState<string>('')
+  const pathname = usePathname()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const anchorLinks = [
-    { id: 'harnesses', label: t('nav_pipeline') },
-    { id: 'pipeline', label: t('nav_how') },
-    { id: 'differentiators', label: t('nav_diff') },
+    { id: 'ingredients', label: t('stack_kicker') },
+    { id: 'harnesses', label: t('harnesses_kicker') },
+    { id: 'pipeline', label: t('nav_diff') },
     { id: 'pricing', label: t('nav_pricing') },
     { id: 'faq', label: t('nav_faq') },
   ]
 
   return (
     <div className="relative flex justify-center w-full">
-      <nav
-        className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full border max-w-full"
-        style={{
-          backgroundColor: '#F4EBE1',
-          borderColor: 'rgba(0,0,0,0.1)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-        }}
-      >
+      <nav className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full ring-1 ring-black/10 bg-white/80 backdrop-blur-sm max-w-full">
         {/* Logo */}
-        <Link href="/">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center mr-1" style={{ backgroundColor: '#f91814' }}>
-            <span className="text-white font-black text-[10px]" style={{ fontFamily: bowlby }}>S</span>
-          </div>
+        <Link href="/" className="flex items-center gap-2 pl-1 pr-2 shrink-0">
+          <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
         </Link>
 
         {/* Desktop anchor links */}
@@ -45,26 +34,16 @@ export default function Header() {
             <a
               key={id}
               href={`/#${id}`}
-              onClick={(e) => {
-                const el = document.getElementById(id)
-                if (el) {
-                  e.preventDefault()
-                  activeSectionRef.current = id
-                  setActiveSectionState(id)
-                  el.scrollIntoView({ behavior: 'smooth' })
-                }
-              }}
-              className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors"
-              style={{ color: activeSectionState === id ? '#0a0a0a' : '#6b7280', fontWeight: activeSectionState === id ? 600 : 500 }}
+              className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-neutral-900"
+              style={{ color: LIGHT_TEXT_MUTED }}
             >
               {label}
             </a>
           ))}
-          {/* Blog route link */}
           <Link
             href="/blog"
             className="shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors"
-            style={{ color: '#6b7280' }}
+            style={{ color: pathname?.startsWith('/blog') ? ACCENT : LIGHT_TEXT_MUTED }}
           >
             Blog
           </Link>
@@ -76,22 +55,16 @@ export default function Header() {
           aria-label={mobileNavOpen ? t('nav_menu_close') : t('nav_menu_open')}
           aria-expanded={mobileNavOpen}
           className="md:hidden shrink-0 w-11 h-11 flex items-center justify-center rounded-full"
-          style={{ color: '#0a0a0a' }}
+          style={{ color: LIGHT_TEXT_PRIMARY }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            {mobileNavOpen ? (
-              <path d="M6 6l12 12M18 6L6 18" />
-            ) : (
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            )}
-          </svg>
+          <iconify-icon icon={mobileNavOpen ? 'solar:close-circle-linear' : 'solar:hamburger-menu-linear'} width="18" />
         </button>
 
         {/* Language toggle */}
         <button
           onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-          className="shrink-0 px-4 min-w-[52px] min-h-11 flex items-center justify-center rounded-full text-xs font-semibold transition-colors"
-          style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#0a0a0a' }}
+          className="shrink-0 px-4 min-w-[52px] min-h-11 flex items-center justify-center rounded-full text-xs font-semibold transition-colors bg-black/5 hover:bg-black/10"
+          style={{ color: LIGHT_TEXT_PRIMARY }}
           title="Switch language"
         >
           {lang === 'en' ? 'EN' : 'ID'}
@@ -100,10 +73,8 @@ export default function Header() {
         {/* Login */}
         <button
           onClick={() => router.push('/login')}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f91814'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#f91814' }}
-          className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all active:scale-95 whitespace-nowrap"
-          style={{ backgroundColor: 'transparent', color: '#f91814', outline: '1.5px solid #f91814', outlineOffset: '-1.5px' }}
+          className="hidden sm:flex shrink-0 px-3 sm:px-4 min-h-11 items-center rounded-full text-xs sm:text-sm font-medium transition-all active:scale-95 whitespace-nowrap ring-1 ring-black/10 hover:bg-black/5"
+          style={{ color: LIGHT_TEXT_MUTED }}
         >
           {t('nav_login')}
         </button>
@@ -112,7 +83,7 @@ export default function Header() {
         <button
           onClick={() => router.push('/register')}
           className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
-          style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
+          style={{ backgroundColor: LIGHT_TEXT_PRIMARY, color: '#ffffff' }}
         >
           {t('nav_get_started')}
         </button>
@@ -120,26 +91,13 @@ export default function Header() {
 
       {/* Mobile dropdown */}
       {mobileNavOpen && (
-        <div
-          className="md:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100%-2rem)] max-w-sm rounded-2xl border flex flex-col overflow-hidden"
-          style={{ backgroundColor: '#F4EBE1', borderColor: 'rgba(0,0,0,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-        >
+        <div className="md:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100%-2rem)] max-w-sm rounded-2xl ring-1 ring-black/10 bg-white flex flex-col overflow-hidden shadow-lg">
           {anchorLinks.map(({ id, label }) => (
             <a
               key={id}
               href={`/#${id}`}
-              onClick={(e) => {
-                const el = document.getElementById(id)
-                if (el) {
-                  e.preventDefault()
-                  activeSectionRef.current = id
-                  setActiveSectionState(id)
-                  setMobileNavOpen(false)
-                  el.scrollIntoView({ behavior: 'smooth' })
-                }
-              }}
-              className="px-5 py-3.5 text-sm font-medium text-left border-b last:border-b-0"
-              style={{ color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.06)' }}
+              className="px-5 py-3.5 text-sm font-medium text-left border-b border-black/5 last:border-b-0"
+              style={{ color: LIGHT_TEXT_PRIMARY }}
             >
               {label}
             </a>
@@ -147,11 +105,18 @@ export default function Header() {
           <Link
             href="/blog"
             onClick={() => setMobileNavOpen(false)}
-            className="px-5 py-3.5 text-sm font-medium text-left border-b last:border-b-0"
-            style={{ color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.06)' }}
+            className="px-5 py-3.5 text-sm font-medium text-left border-b border-black/5 last:border-b-0"
+            style={{ color: LIGHT_TEXT_PRIMARY }}
           >
             Blog
           </Link>
+          <button
+            onClick={() => router.push('/login')}
+            className="px-5 py-3.5 text-sm font-medium text-left"
+            style={{ color: LIGHT_TEXT_PRIMARY }}
+          >
+            {t('nav_login')}
+          </button>
         </div>
       )}
     </div>

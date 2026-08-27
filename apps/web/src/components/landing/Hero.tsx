@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { GridLines } from './GridLines'
 import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
 
@@ -72,6 +73,12 @@ export function Hero(props: HeroProps) {
                   {label}
                 </a>
               ))}
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 transition hover:bg-white/10 hover:ring-white/20 text-sm font-medium text-white/90 bg-white/5 ring-white/10 ring-1 rounded-full pt-2 pr-3.5 pb-2 pl-3.5 backdrop-blur-sm"
+              >
+                Blog
+              </Link>
             </nav>
           </div>
 
@@ -120,6 +127,14 @@ export function Hero(props: HeroProps) {
                 {label}
               </a>
             ))}
+            <Link
+              href="/blog"
+              onClick={() => props.setMobileNavOpen(false)}
+              className="px-5 py-3.5 text-sm font-medium text-left border-b border-white/10"
+              style={{ color: TEXT_PRIMARY }}
+            >
+              Blog
+            </Link>
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); props.onLoginClick(); props.setMobileNavOpen(false) }}

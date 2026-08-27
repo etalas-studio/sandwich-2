@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Header from '../../components/Header'
 import BlogCard from '../../components/BlogCard'
+import { GridLines } from '../../components/landing/GridLines'
+import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from '../../components/landing/tokens'
 import { getAllPosts } from '../../lib/blog'
-
-const bowlby = "'Bowlby One', system-ui"
 
 export const metadata: Metadata = {
   title: 'Insights — SANDWICH',
@@ -14,24 +14,25 @@ export const metadata: Metadata = {
 export default async function BlogIndexPage() {
   const posts = await getAllPosts()
   return (
-    <div className="min-h-screen bg-[#F4EBE1]">
-      <div className="pt-8 pb-6 px-6 flex justify-center">
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      <GridLines />
+      <div className="pt-8 pb-6 px-6 flex justify-center relative z-10">
         <Header />
       </div>
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-6 py-12 relative z-10">
         <div className="mb-10">
           <h1
-            className="text-5xl md:text-6xl tracking-tight leading-none text-zinc-900"
-            style={{ fontFamily: bowlby }}
+            className="text-5xl md:text-6xl font-medium tracking-tighter leading-none"
+            style={{ color: LIGHT_TEXT_PRIMARY }}
           >
             Insights
           </h1>
-          <p className="mt-3 text-base text-zinc-500 max-w-xl">
+          <p className="mt-3 text-base max-w-xl" style={{ color: LIGHT_TEXT_MUTED }}>
             Thoughts on building better products, faster.
           </p>
         </div>
         {posts.length === 0 ? (
-          <p className="text-zinc-500">No articles yet.</p>
+          <p style={{ color: LIGHT_TEXT_MUTED }}>No articles yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (

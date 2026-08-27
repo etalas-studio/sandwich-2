@@ -67,9 +67,15 @@ export default function SetupForm({
     const tick = async () => {
       const verified = await fetchVerificationStatus(email).catch(() => false);
       if (cancelled || !verified) return;
-      await login(username, password).catch(() => {});
+      clearInterval(interval);
+      const loggedIn = await login(username, password).then(() => true).catch(() => false);
+      if (cancelled || !loggedIn) return;
+      // A full navigation (not router.push) guarantees the dashboard's
+      // first render sees the session cookie this login just set — the
+      // same effect a manual refresh had, just automatic.
+      window.location.href = '/dashboard';
     };
-    const interval = setInterval(tick, VERIFICATION_POLL_MS);
+    const interval = setInterval(() => void tick(), VERIFICATION_POLL_MS);
     void tick();
     return () => {
       cancelled = true;
