@@ -50,8 +50,8 @@ export function Hero(props: HeroProps) {
 
       <GridLines />
 
-      {/* Header / Nav */}
-      <header className="z-20 border-white/5 border-b relative">
+      {/* Header / Nav - fixed so it stays in place while the rest of the page scrolls underneath */}
+      <header className="fixed top-0 inset-x-0 z-30 border-white/5 border-b bg-slate-950/40 backdrop-blur-xl">
         <div className="flex md:px-8 max-w-7xl mr-auto ml-auto pt-5 pr-6 pb-5 pl-6 items-center justify-between">
           <div className="flex md:gap-6 ring-white/5 ring-1 rounded-full pt-1 pr-1 pb-1 pl-1 gap-x-4 gap-y-4 items-center">
             <a href="/" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className="flex items-center gap-2 pl-2 pr-3 shrink-0">
