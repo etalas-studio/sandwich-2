@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
@@ -99,59 +100,110 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
     setStreaming(true)
 
     const ctrl = new AbortController()
+    let disposed = false
 
     // Trigger generate FIRST so inFlight is set before stream connects.
     // Stream checks inFlight on connect — if empty it closes immediately.
     generateConversation(conversationId, { regenerate: regenerateRef.current }).catch(() => {})
 
-    // Small delay so inFlight is registered before stream opens
-    const streamPromise = new Promise<Response>(resolve =>
-      setTimeout(() => resolve(fetch(apiUrl(`/api/conversations/${conversationId}/stream`), { credentials: 'include', signal: ctrl.signal })), 100)
-    )
+    const parseEvent = (line: string): { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } } | null => {
+      try {
+        const ev = JSON.parse(line.replace(/^data: /, '').trim()) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }
+        return ev.type ? ev : null
+      } catch {
+        return null
+      }
+    }
 
-    streamPromise
-      .then(async res => {
-        const reader = res.body!.getReader()
-        const dec = new TextDecoder()
-        let buf = ''
-        try {
-          while (true) {
-            const { value, done } = await reader.read()
-            if (done) break
-            buf += dec.decode(value, { stream: true })
-            const parts = buf.split('\n\n')
-            buf = parts.pop() ?? ''
-            for (const part of parts) {
-              const line = part.replace(/^data: /, '').trim()
-              if (!line) continue
-              try {
-                const ev = JSON.parse(line) as { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }
-                if (ev.type === 'stage_start' && ev.stage) {
-                  setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
-                } else if (ev.type === 'done') {
-                  const output = ev.text ?? ''
-                  setMessages(m => [...m, { role: 'ai', isDone: true, output, document: ev.document }])
-                  setStreaming(false)
-                  onDone?.(output)
-                } else if (ev.type === 'error') {
-                  const errText = ev.text ?? tr('pipeline_error')
-                  setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
-                  setStreaming(false)
-                }
-              } catch { /* skip bad JSON */ }
-            }
-          }
-        } finally {
+    const handleEvent = (ev: { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }): 'continue' | 'done' => {
+      if (ev.type === 'stage_start' && ev.stage) {
+        setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
+        return 'continue'
+      }
+      if (ev.type === 'done') {
+        const output = ev.text ?? ''
+        if (output) {
+          // Normal completion — the backend sent the result text + document ref.
+          setMessages(m => [...m, { role: 'ai', isDone: true, output, document: ev.document }])
+          setStreaming(false)
+          onDone?.(output)
+        } else {
+          // "done" without text: the stream reconnected after generation
+          // finished (or this is the connect-time "already done" probe). Don't
+          // append an empty bubble — reload from DB so the result renders.
           setStreaming(false)
           onSettled?.()
         }
-      })
-      .catch(() => {
+        return 'done'
+      }
+      if (ev.type === 'error') {
+        const raw = ev.text ?? ''
+        const errText = raw === 'prototype quota reached'
+          ? tr('prototype_quota_reached')
+          : raw === 'monthly quota reached'
+            ? tr('plan_limit_desc')
+            : raw || tr('pipeline_error')
+        setMessages(m => [...m, { role: 'ai', isError: true, text: errText }])
         setStreaming(false)
-        onSettled?.()
-      })
+        return 'done'
+      }
+      return 'continue'
+    }
 
-    return () => ctrl.abort()
+    // Reconnect with exponential backoff when the stream drops without a
+    // terminal event. Prototype generation can take 10+ minutes; proxies kill
+    // idle SSE connections long before that, so a single fetch is not enough.
+    const connect = (attempt: number) => {
+      if (disposed) return
+      fetch(apiUrl(`/api/conversations/${conversationId}/stream`), { credentials: 'include', signal: ctrl.signal })
+        .then(async res => {
+          const reader = res.body!.getReader()
+          const dec = new TextDecoder()
+          let buf = ''
+          try {
+            while (true) {
+              const { value, done } = await reader.read()
+              if (done) break
+              buf += dec.decode(value, { stream: true })
+              const parts = buf.split('\n\n')
+              buf = parts.pop() ?? ''
+              for (const part of parts) {
+                const line = part.replace(/^data: /, '').trim()
+                if (!line || line.startsWith(':')) continue // skip heartbeats/comments
+                const ev = parseEvent(line)
+                if (!ev) continue
+                if (handleEvent(ev) === 'done') return
+              }
+            }
+            // Stream ended without a terminal event → reconnect with backoff.
+            if (!disposed) {
+              const delay = Math.min(8000, 500 * 2 ** attempt)
+              setTimeout(() => connect(attempt + 1), delay)
+            }
+          } catch {
+            // fetch/read error (network, proxy reset) → reconnect with backoff.
+            if (!disposed) {
+              const delay = Math.min(8000, 500 * 2 ** attempt)
+              setTimeout(() => connect(attempt + 1), delay)
+            }
+          }
+        })
+        .catch(() => {
+          if (!disposed) {
+            const delay = Math.min(8000, 500 * 2 ** attempt)
+            setTimeout(() => connect(attempt + 1), delay)
+          }
+        })
+    }
+
+    // Small delay so inFlight is registered before stream connects.
+    const firstConnect = setTimeout(() => connect(0), 100)
+
+    return () => {
+      disposed = true
+      clearTimeout(firstConnect)
+      ctrl.abort()
+    }
   }, [conversationId, regenNonce])
 
   return { messages, streaming }
@@ -351,10 +403,12 @@ function ChatView({
     { user: initialPrompt, attachments: [], aiMessages: [] }
   ])
 
+  const [isReloading, setIsReloading] = useState(false)
+
   // Reconstruct committed turns from the DB history.
   const reloadTurns = useCallback(() => {
-    if (!conversationId) return
-    getMessages(conversationId)
+    if (!conversationId) return Promise.resolve()
+    return getMessages(conversationId)
       .then((msgs) => {
         if (!msgs.length) return
         const reconstructed: Turn[] = []
@@ -372,7 +426,12 @@ function ChatView({
             currentAttachments = m.attachments ?? []
             currentAi = []
           } else if (m.role === 'assistant') {
-            currentAi.push({ role: 'ai', isDone: true, output: m.content, document: m.documentId ? { id: m.documentId } : undefined })
+            const docMeta = m.document
+              ? { id: m.document.id, type: m.document.type, title: m.document.title, versionNo: m.document.versionNo ?? undefined }
+              : m.documentId
+                ? { id: m.documentId }
+                : undefined
+            currentAi.push({ role: 'ai', isDone: true, output: m.content, document: docMeta })
           }
         }
         if (currentUser) {
@@ -387,7 +446,7 @@ function ChatView({
 
   const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
     updateLocalConversation(conversationId, { content: output, status: 'done' })
-  }, () => { void reloadTurns() })
+  }, () => { setIsReloading(true); void reloadTurns()?.finally(() => setIsReloading(false)) })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
   const [chatError, setChatError] = useState<string | null>(null)
@@ -627,8 +686,8 @@ function ChatView({
                   return null
                 })}
 
-                {/* Loading state — shown while streaming */}
-                {isLast && streaming && !msgs.some(m => m.isDone || m.isError) && (
+                {/* Loading state — shown while streaming or reloading turns after fast response */}
+                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (
                   <div className="flex flex-col gap-2">
                     {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
                       <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
@@ -1318,6 +1377,8 @@ function Drawer({ conversation, onClose, onDelete }: { conversation: LocalConver
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const { t: tr } = useLanguage()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [conversations, setConversations] = useState<LocalConversation[]>([])
   const [selected, setSelected] = useState<LocalConversation | null>(null)
   const [activeNav, setActiveNav] = useState('home')
@@ -1445,17 +1506,45 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setConfirmDeleteChat(false)
     if (chatState) {
       localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, conversationId: chatState.conversationId }))
+      // Sync conversation ID to URL (?c=<id>) without adding a history entry
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('c') !== chatState.conversationId) {
+        router.replace(`/dashboard?c=${chatState.conversationId}`, { scroll: false })
+      }
     } else {
       localStorage.removeItem('sandwich_last_chat')
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('c')) router.replace('/dashboard', { scroll: false })
     }
-  }, [chatState?.conversationId])
+  }, [chatState?.conversationId, router])
 
-  // Handle browser back button when navigating from Documents into chat
+  // Restore conversation from ?c= URL param on first load
+  useEffect(() => {
+    const cId = searchParams.get('c')
+    if (!cId || chatState?.conversationId === cId) return
+    void loadConversations().then(convs => {
+      setConversations(convs)
+      const match = convs.find(c => c.id === cId)
+      if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Handle browser back/forward between conversations
   useEffect(() => {
     const handler = (e: PopStateEvent) => {
       if (e.state?.activeNav) {
         setActiveNav(e.state.activeNav)
         setChatState(null)
+        return
+      }
+      const params = new URLSearchParams(window.location.search)
+      const cId = params.get('c')
+      if (!cId) {
+        setChatState(null)
+      } else {
+        const match = getConversations().find(c => c.id === cId)
+        if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
       }
     }
     window.addEventListener('popstate', handler)

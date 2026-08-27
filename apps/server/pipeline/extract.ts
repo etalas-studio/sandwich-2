@@ -30,26 +30,12 @@ const pdfParse = require("pdf-parse") as (
  * resulting text.
  */
 
-// Vision runs through the user's OpenCode subscription (Gemini flash-lite);
-// if it fails or OpenCode isn't configured, fall back to local OCR.
-const OPENCODE_VISION_PROVIDER =
-  process.env.OPENCODE_VISION_PROVIDER ?? "opencode";
-const OPENCODE_VISION_MODEL =
-  process.env.OPENCODE_VISION_MODEL ?? "gemini-3.5-flash-lite";
+// Vision runs through the configured vision engine (engine_settings);
+// if it fails, fall back to local OCR.
 const OCR_LANGS = process.env.OCR_LANGS ?? "eng";
 
 const VISION_PROMPT =
   "Extract every piece of text in this image verbatim, then describe the layout, UI elements, and visual design in detail. If there is no text, just describe what you see.";
-
-let modelRuntimePromise: Promise<any> | null = null;
-function getModelRuntime(): Promise<any> {
-  if (!modelRuntimePromise) {
-    modelRuntimePromise = import("@earendil-works/pi-coding-agent").then((pi) =>
-      pi.ModelRuntime.create({ modelsPath: null }),
-    );
-  }
-  return modelRuntimePromise;
-}
 
 export interface ExtractResult {
   text: string;
@@ -100,20 +86,14 @@ async function extractImageWithVision(
   buffer: Buffer,
   mimeType: string,
 ): Promise<string> {
-  const rt = await getModelRuntime();
-  const model = rt.getModel(OPENCODE_VISION_PROVIDER, OPENCODE_VISION_MODEL);
-  if (!model) {
-    throw new Error(
-      `vision model not available: ${OPENCODE_VISION_PROVIDER}/${OPENCODE_VISION_MODEL}`,
-    );
-  }
+  const { resolveModel } = await import("../model-runtime.js");
+  const { runtime: rt, model } = await resolveModel("vision");
 
-  // `Models.stream()` resolves auth (env/stored/runtime) and delegates to the
-  // provider — calling `provider.stream()` directly bypasses auth resolution.
   const stream = rt.stream(model, {
     messages: [
       {
         role: "user",
+        timestamp: Date.now(),
         content: [
           { type: "text", text: VISION_PROMPT },
           { type: "image", data: buffer.toString("base64"), mimeType },

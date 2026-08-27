@@ -361,3 +361,104 @@ body {
 .sandwich-output code {
   word-break: break-all;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BLOG ARTICLE TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════ */
+.blog-article {
+  color: #3f3f46; /* zinc-700 */
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.blog-article p {
+  margin-bottom: 1.25em;
+}
+.blog-article h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #18181b; /* zinc-900 */
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+.blog-article h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #18181b;
+  margin-top: 1.75em;
+  margin-bottom: 0.4em;
+  line-height: 1.4;
+}
+.blog-article ul,
+.blog-article ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+}
+.blog-article li {
+  margin-bottom: 0.35em;
+}
+.blog-article ul li {
+  list-style-type: disc;
+}
+.blog-article ol li {
+  list-style-type: decimal;
+}
+.blog-article strong {
+  font-weight: 600;
+  color: #27272a; /* zinc-800 */
+}
+.blog-article a {
+  color: #f91814;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.blog-article a:hover {
+  opacity: 0.8;
+}
+.blog-article code {
+  font-size: 0.875em;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+.blog-article pre {
+  background: #f1f1f1;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1.25em;
+}
+.blog-article pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875em;
+}
+.blog-article blockquote {
+  border-left: 3px solid #d4d4d8; /* zinc-300 */
+  padding-left: 1em;
+  color: #71717a; /* zinc-500 */
+  margin: 1.25em 0;
+  font-style: italic;
+}
+.blog-article hr {
+  border: none;
+  border-top: 1px solid #e4e4e7; /* zinc-200 */
+  margin: 2em 0;
+}
+.blog-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5em;
+  font-size: 0.9rem;
+}
+.blog-article th,
+.blog-article td {
+  text-align: left;
+  padding: 0.6em 0.9em;
+  border: 1px solid #e4e4e7;
+}
+.blog-article th {
+  background: #f4f4f5;
+  font-weight: 600;
+  color: #18181b;
+}

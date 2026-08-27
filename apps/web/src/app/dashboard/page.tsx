@@ -9,10 +9,11 @@ export default function Page() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && state?.status === 'unauthenticated') {
+    if (isLoading) return
+    if (state?.status === 'unauthenticated') {
       router.replace('/login')
     }
-  }, [isLoading, state?.status, router])
+  }, [isLoading, state, router])
 
   if (isLoading || state?.status !== 'authenticated') {
     return <div className="ds-bg min-h-screen" />

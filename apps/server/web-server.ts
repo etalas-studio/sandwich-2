@@ -5,7 +5,12 @@ import { closeRedis } from "./redis.js";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { openDb } from "./db/connection.js";
+import { ensureAdminUser, getUserByEmail } from "./db/users.js";
+import { subscriptions } from "./db/schema.js";
+import { eq } from "drizzle-orm";
+import { hashPassword } from "./auth/password.js";
 import { authenticateRequest } from "./auth/middleware.js";
+import { initIntegrations } from "./integrations/integrations.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
 import { registerAuthRoutes } from "./routes/auth.js";
@@ -25,6 +30,7 @@ import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./pipeline/extract.js";
 import { registerPrototypePublicRoutes } from "./prototype/routes.js";
 import { registerDocumentRoutes } from "./routes/documents.js";
+import { registerAdminRoutes } from "./routes/admin.js";
 
 export interface WebServerOptions {
   port: number;
@@ -42,6 +48,53 @@ function parseTrustedHosts(): Set<string> {
     hosts.add("localhost:3000");
   }
   return hosts;
+}
+
+/**
+ * Seed the internal operator admin (idempotent). Password comes from
+ * ADMIN_SEED_PASSWORD so it's never committed to source; ADMIN_SEED_EMAIL
+ * defaults to the Etalas operator inbox.
+ */
+async function seedAdminUser(db: Awaited<ReturnType<typeof openDb>>): Promise<void> {
+  const email = process.env.ADMIN_SEED_EMAIL ?? "admin@sandwich.etalas.com";
+  const password = process.env.ADMIN_SEED_PASSWORD;
+  if (!password) {
+    console.warn("[admin] ADMIN_SEED_PASSWORD not set — skipping admin seed");
+    return;
+  }
+  const passwordHash = await hashPassword(password);
+  const { created } = await ensureAdminUser(db, { email, passwordHash });
+
+  // The operator admin is not a paying customer — give it a permanent,
+  // unlimited "pro" subscription so the dashboard gate and quota checks
+  // never block the operator from using (and testing) the app.
+  const admin = await getUserByEmail(db, email);
+  if (admin) {
+    const now = new Date();
+    const existing = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, admin.id))
+      .limit(1);
+    if (existing.length === 0) {
+      await db.insert(subscriptions).values({
+        userId: admin.id,
+        planSlug: "pro",
+        status: "active",
+        periodDays: 30,
+        expiresAt: null,
+        startedAt: now,
+        updatedAt: now,
+      });
+    } else {
+      await db
+        .update(subscriptions)
+        .set({ planSlug: "pro", status: "active", expiresAt: null, updatedAt: now })
+        .where(eq(subscriptions.id, existing[0]!.id));
+    }
+  }
+
+  if (created) console.log(`[admin] seeded admin account: ${email}`);
 }
 
 const PUBLIC_API_PATHS = new Set([
@@ -68,6 +121,9 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   for (const a of pending) {
     void processExtraction(db, a);
   }
+  // AI engine runtime (Pi SDK ModelRuntime + DB-backed credentials + 9router).
+  await initIntegrations(db);
+  await seedAdminUser(db);
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 
@@ -100,6 +156,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerPreferenceRoutes(router, db);
   registerPrototypePublicRoutes(router, db);
   registerDocumentRoutes(router, db);
+  registerAdminRoutes(router, db);
 
   const server = createServer((req, res) => {
     void (async () => {

@@ -1,0 +1,146 @@
+export const meta = {
+  title: 'Cara Bikin PRD yang Benar untuk Freelancer',
+  description: 'Panduan langkah demi langkah membuat Product Requirements Document (PRD) yang jelas, supaya project freelance kamu tidak meleset dari scope dan budget.',
+  date: '2026-08-26',
+  slug: 'cara-bikin-prd',
+  image: '/blog/cara-bikin-prd.jpg',
+}
+
+Kalau kamu seorang freelancer — baik developer, designer, atau product manager — pasti pernah merasakan proyek yang tiba-tiba melebar jauh dari kesepakatan awal. Fitur baru muncul di tengah jalan, klien minta revisi yang sebenarnya di luar scope, dan kamu tidak punya dokumen yang bisa jadi acuan. Di sinilah PRD berperan.
+
+## Apa itu PRD?
+
+PRD (Product Requirements Document) adalah dokumen yang menjelaskan **apa yang harus dibangun, kenapa, dan bagaimana cara kerjanya**, sebelum satu baris kode ditulis. PRD bukan dokumen teknis untuk developer saja. Ini adalah kontrak antara kamu dan klien tentang apa yang akan diserahkan.
+
+PRD yang baik menjawab tiga pertanyaan:
+1. **Masalah apa** yang coba diselesaikan?
+2. **Siapa** penggunanya dan apa yang mereka butuhkan?
+3. **Apa saja** fitur yang ada dalam scope, dan apa yang **tidak** termasuk?
+
+## Kenapa Freelancer Butuh PRD?
+
+Tanpa PRD, hampir semua masalah klasik freelance akan muncul:
+
+- **Scope creep** — klien minta tambah fitur yang "seharusnya sudah include"
+- **Revisi tak berujung** — tidak ada acuan yang jelas soal mana yang selesai
+- **Konflik soal harga** — klien merasa bayar mahal, kamu merasa kerja terlalu banyak
+- **Proyek gagal di tengah jalan** — karena ekspektasi tidak pernah selaras dari awal
+
+PRD membuat semua ekspektasi tertulis sebelum project dimulai. Kalau ada perubahan, ada bukti tertulis bahwa itu di luar scope awal, dan bisa dinegosiasikan sebagai pekerjaan tambahan.
+
+## Komponen PRD yang Wajib Ada
+
+### 1. Ringkasan Proyek
+
+Jelaskan proyek dalam 2-3 kalimat. Apa yang dibangun, untuk siapa, dan tujuan utamanya. Ini bukan deskripsi teknis — ini elevator pitch yang dimengerti oleh klien manapun.
+
+Contoh:
+> Aplikasi mobile untuk manajemen stok toko kelontong kecil. Target pengguna adalah pemilik toko yang tidak melek teknologi. Tujuan utama: mengurangi kasus kehabisan stok dan stok mati.
+
+### 2. Tujuan Bisnis
+
+Apa yang ingin dicapai klien dengan produk ini? Tulis dalam metrik yang terukur jika memungkinkan.
+
+- Meningkatkan efisiensi pencatatan stok dari manual ke digital
+- Mengurangi stok mati sebesar 30% dalam 3 bulan setelah launch
+- Memudahkan reorder ke supplier tanpa harus menelepon
+
+### 3. User Stories
+
+User story mendeskripsikan fitur dari sudut pandang pengguna, bukan developer. Formatnya sederhana:
+
+> Sebagai **[siapa]**, saya ingin **[melakukan apa]**, supaya **[tujuan]**.
+
+Contoh:
+- Sebagai pemilik toko, saya ingin melihat daftar produk yang stoknya hampir habis, supaya saya bisa reorder sebelum kehabisan.
+- Sebagai pemilik toko, saya ingin memasukkan stok masuk via foto struk, supaya tidak perlu input manual satu per satu.
+
+### 4. Scope — Apa yang Masuk dan Tidak Masuk
+
+Ini bagian yang paling sering dilewati dan paling banyak menimbulkan konflik. Tulis secara eksplisit apa yang **ada** di dalam proyek ini dan apa yang **tidak ada**.
+
+**Dalam scope:**
+- Login dengan nomor HP
+- Manajemen produk (tambah, edit, hapus)
+- Input stok masuk dan keluar
+- Notifikasi stok hampir habis
+
+**Di luar scope (tidak termasuk di proyek ini):**
+- Integrasi dengan mesin kasir
+- Laporan keuangan
+- Multi-cabang
+- Versi web
+
+### 5. Wireframe atau Alur Pengguna
+
+Tidak perlu desain final. Cukup alur kasar yang menggambarkan bagaimana pengguna berpindah dari satu layar ke layar lain. Ini bisa berupa diagram sederhana atau deskripsi teks.
+
+### 6. Kriteria Penerimaan (Acceptance Criteria)
+
+Untuk setiap fitur utama, tulis kondisi yang harus terpenuhi supaya fitur dianggap selesai. Ini yang akan jadi acuan saat demo ke klien.
+
+Contoh untuk fitur "notifikasi stok hampir habis":
+- Pengguna bisa set ambang batas stok per produk
+- Notifikasi muncul di layar utama ketika stok di bawah ambang batas
+- Pengguna bisa mengabaikan notifikasi satu per satu
+
+### 7. Asumsi dan Risiko
+
+Apa yang kamu asumsikan benar saat menulis PRD ini? Apa risiko yang bisa mempengaruhi timeline atau deliverable?
+
+Contoh asumsi: "Klien akan menyediakan akses ke API supplier paling lambat minggu pertama pengerjaan."
+
+Contoh risiko: "Jika API supplier tidak tersedia, fitur reorder otomatis tidak bisa diimplementasikan di fase pertama."
+
+## Template PRD Sederhana
+
+Berikut template yang bisa langsung kamu pakai:
+
+```
+# PRD: [Nama Proyek]
+
+## Ringkasan
+[2-3 kalimat deskripsi proyek]
+
+## Tujuan Bisnis
+- [Tujuan 1]
+- [Tujuan 2]
+
+## Pengguna
+[Deskripsi target pengguna]
+
+## User Stories
+- Sebagai [siapa], saya ingin [apa], supaya [tujuan]
+- ...
+
+## Scope
+### Dalam scope
+- ...
+
+### Di luar scope
+- ...
+
+## Acceptance Criteria
+### [Nama Fitur]
+- [ ] [Kriteria 1]
+- [ ] [Kriteria 2]
+
+## Asumsi
+- ...
+
+## Risiko
+- ...
+
+## Timeline
+[Estimasi per milestone]
+```
+
+## Cara SANDWICH Membantu
+
+Menulis PRD dari nol membutuhkan waktu, dan kalau kamu baru pertama kali, hasilnya sering tidak lengkap karena tidak tahu apa yang kurang. [SANDWICH](https://sandwich.etalas.com) mengubah brief klien yang masih berantakan menjadi PRD yang terstruktur, lengkap dengan prototype dan estimasi biaya, dalam hitungan menit.
+
+Kamu cukup paste brief klien, dan SANDWICH akan mengisi semua bagian PRD di atas secara otomatis: user stories, scope, dan acceptance criteria. Hasilnya bisa langsung kamu review, edit, dan kirim ke klien.
+
+---
+
+Punya pertanyaan soal PRD atau proyek freelance? Coba [SANDWICH gratis](https://sandwich.etalas.com/register) dan lihat apa yang bisa dihasilkan dari brief klien kamu.

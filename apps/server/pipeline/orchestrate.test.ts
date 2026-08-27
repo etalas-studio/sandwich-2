@@ -4,6 +4,7 @@ import {
   detectDeliverableType,
   detectPreviewIntent,
   detectRefineIntent,
+  detectCancelIntent,
   hasLogoAndColorDetails,
   stageInstruction,
 } from "./orchestrate.js";
@@ -57,9 +58,32 @@ describe("detectRefineIntent", () => {
     assert.equal(detectRefineIntent("ganti tema jadi gelap"), true);
   });
 
+  it("detects natural-language feedback without explicit verbs", () => {
+    assert.equal(detectRefineIntent("marquee nya ada diantara hero sama navbar"), true);
+    assert.equal(detectRefineIntent("posisi marquee-nya salah"), true);
+    assert.equal(detectRefineIntent("seharusnya di bawah hero page"), true);
+  });
+
   it("rejects non-refine messages", () => {
     assert.equal(detectRefineIntent("kasih link previewnya"), false);
     assert.equal(detectRefineIntent("terima kasih"), false);
+  });
+});
+
+describe("detectCancelIntent", () => {
+  it("detects cancellation phrases", () => {
+    assert.equal(detectCancelIntent("nggak jadi"), true);
+    assert.equal(detectCancelIntent("ga usah"), true);
+    assert.equal(detectCancelIntent("batal aja"), true);
+    assert.equal(detectCancelIntent("udah nggak usah"), true);
+    assert.equal(detectCancelIntent("never mind"), true);
+    assert.equal(detectCancelIntent("skip"), true);
+  });
+
+  it("rejects confirmations and feedback", () => {
+    assert.equal(detectCancelIntent("itu dulu aja"), false);
+    assert.equal(detectCancelIntent("iya bener"), false);
+    assert.equal(detectCancelIntent("geser marquee ke bawah"), false);
   });
 });
 
