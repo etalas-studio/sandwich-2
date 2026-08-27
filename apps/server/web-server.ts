@@ -12,7 +12,7 @@ import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPasswordResetRoutes } from "./routes/password-reset.js";
 import { registerEmailVerificationRoutes } from "./routes/email-verification.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
-import { registerConversationRunRoutes } from "./routes/conversation-run.js";
+import { registerConversationRunRoutes, waitForActiveGenerations } from "./routes/conversation-run.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
 import { registerUsageRoutes } from "./routes/usage.js";
 import { registerShareRoutes } from "./routes/share.js";
@@ -53,6 +53,7 @@ const PUBLIC_API_PATHS = new Set([
   "/api/auth/reset-password",
   "/api/auth/verify-email",
   "/api/auth/resend-verification",
+  "/api/auth/verification-status",
   "/api/midtrans/notification",
 ]);
 
@@ -132,9 +133,22 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
       typeof address === "object" && address ? address.port : port;
   });
 
+  // Grace period for in-flight /generate calls to finish and persist their
+  // assistant reply before we exit — without this, a restart/deploy while a
+  // reply is generating silently drops it (it's only written to the DB once
+  // the LLM call fully resolves; see conversation-run.ts).
+  const SHUTDOWN_GRACE_MS = 25_000;
+
   for (const sig of ["SIGTERM", "SIGINT"] as const) {
     process.once(sig, () => {
-      server.close(() => void closeRedis().finally(() => process.exit(0)));
+      // Stop accepting new connections immediately, but don't wait on
+      // server.close()'s callback — the /generate route already responds
+      // and detaches into background work, so open-connection tracking
+      // alone won't capture it.
+      server.close();
+      void waitForActiveGenerations(SHUTDOWN_GRACE_MS).finally(() =>
+        closeRedis().finally(() => process.exit(0)),
+      );
     });
   }
 

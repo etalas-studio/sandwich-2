@@ -5,6 +5,7 @@ import { sendJson, readJsonBody } from "../http-utils.js";
 import {
   exportDocument,
   normalizeFormat,
+  normalizeDocKind,
   sanitizeFilename,
   parseQueryParam,
   type ExportResult,
@@ -107,7 +108,7 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
     }
     const format = normalizeFormat(parseQueryParam(req.url, "format"));
     try {
-      const result: ExportResult = await exportDocument(latest.content, format);
+      const result: ExportResult = await exportDocument(latest.content, format, normalizeDocKind(doc.type));
       const filename = sanitizeFilename(doc.title, result.extension);
       res.writeHead(200, {
         "content-type": result.mimeType,

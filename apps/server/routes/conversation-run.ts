@@ -45,6 +45,7 @@ import {
   GETOKUI_PROTOTYPE_GUIDE,
 } from "../pipeline/prompts.js";
 import { buildReferenceBlock } from "../pipeline/references.js";
+import { normalizeDashBullets } from "../pipeline/normalize-prose.js";
 
 export interface DocumentRef {
   id: string;
@@ -123,6 +124,17 @@ function buildMessages(
 
 const inFlight = new Map<string, AbortController>();
 const sseClients = new Map<string, Set<ServerResponse>>();
+
+// Tracks the background promise for each in-flight /generate call so a
+// graceful shutdown can wait for the assistant reply to be persisted
+// instead of dropping it mid-generation (see waitForActiveGenerations).
+const activeRuns = new Set<Promise<void>>();
+
+export async function waitForActiveGenerations(timeoutMs: number): Promise<void> {
+  if (activeRuns.size === 0) return;
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, timeoutMs));
+  await Promise.race([Promise.allSettled([...activeRuns]), timeout]);
+}
 
 // ── Engine selection ─────────────────────────────────────────────────────────
 // OpenCode (Pi SDK) is primary. Groq is dev fallback.
@@ -704,7 +716,8 @@ export function registerConversationRunRoutes(
                 })
             : () => runWithGroq(turns, controller.signal, stage, pendingType, isRegenerate);
 
-        run()
+        let runPromise!: Promise<void>;
+        runPromise = run()
           .then(async (output) => {
             if (!output) {
               const msg = "Model returned no response. Try again.";
@@ -715,6 +728,13 @@ export function registerConversationRunRoutes(
                 text: msg,
               });
               return;
+            }
+
+            // Deterministic guard against the "- label — description"
+            // AI writing tell — the prompt asks the model to avoid it, but
+            // that's probabilistic, so normalize it in code too.
+            if (stage === "generating" && pendingType && pendingType !== "prototype") {
+              output = normalizeDashBullets(output);
             }
 
             let chatOutput = output;
@@ -807,7 +827,11 @@ export function registerConversationRunRoutes(
               text: msg,
             });
           })
-          .finally(() => closeInFlight(conversationId));
+          .finally(() => {
+            closeInFlight(conversationId);
+            activeRuns.delete(runPromise);
+          });
+        activeRuns.add(runPromise);
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "generation setup failed";
