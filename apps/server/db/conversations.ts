@@ -1,13 +1,9 @@
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import {
-  conversations,
-  chatMessages,
-  attachments,
-  conversationDocuments,
-} from "./schema.js";
+import { conversations, chatMessages, attachments } from "./schema.js";
 import type { Database } from "./connection.js";
 import type { DocumentType } from "./documents.js";
+import { clearConversationDocuments } from "./documents.js";
 import {
   createProject,
   getProject,
@@ -200,9 +196,10 @@ export async function deleteConversation(
   if (!existing) return false;
 
   await db.transaction(async (tx) => {
-    await tx
-      .delete(conversationDocuments)
-      .where(eq(conversationDocuments.conversationId, id));
+    const txDb = tx as unknown as Database;
+    // Detach documents (the files on disk outlive the conversation), then
+    // delete the conversation's own dependents.
+    await clearConversationDocuments(txDb, id);
     await tx.delete(attachments).where(eq(attachments.conversationId, id));
     await tx.delete(chatMessages).where(eq(chatMessages.conversationId, id));
     await tx.delete(conversations).where(eq(conversations.id, id));

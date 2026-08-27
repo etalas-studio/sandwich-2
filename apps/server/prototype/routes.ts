@@ -1,7 +1,10 @@
+import { existsSync, readFileSync } from "node:fs";
+import { posix } from "node:path";
 import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
-import { getDocument, getDocumentFile, getLatestVersion, getVersion } from "../db/documents.js";
+import { getOwnedDocument } from "../db/documents.js";
 import { authenticateRequest } from "../auth/middleware.js";
+import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";
 
 const MIME: Record<string, string> = {
@@ -22,23 +25,9 @@ function extFor(path: string): string {
   return dot >= 0 ? path.slice(dot).toLowerCase() : "";
 }
 
-async function resolveVersionNo(
-  db: Database,
-  documentId: string,
-  versionStr: string | null,
-): Promise<number | null> {
-  if (versionStr) {
-    const n = Number.parseInt(versionStr, 10);
-    return Number.isFinite(n) ? n : null;
-  }
-  // Serve the active (current) version, falling back to latest.
-  const doc = await getDocument(db, documentId);
-  if (doc?.currentVersionId) {
-    const current = await getVersion(db, doc.currentVersionId);
-    if (current) return current.versionNo;
-  }
-  const latest = await getLatestVersion(db, documentId);
-  return latest?.versionNo ?? null;
+interface ServerResponseLike {
+  writeHead(status: number, headers?: Record<string, string>): void;
+  end(body?: string | Buffer): void;
 }
 
 function redirectTrailing(res: ServerResponseLike, location: string): boolean {
@@ -47,77 +36,57 @@ function redirectTrailing(res: ServerResponseLike, location: string): boolean {
   return true;
 }
 
-// Minimal response type used by the handlers.
-interface ServerResponseLike {
-  writeHead(status: number, headers?: Record<string, string>): void;
-  end(body?: string): void;
-}
-
 /**
- * Public prototype preview — serves a prototype document's files by document id
- * and version. `/p/{docId}/` → latest index.html; `/p/{docId}/v/{versionNo}/`
- * → that version's index.html.
+ * Public prototype preview — serves the prototype document's files from the
+ * project's git working tree. `/p/{docId}/` → `prototype/index.html`;
+ * `/p/{docId}/{path}` → `prototype/{path}`. Versioned URLs (`/v/{sha}/`) arrive
+ * with M4-01.
  */
 export function registerPrototypePublicRoutes(router: Router, db: Database): void {
+  async function resolvePrototypeDir(
+    req: Parameters<Parameters<Router["get"]>[1]>[0],
+    docId: string,
+  ): Promise<{ dir: string; protoDir: string } | null> {
+    const auth = await authenticateRequest(db, req);
+    if (!auth) return null;
+    const doc = await getOwnedDocument(db, auth.userId, docId);
+    if (!doc || doc.type !== "prototype") return null;
+    const dir = await getProjectDir(auth.userId, doc.projectId);
+    return { dir, protoDir: posix.dirname(doc.relativePath) };
+  }
+
+  function serveFile(res: ServerResponseLike, dir: string, relPath: string): void {
+    let abs: string;
+    try {
+      abs = resolveInsideProject(dir, relPath);
+    } catch {
+      sendJson(res as never, 404, { error: "not found" });
+      return;
+    }
+    if (!existsSync(abs)) {
+      sendJson(res as never, 404, { error: "not found" });
+      return;
+    }
+    res.writeHead(200, { "content-type": MIME[extFor(abs)] ?? "application/octet-stream" });
+    res.end(readFileSync(abs));
+  }
+
   // Latest index — /p/:docId/
   router.get("/p/:docId", async (req, res, params) => {
-    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
     const urlPath = (req.url ?? "").split("?")[0] ?? "";
     if (!urlPath.endsWith("/")) {
       redirectTrailing(res, `/p/${params.docId!}/`);
       return;
     }
-    const doc = await getDocument(db, params.docId!);
-    if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
-    const versionNo = await resolveVersionNo(db, doc.id, null);
-    if (!versionNo) { sendJson(res, 404, { error: "no files generated" }); return; }
-    const indexFile = await getDocumentFile(db, doc.id, versionNo, "index.html");
-    if (!indexFile) { sendJson(res, 404, { error: "index.html not found" }); return; }
-    res.writeHead(200, { "content-type": "text/html" });
-    res.end(indexFile.content);
+    const resolved = await resolvePrototypeDir(req, params.docId!);
+    if (!resolved) { sendJson(res, 404, { error: "not found" }); return; }
+    serveFile(res, resolved.dir, `${resolved.protoDir}/index.html`);
   });
 
-  // Versioned index — /p/:docId/v/:versionNo/
-  router.get("/p/:docId/v/:versionNo", async (req, res, params) => {
-    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
-    const urlPath = (req.url ?? "").split("?")[0] ?? "";
-    if (!urlPath.endsWith("/")) {
-      redirectTrailing(res, `/p/${params.docId!}/v/${params.versionNo!}/`);
-      return;
-    }
-    const doc = await getDocument(db, params.docId!);
-    if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
-    const versionNo = await resolveVersionNo(db, doc.id, params.versionNo!);
-    if (!versionNo) { sendJson(res, 404, { error: "version not found" }); return; }
-    const indexFile = await getDocumentFile(db, doc.id, versionNo, "index.html");
-    if (!indexFile) { sendJson(res, 404, { error: "index.html not found" }); return; }
-    res.writeHead(200, { "content-type": "text/html" });
-    res.end(indexFile.content);
-  });
-
-  // Versioned file — /p/:docId/v/:versionNo/:path
-  router.get("/p/:docId/v/:versionNo/*path", async (req, res, params) => {
-    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
-    const doc = await getDocument(db, params.docId!);
-    if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
-    const versionNo = await resolveVersionNo(db, doc.id, params.versionNo!);
-    if (!versionNo) { sendJson(res, 404, { error: "version not found" }); return; }
-    const file = await getDocumentFile(db, doc.id, versionNo, params.path!);
-    if (!file) { sendJson(res, 404, { error: "file not found" }); return; }
-    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream" });
-    res.end(file.content);
-  });
-
-  // Latest file — /p/:docId/:path
+  // Latest asset — /p/:docId/:path
   router.get("/p/:docId/*path", async (req, res, params) => {
-    if (!await authenticateRequest(db, req)) { sendJson(res, 401, { error: "unauthorized" }); return; }
-    const doc = await getDocument(db, params.docId!);
-    if (!doc || doc.type !== "prototype") { sendJson(res, 404, { error: "not found" }); return; }
-    const versionNo = await resolveVersionNo(db, doc.id, null);
-    if (!versionNo) { sendJson(res, 404, { error: "no files generated" }); return; }
-    const file = await getDocumentFile(db, doc.id, versionNo, params.path!);
-    if (!file) { sendJson(res, 404, { error: "file not found" }); return; }
-    res.writeHead(200, { "content-type": MIME[extFor(file.path)] ?? "application/octet-stream" });
-    res.end(file.content);
+    const resolved = await resolvePrototypeDir(req, params.docId!);
+    if (!resolved) { sendJson(res, 404, { error: "not found" }); return; }
+    serveFile(res, resolved.dir, `${resolved.protoDir}/${params.path!}`);
   });
 }

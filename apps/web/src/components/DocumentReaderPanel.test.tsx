@@ -19,15 +19,16 @@ describe('DocumentReaderPanel', () => {
   it('renders markdown content for a prd', async () => {
     mockedGetDocument.mockResolvedValue({
       id: 'doc1',
-      userId: 'u1',
+      projectId: 'p1',
+      conversationId: 'c1',
       type: 'prd',
       title: 'PRD One',
-      currentVersionId: 'v1',
+      relativePath: 'prd.md',
+      lastCommitSha: 'abc1234',
       previewUrl: null,
       createdAt: '',
       updatedAt: '',
-      latestVersion: { id: 'v1', documentId: 'doc1', versionNo: 1, content: '# Hello', promptUsed: null, createdAt: '' },
-      versions: [{ id: 'v1', documentId: 'doc1', versionNo: 1, content: '# Hello', promptUsed: null, createdAt: '' }],
+      content: '# Hello',
     })
 
     render(<DocumentReaderPanel documentId="doc1" onClose={vi.fn()} />)
@@ -40,22 +41,23 @@ describe('DocumentReaderPanel', () => {
   it('renders an iframe preview for a prototype', async () => {
     mockedGetDocument.mockResolvedValue({
       id: 'doc2',
-      userId: 'u1',
+      projectId: 'p1',
+      conversationId: 'c1',
       type: 'prototype',
       title: 'Proto',
-      currentVersionId: 'v1',
+      relativePath: 'prototype/index.html',
+      lastCommitSha: 'def5678',
       previewUrl: '/p/doc2/',
       createdAt: '',
       updatedAt: '',
-      latestVersion: { id: 'v1', documentId: 'doc2', versionNo: 1, content: '', promptUsed: null, createdAt: '' },
-      versions: [{ id: 'v1', documentId: 'doc2', versionNo: 1, content: '', promptUsed: null, createdAt: '' }],
+      content: null,
     })
 
     render(<DocumentReaderPanel documentId="doc2" onClose={vi.fn()} />)
 
     const iframe = await screen.findByTitle('Proto')
     expect(iframe.tagName).toBe('IFRAME')
-    expect(iframe.getAttribute('src')).toContain('/p/doc2/v/1/')
+    expect(iframe.getAttribute('src')).toContain('/p/doc2')
   })
 
   it('renders nothing when documentId is null', () => {

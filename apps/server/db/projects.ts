@@ -75,6 +75,27 @@ export function deriveProjectTitle(title: string | null | undefined, prompt: str
   return normaliseTitle(prompt);
 }
 
+/**
+ * Returns the conversation's project id, creating and attaching a project if
+ * the conversation predates M1-02 and somehow has none. Post-M1-02 every
+ * conversation already has one, so this is a safety net.
+ */
+export async function ensureProjectForConversation(
+  db: Database,
+  userId: string,
+  conversation: { id: string; projectId: string | null; title: string; prompt: string },
+): Promise<string> {
+  if (conversation.projectId) return conversation.projectId;
+  const project = await createProject(db, userId, {
+    title: deriveProjectTitle(conversation.title, conversation.prompt),
+  });
+  await db
+    .update(conversations)
+    .set({ projectId: project.id })
+    .where(eq(conversations.id, conversation.id));
+  return project.id;
+}
+
 function normaliseProject(row: typeof projects.$inferSelect): Project {
   return {
     id: row.id,

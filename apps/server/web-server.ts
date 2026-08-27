@@ -2,8 +2,9 @@ import "dotenv/config";
 import { createServer } from "node:http";
 import type { Server, ServerResponse } from "node:http";
 import { closeRedis } from "./redis.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, accessSync, constants } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
+import { projectsRoot } from "./projects/workspace.js";
 import { openDb } from "./db/connection.js";
 import { ensureAdminUser, getUserByEmail } from "./db/users.js";
 import { subscriptions } from "./db/schema.js";
@@ -110,8 +111,31 @@ const PUBLIC_API_PATHS = new Set([
   "/api/midtrans/notification",
 ]);
 
+/**
+ * The project filesystem is canonical for every generated artifact (M1-05+).
+ * In production it must be a mounted, writable volume — a fallback to ephemeral
+ * container disk would silently lose every prototype and deliverable on redeploy.
+ */
+function assertProjectsRootWritable(): void {
+  const root = projectsRoot();
+  if (process.env.NODE_ENV === "production" && !process.env.PROJECTS_ROOT) {
+    console.error(
+      `FATAL: PROJECTS_ROOT is not set. Falling back to ${root} on ephemeral disk would lose all generated artifacts on redeploy. Mount a volume and set PROJECTS_ROOT.`,
+    );
+    process.exit(1);
+  }
+  try {
+    mkdirSync(root, { recursive: true });
+    accessSync(root, constants.W_OK);
+  } catch (err) {
+    console.error(`FATAL: PROJECTS_ROOT (${root}) is not writable:`, err instanceof Error ? err.message : err);
+    process.exit(1);
+  }
+}
+
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { port, webRoot } = options;
+  assertProjectsRootWritable();
   const db = await openDb(process.env.DATABASE_URL!);
   await resetStaleExtractions(db);
   await expireStalePayments(db);

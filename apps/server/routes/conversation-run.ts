@@ -25,21 +25,28 @@ import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../pipeline/plans.js";
 import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
 import {
-  createDocument,
-  createDocumentVersion,
-  getNextVersionNo,
-  linkConversationDocument,
+  upsertDocument,
+  findProjectDocument,
   listConversationDocuments,
-  rollbackDocument,
   type DocumentType,
 } from "../db/documents.js";
 import { formatPrototypeSummary, generatePrototypeDocument } from "../prototype/engine.js";
 import { parseRollbackIntent } from "../prototype/rollback.js";
+import { getProjectDir } from "../projects/workspace.js";
+import {
+  DELIVERABLE_FILES,
+  resolveInsideProject,
+  commitPaths,
+  rollbackDeliverable,
+} from "../projects/workspace.js";
+import { acquireProjectLease, isLease, type ProjectLease } from "../projects/locks.js";
+import { ensureProjectForConversation } from "../db/projects.js";
+import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
+import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import {
   SANDWICH_PRD_GUIDE,
-  SANDWICH_USERFLOWS_GUIDE,
-  SANDWICH_TECHNICAL_GUIDE,
   SANDWICH_QUOTATION_GUIDE,
   SANDWICH_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
@@ -50,7 +57,8 @@ export interface DocumentRef {
   id: string;
   type: DocumentType;
   title: string;
-  versionNo: number;
+  /** Short git sha of the commit behind the file, or null. */
+  commitSha: string | null;
   previewUrl: string | null;
 }
 
@@ -145,26 +153,45 @@ const sseClients = new Map<string, Set<ServerResponse>>();
 // Single harness (Pi SDK). The provider/model per stage comes from
 // engine_settings (admin panel) with 9router/Claude defaults — see model-runtime.ts.
 
-const ENGINE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes — hard stop for any engine call
+const ENGINE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes — hard stop for any engine call
 
-async function runTextGeneration(
-  history: ConversationTurn[],
-  signal: AbortSignal,
-  stage: PipelineStage,
-  pendingType: DocumentType | null,
-  refineInstruction?: string | null,
-): Promise<string> {
+/** The fixed on-disk filename for a text deliverable. */
+export function deliverablePathFor(type: DocumentType): string {
+  return DELIVERABLE_FILES[type];
+}
+
+const READONLY_TOOLS = ["read", "ls", "grep", "find"] as const;
+const WRITE_TOOLS = ["read", "write", "edit", "ls", "grep", "find"] as const;
+
+/** Tools for a text-engine run at a given stage, honouring the kill switch. */
+export function textEngineTools(stage: PipelineStage): readonly string[] {
+  if (process.env.TEXT_ENGINE_TOOLS === "off") return [];
+  return stage === "generating" ? WRITE_TOOLS : READONLY_TOOLS;
+}
+
+async function runTextGeneration(opts: {
+  projectDir: string;
+  history: ConversationTurn[];
+  signal: AbortSignal;
+  stage: PipelineStage;
+  pendingType: DocumentType | null;
+  refineInstruction?: string | null;
+}): Promise<{ text: string; wroteFile: boolean }> {
+  const { projectDir, history, signal, stage, pendingType, refineInstruction } = opts;
   const pi = await import("@earendil-works/pi-coding-agent");
   const { resolveModel } = await import("../model-runtime.js");
 
   const { runtime, model } = await resolveModel("chat");
+  const tools = textEngineTools(stage);
+  const isFileWrite = stage === "generating" && !!pendingType && pendingType !== "prototype";
+  const relPath = isFileWrite ? deliverablePathFor(pendingType!) : null;
 
   const { session } = await pi.createAgentSession({
-    cwd: process.cwd(),
-    model: model as any,
-    modelRuntime: runtime as any,
-    tools: [],
-    sessionManager: pi.SessionManager.inMemory(),
+    cwd: projectDir,
+    model: model as never,
+    modelRuntime: runtime as never,
+    tools: tools as string[],
+    sessionManager: pi.SessionManager.inMemory(projectDir),
     settingsManager: pi.SettingsManager.inMemory({
       compaction: { enabled: false },
     }),
@@ -172,9 +199,21 @@ async function runTextGeneration(
 
   let responseText = "";
   let errorMessage = "";
+  const budget = createToolBudget(
+    stage === "generating" ? TOOL_BUDGETS.text : TOOL_BUDGETS.chat,
+  );
+  let budgetVerdict: "ok" | "ceiling" | "stalled" = "ok";
+  const guardBudget = (v: "ok" | "ceiling" | "stalled") => {
+    if (v !== "ok" && budgetVerdict === "ok") {
+      budgetVerdict = v;
+      console.warn(`[text] budget ${v} after ${budget.toolCalls} tool calls`);
+      session.abort();
+    }
+  };
 
   session.subscribe((event: any) => {
     if (signal.aborted) return;
+    guardBudget(budget.onEvent(event.type, Date.now()));
 
     if (
       event.type === "message_update" &&
@@ -213,13 +252,20 @@ async function runTextGeneration(
   });
 
   const messages = buildMessages(history, stage, pendingType, refineInstruction);
-  const prompt = messages
-    .map((m) => {
-      if (m.role === "system") return m.content;
-      return `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`;
-    })
-    .join("\n\n");
+  const parts = messages.map((m) => {
+    if (m.role === "system") return m.content;
+    return `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`;
+  });
+  if (relPath) {
+    parts.push(
+      refineInstruction
+        ? `The document already exists at \`${relPath}\` in your working directory. Read it, apply the change in place with the edit tool, and reply with only "DONE".`
+        : `Write the complete document to \`${relPath}\` in your working directory using the write tool (overwrite it if it exists). Do not print the document in your reply. After writing, reply with only "DONE".`,
+    );
+  }
+  const prompt = parts.join("\n\n");
 
+  const poll = setInterval(() => guardBudget(budget.check(Date.now())), 5_000);
   try {
     const promptPromise = session.prompt(prompt);
     promptPromise.catch(() => {}); // avoid unhandled rejection on timeout
@@ -232,14 +278,60 @@ async function runTextGeneration(
     await new Promise((r) => setTimeout(r, 100));
     session.dispose();
 
-    if (!responseText && errorMessage) {
+    const wroteFile = !!relPath && existsSync(resolveInsideProject(projectDir, relPath));
+    if (!wroteFile && !responseText && errorMessage) {
       throw new Error(errorMessage);
     }
-    return responseText;
+    if (relPath && !wroteFile) {
+      if (budgetVerdict !== "ok") throw new Error(`text generation ${budgetVerdict} before writing ${relPath}`);
+      throw new Error(`text generation did not write ${relPath}`);
+    }
+    return { text: responseText, wroteFile };
   } catch (err) {
     session.dispose();
     throw err;
+  } finally {
+    clearInterval(poll);
   }
+}
+
+/** Commit-message subject/body for a deliverable run — trailers drive M3-03. */
+export function commitMessageFor(
+  type: DocumentType,
+  mode: "generate" | "refine",
+  conversationId: string,
+  stage: PipelineStage,
+  promptSummary: string,
+): { subject: string; body: string } {
+  const oneLine = promptSummary.replace(/\s+/g, " ").trim().slice(0, 200);
+  return {
+    subject: `${type}: ${mode}`,
+    body: [
+      oneLine ? `Prompt: ${oneLine}` : "",
+      "",
+      `Sandwich-Deliverable: ${type}`,
+      `Sandwich-Conversation: ${conversationId}`,
+      `Sandwich-Stage: ${stage}`,
+    ]
+      .join("\n")
+      .trim(),
+  };
+}
+
+/** Max deliverable size we inline into the chat bubble; above this, a card only. */
+export const CHAT_INLINE_CAP = 40_000;
+
+/** What the assistant chat message says after a generation run. */
+export function chatOutputFor(
+  type: DocumentType,
+  fileContent: string,
+  previewUrl: string | null,
+): string {
+  if (type === "prototype") {
+    return `${DELIVERABLE_LABEL[type]} ${previewUrl ? `siap. Preview: [Buka prototype](${previewUrl})` : "siap."}`;
+  }
+  if (fileContent.length <= CHAT_INLINE_CAP) return fileContent;
+  return `${DELIVERABLE_LABEL[type]} selesai — dokumen terlalu panjang untuk ditampilkan di chat. Buka panel dokumen untuk melihatnya.`;
 }
 
 export function closeInFlight(conversationId: string): void {
@@ -362,14 +454,8 @@ const DELIVERABLE_LABEL: Record<DocumentType, string> = {
   quotation: "Quotation",
   prototype: "Prototype",
   specs: "Specs",
+  mom: "MOM",
 };
-
-function documentSummary(
-  type: DocumentType,
-  versionNo: number,
-): string {
-  return `${DELIVERABLE_LABEL[type]} generated — v${versionNo}`;
-}
 
 export function registerConversationRunRoutes(
   router: Router,
@@ -465,6 +551,21 @@ export function registerConversationRunRoutes(
       return;
     }
 
+    // Resolve the project workspace + serialise runs across the project's
+    // conversations (M2-06). The conversation-level idempotency check above
+    // runs first, so a legitimate reconnect retry never hits this 409.
+    const projectId = await ensureProjectForConversation(db, auth.userId, conversation);
+    const projectDir = await getProjectDir(auth.userId, projectId);
+    const leaseResult = await acquireProjectLease(projectId, conversationId);
+    if (!isLease(leaseResult)) {
+      sendJson(res, 409, {
+        error: "project busy",
+        conversationId: leaseResult.busyWith,
+      });
+      return;
+    }
+    const lease: ProjectLease = leaseResult;
+
     const body = (await readJsonBody(req).catch(() => null)) as {
       regenerate?: boolean;
     } | null;
@@ -499,6 +600,12 @@ export function registerConversationRunRoutes(
     const controller = new AbortController();
     inFlight.set(conversationId, controller);
     void markInFlight(conversationId);
+
+    // Release the project lease alongside the in-flight markers on every exit.
+    const finishRun = () => {
+      void lease.release();
+      closeInFlight(conversationId);
+    };
 
     const broadcast = (event: ConversationRunEvent) => {
       const data = `data: ${JSON.stringify(event)}\n\n`;
@@ -542,16 +649,28 @@ export function registerConversationRunRoutes(
         const lastUserMessage =
           [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
 
-        // Rollback intent — DB-only, no AI call.
+        // Rollback intent — git operation, no AI call.
         const rollbackIntent = parseRollbackIntent(lastUserMessage);
         if (rollbackIntent) {
-          const protoDocs = (await listConversationDocuments(db, conversationId))
-            .filter((d) => d.type === "prototype");
-          const protoDoc = protoDocs[0];
+          const protoDoc = await findProjectDocument(db, projectId, "prototype");
           if (protoDoc) {
-            const rolledBack = await rollbackDocument(db, protoDoc.id, rollbackIntent);
-            const msg = rolledBack
-              ? `Prototype di-rollback ke versi v${rolledBack.versionNo}.`
+            const rolledBack = await rollbackDeliverable(
+              projectDir,
+              protoDoc.relativePath,
+              rollbackIntent,
+            );
+            if (rolledBack.restored) {
+              await upsertDocument(db, {
+                projectId,
+                conversationId,
+                type: "prototype",
+                title: protoDoc.title,
+                relativePath: protoDoc.relativePath,
+                lastCommitSha: rolledBack.sha,
+              });
+            }
+            const msg = rolledBack.restored
+              ? "Prototype dikembalikan ke versi sebelumnya."
               : rollbackIntent === "latest"
                 ? "Prototype sudah di versi terbaru."
                 : "Tidak ada versi sebelumnya untuk di-rollback.";
@@ -561,16 +680,14 @@ export function registerConversationRunRoutes(
               text: msg,
               conversation: (await getConversation(db, conversationId))!,
             });
-            closeInFlight(conversationId);
+            finishRun();
             return;
           }
         }
 
         // Preview intent — return the existing prototype's link (no AI call).
         if (detectPreviewIntent(lastUserMessage)) {
-          const protoDocs = (await listConversationDocuments(db, conversationId))
-            .filter((d) => d.type === "prototype");
-          const protoDoc = protoDocs[0];
+          const protoDoc = await findProjectDocument(db, projectId, "prototype");
           if (protoDoc) {
             const msg = `Preview prototype: [Buka prototype](${prototypePreviewUrl(protoDoc.id)})`;
             await addChatMessage(db, { conversationId, role: "assistant", content: msg });
@@ -579,7 +696,7 @@ export function registerConversationRunRoutes(
               text: msg,
               conversation: (await getConversation(db, conversationId))!,
             });
-            closeInFlight(conversationId);
+            finishRun();
             return;
           }
           // No prototype to preview yet — fall through to normal flow.
@@ -683,125 +800,104 @@ export function registerConversationRunRoutes(
           }
         }
 
-        // For a prototype, create (or reuse) the document up front so the
-        // prototype engine has a document id to write files under.
-        let prototypeDocId: string | null = null;
-        let prototypeVersionNo: number | null = null;
-        if (stage === "generating" && pendingType === "prototype") {
-          const title = conversation.title.trim() || "Prototype";
-          const existing = await listConversationDocuments(db, conversationId);
-          const existingDoc = existing.find((d) => d.type === "prototype");
-          if (existingDoc) {
-            prototypeDocId = existingDoc.id;
-          } else {
-            const doc = await createDocument(db, { userId: auth.userId, type: "prototype", title });
-            await linkConversationDocument(db, conversationId, doc.id);
-            prototypeDocId = doc.id;
-          }
-          prototypeVersionNo = await getNextVersionNo(db, prototypeDocId);
-        }
+        // The agent writes the deliverable file itself; we commit it and update
+        // the documents index row. No pre-created document / version number.
+        const runOnce = async (): Promise<{
+          chatOutput: string;
+          documentRef: DocumentRef | null;
+          nextStage: PipelineStage;
+        }> => {
+          if (stage === "generating" && pendingType) {
+            const type = pendingType;
+            const isPrototype = type === "prototype";
+            const relPath = deliverablePathFor(type);
+            const title = conversation.title.trim() || DELIVERABLE_LABEL[type];
+            const mode: "generate" | "refine" = refineInstruction ? "refine" : "generate";
 
-        const runText = (): Promise<string> =>
-          runTextGeneration(turns, controller.signal, stage, pendingType, refineInstruction);
-
-        const run = prototypeDocId
-          ? async () => {
+            let warning: string | undefined;
+            if (isPrototype) {
               const result = await generatePrototypeDocument(
-                db,
                 {
-                  documentId: prototypeDocId!,
-                  versionNo: prototypeVersionNo!,
+                  projectDir,
+                  conversationId,
                   brief: composePrototypeBrief(turns),
                   ...(refineInstruction ? { refine: { instruction: refineInstruction } } : {}),
                 },
                 controller.signal,
               );
-              return formatPrototypeSummary(result.summary, result.glowupWarning);
-            }
-          : runText;
-
-        run()
-          .then(async (output) => {
-            if (!output) {
-              const msg = "Model returned no response. Try again.";
-              await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
-              broadcast({
-                type: "error",
-                conversation: (await getConversation(db, conversationId))!,
-                text: msg,
+              warning = result.warning;
+            } else {
+              const r = await runTextGeneration({
+                projectDir,
+                history: turns,
+                signal: controller.signal,
+                stage,
+                pendingType: type,
+                refineInstruction,
               });
-              return;
+              if (!r.wroteFile) throw new Error(`${DELIVERABLE_LABEL[type]} tidak berhasil dibuat.`);
             }
 
-            let chatOutput = output;
-            let nextStage: PipelineStage = stage;
-            let documentRef: DocumentRef | null = null;
-            if (stage === "generating" && pendingType) {
-              const isPrototype = pendingType === "prototype";
-              // Persist the deliverable as a versioned document.
-              const fallbackTitle =
-                conversation.title.trim() || `${pendingType.toUpperCase()} document`;
-              const existing = await listConversationDocuments(db, conversationId);
-              const existingDoc = existing.find((d) => d.type === pendingType);
-              let documentId: string;
-              let versionNo: number;
-              if (existingDoc) {
-                documentId = existingDoc.id;
-                versionNo = prototypeVersionNo ?? (await getNextVersionNo(db, existingDoc.id));
-                await createDocumentVersion(db, {
-                  documentId,
-                  versionNo,
-                  content: output,
-                  promptUsed: lastUserMessage,
-                });
-              } else {
-                const doc = await createDocument(db, {
-                  userId: auth.userId,
-                  type: pendingType,
-                  title: fallbackTitle,
-                });
-                documentId = doc.id;
-                versionNo = prototypeVersionNo ?? 1;
-                await createDocumentVersion(db, {
-                  documentId,
-                  versionNo,
-                  content: output,
-                  promptUsed: lastUserMessage,
-                });
-                await linkConversationDocument(db, conversationId, doc.id);
-              }
-              await incrementUsage(
-                db,
-                auth.userId,
-                pendingType === "prototype" ? "prototype" : "doc",
-              );
-              const docTitle = existingDoc ? existingDoc.title : fallbackTitle;
-              // Prototype output is raw HTML — not chat-safe, so collapse it to
-              // a short summary + preview link. Other doc types keep the full
-              // markdown in chat, with the document card appended below it.
-              if (isPrototype) {
-                chatOutput = `${documentSummary(pendingType, versionNo)}\n\nPreview: [Buka prototype](${prototypePreviewUrl(documentId)})`;
-              }
-              documentRef = {
-                id: documentId,
-                type: pendingType,
-                title: docTitle,
-                versionNo,
-                previewUrl: isPrototype ? prototypePreviewUrl(documentId) : null,
-              };
-              nextStage = "awaiting_next";
-              pendingType = null;
-            } else if (stage === "intake") {
-              nextStage = "choosing_deliverable";
-            }
-            // NOTE: no auto-advance from clarifying here. The stage stays in
-            // clarifying until the user's next turn passes the gate (or the
-            // deliverable isn't a prototype), so the assistant's clarifying
-            // reply never silently bumps the conversation into generating.
+            const fileAbs = resolveInsideProject(projectDir, relPath);
+            if (!existsSync(fileAbs)) throw new Error(`file ${relPath} tidak ditemukan setelah generate.`);
+            const fileContent = await readFile(fileAbs, "utf8");
 
+            const commit = await commitPaths(
+              projectDir,
+              [relPath],
+              commitMessageFor(type, mode, conversationId, stage, lastUserMessage),
+            );
+            const doc = await upsertDocument(db, {
+              projectId,
+              conversationId,
+              type,
+              title,
+              relativePath: relPath,
+              lastCommitSha: commit.sha,
+            });
+            await incrementUsage(db, auth.userId, isPrototype ? "prototype" : "doc");
+
+            const previewUrl = isPrototype ? prototypePreviewUrl(doc.id) : null;
+            let chatOutput = chatOutputFor(type, fileContent, previewUrl);
+            if (warning) chatOutput = formatPrototypeSummary(chatOutput, warning);
+
+            return {
+              chatOutput,
+              documentRef: {
+                id: doc.id,
+                type,
+                title: doc.title,
+                commitSha: commit.sha.slice(0, 7),
+                previewUrl,
+              },
+              nextStage: "awaiting_next",
+            };
+          }
+
+          // Non-generating stages: a plain chat reply (read-only tools).
+          const r = await runTextGeneration({
+            projectDir,
+            history: turns,
+            signal: controller.signal,
+            stage,
+            pendingType,
+            refineInstruction,
+          });
+          if (!r.text) throw new Error("Model returned no response. Try again.");
+          return {
+            chatOutput: r.text,
+            documentRef: null,
+            // NOTE: no auto-advance from clarifying — only the user's next turn
+            // passes the gate.
+            nextStage: stage === "intake" ? "choosing_deliverable" : stage,
+          };
+        };
+
+        runOnce()
+          .then(async ({ chatOutput, documentRef, nextStage }) => {
             await updateConversation(db, conversationId, {
               pipelineStage: nextStage,
-              pendingType,
+              pendingType: documentRef ? null : pendingType,
             });
             await addChatMessage(db, {
               conversationId,
@@ -824,7 +920,7 @@ export function registerConversationRunRoutes(
               text: msg,
             });
           })
-          .finally(() => closeInFlight(conversationId));
+          .finally(() => finishRun());
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "generation setup failed";
@@ -834,7 +930,7 @@ export function registerConversationRunRoutes(
           conversation: (await getConversation(db, conversationId))!,
           text: msg,
         });
-        closeInFlight(conversationId);
+        finishRun();
       }
     })();
   });

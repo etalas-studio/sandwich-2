@@ -40,7 +40,7 @@ export interface ChatMessage {
     id: string
     type: string
     title: string
-    versionNo: number | null
+    commitSha: string | null
   } | null
   createdAt: string
   attachments: Attachment[]

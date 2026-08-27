@@ -427,7 +427,7 @@ function ChatView({
             currentAi = []
           } else if (m.role === 'assistant') {
             const docMeta = m.document
-              ? { id: m.document.id, type: m.document.type, title: m.document.title, versionNo: m.document.versionNo ?? undefined }
+              ? { id: m.document.id, type: m.document.type, title: m.document.title, commitSha: m.document.commitSha ?? null }
               : m.documentId
                 ? { id: m.documentId }
                 : undefined

@@ -13,13 +13,8 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
 | M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M1-05 | Retire `document_versions` / `document_files`; slim `documents` to an index | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M2-01 | Run all engines with `cwd = project dir` + tools | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M2-02 | `BRIEF.md` builder | Pi SDK on the project workspace | ⚪ Planned | unassigned |
-| M2-03 | Text deliverables written as files in the project | Pi SDK on the project workspace | ⚪ Planned | unassigned |
-| M2-04 | Prototype → single `prototype/index.html` | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M2-05 | Persist the Pi session per conversation | Pi SDK on the project workspace | ⚪ Planned | unassigned |
-| M2-06 | Serialize generation runs per project | Pi SDK on the project workspace | ⚪ Planned | unassigned |
 | M3-01 | Commit per generation | Versioning via git | ⚪ Planned | unassigned |
 | M3-02 | Rollback via git | Versioning via git | ⚪ Planned | unassigned |
 | M3-03 | Version history + diff API | Versioning via git | ⚪ Planned | unassigned |
@@ -30,6 +25,7 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | M5-02 | Lazy-restore a project from R2 | Durability & lifecycle | ⚪ Planned | unassigned |
 | M5-03 | Project deletion | Durability & lifecycle | ⚪ Planned | unassigned |
 | M5-04 | Per-user disk guardrails | Durability & lifecycle | ⚪ Planned | unassigned |
+| M5-05 | Per-tenant isolation for engine tool execution | Durability & lifecycle | ⚪ Planned | unassigned |
 
 ---
 
@@ -52,40 +48,9 @@ Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and docum
 
 **Notes:** The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.
 
-### M1-05 · Retire `document_versions` / `document_files`; slim `documents` to an index
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Drop both tables. Reshape `documents` to: id, project_id, conversation_id (nullable — "generated in"), type, title, relative_path, last_commit_sha, timestamps. No migration of existing rows — clean slate.
-
-**Why:** Git in the project directory becomes the version store. Postgres only needs a pointer to the file on disk and the latest commit SHA.
-
-**Acceptance criteria:**
-- [ ] Migration drops `document_versions` and `document_files` and alters `documents`
-- [ ] `apps/server/db/documents.ts` rewritten to the new shape
-- [ ] All code paths that read versions/files updated or removed (`prototype/engine.ts`, `prototype/routes.ts`, `routes/documents.ts`, `routes/conversation-run.ts`)
-- [ ] `conversation_documents` removed in favour of `documents.conversation_id`
-
-**Notes:** This is a breaking schema change; coordinate with M2 and M4 so nothing reads the dropped tables after the migration.
-
 ## M2 — Pi SDK on the project workspace
 
 **Goal:** Every engine runs like Pi / Claude Code in a local checkout: `cwd` is the project directory, context comes from the files there, and output is written back as files.
-
-### M2-01 · Run all engines with `cwd = project dir` + tools
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Replace the ephemeral `tmpdir()` workspace (prototype engine) and `process.cwd()` (text engine) with the resolved project directory. Give every engine the tool set read / write / edit / ls / grep / find / bash. Keep the existing timeout guards.
-
-**Why:** Unifies the two engines and lets a later pass (e.g. quotation) read a deliverable the user already generated in the same project — exactly how a local coding agent works.
-
-**Acceptance criteria:**
-- [ ] `runTextGeneration` and `generatePrototypeDocument` both take `projectDir` and pass it as `cwd`
-- [ ] Text engine is no longer tool-free
-- [ ] PRODUCT.md §6 ("text engine stays tool-free") updated
-
-**Notes:** Watch for the historical text-engine hangs with tools (PRODUCT.md §6). If they recur, add a tool-call ceiling and/or a stricter timeout rather than reverting.
 
 ### M2-02 · `BRIEF.md` builder
 
@@ -102,36 +67,6 @@ Before each run the backend (re)writes `BRIEF.md` at the project root: the conso
 
 **Notes:** Replaces the current inline attachment injection (`enrichMessageContent`) for large attachments; small ones can still be inlined into the prompt.
 
-### M2-03 · Text deliverables written as files in the project
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-PRD / quotation / specs / MOM land as `prd.md`, `quotation.md`, `spec.md`, `mom.md` at the project root, produced by the agent via the `write` tool. The backend records/updates the `documents` index row and commits.
-
-**Why:** "Layaknya codebase" — one file per deliverable, overwrite on regenerate, history in git.
-
-**Acceptance criteria:**
-- [ ] Each deliverable type maps to a fixed filename at the project root
-- [ ] Regenerate overwrites the same file (new commit, not a new file)
-- [ ] `documents.relative_path` and `last_commit_sha` updated after each run
-
-**Notes:** One deliverable of each type per project for now.
-
-### M2-04 · Prototype → single `prototype/index.html`
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Prototype output becomes a single self-contained `prototype/index.html` inside the project directory. Drop the multi-file save-to-Postgres loop and the tmpdir workspace. Refine edits the file in place.
-
-**Why:** The user wants single-HTML prototypes for now; the multi-file model and its Postgres persistence go away with `document_files`.
-
-**Acceptance criteria:**
-- [ ] Prototype run writes/edits only `prototype/index.html`
-- [ ] Refine edits the existing file in place, not a regenerate
-- [ ] Decision recorded on whether the glowup polish pass still runs (in place) or is deferred
-
-**Notes:** `apps/server/prototype/engine.ts`, `apps/server/prototype/glowup.ts`.
-
 ### M2-05 · Persist the Pi session per conversation
 
 **Status:** ⚪ Planned  |  **Owner:** unassigned
@@ -146,20 +81,6 @@ Swap `SessionManager.inMemory` for a disk-backed session keyed by `conversation_
 - [ ] Deleting a conversation removes its session store
 
 **Notes:** Check whether `pi.SessionManager` ships a disk-backed manager; otherwise wrap one.
-
-### M2-06 · Serialize generation runs per project
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Extend the in-flight guard from per-conversation to also lock the project directory, so two conversations in the same project cannot run generations concurrently against the same git working tree.
-
-**Why:** Concurrent writes and commits to one git repo corrupt its state.
-
-**Acceptance criteria:**
-- [ ] A second concurrent run in the same project queues or is rejected with a clear message
-- [ ] The lock is released on completion, error, and timeout
-
-**Notes:** `inFlight` map in `apps/server/routes/conversation-run.ts` plus the Redis keys in `apps/server/redis.ts`.
 
 ## M3 — Versioning via git
 
@@ -310,6 +231,21 @@ Cap total project bytes per user (and per project), with a clear error when exce
 - [ ] Over-limit returns 403 with an actionable message
 
 **Notes:** PRODUCT.md §9.
+
+### M5-05 · Per-tenant isolation for engine tool execution
+
+**Status:** ⚪ Planned  |  **Owner:** unassigned
+
+Run each generation engine (esp. the prototype engine's bash tool) under real isolation — a per-user OS uid, a container, or a jailed filesystem — so a prompt-injected tool call cannot read another tenant's project directory under PROJECTS_ROOT.
+
+**Why:** After M2-01 the engines run with cwd inside PROJECTS_ROOT and M2-02 feeds user-controlled attachment text into their context. Pi's tools resolve relative paths to cwd but pass absolute paths through — there is no sandbox. The env-scrub on bash and dropping bash from the text engine are mitigations, not isolation. Required before any multi-tenant launch.
+
+**Acceptance criteria:**
+- [ ] A tool call with an absolute path outside the project dir is denied or contained
+- [ ] Engine subprocess cannot read PROJECTS_ROOT siblings or host secrets
+- [ ] Decision recorded: uid-per-user vs container vs chroot/bind-mount
+
+**Notes:** Interim mitigations already in place: apps/server/engine/bash-tool.ts (scrubEnv + spawnHook), text engine runs bash-free.
 
 ---
 

@@ -1,41 +1,23 @@
 import { apiUrl } from './base'
 
-export type DocumentType = 'prd' | 'quotation' | 'prototype' | 'specs'
+export type DocumentType = 'prd' | 'quotation' | 'prototype' | 'specs' | 'mom'
 
 export interface DocumentListItem {
   id: string
-  userId: string
+  projectId: string
+  conversationId: string | null
   type: string
   title: string
-  currentVersionId: string | null
-  latestVersionNo: number | null
-  currentVersionNo: number | null
+  relativePath: string
+  lastCommitSha: string | null
   previewUrl: string | null
-  conversationId: string | null
   createdAt?: string
   updatedAt: string
 }
 
-export interface DocumentVersion {
-  id: string
-  documentId: string
-  versionNo: number
-  content: string
-  promptUsed: string | null
-  createdAt: string
-}
-
-export interface DocumentDetail {
-  id: string
-  userId: string
-  type: string
-  title: string
-  currentVersionId: string | null
-  previewUrl: string | null
-  createdAt: string
-  updatedAt: string
-  latestVersion: DocumentVersion | null
-  versions: DocumentVersion[]
+export interface DocumentDetail extends DocumentListItem {
+  /** The current file content from the project's git working tree. */
+  content: string | null
 }
 
 async function json<T>(res: Response): Promise<T> {
