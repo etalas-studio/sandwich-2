@@ -106,6 +106,7 @@ const PUBLIC_API_PATHS = new Set([
   "/api/auth/reset-password",
   "/api/auth/verify-email",
   "/api/auth/resend-verification",
+  "/api/auth/verification-status",
   "/api/midtrans/notification",
 ]);
 

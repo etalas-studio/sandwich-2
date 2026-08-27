@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import SetupForm from './SetupForm'
 
 export default function RegisterPage() {
-  const { state, register, registerError, registerPending } = useAuth()
+  const { state, register, login, registerError, registerPending } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -14,6 +14,7 @@ export default function RegisterPage() {
   return (
     <SetupForm
       onSubmit={register}
+      login={login}
       error={registerError}
       isPending={registerPending}
       onBack={() => router.push('/')}

@@ -1,16 +1,23 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "../lib/i18n";
 import { trackPostHog } from "../lib/posthog";
+import { fetchVerificationStatus } from "../api/auth";
 
 const bowlby = "'Bowlby One', system-ui";
 
+// How often the "check your email" screen polls to see if the user verified
+// from a link opened in a different tab — cheap enough to poll often, the
+// endpoint has its own generous rate limit for exactly this use case.
+const VERIFICATION_POLL_MS = 4000;
+
 interface SetupFormProps {
   onSubmit: (username: string, email: string, password: string) => Promise<unknown>;
+  login: (username: string, password: string) => Promise<unknown>;
   error: string | null;
   isPending: boolean;
   onBack: () => void;
@@ -19,6 +26,7 @@ interface SetupFormProps {
 
 export default function SetupForm({
   onSubmit,
+  login,
   error,
   isPending,
   onBack,
@@ -48,6 +56,32 @@ export default function SetupForm({
       /* error surfaced via error prop */
     }
   };
+
+  // This tab already has the credentials the user just chose — once the
+  // verification link they open in another tab (e.g. from their email
+  // client) marks the account verified, log this tab in automatically
+  // instead of leaving it stuck on "check your email".
+  useEffect(() => {
+    if (!registered) return;
+    let cancelled = false;
+    const tick = async () => {
+      const verified = await fetchVerificationStatus(email).catch(() => false);
+      if (cancelled || !verified) return;
+      clearInterval(interval);
+      const loggedIn = await login(username, password).then(() => true).catch(() => false);
+      if (cancelled || !loggedIn) return;
+      // A full navigation (not router.push) guarantees the dashboard's
+      // first render sees the session cookie this login just set — the
+      // same effect a manual refresh had, just automatic.
+      window.location.href = '/dashboard';
+    };
+    const interval = setInterval(() => void tick(), VERIFICATION_POLL_MS);
+    void tick();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [registered, email, username, password, login]);
 
   if (registered) {
     return (

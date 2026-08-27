@@ -73,3 +73,12 @@ export async function postVerifyEmail(token: string): Promise<void> {
 export async function postResendVerification(email: string): Promise<void> {
   await postJson(apiUrl('/api/auth/resend-verification'), { email })
 }
+
+export async function fetchVerificationStatus(email: string): Promise<boolean> {
+  const res = await fetch(apiUrl(`/api/auth/verification-status?email=${encodeURIComponent(email)}`), {
+    credentials: 'include',
+  })
+  if (!res.ok) return false
+  const data = (await res.json()) as { verified?: boolean }
+  return data.verified === true
+}
