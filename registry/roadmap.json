@@ -24,27 +24,6 @@
       ]
     },
     {
-      "id": "m2",
-      "name": "Pi SDK on the project workspace",
-      "goal": "Every engine runs like Pi / Claude Code in a local checkout: `cwd` is the project directory, context comes from the files there, and output is written back as files.",
-      "issues": [
-        {
-          "id": "M2-05",
-          "title": "Persist the Pi session per conversation",
-          "what": "Swap `SessionManager.inMemory` for a disk-backed session keyed by `conversation_id`, stored OUTSIDE the project directory (e.g. `${PI_SESSIONS_ROOT}/${conversationId}`). One project can have several conversations, hence several sessions, all sharing the same `cwd`.",
-          "why": "Matches \"session per conversation, context from the folder\": the agent keeps conversational continuity while the project files are the shared substrate.",
-          "acceptance": [
-            "Session store path is outside `cwd` — no session files pollute the project directory",
-            "Resuming a conversation resumes its Pi session",
-            "Deleting a conversation removes its session store"
-          ],
-          "notes": "Check whether `pi.SessionManager` ships a disk-backed manager; otherwise wrap one.",
-          "owner": "unassigned",
-          "status": "planned"
-        }
-      ]
-    },
-    {
       "id": "m3",
       "name": "Versioning via git",
       "goal": "Replace the Postgres version snapshots with git operations on each project repository.",

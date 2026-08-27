@@ -1,12 +1,14 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { mkdtempSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readdirSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   piSessionsRoot,
   conversationSessionDir,
   deleteConversationSession,
+  sessionExists,
+  openConversationSession,
 } from "./sessions.js";
 import { ProjectPathError } from "./workspace.js";
 
@@ -56,6 +58,48 @@ describe("conversationSessionDir", () => {
   it("rejects unsafe conversation ids", () => {
     for (const bad of ["", "..", "a/b", "x\0y"]) {
       assert.throws(() => conversationSessionDir(bad), ProjectPathError);
+    }
+  });
+});
+
+describe("sessionExists / openConversationSession", () => {
+  it("round-trips a session and never writes into the project dir", async () => {
+    const prevS = process.env.PI_SESSIONS_ROOT;
+    const sessRoot = mkdtempSync(join(tmpdir(), "pi-sess-rt-"));
+    const projectDir = mkdtempSync(join(tmpdir(), "proj-rt-"));
+    process.env.PI_SESSIONS_ROOT = sessRoot;
+    try {
+      assert.equal(sessionExists("cv-rt"), false);
+
+      const mgr = (await openConversationSession("cv-rt", projectDir)) as {
+        getCwd(): string;
+        getSessionDir(): string | undefined;
+        getSessionFile(): string | undefined;
+        appendMessage(m: unknown): string;
+        getEntries(): unknown[];
+      };
+
+      // cwd is the shared project dir; the session store is elsewhere.
+      assert.equal(mgr.getCwd(), projectDir);
+      assert.equal(mgr.getSessionDir(), conversationSessionDir("cv-rt"));
+      const file = mgr.getSessionFile();
+      assert.ok(file && file.startsWith(sessRoot));
+      assert.ok(!file!.startsWith(projectDir));
+
+      mgr.appendMessage({ role: "user", content: "hello", timestamp: Date.now() });
+      assert.ok(mgr.getEntries().length >= 1);
+
+      // No session artefact in the project directory — M2-05's core guarantee.
+      assert.equal(existsSync(join(projectDir, ".pi")), false);
+      assert.deepEqual(
+        readdirSync(projectDir).filter((f: string) => f.endsWith(".jsonl")),
+        [],
+      );
+    } finally {
+      if (prevS === undefined) delete process.env.PI_SESSIONS_ROOT;
+      else process.env.PI_SESSIONS_ROOT = prevS;
+      rmSync(sessRoot, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
     }
   });
 });

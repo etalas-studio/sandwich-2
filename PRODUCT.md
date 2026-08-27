@@ -95,8 +95,14 @@ prototype/index.html
 - **Title-scoped retrieval** stays as a convenience lookup (`user + title`), no
   longer the identity.
 - Retrieval is **explicit** ("buka PRD X" / click in the sidebar), not semantic.
-- Pi agent sessions live **outside** the project dir under `PI_SESSIONS_ROOT`
-  (keyed by conversation) so no session file is committed (M2-05).
+- Pi agent sessions are **disk-backed, one per conversation**, under
+  `PI_SESSIONS_ROOT` — outside the project dir so no session file is committed.
+  Several conversations in one project each keep their own session while sharing
+  the same `cwd` (the project files). Resuming a conversation resumes its
+  session; on a resumed turn only the new message is sent (the session carries
+  the transcript). Deleting a conversation removes its session store. Compaction
+  is on for the text engine's session (it persists and would otherwise grow
+  unbounded); off for the single-shot prototype pass.
 
 ## 6. Engine strategy
 
