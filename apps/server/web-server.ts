@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import type { Server, ServerResponse } from "node:http";
 import { closeRedis } from "./redis.js";
 import { existsSync, readFileSync, mkdirSync, accessSync, constants } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { extname, join, normalize, resolve } from "node:path";
 import { projectsRoot } from "./projects/workspace.js";
 import { openDb } from "./db/connection.js";
@@ -112,11 +113,22 @@ const PUBLIC_API_PATHS = new Set([
 ]);
 
 /**
- * The project filesystem is canonical for every generated artifact (M1-05+).
- * In production it must be a mounted, writable volume — a fallback to ephemeral
- * container disk would silently lose every prototype and deliverable on redeploy.
+ * Preconditions for the per-project git workspace (M1-05+):
+ *  - `git` on PATH — every generation shells out to it
+ *  - `PROJECTS_ROOT` a mounted, writable dir in production — an ephemeral-disk
+ *    fallback would silently lose every artifact on redeploy
+ * Fail loud at boot rather than on the first chat.
  */
-function assertProjectsRootWritable(): void {
+function assertWorkspacePrereqs(): void {
+  try {
+    execFileSync("git", ["--version"], { stdio: "ignore" });
+  } catch {
+    console.error(
+      "FATAL: `git` is not available. The server needs it for per-project version control. Install it in the runtime image (see nixpacks.toml).",
+    );
+    process.exit(1);
+  }
+
   const root = projectsRoot();
   if (process.env.NODE_ENV === "production" && !process.env.PROJECTS_ROOT) {
     console.error(
@@ -135,7 +147,7 @@ function assertProjectsRootWritable(): void {
 
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { port, webRoot } = options;
-  assertProjectsRootWritable();
+  assertWorkspacePrereqs();
   const db = await openDb(process.env.DATABASE_URL!);
   await resetStaleExtractions(db);
   await expireStalePayments(db);

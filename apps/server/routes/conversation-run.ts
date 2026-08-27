@@ -589,8 +589,25 @@ export function registerConversationRunRoutes(
     // Resolve the project workspace + serialise runs across the project's
     // conversations (M2-06). The conversation-level idempotency check above
     // runs first, so a legitimate reconnect retry never hits this 409.
-    const projectId = await ensureProjectForConversation(db, auth.userId, conversation);
-    const projectDir = await getProjectDir(auth.userId, projectId);
+    let projectId: string;
+    let projectDir: string;
+    try {
+      projectId = await ensureProjectForConversation(db, auth.userId, conversation);
+      projectDir = await getProjectDir(auth.userId, projectId);
+    } catch (err) {
+      // Workspace setup failed (e.g. git unavailable, volume not writable).
+      // Surface it as a chat error instead of a bare 500 the client swallows.
+      console.error("[generate] workspace setup failed:", err);
+      const msg =
+        "Gagal menyiapkan workspace proyek. Coba lagi sebentar — kalau terus terjadi, hubungi support.";
+      await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
+      sendJson(res, 200, { conversationId, started: false, error: "workspace setup failed" });
+      void publishEvent(
+        conversationId,
+        `data: ${JSON.stringify({ type: "error", text: msg })}\n\n`,
+      );
+      return;
+    }
     const leaseResult = await acquireProjectLease(projectId, conversationId);
     if (!isLease(leaseResult)) {
       sendJson(res, 409, {

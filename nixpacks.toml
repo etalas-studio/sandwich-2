@@ -1,0 +1,4 @@
+# The server shells out to `git` for per-project version control (M1-05+).
+# Nixpacks' Node runtime image does not include git by default, so add it here.
+[phases.setup]
+aptPkgs = ["git"]
