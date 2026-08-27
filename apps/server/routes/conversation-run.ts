@@ -35,10 +35,12 @@ import { parseRollbackIntent } from "../prototype/rollback.js";
 import { getProjectDir } from "../projects/workspace.js";
 import {
   DELIVERABLE_FILES,
+  BRIEF_FILE,
   resolveInsideProject,
   commitPaths,
   rollbackDeliverable,
 } from "../projects/workspace.js";
+import { buildBriefMarkdown, writeBrief, type BriefRole } from "../projects/brief.js";
 import { acquireProjectLease, isLease, type ProjectLease } from "../projects/locks.js";
 import { ensureProjectForConversation } from "../db/projects.js";
 import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
@@ -85,6 +87,7 @@ function buildMessages(
     `You are SANDWICH, an expert product consultant AI built by Etalas.`,
     `You help clients turn ideas and briefs into structured product documents.`,
     `Reply in the same language as the client (Indonesian or English).`,
+    `Your working directory holds BRIEF.md (the consolidated brief, clarifying Q&A, and attachment summaries) and any deliverables generated so far — read them with your tools when you need context.`,
   ];
 
   let system: string;
@@ -211,7 +214,12 @@ async function runTextGeneration(opts: {
     }
   };
 
-  session.subscribe((event: any) => {
+  session.subscribe((event: {
+    type: string;
+    assistantMessageEvent?: { type?: string; delta?: string };
+    errorMessage?: string;
+    messages?: unknown;
+  }) => {
     if (signal.aborted) return;
     guardBudget(budget.onEvent(event.type, Date.now()));
 
@@ -364,6 +372,13 @@ async function waitForExtraction(
   }
 }
 
+/**
+ * Extracted attachment text at or below this many characters is inlined into
+ * the prompt; anything larger only gets a summary in BRIEF.md (M2-02) so it
+ * doesn't blow up the context on every turn.
+ */
+const ATTACHMENT_INLINE_CAP = 2_000;
+
 function enrichMessageContent(m: {
   role: string;
   content: string;
@@ -377,7 +392,11 @@ function enrichMessageContent(m: {
   if (m.role !== "user") return m.content;
   const blocks = m.attachments
     .filter((a) => a.extractStatus === "done" && a.extractedText)
-    .map((a) => `[attachment: ${a.filename}]\n${a.extractedText}`);
+    .map((a) =>
+      a.extractedText!.length <= ATTACHMENT_INLINE_CAP
+        ? `[attachment: ${a.filename}]\n${a.extractedText}`
+        : `[attachment: ${a.filename} — full text summarised in BRIEF.md]`,
+    );
   if (blocks.length === 0) return m.content;
   return `${m.content}\n\n${blocks.join("\n\n")}`;
 }
@@ -639,6 +658,18 @@ export function registerConversationRunRoutes(
           content: enrichMessageContent(m),
         }));
 
+        // BRIEF.md — the only user-originated context that lands on disk. Written
+        // fresh every run so the engines' read/ls tools always see current
+        // context; committed alongside the deliverable in the generating path.
+        await writeBrief(
+          projectDir,
+          buildBriefMarkdown({
+            title: conversation.title,
+            turns: messages.map((m) => ({ role: m.role as BriefRole, content: m.content })),
+            attachments: messages.flatMap((m) => m.attachments),
+          }),
+        );
+
         broadcast({
           type: "stage_start",
           stage: "generate",
@@ -844,7 +875,7 @@ export function registerConversationRunRoutes(
 
             const commit = await commitPaths(
               projectDir,
-              [relPath],
+              [BRIEF_FILE, relPath],
               commitMessageFor(type, mode, conversationId, stage, lastUserMessage),
             );
             const doc = await upsertDocument(db, {

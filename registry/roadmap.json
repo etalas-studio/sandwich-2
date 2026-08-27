@@ -29,20 +29,6 @@
       "goal": "Every engine runs like Pi / Claude Code in a local checkout: `cwd` is the project directory, context comes from the files there, and output is written back as files.",
       "issues": [
         {
-          "id": "M2-02",
-          "title": "`BRIEF.md` builder",
-          "what": "Before each run the backend (re)writes `BRIEF.md` at the project root: the consolidated brief, clarifying Q&A, and short summaries of any uploaded attachments. This is the only user-originated context that lands on disk.",
-          "why": "Gives every engine grounding without dumping raw chat logs or raw uploads into `cwd`, which would be context noise the agent picks up via `ls` / `read`.",
-          "acceptance": [
-            "`BRIEF.md` regenerated on each generate run and committed with that run",
-            "Chat transcript, intake, and pipeline/session state stay in Postgres",
-            "Raw attachment bytes stay in R2; only extracted-text summaries go into `BRIEF.md`"
-          ],
-          "notes": "Replaces the current inline attachment injection (`enrichMessageContent`) for large attachments; small ones can still be inlined into the prompt.",
-          "owner": "unassigned",
-          "status": "planned"
-        },
-        {
           "id": "M2-05",
           "title": "Persist the Pi session per conversation",
           "what": "Swap `SessionManager.inMemory` for a disk-backed session keyed by `conversation_id`, stored OUTSIDE the project directory (e.g. `${PI_SESSIONS_ROOT}/${conversationId}`). One project can have several conversations, hence several sessions, all sharing the same `cwd`.",
