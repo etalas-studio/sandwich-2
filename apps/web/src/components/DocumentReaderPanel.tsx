@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { marked } from 'marked'
 import { getDocument, documentExportUrl, type DocumentDetail } from '../api/documents'
+import { apiUrl } from '../api/base'
 
 const TYPE_LABEL: Record<string, string> = {
   prd: 'PRD',
@@ -56,8 +57,8 @@ export default function DocumentReaderPanel({
   const selectedVersion =
     doc?.versions.find((v) => v.versionNo === versionNo) ?? null
   const content = selectedVersion?.content ?? doc?.latestVersion?.content ?? ''
-  const base = (doc?.previewUrl ?? '').replace(/\/$/, '')
-  const previewSrc = versionNo ? `${base}/v/${versionNo}/` : base
+  const base = (doc?.previewUrl ?? apiUrl(`/p/${documentId}`)).replace(/\/$/, '')
+  const previewSrc = versionNo ? `${base}/v/${versionNo}/` : `${base}/`
 
   return (
     <div className="fixed inset-0 z-50">

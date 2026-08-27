@@ -57,8 +57,8 @@ function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentIt
   const current = doc.currentVersionNo ?? latest
   const [version, setVersion] = useState(current)
   const [setting, setSetting] = useState(false)
-  const base = doc.previewUrl?.replace(/\/$/, '') ?? ''
-  const previewUrl = base ? `${base}/v/${version}/` : null
+  const base = (doc.previewUrl ?? apiUrl(`/p/${doc.id}`)).replace(/\/$/, '')
+  const previewUrl = `${base}/v/${version}/`
 
   const dateStr = new Date(doc.createdAt ?? doc.updatedAt).toLocaleDateString('id-ID', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -87,7 +87,7 @@ function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentIt
     >
       {/* Preview thumbnail */}
       <div style={{ height: 180, overflow: 'hidden', position: 'relative', backgroundColor: '#f3f4f6', flexShrink: 0 }}>
-        {previewUrl ? (
+        {doc.latestVersionNo ? (
           <iframe
             src={previewUrl}
             title="preview"
@@ -118,7 +118,7 @@ function PrototypeCard({ doc, onChanged, onOpenConversation }: { doc: DocumentIt
 
         {/* Preview button + version select */}
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {previewUrl && (
+          {doc.latestVersionNo && (
             <a
               href={previewUrl}
               target="_blank"
