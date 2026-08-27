@@ -1,7 +1,7 @@
 'use client'
 
 import { GridLines } from './GridLines'
-import { ACCENT, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED } from './tokens'
+import { TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED } from './tokens'
 
 export interface HarnessesProps {
   kicker: string
@@ -23,15 +23,12 @@ export function Harnesses(props: HarnessesProps) {
               className="aspect-[16/11] md:aspect-[5/4] overflow-hidden rounded-3xl relative border"
               style={{ borderColor: 'rgba(255,255,255,0.08)', backgroundColor: '#0A0A0A' }}
             >
-              <div className="absolute inset-0" style={{ background: `radial-gradient(70% 60% at 70% 20%, ${ACCENT}26, transparent 70%)` }} />
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundSize: '40px 40px',
-                  backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)',
-                }}
+              <img
+                src="/harnesses-spec.webp"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-contain"
               />
-              <iconify-icon icon="solar:document-add-linear" width="72" className="absolute inset-0 m-auto opacity-20" style={{ color: TEXT_PRIMARY }} />
             </div>
           </div>
 
