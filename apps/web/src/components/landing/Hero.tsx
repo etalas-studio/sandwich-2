@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { GridLines } from './GridLines'
-import { ACCENT, TEXT_PRIMARY, TEXT_MUTED } from './tokens'
+import { ACCENT, TEXT_PRIMARY } from './tokens'
 
 export interface HeroProps {
   heroTagline: string
@@ -163,12 +163,9 @@ export function Hero(props: HeroProps) {
             <span>SANDWICH</span>
           </div>
 
-          <h1 className="leading-tight sm:text-4xl md:text-4xl lg:text-5xl text-3xl tracking-tighter">
+          <h1 className="leading-tight sm:text-5xl md:text-5xl lg:text-6xl text-4xl tracking-tighter">
             <span style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
-            <span
-              className="block bg-clip-text text-transparent tracking-tighter"
-              style={{ backgroundImage: `linear-gradient(90deg, ${TEXT_PRIMARY}, ${TEXT_PRIMARY}, ${TEXT_MUTED})` }}
-            >
+            <span className="block tracking-tighter" style={{ color: TEXT_PRIMARY }}>
               {props.heroTagline}
             </span>
           </h1>
