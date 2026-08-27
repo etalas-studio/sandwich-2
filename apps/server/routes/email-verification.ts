@@ -9,9 +9,13 @@ import {
 import { sendEmail } from "../pipeline/email.js";
 import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
+import { parseQueryParam } from "../pipeline/export.js";
 
 const verifyLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 const resendLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 3 });
+// Polled every few seconds by the "check your email" tab, so this needs
+// enough headroom for a few minutes of polling without tripping.
+const statusLimiter = createRateLimiter({ windowMs: 60_000, max: 30 });
 
 export function verificationLink(token: string): string {
   const base = process.env.APP_URL ?? "http://localhost:3000";
@@ -41,6 +45,22 @@ export function registerEmailVerificationRoutes(router: Router, db: Database): v
       await markVerificationTokenUsed(tx as unknown as Database, body.token!);
     });
     sendJson(res, 200, { ok: true });
+  });
+
+  // Polled by the "check your email" tab so it can pick up verification
+  // done from a link opened in a different tab, without a manual reload.
+  router.get("/api/auth/verification-status", async (req, res) => {
+    if (!statusLimiter.check(clientIp(req))) {
+      sendJson(res, 429, { error: "too many requests, try again later" });
+      return;
+    }
+    const email = parseQueryParam(req.url, "email");
+    if (!email) {
+      sendJson(res, 400, { error: "email is required" });
+      return;
+    }
+    const user = await getUserByEmail(db, email.trim());
+    sendJson(res, 200, { verified: user?.emailVerified ?? false });
   });
 
   router.post("/api/auth/resend-verification", async (req, res) => {

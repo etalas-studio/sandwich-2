@@ -45,6 +45,7 @@ import {
   GETOKUI_PROTOTYPE_GUIDE,
 } from "../pipeline/prompts.js";
 import { buildReferenceBlock } from "../pipeline/references.js";
+import { normalizeDashBullets } from "../pipeline/normalize-prose.js";
 
 export interface DocumentRef {
   id: string;
@@ -731,6 +732,13 @@ export function registerConversationRunRoutes(
                 text: msg,
               });
               return;
+            }
+
+            // Deterministic guard against the "- label — description"
+            // AI writing tell — the prompt asks the model to avoid it, but
+            // that's probabilistic, so normalize it in code too.
+            if (stage === "generating" && pendingType && pendingType !== "prototype") {
+              output = normalizeDashBullets(output);
             }
 
             let chatOutput = output;
