@@ -156,58 +156,43 @@ export function Hero(props: HeroProps) {
       </header>
 
       {/* Hero content */}
-      <main className="z-20 flex h-[calc(100vh-80px)] relative items-end">
-        <section className="md:px-8 md:pb-16 lg:pb-20 w-full max-w-7xl mr-auto ml-auto pr-6 pb-12 pl-6">
-          <div className="mb-12 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <main className="z-20 flex h-[calc(100vh-80px)] relative items-center">
+        <section className="md:px-8 w-full max-w-4xl mr-auto ml-auto pr-6 pl-6 text-center">
+          <div className="inline-flex text-xs font-medium text-white/80 bg-white/5 ring-white/10 ring-1 rounded-full mb-5 pt-1.5 pr-3 pb-1.5 pl-3 backdrop-blur-sm gap-x-2 gap-y-2 items-center">
+            <iconify-icon icon="solar:sparkles-linear" width="16" className="text-white/80" />
+            <span>SANDWICH</span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 md:gap-6 lg:gap-10 gap-x-8 gap-y-8 items-center">
-            <div className="md:col-span-7 lg:col-span-6 relative">
-              <div className="inline-flex text-xs font-medium text-white/80 bg-white/5 ring-white/10 ring-1 rounded-full mb-5 pt-1.5 pr-3 pb-1.5 pl-3 backdrop-blur-sm gap-x-2 gap-y-2 items-center">
-                <iconify-icon icon="solar:sparkles-linear" width="16" className="text-white/80" />
-                <span>SANDWICH</span>
-              </div>
+          <h1 className="leading-tight sm:text-4xl md:text-4xl lg:text-5xl text-3xl tracking-tighter">
+            <span style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
+            <span
+              className="block bg-clip-text text-transparent tracking-tighter"
+              style={{ backgroundImage: `linear-gradient(90deg, ${TEXT_PRIMARY}, ${TEXT_PRIMARY}, ${TEXT_MUTED})` }}
+            >
+              {props.heroTagline}
+            </span>
+          </h1>
 
-              <h1 className="leading-tight sm:text-5xl md:text-5xl lg:text-6xl text-4xl tracking-tighter">
-                <span style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
-                <span
-                  className="block bg-clip-text text-transparent tracking-tighter"
-                  style={{ backgroundImage: `linear-gradient(90deg, ${TEXT_PRIMARY}, ${TEXT_PRIMARY}, ${TEXT_MUTED})` }}
-                >
-                  {props.heroTagline}
-                </span>
-              </h1>
-            </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-white/50 mt-6 mb-6">
+            <iconify-icon icon="solar:bolt-linear" width="16" className="opacity-50" />
+            <span>{props.heroBenefit}</span>
+          </div>
 
-            <div className="hidden md:block md:col-span-1 relative">
-              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-white/20 via-white/10 to-white/5 -translate-x-1/2" />
-            </div>
-
-            <div className="md:col-span-12 lg:col-span-4 relative">
-              <div className="border-white/10 border-t pt-6 md:border-t-0 md:pt-0">
-                <div className="flex gap-4 text-sm text-white/50 gap-x-4 gap-y-4 items-center mb-6">
-                  <div className="flex items-center gap-2">
-                    <iconify-icon icon="solar:bolt-linear" width="16" className="opacity-50" />
-                    <span>{props.heroBenefit}</span>
-                  </div>
-                </div>
-                <div className="flex flex-row gap-x-3 gap-y-3">
-                  <button
-                    onClick={props.onGetStartedClick}
-                    className="inline-flex items-center justify-center gap-2 transition hover:bg-white/15 hover:ring-white/25 whitespace-nowrap text-sm font-medium text-white/90 bg-white/10 ring-white/15 ring-1 rounded-full pt-2.5 pr-4 pb-2.5 pl-4 backdrop-blur-sm"
-                  >
-                    <span>{props.navGetStarted}</span>
-                    <iconify-icon icon="solar:arrow-right-linear" width="16" />
-                  </button>
-                  <button
-                    onClick={props.onSecondaryClick}
-                    className="inline-flex items-center justify-center gap-2 ring-1 ring-white/20 transition hover:bg-neutral-100 whitespace-nowrap text-sm font-medium text-neutral-900 bg-white rounded-full pt-2.5 pr-4 pb-2.5 pl-4"
-                  >
-                    <span>{props.navDiff}</span>
-                    <iconify-icon icon="solar:widget-2-linear" width="16" />
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div className="flex flex-row items-center justify-center gap-x-3 gap-y-3">
+            <button
+              onClick={props.onGetStartedClick}
+              className="inline-flex items-center justify-center gap-2 transition hover:bg-white/15 hover:ring-white/25 whitespace-nowrap text-sm font-medium text-white/90 bg-white/10 ring-white/15 ring-1 rounded-full pt-2.5 pr-4 pb-2.5 pl-4 backdrop-blur-sm"
+            >
+              <span>{props.navGetStarted}</span>
+              <iconify-icon icon="solar:arrow-right-linear" width="16" />
+            </button>
+            <button
+              onClick={props.onSecondaryClick}
+              className="inline-flex items-center justify-center gap-2 ring-1 ring-white/20 transition hover:bg-neutral-100 whitespace-nowrap text-sm font-medium text-neutral-900 bg-white rounded-full pt-2.5 pr-4 pb-2.5 pl-4"
+            >
+              <span>{props.navDiff}</span>
+              <iconify-icon icon="solar:widget-2-linear" width="16" />
+            </button>
           </div>
         </section>
       </main>
