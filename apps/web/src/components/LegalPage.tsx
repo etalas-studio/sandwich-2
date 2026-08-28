@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useLanguage } from '../lib/i18n'
 import { LandingNav } from './landing/LandingNav'
+import { FooterBlog } from './landing/FooterBlog'
 
 const interTight = "'Inter Tight', 'Inter', sans-serif"
 
@@ -57,6 +58,7 @@ export default function LegalPage({ title, updated, sections }: LegalPageProps) 
           ))}
         </div>
       </div>
+      <FooterBlog />
     </div>
   )
 }
