@@ -196,10 +196,7 @@ export function Hero(props: HeroProps) {
             </button>
             <button
               onClick={props.onGetStartedClick}
-              className={`inline-flex items-center gap-2 transition-colors duration-300 text-sm font-medium rounded-full pt-2 pr-3.5 pb-2 pl-3.5 ${
-                scrolled ? 'text-white hover:opacity-90' : 'bg-white/10 text-white/90 ring-1 ring-white/15 hover:bg-white/15 hover:ring-white/25 backdrop-blur-sm'
-              }`}
-              style={scrolled ? { backgroundColor: ACCENT } : undefined}
+              className={`inline-flex items-center gap-2 transition-colors duration-300 text-sm font-medium ring-1 rounded-full pt-2 pr-3.5 pb-2 pl-3.5 backdrop-blur-sm ${pillClass}`}
             >
               {props.navGetStarted}
             </button>

@@ -25,16 +25,16 @@ export function Footer(props: FooterProps) {
 
   return (
     <footer className="overflow-hidden border-white/20 border-t relative z-20">
-      {/* Blue-sky background image (blurred) at full 100% opacity. A white
-          overlay sits on top: transparent at the bottom (blue strongest) and
-          only lightly tinted toward the top — so the blue gets a little thinner
-          going up but the white text stays readable. */}
+      {/* Background: image, fade to white at top, solid blue at bottom — no dark overlay */}
       <div className="absolute inset-0 -z-10">
         <img src="/footer-bg-final.jpg" alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(255,255,255,0) 40%, rgba(255,255,255,0.35) 100%)' }} />
+        {/* Top: fade to white so it blends with the section above */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 35%)' }} />
+        {/* Bottom: solid blue fill — same hue as the image, no black */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(80,115,150,1) 0%, rgba(80,115,150,0.5) 40%, rgba(80,115,150,0) 65%)' }} />
       </div>
 
-      <div className="z-10 md:px-8 lg:py-20 max-w-7xl mr-auto ml-auto pt-16 pr-6 pb-16 pl-6 relative">
+      <div className="z-10 md:px-8 max-w-7xl mr-auto ml-auto pt-64 pr-6 pb-16 pl-6 relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
