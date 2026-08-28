@@ -16,18 +16,19 @@ describe('DocumentCard', () => {
     mockedGetDocument.mockReset()
   })
 
-  it('renders title/type/version and calls onClick', async () => {
+  it('renders title/type/commit and calls onClick', async () => {
     mockedGetDocument.mockResolvedValue({
       id: 'doc1',
-      userId: 'u1',
+      projectId: 'p1',
+      conversationId: 'c1',
       type: 'prd',
       title: 'My PRD',
-      currentVersionId: 'v2',
+      relativePath: 'prd.md',
+      lastCommitSha: 'abcdef1234',
       previewUrl: null,
       createdAt: '',
       updatedAt: '',
-      latestVersion: { id: 'v2', documentId: 'doc1', versionNo: 2, content: '# Hi', promptUsed: null, createdAt: '' },
-      versions: [],
+      content: '# Hi',
     })
     const onClick = vi.fn()
     const user = userEvent.setup()
@@ -35,7 +36,7 @@ describe('DocumentCard', () => {
 
     expect(await screen.findByText('My PRD')).toBeInTheDocument()
     expect(screen.getByText('PRD')).toBeInTheDocument()
-    expect(screen.getByText('v2')).toBeInTheDocument()
+    expect(screen.getByText('abcdef1')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button'))
     expect(onClick).toHaveBeenCalledTimes(1)
@@ -46,7 +47,7 @@ describe('DocumentCard', () => {
     render(
       <DocumentCard
         documentId="doc1"
-        initial={{ type: 'specs', title: 'Specs Draft', versionNo: 1 }}
+        initial={{ type: 'specs', title: 'Specs Draft', commitSha: null }}
         onClick={vi.fn()}
       />,
     )

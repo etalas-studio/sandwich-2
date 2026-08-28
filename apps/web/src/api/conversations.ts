@@ -14,6 +14,7 @@ export type ConversationStatus = 'backlog' | 'in_progress' | 'done'
 export interface Conversation {
   id: string
   userId: string
+  projectId: string | null
   type: string
   title: string
   prompt: string
@@ -39,7 +40,7 @@ export interface ChatMessage {
     id: string
     type: string
     title: string
-    versionNo: number | null
+    commitSha: string | null
   } | null
   createdAt: string
   attachments: Attachment[]
@@ -89,6 +90,7 @@ export async function createConversation(input: {
   title: string
   prompt: string
   pendingType?: string
+  projectId?: string
 }): Promise<Conversation> {
   const res = await fetch(apiUrl('/api/conversations'), {
     method: 'POST',

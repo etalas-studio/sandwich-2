@@ -2,8 +2,10 @@ import "dotenv/config";
 import { createServer } from "node:http";
 import type { Server, ServerResponse } from "node:http";
 import { closeRedis } from "./redis.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, accessSync, constants } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { extname, join, normalize, resolve } from "node:path";
+import { projectsRoot } from "./projects/workspace.js";
 import { openDb } from "./db/connection.js";
 import { ensureAdminUser, getUserByEmail } from "./db/users.js";
 import { subscriptions } from "./db/schema.js";
@@ -17,7 +19,8 @@ import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPasswordResetRoutes } from "./routes/password-reset.js";
 import { registerEmailVerificationRoutes } from "./routes/email-verification.js";
 import { registerConversationRoutes } from "./routes/conversations.js";
-import { registerConversationRunRoutes, waitForActiveGenerations } from "./routes/conversation-run.js";
+import { registerProjectRoutes } from "./routes/projects.js";
+import { registerConversationRunRoutes } from "./routes/conversation-run.js";
 import { registerAttachmentRoutes } from "./routes/attachments.js";
 import { registerUsageRoutes } from "./routes/usage.js";
 import { registerShareRoutes } from "./routes/share.js";
@@ -106,12 +109,45 @@ const PUBLIC_API_PATHS = new Set([
   "/api/auth/reset-password",
   "/api/auth/verify-email",
   "/api/auth/resend-verification",
-  "/api/auth/verification-status",
   "/api/midtrans/notification",
 ]);
 
+/**
+ * Preconditions for the per-project git workspace (M1-05+):
+ *  - `git` on PATH — every generation shells out to it. A WARNING, not fatal:
+ *    the rest of the app (auth, billing, viewing) should stay up, and a
+ *    generation attempt fails gracefully with a chat error (conversation-run).
+ *  - `PROJECTS_ROOT` a mounted, writable dir in production — FATAL, because an
+ *    ephemeral-disk fallback would silently lose every artifact on redeploy.
+ */
+function assertWorkspacePrereqs(): void {
+  try {
+    execFileSync("git", ["--version"], { stdio: "ignore" });
+  } catch {
+    console.error(
+      "WARNING: `git` is not on PATH. Document generation will fail until it is installed in the runtime image (see nixpacks.toml). The rest of the app still works.",
+    );
+  }
+
+  const root = projectsRoot();
+  if (process.env.NODE_ENV === "production" && !process.env.PROJECTS_ROOT) {
+    console.error(
+      `FATAL: PROJECTS_ROOT is not set. Falling back to ${root} on ephemeral disk would lose all generated artifacts on redeploy. Mount a volume and set PROJECTS_ROOT.`,
+    );
+    process.exit(1);
+  }
+  try {
+    mkdirSync(root, { recursive: true });
+    accessSync(root, constants.W_OK);
+  } catch (err) {
+    console.error(`FATAL: PROJECTS_ROOT (${root}) is not writable:`, err instanceof Error ? err.message : err);
+    process.exit(1);
+  }
+}
+
 export async function startWebServer(options: WebServerOptions): Promise<Server> {
   const { port, webRoot } = options;
+  assertWorkspacePrereqs();
   const db = await openDb(process.env.DATABASE_URL!);
   await resetStaleExtractions(db);
   await expireStalePayments(db);
@@ -146,6 +182,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   registerPasswordResetRoutes(router, db);
   registerEmailVerificationRoutes(router, db);
   registerConversationRoutes(router, db);
+  registerProjectRoutes(router, db);
   registerConversationRunRoutes(router, db);
   registerAttachmentRoutes(router, db);
   registerUsageRoutes(router, db);
@@ -190,22 +227,9 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
       typeof address === "object" && address ? address.port : port;
   });
 
-  // Grace period for in-flight /generate calls to finish and persist their
-  // assistant reply before we exit — without this, a restart/deploy while a
-  // reply is generating silently drops it (it's only written to the DB once
-  // the LLM call fully resolves; see conversation-run.ts).
-  const SHUTDOWN_GRACE_MS = 25_000;
-
   for (const sig of ["SIGTERM", "SIGINT"] as const) {
     process.once(sig, () => {
-      // Stop accepting new connections immediately, but don't wait on
-      // server.close()'s callback — the /generate route already responds
-      // and detaches into background work, so open-connection tracking
-      // alone won't capture it.
-      server.close();
-      void waitForActiveGenerations(SHUTDOWN_GRACE_MS).finally(() =>
-        closeRedis().finally(() => process.exit(0)),
-      );
+      server.close(() => void closeRedis().finally(() => process.exit(0)));
     });
   }
 

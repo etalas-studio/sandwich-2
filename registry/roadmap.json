@@ -1,0 +1,198 @@
+{
+  "project": "SANDWICH v2",
+  "description": "Collaboration roadmap for SANDWICH v2 — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.",
+  "milestones": [
+    {
+      "id": "m1",
+      "name": "Project entity & storage foundation",
+      "goal": "Introduce a first-class `projects` entity and a persistent per-project directory on disk that becomes the source of truth for every generated artifact. Postgres keeps only an index.",
+      "issues": [
+        {
+          "id": "M1-04",
+          "title": "Railway Volume provisioning + single-instance constraint",
+          "what": "Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and document that the API service now runs as a single instance (no horizontal scaling) because the volume is single-attach.",
+          "why": "The filesystem is now canonical for artifacts, so it must survive redeploys. Railway container disk is ephemeral; a Volume is the persistent option.",
+          "acceptance": [
+            "Volume mounted and `PROJECTS_ROOT` set in Railway",
+            "Boot check logs a clear fatal error if `PROJECTS_ROOT` is missing or not writable",
+            "README.md / PRODUCT.md updated with the single-instance constraint"
+          ],
+          "notes": "The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.",
+          "owner": "unassigned",
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "name": "Versioning via git",
+      "goal": "Replace the Postgres version snapshots with git operations on each project repository.",
+      "issues": [
+        {
+          "id": "M3-01",
+          "title": "Commit per generation",
+          "what": "After every successful generate / refine, stage the changed deliverable(s) + `BRIEF.md` and commit with a structured message (deliverable type + version, conversation id, prompt summary). Persist the resulting SHA to `documents.last_commit_sha`.",
+          "why": "The git log becomes the version history that the sidebar and rollback read from.",
+          "acceptance": [
+            "Exactly one commit per successful run, app-authored, with metadata in the body",
+            "`last_commit_sha` updated on the affected `documents` rows",
+            "An empty diff produces no commit and a \"nothing changed\" reply"
+          ],
+          "notes": "Commit via `child_process` inside the workspace module from M1-03.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M3-02",
+          "title": "Rollback via git",
+          "what": "Rewire the existing rollback-intent parsing (`apps/server/prototype/rollback.ts`) to git: \"rollback ke v2\" resolves the Nth deliverable commit and restores that file, then commits the restore.",
+          "why": "The rollback UX already exists in chat; only the backing store changes.",
+          "acceptance": [
+            "\"rollback\", \"kembali ke versi sebelumnya\", \"v2\" all resolve to git operations",
+            "Rollback creates a new commit — no history rewrite",
+            "Preview reflects the rolled-back file"
+          ],
+          "notes": "Operate per deliverable file, not the whole tree.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M3-03",
+          "title": "Version history + diff API",
+          "what": "Endpoints that return the `git log` for a deliverable (SHA, date, message, prompt summary) and a unified diff between two SHAs, for the sidebar version panel.",
+          "why": "PRODUCT.md §7 promises version history and per-prompt diffs in the sidebar.",
+          "acceptance": [
+            "`GET /api/projects/:id/documents/:type/history`",
+            "`GET /api/projects/:id/documents/:type/diff?from=&to=` returns unified diff text",
+            "Both guarded by project ownership"
+          ],
+          "notes": "",
+          "owner": "unassigned",
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "name": "Preview & retrieval from the filesystem",
+      "goal": "Serve prototype previews and document content from disk (and from past commits) instead of Postgres.",
+      "issues": [
+        {
+          "id": "M4-01",
+          "title": "`/p` preview served from disk",
+          "what": "`/p/:projectId/` serves `prototype/index.html` from the project directory; `/p/:projectId/v/:sha/` serves that file at a past commit via `git show`. Keep the auth check.",
+          "why": "`document_files` is gone; the preview must read the on-disk file.",
+          "acceptance": [
+            "Latest and versioned preview both work from disk",
+            "404 when no prototype file exists for the project",
+            "`prototypePreviewUrl` updated from `/p/:docId` to `/p/:projectId`"
+          ],
+          "notes": "`apps/server/prototype/routes.ts`.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M4-02",
+          "title": "Document read / download from disk",
+          "what": "Document content endpoints in `apps/server/routes/documents.ts` read the file from the project directory (optionally at a given SHA) instead of `document_versions`.",
+          "why": "Same reason — the version tables no longer exist.",
+          "acceptance": [
+            "Get latest content, get content at a SHA, and download (.md / .html) all work",
+            "Every read goes through `resolveInsideProject`"
+          ],
+          "notes": "",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M4-03",
+          "title": "Project file-tree API for the sidebar",
+          "what": "`GET /api/projects/:id/files` returns the deliverables present on disk (type, filename, last commit, updated-at) to power the document panel.",
+          "why": "The sidebar now reflects a directory, not a set of `documents` rows with embedded content.",
+          "acceptance": [
+            "Lists the known deliverables that exist on disk",
+            "`BRIEF.md`, `.git`, and any internal files are excluded or flagged internal"
+          ],
+          "notes": "",
+          "owner": "unassigned",
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "m5",
+      "name": "Durability & lifecycle",
+      "goal": "Back the single-copy volume with R2, and handle project deletion and storage limits.",
+      "issues": [
+        {
+          "id": "M5-01",
+          "title": "R2 backup per project",
+          "what": "After each commit, asynchronously push a `git bundle` of the project repo to R2 under `projects/:userId/:projectId.bundle`.",
+          "why": "The Railway Volume is a single copy. R2 is the durability net and the escape hatch if we later change hosts or need to scale out.",
+          "acceptance": [
+            "Bundle uploaded after each commit, non-blocking, retried on failure",
+            "Backup failures are logged and surfaced in metrics, never to the user"
+          ],
+          "notes": "Reuse `apps/server/storage/r2.ts`.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M5-02",
+          "title": "Lazy-restore a project from R2",
+          "what": "When a project directory is requested but missing on disk (volume recreated, new host), restore it from its R2 bundle before use.",
+          "why": "Makes the volume disposable and keeps redeploys safe even if the volume is wiped.",
+          "acceptance": [
+            "Missing dir + existing bundle → cloned from the bundle transparently",
+            "Missing dir + no bundle → treated as a new empty project",
+            "Restore is idempotent and locked per project"
+          ],
+          "notes": "",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M5-03",
+          "title": "Project deletion",
+          "what": "Deleting a project removes its DB rows (conversations, documents, chat_messages, attachment metadata), its on-disk directory, its R2 bundle, and its R2 attachment objects. Deleting a single conversation removes only that conversation + its Pi session, never the project.",
+          "why": "No orphaned disk or object storage.",
+          "acceptance": [
+            "DB rows removed in one transaction; disk + R2 cleanup best-effort with logging",
+            "Deleting a conversation leaves the project and its other conversations intact"
+          ],
+          "notes": "Extend the `deleteConversation` transaction pattern in `apps/server/db/conversations.ts`.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M5-04",
+          "title": "Per-user disk guardrails",
+          "what": "Cap total project bytes per user (and per project), with a clear error when exceeded. Keep the existing monthly document / chat quotas.",
+          "why": "Filesystem storage per user is now effectively unbounded.",
+          "acceptance": [
+            "Size check before a generate run writes files",
+            "Limits configurable per plan (Starter vs Pro)",
+            "Over-limit returns 403 with an actionable message"
+          ],
+          "notes": "PRODUCT.md §9.",
+          "owner": "unassigned",
+          "status": "planned"
+        },
+        {
+          "id": "M5-05",
+          "title": "Per-tenant isolation for engine tool execution",
+          "what": "Run each generation engine (esp. the prototype engine's bash tool) under real isolation — a per-user OS uid, a container, or a jailed filesystem — so a prompt-injected tool call cannot read another tenant's project directory under PROJECTS_ROOT.",
+          "why": "After M2-01 the engines run with cwd inside PROJECTS_ROOT and M2-02 feeds user-controlled attachment text into their context. Pi's tools resolve relative paths to cwd but pass absolute paths through — there is no sandbox. The env-scrub on bash and dropping bash from the text engine are mitigations, not isolation. Required before any multi-tenant launch.",
+          "acceptance": [
+            "A tool call with an absolute path outside the project dir is denied or contained",
+            "Engine subprocess cannot read PROJECTS_ROOT siblings or host secrets",
+            "Decision recorded: uid-per-user vs container vs chroot/bind-mount"
+          ],
+          "notes": "Interim mitigations already in place: apps/server/engine/bash-tool.ts (scrubEnv + spawnHook), text engine runs bash-free.",
+          "owner": "unassigned",
+          "status": "planned"
+        }
+      ]
+    }
+  ]
+}

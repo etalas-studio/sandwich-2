@@ -1,77 +1,169 @@
-import { and, desc, eq, inArray, max } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import {
-  conversationDocuments,
-  documentFiles,
-  documents,
-  documentVersions,
-} from "./schema.js";
+import { documents, projects } from "./schema.js";
 import type { Database } from "./connection.js";
 
-export type DocumentType = "prd" | "quotation" | "prototype" | "specs";
+export type DocumentType = "prd" | "quotation" | "prototype" | "specs" | "mom";
 
+/**
+ * An index row pointing at a file in the project's git repo. Postgres stores no
+ * content — `relativePath` + `lastCommitSha` locate it on disk and in history.
+ * One row per (projectId, type).
+ */
 export interface Document {
   id: string;
-  userId: string;
+  projectId: string;
+  conversationId: string | null;
   type: string;
   title: string;
-  currentVersionId: string | null;
+  relativePath: string;
+  lastCommitSha: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface DocumentVersion {
-  id: string;
-  documentId: string;
-  versionNo: number;
-  content: string;
-  promptUsed: string | null;
-  createdAt: Date;
+function normalise(row: typeof documents.$inferSelect): Document {
+  return {
+    id: row.id,
+    projectId: row.projectId,
+    conversationId: row.conversationId,
+    type: row.type,
+    title: row.title,
+    relativePath: row.relativePath,
+    lastCommitSha: row.lastCommitSha,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
-export interface DocumentFile {
-  id: string;
-  documentId: string;
-  versionNo: number;
-  path: string;
-  content: string;
-  createdAt: Date;
+export interface UpsertDocumentInput {
+  projectId: string;
+  conversationId: string | null;
+  type: DocumentType;
+  title: string;
+  relativePath: string;
+  lastCommitSha?: string | null;
 }
 
-export async function createDocument(
+/**
+ * Creates or updates the (projectId, type) document row after a generation run.
+ * Regenerating a deliverable overwrites the same file on disk, so it also
+ * overwrites the same row here — never a new one.
+ */
+export async function upsertDocument(
   db: Database,
-  input: { userId: string; type: DocumentType; title: string },
+  input: UpsertDocumentInput,
 ): Promise<Document> {
-  const id = randomUUID();
   const now = new Date();
-  await db.insert(documents).values({
-    id,
-    userId: input.userId,
-    type: input.type,
-    title: input.title,
-    createdAt: now,
-    updatedAt: now,
-  });
-  return (await getDocument(db, id))!;
+  await db
+    .insert(documents)
+    .values({
+      id: randomUUID(),
+      projectId: input.projectId,
+      conversationId: input.conversationId,
+      type: input.type,
+      title: input.title,
+      relativePath: input.relativePath,
+      lastCommitSha: input.lastCommitSha ?? null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [documents.projectId, documents.type],
+      set: {
+        title: input.title,
+        relativePath: input.relativePath,
+        conversationId: input.conversationId,
+        lastCommitSha: input.lastCommitSha ?? null,
+        updatedAt: now,
+      },
+    });
+  return (await findProjectDocument(db, input.projectId, input.type))!;
 }
 
+/** Record the latest commit that touched this document's file. */
+export async function setDocumentCommit(
+  db: Database,
+  id: string,
+  sha: string,
+): Promise<void> {
+  await db
+    .update(documents)
+    .set({ lastCommitSha: sha, updatedAt: new Date() })
+    .where(eq(documents.id, id));
+}
+
+/** Unscoped by id — callers that already hold a scoped row use this to re-read. */
 export async function getDocument(db: Database, id: string): Promise<Document | null> {
   const rows = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
-  return rows[0] ?? null;
+  return rows[0] ? normalise(rows[0]) : null;
 }
 
-export async function listDocuments(db: Database, userId: string): Promise<Document[]> {
-  return db.select().from(documents).where(eq(documents.userId, userId)).orderBy(desc(documents.updatedAt));
-}
-
-export async function getConversationIdForDocument(db: Database, documentId: string): Promise<string | null> {
+/** By id, scoped to the owning user via project ownership. */
+export async function getOwnedDocument(
+  db: Database,
+  userId: string,
+  id: string,
+): Promise<Document | null> {
   const rows = await db
-    .select({ conversationId: conversationDocuments.conversationId })
-    .from(conversationDocuments)
-    .where(eq(conversationDocuments.documentId, documentId))
-    .orderBy(desc(conversationDocuments.createdAt))
+    .select({ doc: documents })
+    .from(documents)
+    .innerJoin(projects, eq(documents.projectId, projects.id))
+    .where(and(eq(documents.id, id), eq(projects.userId, userId)))
     .limit(1);
-  return rows[0]?.conversationId ?? null;
+  return rows[0] ? normalise(rows[0].doc) : null;
+}
+
+export async function listDocumentsForUser(
+  db: Database,
+  userId: string,
+): Promise<Document[]> {
+  const rows = await db
+    .select({ doc: documents })
+    .from(documents)
+    .innerJoin(projects, eq(documents.projectId, projects.id))
+    .where(eq(projects.userId, userId))
+    .orderBy(desc(documents.updatedAt));
+  return rows.map((r) => normalise(r.doc));
+}
+
+export async function listProjectDocuments(
+  db: Database,
+  projectId: string,
+): Promise<Document[]> {
+  const rows = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.projectId, projectId))
+    .orderBy(desc(documents.updatedAt));
+  return rows.map(normalise);
+}
+
+/** The single row for a deliverable type in a project (upsert lookup). */
+export async function findProjectDocument(
+  db: Database,
+  projectId: string,
+  type: DocumentType,
+): Promise<Document | null> {
+  const rows = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.projectId, projectId), eq(documents.type, type)))
+    .limit(1);
+  return rows[0] ? normalise(rows[0]) : null;
+}
+
+/** Documents last generated in a conversation ("generated in"). */
+export async function listConversationDocuments(
+  db: Database,
+  conversationId: string,
+): Promise<Document[]> {
+  const rows = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.conversationId, conversationId))
+    .orderBy(desc(documents.updatedAt));
+  return rows.map(normalise);
 }
 
 /** Title-scoped retrieval — the explicit "buka PRD X" lookup. */
@@ -80,186 +172,39 @@ export async function findDocumentByTitle(
   userId: string,
   title: string,
 ): Promise<Document | null> {
-  const rows = await db.select().from(documents)
-    .where(and(eq(documents.userId, userId), eq(documents.title, title)))
+  const rows = await db
+    .select({ doc: documents })
+    .from(documents)
+    .innerJoin(projects, eq(documents.projectId, projects.id))
+    .where(and(eq(projects.userId, userId), eq(documents.title, title)))
     .limit(1);
-  return rows[0] ?? null;
+  return rows[0] ? normalise(rows[0].doc) : null;
 }
 
-export async function updateDocumentTitle(db: Database, id: string, title: string): Promise<void> {
+export async function updateDocumentTitle(
+  db: Database,
+  id: string,
+  title: string,
+): Promise<void> {
   await db.update(documents).set({ title, updatedAt: new Date() }).where(eq(documents.id, id));
 }
 
-export async function createDocumentVersion(
-  db: Database,
-  input: { documentId: string; versionNo: number; content: string; promptUsed?: string },
-): Promise<DocumentVersion> {
-  const id = randomUUID();
-  const now = new Date();
-  await db.insert(documentVersions).values({
-    id,
-    documentId: input.documentId,
-    versionNo: input.versionNo,
-    content: input.content,
-    promptUsed: input.promptUsed ?? null,
-    createdAt: now,
-  });
-  await db.update(documents)
-    .set({ currentVersionId: id, updatedAt: now })
-    .where(eq(documents.id, input.documentId));
-  return (await getVersion(db, id))!;
-}
-
-export async function getVersion(db: Database, id: string): Promise<DocumentVersion | null> {
-  const rows = await db.select().from(documentVersions).where(eq(documentVersions.id, id)).limit(1);
-  return rows[0] ?? null;
-}
-
-export async function getLatestVersion(db: Database, documentId: string): Promise<DocumentVersion | null> {
-  const rows = await db.select().from(documentVersions)
-    .where(eq(documentVersions.documentId, documentId))
-    .orderBy(desc(documentVersions.versionNo))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-/** Single query: versionNo for a set of version IDs. */
-export async function getVersionNosByIds(
-  db: Database,
-  versionIds: string[],
-): Promise<Map<string, number>> {
-  if (versionIds.length === 0) return new Map();
-  const rows = await db
-    .select({ id: documentVersions.id, versionNo: documentVersions.versionNo })
-    .from(documentVersions)
-    .where(inArray(documentVersions.id, versionIds));
-  return new Map(rows.map((r) => [r.id, r.versionNo]));
-}
-
-/** Single query: latest versionNo per document for a set of document IDs. */
-export async function getLatestVersionNosForDocuments(
-  db: Database,
-  documentIds: string[],
-): Promise<Map<string, number>> {
-  if (documentIds.length === 0) return new Map();
-  const rows = await db
-    .select({ documentId: documentVersions.documentId, maxNo: max(documentVersions.versionNo) })
-    .from(documentVersions)
-    .where(inArray(documentVersions.documentId, documentIds))
-    .groupBy(documentVersions.documentId);
-  return new Map(rows.map((r) => [r.documentId, r.maxNo ?? 0]));
-}
-
-export async function listVersions(db: Database, documentId: string): Promise<DocumentVersion[]> {
-  return db.select().from(documentVersions)
-    .where(eq(documentVersions.documentId, documentId))
-    .orderBy(desc(documentVersions.versionNo));
-}
-
-export async function getNextVersionNo(db: Database, documentId: string): Promise<number> {
-  const latest = await getLatestVersion(db, documentId);
-  return (latest?.versionNo ?? 0) + 1;
-}
-
-export async function setDocumentCurrentVersion(
-  db: Database,
-  documentId: string,
-  versionId: string,
-): Promise<void> {
-  await db.update(documents)
-    .set({ currentVersionId: versionId, updatedAt: new Date() })
-    .where(eq(documents.id, documentId));
-}
-
-/** Move the active version pointer (rollback). Does not delete history. */
-export async function rollbackDocument(
-  db: Database,
-  documentId: string,
-  intent: "previous" | "latest",
-): Promise<DocumentVersion | null> {
-  const versions = await listVersions(db, documentId); // descending version_no
-  if (versions.length === 0) return null;
-  const doc = await getDocument(db, documentId);
-  const current = doc?.currentVersionId
-    ? versions.find((v) => v.id === doc.currentVersionId) ?? versions[0]!
-    : versions[0]!;
-
-  let target: DocumentVersion | null = null;
-  if (intent === "latest") {
-    target = versions[0]!;
-  } else {
-    const targetNo = current.versionNo - 1;
-    target = versions.find((v) => v.versionNo === targetNo) ?? null;
-  }
-
-  if (target && target.id !== current.id) {
-    await setDocumentCurrentVersion(db, documentId, target.id);
-    return target;
-  }
-  return null;
-}
-
-// ── conversation ↔ document link ──────────────────────────────────────────────
-
-export async function linkConversationDocument(
+/** Detach documents from a conversation being deleted — the files survive. */
+export async function clearConversationDocuments(
   db: Database,
   conversationId: string,
-  documentId: string,
 ): Promise<void> {
-  await db.insert(conversationDocuments).values({
-    conversationId,
-    documentId,
-    createdAt: new Date(),
-  }).onConflictDoNothing({
-    target: [conversationDocuments.conversationId, conversationDocuments.documentId],
-  });
+  await db
+    .update(documents)
+    .set({ conversationId: null })
+    .where(eq(documents.conversationId, conversationId));
 }
 
-export async function listConversationDocuments(db: Database, conversationId: string): Promise<Document[]> {
-  const rows = await db.select({ doc: documents })
-    .from(conversationDocuments)
-    .innerJoin(documents, eq(conversationDocuments.documentId, documents.id))
-    .where(eq(conversationDocuments.conversationId, conversationId));
-  return rows.map((r) => r.doc);
-}
-
-// ── multi-file documents (prototype) ─────────────────────────────────────────
-
-export async function saveDocumentFile(
+/** Delete every document row for a set of projects (user deletion cascade). */
+export async function deleteDocumentsForProjects(
   db: Database,
-  documentId: string,
-  versionNo: number,
-  path: string,
-  content: string,
+  projectIds: string[],
 ): Promise<void> {
-  await db.insert(documentFiles).values({ documentId, versionNo, path, content, createdAt: new Date() })
-    .onConflictDoUpdate({
-      target: [documentFiles.documentId, documentFiles.versionNo, documentFiles.path],
-      set: { content, createdAt: new Date() },
-    });
-}
-
-export async function getDocumentFiles(
-  db: Database,
-  documentId: string,
-  versionNo: number,
-): Promise<DocumentFile[]> {
-  return db.select().from(documentFiles)
-    .where(and(eq(documentFiles.documentId, documentId), eq(documentFiles.versionNo, versionNo)));
-}
-
-export async function getDocumentFile(
-  db: Database,
-  documentId: string,
-  versionNo: number,
-  path: string,
-): Promise<DocumentFile | null> {
-  const rows = await db.select().from(documentFiles)
-    .where(and(
-      eq(documentFiles.documentId, documentId),
-      eq(documentFiles.versionNo, versionNo),
-      eq(documentFiles.path, path),
-    ))
-    .limit(1);
-  return rows[0] ?? null;
+  if (projectIds.length === 0) return;
+  await db.delete(documents).where(inArray(documents.projectId, projectIds));
 }

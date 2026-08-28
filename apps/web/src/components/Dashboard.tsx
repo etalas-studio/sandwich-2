@@ -4,8 +4,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
-import { getConversations, loadConversations, createConversationLocal, updateLocalConversation, deleteLocalConversation, type LocalConversation, type ConversationType } from '../lib/conversations'
+import { getConversations, loadConversations, loadConversationGroups, getConversationGroups, createConversationLocal, updateLocalConversation, deleteLocalConversation, renameLocalProject, sortGroupConversations, type LocalConversation, type ConversationGroup, type ConversationType } from '../lib/conversations'
 import { updateConversation as updateConversationApi, uploadAttachment, shareConversation, unshareConversation, createMessage, generateConversation, getMessages, updateMessage, type Attachment } from '../api/conversations'
+import ProjectGroup from './ProjectGroup'
 import { useUsage } from '../hooks/useUsage'
 import { apiUrl } from '../api/base'
 import Settings from './Settings'
@@ -427,7 +428,7 @@ function ChatView({
             currentAi = []
           } else if (m.role === 'assistant') {
             const docMeta = m.document
-              ? { id: m.document.id, type: m.document.type, title: m.document.title, versionNo: m.document.versionNo ?? undefined }
+              ? { id: m.document.id, type: m.document.type, title: m.document.title, commitSha: m.document.commitSha ?? null }
               : m.documentId
                 ? { id: m.documentId }
                 : undefined
@@ -788,6 +789,9 @@ interface PromptBoxProps {
   defaultType?: ConversationType
   onSuccess: (t: LocalConversation) => void
   usage: PlanUsage
+  projectId?: string | null
+  projectTitle?: string | null
+  onClearProject?: () => void
 }
 function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType: ConversationType | null } {
   try {
@@ -801,7 +805,7 @@ function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType:
   }
 }
 
-function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps) {
+function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, projectTitle, onClearProject }: PromptBoxProps) {
   const { t: tr } = useLanguage()
   const [draft] = useState(loadDraft)
   const [prompt, setPrompt] = useState(draft.prompt)
@@ -828,7 +832,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
     setIsSubmitting(true)
     setError(null)
     try {
-      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
+      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim(), projectId: projectId ?? undefined })
       const uploaded: Attachment[] = []
       for (const a of attachments) {
         try {
@@ -846,6 +850,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
       if (msg === 'active subscription required') setError(tr('dash_expired_error'))
       else if (msg === 'monthly quota reached') setError(tr('plan_limit_desc'))
       else if (msg === 'prototype quota reached') setError(tr('prototype_quota_reached'))
+      else if (msg === 'project not found') { setError(tr('dash_project_gone')); onClearProject?.() }
       else setError(msg || tr('dash_generic_error'))
     } finally {
       setIsSubmitting(false)
@@ -854,6 +859,16 @@ function PromptBox({ defaultType = 'general', onSuccess, usage }: PromptBoxProps
 
   return (
     <div className="w-full rounded-2xl" style={{ backgroundColor: '#111113' }}>
+      {projectId && projectTitle && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            {tr('dash_new_chat_in')} <span style={{ color: '#ffffff', fontWeight: 600 }}>{projectTitle}</span>
+          </p>
+          <button onClick={onClearProject} aria-label="Clear project" className="p-1 rounded shrink-0" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <iconify-icon icon="solar:close-circle-linear" width="14" />
+          </button>
+        </div>
+      )}
       {atLimit && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-t-2xl" style={{ backgroundColor: 'rgba(249,24,20,0.12)', borderBottom: '1px solid rgba(249,24,20,0.2)' }}>
           <div>
@@ -996,6 +1011,9 @@ function HomeOverview({
   onGoTemplates,
   onGoBriefs,
   onGoType,
+  projectId,
+  projectTitle,
+  onClearProject,
 }: {
   conversations: LocalConversation[]
   username: string
@@ -1005,6 +1023,9 @@ function HomeOverview({
   onGoTemplates: () => void
   onGoBriefs: () => void
   onGoType: (type: ConversationType) => void
+  projectId?: string | null
+  projectTitle?: string | null
+  onClearProject?: () => void
 }) {
   const { lang, t: tr } = useLanguage()
   const [filter, setFilter] = useState<'all' | 'done' | 'draft'>('all')
@@ -1081,7 +1102,7 @@ function HomeOverview({
         )}
 
         {/* Prompt box */}
-        <PromptBox onSuccess={onSuccess} usage={usage} />
+        <PromptBox onSuccess={onSuccess} usage={usage} projectId={projectId} projectTitle={projectTitle} onClearProject={onClearProject} />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1402,6 +1423,13 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [contextMenuConversation, setContextMenuConversation] = useState<string | null>(null)
   const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null)
   const [renameConversationValue, setRenameConversationValue] = useState('')
+  const [groups, setGroups] = useState<ConversationGroup[]>([])
+  const [collapsedProjects, setCollapsedProjects] = useState<Record<string, boolean>>({})
+  const [renamingProjectId, setRenamingProjectId] = useState<string | null>(null)
+  const [renameProjectValue, setRenameProjectValue] = useState('')
+  const [contextMenuProject, setContextMenuProject] = useState<string | null>(null)
+  const [composerProjectId, setComposerProjectId] = useState<string | null>(null)
+  const [documentsProjectId, setDocumentsProjectId] = useState<string | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareVisibility, setShareVisibility] = useState<'private' | 'shared'>('private')
@@ -1479,16 +1507,25 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     )
   }
 
-  const refresh = () => setConversations(getConversations())
+  const refresh = () => {
+    setConversations(getConversations())
+    setGroups(getConversationGroups())
+  }
 
   useEffect(() => {
-    void loadConversations().then(setConversations).catch(() => {})
+    void loadConversationGroups().then(() => refresh()).catch(() => {
+      // Fall back to the flat list so the sidebar still works.
+      void loadConversations().then(setConversations).catch(() => {})
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleSuccess = (t: LocalConversation) => {
-    refresh()
+    setComposerProjectId(null)
     usageQuery.invalidate()
     setChatState({ prompt: t.summary, conversationId: t.id, autoRun: true })
+    // A project-less create minted a fresh project server-side — reload groups.
+    void loadConversationGroups().then(() => refresh()).catch(() => refresh())
   }
 
   const handleDelete = (id: string) => {
@@ -1498,7 +1535,134 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setSelected(null)
   }
 
+  // "+ New chat" inside a project — opens the composer carrying that project.
+  // The conversation is created on submit (POST requires a prompt).
+  const startChatInProject = (projectId: string) => {
+    setComposerProjectId(projectId)
+    setChatState(null)
+    setActiveNav('home')
+    setCollapsedProjects(p => ({ ...p, [projectId]: false }))
+    if (typeof window !== 'undefined' && window.innerWidth < 768) setSidebarOpen(false)
+  }
+
+  const commitProjectRename = () => {
+    if (renamingProjectId && renameProjectValue.trim()) {
+      renameLocalProject(renamingProjectId, renameProjectValue.trim())
+      refresh()
+    }
+    setRenamingProjectId(null)
+  }
+
+  const renderConversationRow = (t: LocalConversation) => {
+    const meta = TYPE_META[t.type] ?? TYPE_META.general
+    const isActive = chatState?.conversationId === t.id
+    const menuOpen = contextMenuConversation === t.id
+    const isRenaming = renamingConversationId === t.id
+    return (
+      <div key={t.id} className="relative group/item mb-0.5">
+        <button
+          onClick={() => {
+            setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
+            setActiveNav('home')
+            if (t.unread) updateLocalConversation(t.id, { unread: false })
+            refresh()
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
+          style={{ backgroundColor: isActive || menuOpen ? 'rgba(255,255,255,0.08)' : '' }}
+          onMouseEnter={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
+          onMouseLeave={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = '' }}
+        >
+          <div className="w-5 h-5 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
+            <iconify-icon icon={meta.icon} width="11" style={{ color: meta.ic }} />
+          </div>
+          {isRenaming ? (
+            <input
+              autoFocus
+              value={renameConversationValue}
+              onChange={e => setRenameConversationValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  updateLocalConversation(t.id, { summary: renameConversationValue }); refresh()
+                  setRenamingConversationId(null)
+                }
+                if (e.key === 'Escape') setRenamingConversationId(null)
+              }}
+              onBlur={() => {
+                if (renameConversationValue.trim()) { updateLocalConversation(t.id, { summary: renameConversationValue }); refresh() }
+                setRenamingConversationId(null)
+              }}
+              onClick={e => e.stopPropagation()}
+              className="flex-1 bg-transparent outline-none text-xs min-w-0"
+              style={{ color: '#ffffff' }}
+            />
+          ) : (
+            <span className="text-xs truncate flex-1" style={{ color: isActive ? '#ffffff' : t.unread ? '#ffffff' : 'rgba(255,255,255,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
+          )}
+          {t.pinned && !menuOpen && (
+            <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+          )}
+          {t.unread && !menuOpen && (
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#f91814' }} />
+          )}
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); setContextMenuConversation(menuOpen ? null : t.id) }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-100 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity"
+          style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
+          aria-label="Chat options"
+        >
+          <iconify-icon icon="solar:menu-dots-bold" width="14" />
+        </button>
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setContextMenuConversation(null)} />
+            <div
+              className="absolute right-0 top-full mt-0.5 z-50 rounded-xl py-1 min-w-[160px] shadow-xl"
+              style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button onClick={() => { updateLocalConversation(t.id, { pinned: !t.pinned }); setContextMenuConversation(null); refresh() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <iconify-icon icon="solar:pin-linear" width="14" />
+                {t.pinned ? 'Unpin' : 'Pin'}
+              </button>
+              <button onClick={() => { updateLocalConversation(t.id, { unread: !t.unread }); setContextMenuConversation(null); refresh() }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <iconify-icon icon="solar:eye-closed-linear" width="14" />
+                {t.unread ? 'Mark as read' : 'Mark as unread'}
+              </button>
+              <button onClick={() => { setRenameConversationValue(t.summary); setRenamingConversationId(t.id); setContextMenuConversation(null) }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <iconify-icon icon="solar:pen-2-linear" width="14" />
+                Rename
+              </button>
+              <button onClick={() => { handleDelete(t.id); setContextMenuConversation(null) }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
+                style={{ color: '#f91814' }}>
+                <iconify-icon icon="solar:trash-bin-trash-linear" width="14" />
+                Delete
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
   const currentConversation = conversations.find(t => t.id === chatState?.conversationId) ?? null
+
+  // Keep the active conversation's project expanded.
+  useEffect(() => {
+    const cId = chatState?.conversationId
+    if (!cId) return
+    const g = groups.find(gr => gr.conversationIds.includes(cId))
+    if (g && collapsedProjects[g.project.id]) {
+      setCollapsedProjects(p => ({ ...p, [g.project.id]: false }))
+    }
+  }, [chatState?.conversationId, groups, collapsedProjects])
 
   useEffect(() => {
     setShowChatMenu(false)
@@ -1522,11 +1686,22 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   useEffect(() => {
     const cId = searchParams.get('c')
     if (!cId || chatState?.conversationId === cId) return
-    void loadConversations().then(convs => {
-      setConversations(convs)
-      const match = convs.find(c => c.id === cId)
-      if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
-    }).catch(() => {})
+    void loadConversationGroups()
+      .then(() => {
+        refresh()
+        let match = getConversations().find(c => c.id === cId)
+        if (match) {
+          setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
+          return
+        }
+        // Not in the grouped result (null project_id / legacy) — flat fallback.
+        return loadConversations().then(convs => {
+          setConversations(convs)
+          match = convs.find(c => c.id === cId)
+          if (match) setChatState({ prompt: match.summary, conversationId: match.id, autoRun: false })
+        })
+      })
+      .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -1644,7 +1819,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
+    if (activeNav === 'documents') return <DocumentsPanel initialProjectId={documentsProjectId} onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
       const conv = convId
         ? conversations.find(c => c.id === convId)
         : conversations.find(c => c.summary.includes(docTitle))
@@ -1691,9 +1866,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
         {/* Fixed top nav */}
         <div className="px-2 mt-3 shrink-0">
-          {/* New Chat button */}
+          {/* New project button */}
           <button
-            onClick={() => { setActiveNav('home'); setChatState(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
+            onClick={() => { setActiveNav('home'); setChatState(null); setComposerProjectId(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium mb-1 transition-colors text-left"
             style={activeNav === 'home' && !chatState
               ? { backgroundColor: '#f91814', color: '#ffffff' }
@@ -1702,8 +1877,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             onMouseEnter={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
             onMouseLeave={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
           >
-            <iconify-icon icon="solar:chat-round-line-linear" width="15" />
-            New Chat
+            <iconify-icon icon="solar:folder-with-files-linear" width="15" />
+            {tr('dash_new_project')}
             <iconify-icon icon="solar:pen-new-square-linear" width="13" style={{ marginLeft: 'auto', color: '#ffffff' }} />
           </button>
 
@@ -1713,7 +1888,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               const isActive = activeNav === item.id
               const count = byType(PIPELINE_MAP[item.id]?.type ?? 'general' as ConversationType).length
               return (
-                <button key={item.id} onClick={() => { setActiveNav(item.id); setChatState(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
+                <button key={item.id} onClick={() => { if (item.id === 'documents') setDocumentsProjectId(currentConversation?.projectId ?? null); setActiveNav(item.id); setChatState(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
                   style={isActive ? { backgroundColor: '#f91814', color: '#ffffff', fontWeight: 500 } : { color: 'rgba(255,255,255,0.5)' }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
@@ -1730,117 +1905,42 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        {/* Chat history — scrollable, separated by big gap */}
+        {/* Projects — scrollable, separated by big gap */}
         <div className="flex-1 min-h-0 flex flex-col mt-8 px-2">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase shrink-0" style={{ color: '#ffffff' }}>{tr('dash_chat_history')}</p>
+          <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase shrink-0" style={{ color: '#ffffff' }}>{tr('dash_projects')}</p>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-            {conversations.length === 0 ? (
-              <p className="px-3 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>{tr('dash_no_chats')}</p>
-            ) : (
-              conversations.slice().reverse().sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map(t => {
-                const meta = TYPE_META[t.type] ?? TYPE_META.general
-                const isActive = chatState?.conversationId === t.id
-                const menuOpen = contextMenuConversation === t.id
-                const isRenaming = renamingConversationId === t.id
-                return (
-                  <div key={t.id} className="relative group/item mb-0.5">
-                    <button
-                      onClick={() => {
-                        setChatState({ prompt: t.summary, conversationId: t.id, autoRun: false })
-                        setActiveNav('home')
-                        if (t.unread) updateLocalConversation(t.id, { unread: false })
-                        refresh()
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
-                      style={{ backgroundColor: isActive || menuOpen ? 'rgba(255,255,255,0.08)' : '' }}
-                      onMouseEnter={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
-                      onMouseLeave={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = '' }}
-                    >
-                      <div className="w-5 h-5 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
-                        <iconify-icon icon={meta.icon} width="11" style={{ color: meta.ic }} />
-                      </div>
-                      {isRenaming ? (
-                        <input
-                          autoFocus
-                          value={renameConversationValue}
-                          onChange={e => setRenameConversationValue(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              updateLocalConversation(t.id, { summary: renameConversationValue }); refresh()
-                              setRenamingConversationId(null)
-                            }
-                            if (e.key === 'Escape') setRenamingConversationId(null)
-                          }}
-                          onBlur={() => {
-                            if (renameConversationValue.trim()) { updateLocalConversation(t.id, { summary: renameConversationValue }); refresh() }
-                            setRenamingConversationId(null)
-                          }}
-                          onClick={e => e.stopPropagation()}
-                          className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                          style={{ color: '#ffffff' }}
-                        />
-                      ) : (
-                        <span className="text-xs truncate flex-1" style={{ color: isActive ? '#ffffff' : t.unread ? '#ffffff' : 'rgba(255,255,255,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
-                      )}
-                      {t.pinned && !menuOpen && (
-                        <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
-                      )}
-                      {t.unread && !menuOpen && (
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#f91814' }} />
-                      )}
-                    </button>
-                    {/* Three dots button — visible on row hover or when menu open */}
-                    <button
-                      onClick={e => {
-                        e.stopPropagation()
-                        setContextMenuConversation(menuOpen ? null : t.id)
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-0 group-hover/item:opacity-100 transition-opacity"
-                      style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
-                      aria-label="Chat options"
-                    >
-                      <iconify-icon icon="solar:menu-dots-bold" width="14" />
-                    </button>
-                    {/* Context menu */}
-                    {menuOpen && (
-                      <>
-                      <div className="fixed inset-0 z-40" onClick={() => setContextMenuConversation(null)} />
-                      <div
-                        className="absolute right-0 top-full mt-0.5 z-50 rounded-xl py-1 min-w-[160px] shadow-xl"
-                        style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <button onClick={() => { updateLocalConversation(t.id, { pinned: !t.pinned }); setContextMenuConversation(null); refresh() }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.85)' }}>
-                          <iconify-icon icon="solar:pin-linear" width="14" />
-                          {t.pinned ? 'Unpin' : 'Pin'}
-                        </button>
-                        <button onClick={() => { updateLocalConversation(t.id, { unread: !t.unread }); setContextMenuConversation(null); refresh() }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.85)' }}>
-                          <iconify-icon icon="solar:eye-closed-linear" width="14" />
-                          {t.unread ? 'Mark as read' : 'Mark as unread'}
-                        </button>
-                        <button onClick={() => { setRenameConversationValue(t.summary); setRenamingConversationId(t.id); setContextMenuConversation(null) }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.85)' }}>
-                          <iconify-icon icon="solar:pen-2-linear" width="14" />
-                          Rename
-                        </button>
-                        <button onClick={() => { handleDelete(t.id); setContextMenuConversation(null) }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                          style={{ color: '#f91814' }}>
-                          <iconify-icon icon="solar:trash-bin-trash-linear" width="14" />
-                          Delete
-                        </button>
-                      </div>
-                      </>
-                    )}
-                  </div>
-                )
-              })
-            )}
+            {(() => {
+              const byId = new Map(conversations.map(c => [c.id, c]))
+              const visibleGroups = groups
+                .map(g => ({ g, convs: sortGroupConversations(g.conversationIds, byId) }))
+                .filter(x => x.convs.length > 0)
+              if (visibleGroups.length === 0) {
+                return <p className="px-3 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>{tr('dash_no_chats')}</p>
+              }
+              return visibleGroups.map(({ g, convs }) => (
+                <ProjectGroup
+                  key={g.project.id}
+                  project={g.project}
+                  count={convs.length}
+                  collapsed={!!collapsedProjects[g.project.id]}
+                  isActive={!!chatState && g.conversationIds.includes(chatState.conversationId)}
+                  isRenaming={renamingProjectId === g.project.id}
+                  renameValue={renameProjectValue}
+                  newChatLabel={tr('dash_new_chat_in_project')}
+                  renameLabel={tr('dash_rename_project')}
+                  menuOpen={contextMenuProject === g.project.id}
+                  onMenuToggle={() => setContextMenuProject(contextMenuProject === g.project.id ? null : g.project.id)}
+                  onToggle={() => setCollapsedProjects(p => ({ ...p, [g.project.id]: !p[g.project.id] }))}
+                  onNewChat={() => startChatInProject(g.project.id)}
+                  onRenameStart={() => { setRenameProjectValue(g.project.title); setRenamingProjectId(g.project.id) }}
+                  onRenameChange={setRenameProjectValue}
+                  onRenameCommit={commitProjectRename}
+                  onRenameCancel={() => setRenamingProjectId(null)}
+                >
+                  {convs.map(renderConversationRow)}
+                </ProjectGroup>
+              ))
+            })()}
           </div>
         </div>
 
@@ -2078,6 +2178,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             onGoTemplates={() => setActiveNav('documents')}
             onGoBriefs={() => setActiveNav('briefs')}
             onGoType={() => setActiveNav('home')}
+            projectId={composerProjectId}
+            projectTitle={composerProjectId ? (groups.find(g => g.project.id === composerProjectId)?.project.title ?? null) : null}
+            onClearProject={() => setComposerProjectId(null)}
           />
         ) : renderPage()}
       </main>

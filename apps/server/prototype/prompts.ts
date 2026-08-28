@@ -1,5 +1,8 @@
 import type { ReferenceStyle } from "./webref.js";
 
+/** The one file a prototype run may write. */
+export const PROTOTYPE_FILE = "prototype/index.html";
+
 /** Build a prompt section summarizing extracted reference styles (no raw HTML). */
 export function buildReferenceContext(styles: ReferenceStyle[]): string {
   if (styles.length === 0) return "";
@@ -20,6 +23,15 @@ export function buildReferenceContext(styles: ReferenceStyle[]): string {
   ].join("\n");
 }
 
+const SINGLE_FILE_RULES = [
+  `## Output — ONE FILE ONLY`,
+  `Write exactly one file: \`${PROTOTYPE_FILE}\` (relative to the current working directory), using the write tool.`,
+  `- It MUST be a single self-contained HTML document: all CSS in one \`<style>\` in the \`<head>\`, all JavaScript in one \`<script>\` before \`</body>\`.`,
+  `- Do NOT create any other file. No \`styles.css\`, no \`script.js\`, no extra pages. Multi-view UIs are done with in-page sections/tabs toggled by JS, not separate files.`,
+  `- External resources allowed ONLY via CDN <script>/<link>: Chart.js (https://cdn.jsdelivr.net/npm/chart.js) and Lucide (https://unpkg.com/lucide@latest). Nothing else is fetched.`,
+  `After writing the file, respond with ONLY the text "DONE".`,
+].join("\n");
+
 export function buildPrototypeSystemPrompt(
   brief: string,
   styles: ReferenceStyle[] = [],
@@ -27,87 +39,66 @@ export function buildPrototypeSystemPrompt(
   const referenceSection = buildReferenceContext(styles);
 
   return [
-    `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
+    `You are SANDWICH, an expert prototype builder. You produce one polished, production-quality, self-contained HTML prototype.`,
+    ``,
+    `Your working directory has BRIEF.md (consolidated brief + clarifying Q&A + attachment summaries) — read it with your tools for the full picture. The brief below is a copy for convenience.`,
     ``,
     `## Client Brief`,
     brief,
     ``,
     referenceSection,
     ``,
-    `## Required Pages`,
-    `Generate a MULTI-PAGE static prototype (separate HTML files, no build step, no frameworks).`,
+    `## What to build`,
+    `A single-page app that demonstrates the product in the brief. Use in-page navigation (a sidebar or top nav that shows/hides \`<section>\`s) to cover:`,
+    `1. A landing / overview view — end-user focused, benefit-driven copy (not implementation detail). Hero, key features, a call to action.`,
+    `2. A dashboard view — KPI cards plus 2–4 charts via Chart.js, and an activity table. Metrics must reflect the brief.`,
+    `3. One view per module/menu named in the brief, each with a full CRUD flow.`,
     ``,
-    `1. **Landing page** (index.html) — end-user focused, NON-technical copywriting. Explain benefits, not implementation. Include hero, features, pricing, footer.`,
-    `2. **Dashboard** (dashboard.html) — business-focused with LOTS of charts and metrics. Use Chart.js from CDN (https://cdn.jsdelivr.net/npm/chart.js). Include KPI cards, bar/line/pie charts, activity table. Make metrics relevant to the brief requirements.`,
-    `3. **Module pages** — every module/menu mentioned in the brief gets its own page (e.g. users.html, orders.html, products.html).`,
+    `## CRUD (CRITICAL)`,
+    `Every module view MUST have:`,
+    `- A semantic \`<table>\` (\`<thead>\`/\`<tbody>\`, \`<th scope>\`) seeded with realistic demo rows, wrapped in a container with \`overflow-x: auto\`, with an empty-state row.`,
+    `- An "Add" button, plus Edit and Delete on each row.`,
+    `- Add / Edit / Delete all use ONE custom in-page modal (a styled overlay). NEVER \`window.confirm()\`, \`alert()\`, or \`prompt()\`.`,
+    `- Persistence via \`localStorage\`.`,
     ``,
-    `## CRUD Requirements (CRITICAL)`,
-    `EVERY module page MUST include a complete CRUD flow:`,
-    `- A table/list showing existing records (seeded with realistic demo data)`,
-    `- An "Add" button opening a form with ALL relevant input fields`,
-    `- Edit and Delete buttons on each row`,
-    `- Data persistence via localStorage (simulated backend)`,
-    `- Shared JavaScript in script.js for CRUD operations`,
-    `- Add, edit, AND delete all open the SAME custom in-page modal component (a styled overlay, not the browser's). NEVER use window.confirm(), alert(), or prompt() — native browser dialogs break visual consistency.`,
+    `## Iconography`,
+    `- NEVER use emoji in the UI.`,
+    `- Use Lucide only: \`<script src="https://unpkg.com/lucide@latest"></script>\`, place \`<i data-lucide="name"></i>\`, call \`lucide.createIcons()\` after render and after any DOM update.`,
+    `- Every icon gets an explicit size and a palette color.`,
     ``,
-    `## Tables (MUST be production-quality)`,
-    `- Use semantic <table> with <thead>, <tbody>, and <th scope="col">/"row".`,
-    `- Clear header contrast, consistent cell padding, subtle row hover or zebra striping.`,
-    `- Responsive: wrap the table in a container with overflow-x: auto so it scrolls on small screens instead of breaking the layout.`,
-    `- Add an empty-state row when there is no data, and column sorting via script.js where relevant.`,
+    `## Craft`,
+    `- Responsive (mobile + desktop). CSS variables for the palette. Accessible, semantic HTML.`,
+    `- Consistent spacing scale, clear type hierarchy, real hover/focus states.`,
     ``,
-    `## Iconography (MUST)`,
-    `- NEVER use emoji anywhere in the UI — not in buttons, menus, headers, or empty states.`,
-    `- Use ONE icon set for the whole prototype: Lucide.`,
-    `- Load it once in the <head> with <script src="https://unpkg.com/lucide@latest"></script>, then place icons with <i data-lucide="icon-name"></i> and call lucide.createIcons() on every page.`,
-    `- Give each icon an explicit size and a color from the design palette (not the default emoji-style colors).`,
-    ``,
-    `## Shared Assets`,
-    `- styles.css — shared styles, CSS variables for colors`,
-    `- script.js — shared JS (CRUD helpers, navigation, chart rendering)`,
-    ``,
-    `## Technical Rules`,
-    `- Pure static files: HTML, CSS, JavaScript. No frameworks, no bundler.`,
-    `- Chart.js loaded from CDN (single script tag).`,
-    `- Responsive design (mobile + desktop).`,
-    `- All CSS in styles.css, all JS in script.js, minimal inline styles.`,
-    `- Write clean, semantic, accessible HTML.`,
-    ``,
-    `## Output Instructions`,
-    `Create the files in the current working directory using the write tool.`,
-    `Create: index.html, dashboard.html, styles.css, script.js, and one HTML file per module.`,
-    `Start by listing the files you will create, then write each one.`,
-    `After writing all files, respond with ONLY the text "DONE".`,
+    SINGLE_FILE_RULES,
   ].join("\n");
 }
 
 /**
- * Refine-mode prompt. A working prototype already lives in the workspace;
- * the agent must apply ONE targeted change in place instead of regenerating.
+ * Refine-mode prompt. A working prototype already lives at `prototype/index.html`
+ * in the cwd; the agent must apply ONE targeted change in place.
  *
- * NOTE: we deliberately do NOT pass the full client brief here. The prototype
- * engine seeds the workspace with the current version's files; feeding the
- * brief back makes the model want to "improve" everything and regenerate the
- * whole thing. The only context is the concrete feedback the user gave.
+ * NOTE: we deliberately do NOT pass the client brief here — feeding it back makes
+ * the model want to "improve" everything and regenerate the whole file. The only
+ * context is the concrete feedback.
  */
-export function buildPrototypeRefinePrompt(brief: string, instruction: string): string {
+export function buildPrototypeRefinePrompt(_brief: string, instruction: string): string {
   return [
-    `You are SANDWICH's prototype revision pass. A working multi-page static prototype already exists in the current working directory. Your ONLY job is to apply the client's feedback below to the EXISTING files. Do NOT regenerate, do NOT restyle, do NOT touch anything the feedback does not mention.`,
+    `You are SANDWICH's prototype revision pass. A working self-contained prototype already exists at \`${PROTOTYPE_FILE}\` in the current working directory. Your ONLY job is to apply the client's feedback below to that EXISTING file. Do NOT regenerate, do NOT restyle, do NOT touch anything the feedback does not mention.`,
     ``,
     `## Client feedback`,
     instruction || "Apply the user's requested change.",
     ``,
     `## Hard boundaries (MANDATORY)`,
-    `- Apply ONLY the change the feedback describes. If the feedback is "move the marquee section", move it — do not also "improve" the hero, colors, or other sections.`,
-    `- Keep every headline, paragraph, table row, label, chart, demo data, and other file exactly as it is. Restyle/rewrite NOTHING beyond the requested change.`,
-    `- Do NOT create new files, do NOT delete files, do NOT rename or reorganize files. Do NOT add new pages or sections.`,
-    `- Preserve the CRUD flows, localStorage logic, Chart.js usage, the single styles.css + script.js structure, and the Lucide icon setup (no emoji).`,
+    `- Apply ONLY the change the feedback describes. Do not also "improve" unrelated sections, colors, or copy.`,
+    `- Keep every headline, paragraph, table row, label, chart, and demo record exactly as it is.`,
+    `- Do NOT create, delete, or rename any file. Everything stays in the one \`${PROTOTYPE_FILE}\`.`,
+    `- Preserve the CRUD flows, localStorage logic, Chart.js usage, the single \`<style>\`/\`<script>\` structure, and the Lucide setup (no emoji).`,
     `- If the feedback is unclear, make the smallest reasonable change and keep everything else intact.`,
     ``,
-    `## Your Process`,
-    `1. Read the relevant existing file(s) first (use the read tool) so your edit fits the current structure, classes, and data.`,
-    `2. Make the minimal edit with the edit tool (or write tool for a whole file if the edit is structural).`,
-    `3. Check whether the change touches shared styles (styles.css) — if so, update only the specific selectors involved.`,
+    `## Process`,
+    `1. Read \`${PROTOTYPE_FILE}\` first so your edit fits the current structure.`,
+    `2. Make the minimal edit with the edit tool (or the write tool for the whole file if the change is structural).`,
     ``,
     `## Output`,
     `After editing, respond with ONLY the text "DONE".`,

@@ -43,6 +43,30 @@ export const sessions = pgTable(
 );
 
 /**
+ * A project: one on-disk directory + git repo, owning many conversations and
+ * many documents. Created implicitly on the first chat (see the auto-create in
+ * `createConversation`) and renameable afterwards.
+ */
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    title: text("title").notNull(),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index("idx_projects_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  }),
+);
+
+/**
  * A chat session + its generated document: a title/prompt, an optional
  * AI-generated `output`, and a multi-turn message history (see `chatMessages`).
  */
@@ -54,6 +78,9 @@ export const conversations = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
+    // Nullable during rollout; backfilled to one project per conversation by
+    // migration 0021. Every conversation created after that always has one.
+    projectId: text("project_id").references(() => projects.id),
     title: text("title").notNull(),
     prompt: text("prompt").notNull(),
     // Guided-pipeline state machine (model-driven):
@@ -74,6 +101,10 @@ export const conversations = pgTable(
   (table) => ({
     userCreatedIdx: index("idx_conversations_user_created").on(
       table.userId,
+      table.createdAt,
+    ),
+    projectCreatedIdx: index("idx_conversations_project_created").on(
+      table.projectId,
       table.createdAt,
     ),
   }),
@@ -224,98 +255,42 @@ export const engineSettings = pgTable("engine_settings", {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Document model (chat-based, versioned deliverables). Documents are
-// user-scoped and title-scoped; a conversation is a thread that can generate
-// or reference many documents.
+// Document model. A document is an INDEX ROW pointing at a file on disk in the
+// project's git repo — Postgres stores no content. One document per (project,
+// type); `conversation_id` records where it was last generated. Version history
+// lives in git (see `last_commit_sha`).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** prd | quotation | prototype | specs */
+/** prd | quotation | prototype | specs | mom */
 export const documents = pgTable(
   "documents",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id")
+    projectId: text("project_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => projects.id),
+    // "generated in" — nullable so deleting a conversation doesn't delete the file.
+    conversationId: text("conversation_id").references(() => conversations.id),
     type: text("type").notNull(),
     title: text("title").notNull(),
-    currentVersionId: text("current_version_id"),
+    // Path relative to the project root, e.g. "prd.md" / "prototype/index.html".
+    relativePath: text("relative_path").notNull(),
+    // Latest git commit that touched this file; null until the first commit.
+    lastCommitSha: text("last_commit_sha"),
     createdAt: ts("created_at").notNull(),
     updatedAt: ts("updated_at").notNull(),
   },
   (table) => ({
-    userCreatedIdx: index("idx_documents_user_created").on(
-      table.userId,
-      table.createdAt,
+    // One deliverable of each type per project (M2-03). Also the upsert target.
+    projectTypeIdx: uniqueIndex("idx_documents_project_type").on(
+      table.projectId,
+      table.type,
     ),
-    userTitleIdx: index("idx_documents_user_title").on(
-      table.userId,
-      table.title,
+    projectUpdatedIdx: index("idx_documents_project_updated").on(
+      table.projectId,
+      table.updatedAt,
     ),
-  }),
-);
-
-/** Immutable snapshot of a document (one per generation/revision). */
-export const documentVersions = pgTable(
-  "document_versions",
-  {
-    id: text("id").primaryKey(),
-    documentId: text("document_id")
-      .notNull()
-      .references(() => documents.id),
-    versionNo: integer("version_no").notNull(),
-    content: text("content").notNull(),
-    promptUsed: text("prompt_used"),
-    createdAt: ts("created_at").notNull(),
-  },
-  (table) => ({
-    docVersionIdx: index("idx_document_versions_doc").on(
-      table.documentId,
-      table.versionNo,
-    ),
-  }),
-);
-
-/** Links a conversation (thread) to documents it generated or opened. */
-export const conversationDocuments = pgTable(
-  "conversation_documents",
-  {
-    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-    conversationId: text("conversation_id")
-      .notNull()
-      .references(() => conversations.id),
-    documentId: text("document_id")
-      .notNull()
-      .references(() => documents.id),
-    createdAt: ts("created_at").notNull(),
-  },
-  (table) => ({
-    uniqueConvDoc: uniqueIndex("idx_conversation_documents_conv_doc").on(
-      table.conversationId,
-      table.documentId,
-    ),
-  }),
-);
-
-/** Files of a multi-file document (prototype HTML/CSS/JS). */
-export const documentFiles = pgTable(
-  "document_files",
-  {
-    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-    documentId: text("document_id")
-      .notNull()
-      .references(() => documents.id),
-    versionNo: integer("version_no").notNull().default(1),
-    path: text("path").notNull(),
-    content: text("content").notNull(),
-    createdAt: ts("created_at").notNull(),
-  },
-  (table) => ({
-    uniqueVersionPath: uniqueIndex("idx_document_files_version_path").on(
-      table.documentId,
-      table.versionNo,
-      table.path,
-    ),
+    conversationIdx: index("idx_documents_conversation").on(table.conversationId),
   }),
 );
 

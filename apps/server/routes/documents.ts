@@ -1,28 +1,23 @@
 import type { Router } from "../router.js";
-import type { ServerResponse } from "node:http";
+import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { authenticateRequest } from "../auth/middleware.js";
 import { sendJson, readJsonBody } from "../http-utils.js";
 import {
   exportDocument,
   normalizeFormat,
-  normalizeDocKind,
   sanitizeFilename,
   parseQueryParam,
   type ExportResult,
 } from "../pipeline/export.js";
 import {
   findDocumentByTitle,
-  getDocument,
-  getLatestVersion,
-  getLatestVersionNosForDocuments,
-  getVersionNosByIds,
-  getConversationIdForDocument,
-  listDocuments,
-  listVersions,
-  setDocumentCurrentVersion,
+  getOwnedDocument,
+  listDocumentsForUser,
   updateDocumentTitle,
   type Document,
 } from "../db/documents.js";
+import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";
 
 function withPreviewUrl(doc: Document) {
@@ -31,30 +26,36 @@ function withPreviewUrl(doc: Document) {
   return { ...doc, previewUrl: domain ? `https://${domain}/p/${doc.id}/` : `/p/${doc.id}/` };
 }
 
+/** Read a document's file from its project's git working tree. */
+async function readDocumentContent(
+  userId: string,
+  doc: Document,
+): Promise<string | null> {
+  const dir = await getProjectDir(userId, doc.projectId);
+  let abs: string;
+  try {
+    abs = resolveInsideProject(dir, doc.relativePath);
+  } catch {
+    return null;
+  }
+  if (!existsSync(abs)) return null;
+  return readFile(abs, "utf8");
+}
+
 export function registerDocumentRoutes(router: Router, db: Database): void {
-  // List the user's documents (title-scoped registry).
+  // List the user's documents (one row per project+type).
   router.get("/api/documents", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const docs = await listDocuments(db, auth.userId);
-    const docIds = docs.map((d) => d.id);
-    const pinnedVersionIds = docs.map((d) => d.currentVersionId).filter((id): id is string => !!id);
-    const [latestNos, pinnedNos, conversationIds] = await Promise.all([
-      getLatestVersionNosForDocuments(db, docIds),
-      getVersionNosByIds(db, pinnedVersionIds),
-      Promise.all(docs.map((d) => getConversationIdForDocument(db, d.id))),
-    ]);
-    const withMeta = docs.map((doc, i) => {
-      const latestVersionNo = latestNos.get(doc.id) ?? null;
-      const currentVersionNo = doc.currentVersionId
-        ? (pinnedNos.get(doc.currentVersionId) ?? latestVersionNo)
-        : latestVersionNo;
-      return { ...withPreviewUrl(doc), latestVersionNo, currentVersionNo, conversationId: conversationIds[i] ?? null };
-    });
-    sendJson(res, 200, withMeta);
+    const docs = await listDocumentsForUser(db, auth.userId);
+    sendJson(
+      res,
+      200,
+      docs.map((doc) => withPreviewUrl(doc)),
+    );
   });
 
   // Look up a document by exact title ("buka PRD X").
@@ -69,46 +70,45 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       sendJson(res, 404, { error: "document not found" });
       return;
     }
-    sendJson(res, 200, doc);
+    sendJson(res, 200, withPreviewUrl(doc));
   });
 
-  // Get a document with its latest version + full version history.
+  // Get a document with its current file content.
   router.get("/api/documents/:id", async (req, res, params) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const doc = await getDocument(db, params.id!);
-    if (!doc || doc.userId !== auth.userId) {
+    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    if (!doc) {
       sendJson(res, 404, { error: "document not found" });
       return;
     }
-    const latest = await getLatestVersion(db, doc.id);
-    const versions = await listVersions(db, doc.id);
-    sendJson(res, 200, { ...withPreviewUrl(doc), latestVersion: latest, versions });
+    const content = await readDocumentContent(auth.userId, doc);
+    sendJson(res, 200, { ...withPreviewUrl(doc), content });
   });
 
-  // Export the latest version of a document as PDF/MD/DOC.
+  // Export the current document as PDF/MD/DOC.
   router.get("/api/documents/:id/export", async (req, res, params) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const doc = await getDocument(db, params.id!);
-    if (!doc || doc.userId !== auth.userId) {
+    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    if (!doc) {
       sendJson(res, 404, { error: "document not found" });
       return;
     }
-    const latest = await getLatestVersion(db, doc.id);
-    if (!latest) {
+    const content = await readDocumentContent(auth.userId, doc);
+    if (content === null) {
       sendJson(res, 400, { error: "document has no content yet" });
       return;
     }
     const format = normalizeFormat(parseQueryParam(req.url, "format"));
     try {
-      const result: ExportResult = await exportDocument(latest.content, format, normalizeDocKind(doc.type));
+      const result: ExportResult = await exportDocument(content, format);
       const filename = sanitizeFilename(doc.title, result.extension);
       res.writeHead(200, {
         "content-type": result.mimeType,
@@ -117,36 +117,9 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
         "cache-control": "no-store",
       });
       res.end(result.buffer);
-    } catch (err) {
+    } catch {
       sendJson(res, 500, { error: "export failed" });
     }
-  });
-
-  // Set a specific version as the active/current version (rollback).
-  router.post("/api/documents/:id/rollback", async (req, res, params) => {
-    const auth = await authenticateRequest(db, req);
-    if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
-      return;
-    }
-    const doc = await getDocument(db, params.id!);
-    if (!doc || doc.userId !== auth.userId) {
-      sendJson(res, 404, { error: "document not found" });
-      return;
-    }
-    const body = (await readJsonBody(req).catch(() => null)) as { versionNo?: number } | null;
-    if (typeof body?.versionNo !== "number") {
-      sendJson(res, 400, { error: "versionNo is required" });
-      return;
-    }
-    const versions = await listVersions(db, doc.id);
-    const target = versions.find((v) => v.versionNo === body.versionNo);
-    if (!target) {
-      sendJson(res, 404, { error: "version not found" });
-      return;
-    }
-    await setDocumentCurrentVersion(db, doc.id, target.id);
-    sendJson(res, 200, { currentVersionNo: target.versionNo });
   });
 
   // Rename a document title (title is the retrieval key).
@@ -156,8 +129,8 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const doc = await getDocument(db, params.id!);
-    if (!doc || doc.userId !== auth.userId) {
+    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    if (!doc) {
       sendJson(res, 404, { error: "document not found" });
       return;
     }
@@ -167,6 +140,6 @@ export function registerDocumentRoutes(router: Router, db: Database): void {
       return;
     }
     await updateDocumentTitle(db, doc.id, body.title.trim());
-    sendJson(res, 200, await getDocument(db, doc.id));
+    sendJson(res, 200, withPreviewUrl((await getOwnedDocument(db, auth.userId, doc.id))!));
   });
 }

@@ -15,6 +15,8 @@
     "test": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && node scripts/copy-doc-references.mjs && node scripts/copy-pdf-assets.mjs && node --test dist/**/*.test.js",
     "format": "prettier --write \"apps/server/**/*.ts\"",
     "lint": "eslint \"apps/server/**/*.ts\"",
+    "roadmap:generate": "node scripts/roadmap/generate.mjs",
+    "roadmap:check": "node scripts/roadmap/generate.mjs --check",
     "serve": "node dist/web-server.js",
     "start": "npm run serve"
   },
