@@ -223,4 +223,4 @@ Run each generation engine (esp. the prototype engine's bash tool) under real is
 
 **Finishing an item:** delete its entry from the registry and regenerate. This roadmap never shows completed work.
 
-_Last generated: 2026-08-27_
+_Last generated: 2026-08-28_
