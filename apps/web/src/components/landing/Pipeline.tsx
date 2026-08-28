@@ -43,7 +43,7 @@ export function Pipeline(props: PipelineProps) {
             the others shrink. Content appears inside the expanded card. */}
         <div
           className="flex flex-col md:flex-row gap-4 items-stretch mt-10"
-          onMouseLeave={() => setOpen(null)}
+          onMouseLeave={() => setOpen(0)}
         >
           {props.steps.map((s, i) => {
             const isOpen = open === i
