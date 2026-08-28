@@ -59,7 +59,7 @@ const TYPE_META: Record<string, { label: string; color: string; ic: string; icon
   specs:     { label: 'Specs',     color: '#fce7f3', ic: '#db2777', icon: 'solar:checklist-linear' },
   prototype: { label: 'Prototype', color: '#ede9fe', ic: '#7c3aed', icon: 'solar:widget-linear' },
   workflow:  { label: 'Workflow',  color: '#dbeafe', ic: '#2563eb', icon: 'solar:settings-minimalistic-linear' },
-  general:   { label: 'Brief',     color: 'rgba(255,255,255,0.1)', ic: 'rgba(255,255,255,0.5)', icon: 'solar:notes-linear' },
+  general:   { label: 'Brief',     color: 'rgba(0,0,0,0.08)', ic: 'rgba(0,0,0,0.4)', icon: 'solar:notes-linear' },
 }
 
 const STAGE_LABEL_KEYS: Record<string, StringKey> = {
@@ -234,7 +234,7 @@ function AiMessageActions({ output, conversationId, onRegenerate }: { output: st
 
   const btnClass = "p-1.5 rounded-md transition-colors hover:bg-black/5"
   const iconColor = 'rgba(0,0,0,0.35)'
-  const activeColor = '#f91814'
+  const activeColor = '#3b82f6'
 
   return (
     <div className="flex items-center gap-0.5">
@@ -305,7 +305,7 @@ function PlanBadge() {
         type="button"
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs font-semibold text-white transition-opacity hover:opacity-80"
-        style={{ backgroundColor: isPro ? '#f91814' : '#111827' }}
+        style={{ backgroundColor: '#3b82f6' }}
       >
         <iconify-icon icon={isPro ? 'solar:crown-bold' : 'solar:lightning-bold'} width="12" />
         <span className="hidden sm:inline">{isPro ? 'Pro' : 'Starter'}</span>
@@ -314,10 +314,10 @@ function PlanBadge() {
       {open && (
         <div
           className="absolute top-full mt-2 right-0 rounded-2xl p-4 z-50 w-56"
-          style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }}
+          style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 12px 32px rgba(0,0,0,0.12)' }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: isPro ? '#f91814' : 'rgba(255,255,255,0.1)' }}>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: isPro ? '#3b82f6' : 'rgba(0,0,0,0.08)' }}>
               <iconify-icon icon={isPro ? 'solar:crown-bold' : 'solar:lightning-bold'} width="12" style={{ color: '#fff' }} />
             </div>
             <span className="text-sm font-semibold text-white">{isPro ? 'Pro' : 'Starter'}</span>
@@ -325,8 +325,8 @@ function PlanBadge() {
           <div className="flex flex-col gap-2">
             {benefits.map((b, i) => (
               <div key={i} className="flex items-center gap-2.5">
-                <iconify-icon icon={b.icon} width="13" style={{ color: isPro ? '#f91814' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>{b.text}</span>
+                <iconify-icon icon={b.icon} width="13" style={{ color: isPro ? '#3b82f6' : 'rgba(0,0,0,0.4)', flexShrink: 0 }} />
+                <span className="text-xs" style={{ color: '#374151' }}>{b.text}</span>
               </div>
             ))}
           </div>
@@ -334,7 +334,7 @@ function PlanBadge() {
             <a
               href="/pay?plan=pro"
               className="w-full mt-4 py-2 rounded-full text-xs font-semibold text-white flex items-center justify-center"
-              style={{ backgroundColor: '#f91814' }}
+              style={{ backgroundColor: '#3b82f6' }}
             >
               Upgrade to Pro
             </a>
@@ -549,7 +549,7 @@ function ChatView({
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#f4ebe1', fontFamily: inter }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#f8fafc', fontFamily: inter }}>
       {/* Thread */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         <div className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-8">
@@ -569,7 +569,7 @@ function ChatView({
                   )}
                   <div className={`${editingTurnIndex === ti ? 'w-full' : 'max-w-[75%]'} flex flex-col items-end gap-1.5 group`}>
                     {editingTurnIndex === ti ? (
-                      <div className="w-full rounded-2xl px-5 py-3" style={{ backgroundColor: '#1a1a1a' }}>
+                      <div className="w-full rounded-2xl px-5 py-3" style={{ backgroundColor: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)' }}>
                         <textarea
                           autoFocus
                           value={editValue}
@@ -583,16 +583,16 @@ function ChatView({
                           style={{ color: '#ffffff' }}
                         />
                         <div className="flex items-center justify-end gap-2 mt-2">
-                          <button onClick={() => setEditingTurnIndex(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <button onClick={() => setEditingTurnIndex(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors" style={{ color: 'rgba(0,0,0,0.4)' }}>
                             Cancel
                           </button>
-                          <button onClick={() => handleSaveEdit(ti)} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#f91814' }}>
+                          <button onClick={() => handleSaveEdit(ti)} className="text-xs px-3 py-1.5 rounded-lg font-medium text-white transition-colors" style={{ backgroundColor: '#3b82f6' }}>
                             {tr('dash_save_resend')}
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-all whitespace-pre-wrap" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+                      <div className="px-5 py-3 rounded-2xl text-sm leading-relaxed break-all whitespace-pre-wrap" style={{ backgroundColor: '#1e40af', color: '#ffffff' }}>
                         {turn.user}
                       </div>
                     )}
@@ -644,7 +644,7 @@ function ChatView({
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814', opacity: 0.55 }}>
+                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
                             <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
                           </div>
                         </div>
@@ -671,7 +671,7 @@ function ChatView({
                       {/* SANDWICH logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814', opacity: 0.55 }}>
+                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
                             <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
                           </div>
                         </div>
@@ -712,9 +712,9 @@ function ChatView({
 
       {/* Input — Claude style floating */}
       <div className="shrink-0 px-6 pb-6 pt-3">
-        <div className="max-w-3xl mx-auto rounded-2xl" style={{ backgroundColor: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="max-w-3xl mx-auto rounded-2xl" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
           {chatError && (
-            <p className="px-5 pt-3 text-xs" style={{ color: '#f91814' }}>{chatError}</p>
+            <p className="px-5 pt-3 text-xs" style={{ color: '#3b82f6' }}>{chatError}</p>
           )}
           <textarea
             ref={textareaRef}
@@ -729,13 +729,13 @@ function ChatView({
             rows={2}
             disabled={streaming}
             className="w-full resize-none bg-transparent outline-none px-5 pt-5 pb-2"
-            style={{ color: 'rgba(255,255,255,0.85)', fontSize: '15px', minHeight: '70px', maxHeight: '180px', lineHeight: '1.6' }}
+            style={{ color: '#111827', fontSize: '15px', minHeight: '70px', maxHeight: '180px', lineHeight: '1.6' }}
           />
 
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pb-2">
               {attachments.map((a, i) => (
-                <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+                <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#374151' }}>
                   {a.type.startsWith('image/') ? <img src={a.dataUrl} className="w-4 h-4 rounded object-cover" alt="" /> : <iconify-icon icon="solar:document-linear" width="12" />}
                   <span className="max-w-[100px] truncate">{a.name}</span>
                   <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100" aria-label="Remove attachment">
@@ -749,24 +749,24 @@ function ChatView({
           <div className="flex items-center gap-1 px-4 pb-4 pt-1">
             <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
             <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
-            <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
+            <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(0,0,0,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
               <iconify-icon icon="solar:gallery-linear" width="18" />
             </button>
-            <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
+            <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(0,0,0,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
               <iconify-icon icon="solar:paperclip-linear" width="18" />
             </button>
-            <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
+            <span className="text-xs ml-1" style={{ color: 'rgba(0,0,0,0.3)' }}>⌘↵</span>
             <div className="flex-1" />
             <button
               onClick={handleSend}
               disabled={streaming || !followUp.trim()}
               aria-label="Send message"
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-25 active:scale-95 ml-2"
-              style={{ backgroundColor: '#f91814' }}
+              style={{ backgroundColor: '#3b82f6' }}
             >
               <iconify-icon icon="solar:arrow-up-linear" width="14" style={{ color: '#ffffff' }} />
             </button>
@@ -858,24 +858,24 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
   }
 
   return (
-    <div className="w-full rounded-2xl" style={{ backgroundColor: '#111113' }}>
+    <div className="w-full rounded-2xl" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
       {projectId && projectTitle && (
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            {tr('dash_new_chat_in')} <span style={{ color: '#ffffff', fontWeight: 600 }}>{projectTitle}</span>
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-2xl" style={{ backgroundColor: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+          <p className="text-xs truncate" style={{ color: '#6b7280' }}>
+            {tr('dash_new_chat_in')} <span style={{ color: '#111827', fontWeight: 600 }}>{projectTitle}</span>
           </p>
-          <button onClick={onClearProject} aria-label="Clear project" className="p-1 rounded shrink-0" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <button onClick={onClearProject} aria-label="Clear project" className="p-1 rounded shrink-0" style={{ color: 'rgba(0,0,0,0.4)' }}>
             <iconify-icon icon="solar:close-circle-linear" width="14" />
           </button>
         </div>
       )}
       {atLimit && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-t-2xl" style={{ backgroundColor: 'rgba(249,24,20,0.12)', borderBottom: '1px solid rgba(249,24,20,0.2)' }}>
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-t-2xl" style={{ backgroundColor: 'rgba(59,130,246,0.1)', borderBottom: '1px solid rgba(59,130,246,0.2)' }}>
           <div>
-            <p className="text-xs font-semibold" style={{ color: '#f91814' }}>{tr('plan_limit_title')}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{tr('plan_limit_desc')}</p>
+            <p className="text-xs font-semibold" style={{ color: '#1e40af' }}>{tr('plan_limit_title')}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.4)' }}>{tr('plan_limit_desc')}</p>
           </div>
-          <a href="/pay?plan=pro" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#f91814' }}>
+          <a href="/pay?plan=pro" className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white whitespace-nowrap" style={{ backgroundColor: '#3b82f6' }}>
             {tr('plan_limit_upgrade')}
           </a>
         </div>
@@ -883,7 +883,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
         <DeliverableTypeSelect value={pendingType} onChange={setPendingType} />
         {!usage.isPro && !atLimit && (
-          <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
+          <span className="ml-auto shrink-0 text-[11px] pl-2" style={{ color: 'rgba(0,0,0,0.3)' }}>{usage.used}/{usage.limit ?? '∞'} this month</span>
         )}
       </div>
 
@@ -894,14 +894,14 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
         placeholder="Write a message..."
         rows={3}
         disabled={atLimit}
-        className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed text-white placeholder:text-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full resize-none bg-transparent text-sm outline-none px-4 py-3 leading-relaxed text-gray-800 placeholder:text-black/30 disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ minHeight: '72px' }}
       />
 
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 px-4 pb-2">
           {attachments.map((a, i) => (
-            <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+            <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs" style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#374151' }}>
               {a.type.startsWith('image/') ? <img src={a.dataUrl} className="w-4 h-4 rounded object-cover" alt="" /> : <iconify-icon icon="solar:document-linear" width="12" />}
               <span className="max-w-[100px] truncate">{a.name}</span>
               <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="opacity-40 hover:opacity-100" aria-label="Remove attachment">
@@ -912,23 +912,23 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
         </div>
       )}
 
-      {error && <p className="px-4 pb-2 text-xs" style={{ color: '#f91814' }}>{error}</p>}
+      {error && <p className="px-4 pb-2 text-xs" style={{ color: '#3b82f6' }}>{error}</p>}
 
       <div className="flex items-center justify-between px-4 pb-4 pt-1">
         <div className="flex items-center gap-1">
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
           <input ref={imageInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
-          <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
+          <button onClick={() => imageInputRef.current?.click()} aria-label="Attach image" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(0,0,0,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:gallery-linear" width="18" />
           </button>
-          <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)')}
+          <button onClick={() => fileInputRef.current?.click()} aria-label="Attach file" className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(0,0,0,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <iconify-icon icon="solar:paperclip-linear" width="18" />
           </button>
-          <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
+          <span className="text-xs ml-1" style={{ color: 'rgba(0,0,0,0.3)' }}>⌘↵</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -936,7 +936,7 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
             disabled={isSubmitting || !prompt.trim() || atLimit}
             aria-label="Send"
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-40 active:scale-95"
-            style={{ backgroundColor: '#f91814' }}
+            style={{ backgroundColor: '#3b82f6' }}
           >
             <iconify-icon icon={isSubmitting ? 'solar:refresh-linear' : 'solar:arrow-up-linear'} width="15" style={{ color: '#ffffff' }} />
           </button>
@@ -951,13 +951,13 @@ function ConversationList({ conversations, onOpen, onNew }: { conversations: Loc
   const { lang, t: tr } = useLanguage()
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
+      <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: '#ffffff' }}>
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}>
           <iconify-icon icon="solar:notes-linear" width="22" style={{ color: 'rgba(0,0,0,0.3)' }} />
         </div>
         <p className="text-sm font-medium" style={{ color: '#374151' }}>{tr('dash_no_docs')}</p>
         <p className="text-xs mt-1 mb-5" style={{ color: '#9ca3af' }}>{tr('dash_no_docs_sub')}</p>
-        <button onClick={onNew} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium" style={{ backgroundColor: '#f91814', color: '#ffffff' }}>
+        <button onClick={onNew} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium" style={{ backgroundColor: '#3b82f6', color: '#ffffff' }}>
           <iconify-icon icon="solar:add-linear" width="14" />
           {tr('dash_create_brief')}
         </button>
@@ -965,14 +965,14 @@ function ConversationList({ conversations, onOpen, onNew }: { conversations: Loc
     )
   }
   return (
-    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: '#ffffff' }}>
       {conversations.map(t => {
         const meta = TYPE_META[t.type] ?? TYPE_META.general
         return (
           <button key={t.id} onClick={() => onOpen(t)}
             className="w-full flex items-center justify-between px-5 py-4 text-left border-b last:border-b-0 transition-colors"
             style={{ borderColor: 'rgba(0,0,0,0.05)' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.8)')}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: meta.color }}>
@@ -1064,7 +1064,7 @@ function HomeOverview({
   const checklistDone = checklist.filter(c => c.done).length
 
   const cardStyle = { backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }
-  const sectionStyle = { backgroundColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(0,0,0,0.08)' }
+  const sectionStyle = { backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -1073,7 +1073,7 @@ function HomeOverview({
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#B3120E' }}>{dateStr}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#3b82f6' }}>{dateStr}</p>
             <h1 className="text-2xl tracking-tighter mt-1" style={{ color: '#111827', fontFamily: bowlby }}>{tr(greetingKey).toUpperCase()}, {username.toUpperCase()}</h1>
             <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>
               {conversations.length === 0 ? tr('home_subtitle_empty') : tr('home_subtitle_count').replace('{n}', String(conversations.length))}
@@ -1086,7 +1086,7 @@ function HomeOverview({
               {tr('home_templates_btn')}
             </button>
             <button onClick={onGoBriefs} className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white"
-              style={{ backgroundColor: '#f91814' }}>
+              style={{ backgroundColor: '#3b82f6' }}>
               <iconify-icon icon="solar:folder-linear" width="14" />
               {tr('home_all_briefs_btn')}
             </button>
@@ -1095,7 +1095,7 @@ function HomeOverview({
 
         {/* Expiry notice — proactive + mid-session */}
         {(sub?.expired || (sub?.expiresAt && new Date(sub.expiresAt).getTime() - now < 24 * 60 * 60 * 1000)) && (
-          <a href="/pay?expired=1" className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-sm font-semibold" style={{ backgroundColor: 'rgba(249,24,20,0.1)', color: '#f91814', border: '1px solid rgba(249,24,20,0.25)' }}>
+          <a href="/pay?expired=1" className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-sm font-semibold" style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.25)' }}>
             <span>{sub?.expired ? tr('dash_expired_banner') : tr('dash_expiring_banner')}</span>
             <span className="shrink-0">{tr('plan_limit_upgrade')}</span>
           </a>
@@ -1133,7 +1133,7 @@ function HomeOverview({
               {usage.used}<span className="text-base font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.limit} {tr('home_quota_documents')}</span>
             </p>
             <div className="h-1.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
-              <div className="h-full rounded-full" style={{ backgroundColor: '#f91814', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
+              <div className="h-full rounded-full" style={{ backgroundColor: '#3b82f6', width: usage.isPro ? '100%' : `${Math.min(100, (usage.used / (usage.limit ?? 1)) * 100)}%` }} />
             </div>
             <p className="text-sm mt-4" style={{ color: '#111827' }}>
               {usage.prototypeUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.prototypeLimit} {tr('home_quota_prototypes')}</span>
@@ -1142,7 +1142,7 @@ function HomeOverview({
               {usage.chatUsed}<span className="text-xs font-normal" style={{ color: '#9ca3af' }}> / {usage.isPro ? '∞' : usage.chatLimit} {tr('home_quota_chats')}</span>
             </p>
             {!usage.isPro && (
-              <a href="/pay?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+              <a href="/pay?plan=pro" className="w-full mt-4 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#3b82f6' }}>
                 <iconify-icon icon="solar:crown-linear" width="14" />
                 {tr('home_quota_upgrade')}
               </a>
@@ -1160,7 +1160,7 @@ function HomeOverview({
               {dayBuckets.map((d, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
                   <span className="text-[10px]" style={{ color: '#9ca3af' }}>{d.count || ''}</span>
-                  <div className="w-full rounded-md" style={{ backgroundColor: d.count ? '#f91814' : '#f3f4f6', height: Math.max(4, (d.count / maxDay) * 60) }} />
+                  <div className="w-full rounded-md" style={{ backgroundColor: d.count ? '#3b82f6' : '#f3f4f6', height: Math.max(4, (d.count / maxDay) * 60) }} />
                   <span className="text-[10px]" style={{ color: '#9ca3af' }}>{d.label}</span>
                 </div>
               ))}
@@ -1201,7 +1201,7 @@ function HomeOverview({
                 {([['all', 'home_filter_all'], ['done', 'home_filter_done'], ['draft', 'home_filter_draft']] as const).map(([key, labelKey]) => (
                   <button key={key} onClick={() => setFilter(key)}
                     className="px-3 py-1 rounded-full text-xs font-medium transition-colors"
-                    style={filter === key ? { backgroundColor: '#111827', color: '#ffffff' } : { color: '#6b7280' }}>
+                    style={filter === key ? { backgroundColor: '#3b82f6', color: '#ffffff' } : { color: '#6b7280' }}>
                     {tr(labelKey)}
                   </button>
                 ))}
@@ -1293,8 +1293,8 @@ function HomeOverview({
               { icon: 'solar:refresh-linear', title: tr('home_tip_3_title'), desc: tr('home_tip_3_desc') },
             ].map(tip => (
               <div key={tip.title} className="rounded-2xl border p-5" style={cardStyle}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(249,24,20,0.1)' }}>
-                  <iconify-icon icon={tip.icon} width="15" style={{ color: '#f91814' }} />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(59,130,246,0.1)' }}>
+                  <iconify-icon icon={tip.icon} width="15" style={{ color: '#3b82f6' }} />
                 </div>
                 <p className="text-sm font-medium" style={{ color: '#111827' }}>{tip.title}</p>
                 <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#9ca3af' }}>{tip.desc}</p>
@@ -1304,12 +1304,12 @@ function HomeOverview({
         </div>
 
         {/* Help banner */}
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl p-6" style={{ backgroundColor: '#111113' }}>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl p-6" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
           <div>
-            <p className="text-sm font-semibold text-white">{tr('home_help_title')}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{tr('home_help_sub')}</p>
+            <p className="text-sm font-semibold" style={{ color: '#1e40af' }}>{tr('home_help_title')}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.4)' }}>{tr('home_help_sub')}</p>
           </div>
-          <a href="/dashboard" onClick={e => { e.preventDefault(); onGoTemplates() }} className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#f91814' }}>
+          <a href="/dashboard" onClick={e => { e.preventDefault(); onGoTemplates() }} className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: '#3b82f6' }}>
             <iconify-icon icon="solar:question-circle-linear" width="14" />
             {tr('home_help_cta')}
           </a>
@@ -1496,10 +1496,10 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
   if (!subLoading && sub !== undefined && !sub?.planSlug) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4EBE1' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f8fafc' }}>
         <div className="text-center max-w-sm px-4">
           <p className="text-sm text-zinc-500 mb-4">No active plan found. Please contact support.</p>
-          <a href="mailto:support@etalas.ai" className="text-sm font-semibold underline" style={{ color: '#f91814' }}>
+          <a href="mailto:support@etalas.ai" className="text-sm font-semibold underline" style={{ color: '#3b82f6' }}>
             support@etalas.ai
           </a>
         </div>
@@ -1568,8 +1568,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             refresh()
           }}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors"
-          style={{ backgroundColor: isActive || menuOpen ? 'rgba(255,255,255,0.08)' : '' }}
-          onMouseEnter={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
+          style={{ backgroundColor: isActive || menuOpen ? 'rgba(59,130,246,0.1)' : '' }}
+          onMouseEnter={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)' }}
           onMouseLeave={e => { if (!isActive && !menuOpen) e.currentTarget.style.backgroundColor = '' }}
         >
           <div className="w-5 h-5 rounded shrink-0 flex items-center justify-center" style={{ backgroundColor: meta.color }}>
@@ -1593,22 +1593,22 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               }}
               onClick={e => e.stopPropagation()}
               className="flex-1 bg-transparent outline-none text-xs min-w-0"
-              style={{ color: '#ffffff' }}
+              style={{ color: '#111827' }}
             />
           ) : (
-            <span className="text-xs truncate flex-1" style={{ color: isActive ? '#ffffff' : t.unread ? '#ffffff' : 'rgba(255,255,255,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
+            <span className="text-xs truncate flex-1" style={{ color: isActive ? '#1e40af' : t.unread ? '#111827' : 'rgba(0,0,0,0.5)', fontWeight: t.unread ? 600 : 400 }}>{t.summary}</span>
           )}
           {t.pinned && !menuOpen && (
-            <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+            <iconify-icon icon="solar:pin-bold" width="10" style={{ color: 'rgba(0,0,0,0.3)', flexShrink: 0 }} />
           )}
           {t.unread && !menuOpen && (
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#f91814' }} />
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#3b82f6' }} />
           )}
         </button>
         <button
           onClick={e => { e.stopPropagation(); setContextMenuConversation(menuOpen ? null : t.id) }}
           className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded opacity-100 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity"
-          style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(255,255,255,0.5)' }}
+          style={{ opacity: menuOpen ? 1 : undefined, color: 'rgba(0,0,0,0.4)' }}
           aria-label="Chat options"
         >
           <iconify-icon icon="solar:menu-dots-bold" width="14" />
@@ -1618,30 +1618,30 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             <div className="fixed inset-0 z-40" onClick={() => setContextMenuConversation(null)} />
             <div
               className="absolute right-0 top-full mt-0.5 z-50 rounded-xl py-1 min-w-[160px] shadow-xl"
-              style={{ backgroundColor: '#1c1c1c', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}
               onClick={e => e.stopPropagation()}
             >
               <button onClick={() => { updateLocalConversation(t.id, { pinned: !t.pinned }); setContextMenuConversation(null); refresh() }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-black/5 transition-colors"
+                style={{ color: '#111827' }}>
                 <iconify-icon icon="solar:pin-linear" width="14" />
                 {t.pinned ? 'Unpin' : 'Pin'}
               </button>
               <button onClick={() => { updateLocalConversation(t.id, { unread: !t.unread }); setContextMenuConversation(null); refresh() }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-black/5 transition-colors"
+                style={{ color: '#111827' }}>
                 <iconify-icon icon="solar:eye-closed-linear" width="14" />
                 {t.unread ? 'Mark as read' : 'Mark as unread'}
               </button>
               <button onClick={() => { setRenameConversationValue(t.summary); setRenamingConversationId(t.id); setContextMenuConversation(null) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                style={{ color: 'rgba(255,255,255,0.85)' }}>
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-black/5 transition-colors"
+                style={{ color: '#111827' }}>
                 <iconify-icon icon="solar:pen-2-linear" width="14" />
                 Rename
               </button>
               <button onClick={() => { handleDelete(t.id); setContextMenuConversation(null) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-white/5 transition-colors"
-                style={{ color: '#f91814' }}>
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-black/5 transition-colors"
+                style={{ color: '#3b82f6' }}>
                 <iconify-icon icon="solar:trash-bin-trash-linear" width="14" />
                 Delete
               </button>
@@ -1846,21 +1846,21 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F4EBE1', fontFamily: inter }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f8fafc', fontFamily: inter }}>
 
       {/* ── Sidebar ── */}
       {sidebarOpen && (
       <>
         <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
-        <aside className="flex flex-col w-56 shrink-0 fixed md:static inset-y-0 left-0 z-50 md:z-auto h-full" style={{ backgroundColor: '#0a0a0a' }}>
+        <aside className="flex flex-col w-56 shrink-0 fixed md:static inset-y-0 left-0 z-50 md:z-auto h-full border-r" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6' }}>
               <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
             </div>
           </div>
-          <button className="p-1 rounded transition-colors hover:bg-white/10" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
-            <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: '#ffffff' }} />
+          <button className="p-1 rounded transition-colors hover:bg-black/5" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
+            <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: 'rgba(0,0,0,0.4)' }} />
           </button>
         </div>
 
@@ -1871,11 +1871,11 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             onClick={() => { setActiveNav('home'); setChatState(null); setComposerProjectId(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium mb-1 transition-colors text-left"
             style={activeNav === 'home' && !chatState
-              ? { backgroundColor: '#f91814', color: '#ffffff' }
-              : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }
+              ? { backgroundColor: '#3b82f6', color: '#ffffff' }
+              : { backgroundColor: 'rgba(0,0,0,0.06)', color: '#374151' }
             }
-            onMouseEnter={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
-            onMouseLeave={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
+            onMouseEnter={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.08)' }}
+            onMouseLeave={e => { if (!(activeNav === 'home' && !chatState)) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)' }}
           >
             <iconify-icon icon="solar:folder-with-files-linear" width="15" />
             {tr('dash_new_project')}
@@ -1890,14 +1890,14 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
               return (
                 <button key={item.id} onClick={() => { if (item.id === 'documents') setDocumentsProjectId(currentConversation?.projectId ?? null); setActiveNav(item.id); setChatState(null); if (window.innerWidth < 768) setSidebarOpen(false) }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left mb-0.5"
-                  style={isActive ? { backgroundColor: '#f91814', color: '#ffffff', fontWeight: 500 } : { color: 'rgba(255,255,255,0.5)' }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
+                  style={isActive ? { backgroundColor: '#3b82f6', color: '#ffffff', fontWeight: 500 } : { color: 'rgba(0,0,0,0.4)' }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)' }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = '' }}
                 >
                   <iconify-icon icon={item.icon} width="15" />
                   {item.label}
                   {item.id !== 'documents' && count > 0 && (
-                    <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>{count}</span>
+                    <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.08)', color: 'rgba(0,0,0,0.4)' }}>{count}</span>
                   )}
                 </button>
               )
@@ -1907,7 +1907,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
         {/* Projects — scrollable, separated by big gap */}
         <div className="flex-1 min-h-0 flex flex-col mt-8 px-2">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase shrink-0" style={{ color: '#ffffff' }}>{tr('dash_projects')}</p>
+          <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase shrink-0" style={{ color: '#111827' }}>{tr('dash_projects')}</p>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
             {(() => {
               const byId = new Map(conversations.map(c => [c.id, c]))
@@ -1915,7 +1915,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 .map(g => ({ g, convs: sortGroupConversations(g.conversationIds, byId) }))
                 .filter(x => x.convs.length > 0)
               if (visibleGroups.length === 0) {
-                return <p className="px-3 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>{tr('dash_no_chats')}</p>
+                return <p className="px-3 text-xs" style={{ color: 'rgba(0,0,0,0.2)' }}>{tr('dash_no_chats')}</p>
               }
               return visibleGroups.map(({ g, convs }) => (
                 <ProjectGroup
@@ -1944,44 +1944,44 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <div className="border-t px-2 py-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="border-t px-2 py-3" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-0.5 transition-colors"
-            style={{ color: activeNav === 'help' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', backgroundColor: activeNav === 'help' ? 'rgba(255,255,255,0.08)' : '' }}
+            style={{ color: activeNav === 'help' ? '#111827' : 'rgba(0,0,0,0.4)', backgroundColor: activeNav === 'help' ? 'rgba(0,0,0,0.06)' : '' }}
             onClick={() => setActiveNav('help')}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = activeNav === 'help' ? 'rgba(255,255,255,0.08)' : '')}>
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = activeNav === 'help' ? 'rgba(0,0,0,0.06)' : '')}>
             <iconify-icon icon="solar:question-circle-linear" width="15" />
             Help &amp; Docs
           </button>
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left mb-2 transition-colors"
-            style={{ color: activeNav === 'settings' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', backgroundColor: activeNav === 'settings' ? 'rgba(255,255,255,0.08)' : '' }}
+            style={{ color: activeNav === 'settings' ? '#111827' : 'rgba(0,0,0,0.4)', backgroundColor: activeNav === 'settings' ? 'rgba(0,0,0,0.06)' : '' }}
             onClick={() => setActiveNav('settings')}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = activeNav === 'settings' ? 'rgba(255,255,255,0.08)' : '')}>
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = activeNav === 'settings' ? 'rgba(0,0,0,0.06)' : '')}>
             <iconify-icon icon="solar:settings-linear" width="15" />
             Settings
           </button>
           <button onClick={() => setShowAccountMenu(true)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.14)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#f91814' }}>
+            style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.08)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#3b82f6' }}>
               {username.charAt(0).toUpperCase()}
             </div>
-            <p className="text-xs font-medium truncate text-white">{username}</p>
+            <p className="text-xs font-medium truncate" style={{ color: '#111827' }}>{username}</p>
           </button>
 
           {showAccountMenu && (
             <div className="fixed inset-0 z-50" onClick={() => setShowAccountMenu(false)}>
               <style>{`@keyframes slideUp { from { transform: translateY(4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
               <div className="absolute bottom-16 left-3 w-[200px] rounded-xl overflow-hidden"
-                style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', animation: 'slideUp 0.15s ease-out' }}
+                style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', animation: 'slideUp 0.15s ease-out', boxShadow: '0 12px 32px rgba(0,0,0,0.12)' }}
                 onClick={e => e.stopPropagation()}>
-                <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                  <p className="text-sm font-semibold text-white">{username}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{email}</p>
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#111827' }}>{username}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.4)' }}>{email}</p>
                 </div>
                 <div className="p-2">
                   <button onClick={() => { setShowAccountMenu(false); logout() }}
@@ -2004,7 +2004,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       {/* ── Main ── */}
       <main className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b shrink-0 gap-2" style={{ backgroundColor: 'rgba(244,235,225,0.8)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b shrink-0 gap-2" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderColor: 'rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)' }}>
           <div className="flex items-center gap-2 min-w-0">
             {!sidebarOpen && (
               <button className="p-1.5 rounded-lg hover:bg-black/8 transition-colors shrink-0" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
@@ -2039,34 +2039,34 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                     <>
                       <div className="fixed inset-0 z-[100]" onClick={() => setShowChatMenu(false)} />
                       <div className="absolute right-0 top-full mt-1 z-[101] w-48 rounded-xl overflow-hidden"
-                        style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
+                        style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.12)' }}
                         onClick={e => e.stopPropagation()}>
                         <div className="p-1.5">
                           <button onClick={toggleChatPin}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                            style={{ color: 'rgba(255,255,255,0.7)' }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                            style={{ color: '#374151' }}
+                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
                             <iconify-icon icon={currentConversation?.pinned ? 'solar:pin-bold' : 'solar:pin-linear'} width="15" />
                             {currentConversation?.pinned ? 'Unpin' : 'Pin'}
                           </button>
                           <button onClick={toggleChatUnread}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                            style={{ color: 'rgba(255,255,255,0.7)' }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                            style={{ color: '#374151' }}
+                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
                             <iconify-icon icon={currentConversation?.unread ? 'solar:eye-linear' : 'solar:eye-closed-linear'} width="15" />
                             {currentConversation?.unread ? 'Mark as read' : 'Mark as unread'}
                           </button>
                           <button onClick={startChatRename}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                            style={{ color: 'rgba(255,255,255,0.7)' }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                            style={{ color: '#374151' }}
+                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
                             <iconify-icon icon="solar:pen-2-linear" width="15" />
                             Rename
                           </button>
-                          <div className="my-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }} />
+                          <div className="my-1 border-t" style={{ borderColor: 'rgba(0,0,0,0.08)' }} />
                           <button onClick={handleDeleteChat}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
                             style={{ color: '#f87171' }}
@@ -2090,25 +2090,25 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 <button onClick={() => { setShowNotifMenu(v => !v); setShowMoreMenu(false) }} className="p-2 rounded-lg hover:bg-black/5 transition-colors relative" aria-label="Notifications">
                   <iconify-icon icon="solar:bell-linear" width="16" style={{ color: 'rgba(0,0,0,0.4)' }} />
                   {notifications.length > 0 && (
-                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
+                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
                   )}
                 </button>
                 {showNotifMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-50 w-64 rounded-xl overflow-hidden"
-                      style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
+                      style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.12)' }}
                       onClick={e => e.stopPropagation()}>
                       <div className="p-1.5 max-h-72 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <p className="px-3 py-4 text-xs text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{tr('dash_no_notifications')}</p>
+                          <p className="px-3 py-4 text-xs text-center" style={{ color: 'rgba(0,0,0,0.4)' }}>{tr('dash_no_notifications')}</p>
                         ) : notifications.map(t => (
                           <button key={t.id} onClick={() => openNotification(t)}
                             className="w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                            style={{ color: 'rgba(255,255,255,0.7)' }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                            style={{ color: '#374151' }}
+                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
-                            <iconify-icon icon="solar:check-circle-bold" width="15" style={{ color: '#f91814', marginTop: 1 }} />
+                            <iconify-icon icon="solar:check-circle-bold" width="15" style={{ color: '#3b82f6', marginTop: 1 }} />
                             <span className="truncate">{t.summary} {tr('dash_finished_processing')}</span>
                           </button>
                         ))}
@@ -2128,21 +2128,21 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-50 w-52 rounded-xl overflow-hidden"
-                      style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.5)' }}
+                      style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 12px 24px -6px rgba(0,0,0,0.12)' }}
                       onClick={e => e.stopPropagation()}>
                       <div className="p-1.5">
                         <button onClick={() => { setShowMoreMenu(false); setActiveNav('settings'); setChatState(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.7)' }}
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                          style={{ color: '#374151' }}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                           onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
                           <iconify-icon icon="solar:settings-linear" width="15" />
                           Settings
                         </button>
                         <button onClick={() => { setShowMoreMenu(false); setActiveNav('help'); setChatState(null) }}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.7)' }}
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                          style={{ color: '#374151' }}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                           onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}>
                           <iconify-icon icon="solar:question-circle-linear" width="15" />
                           Help
@@ -2205,20 +2205,20 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
             <div className="ds-card-outer ds-shadow-elevated w-full max-w-md" style={{ height: 'auto' }}>
               <div className="ds-card-inner p-6" style={{ height: 'auto' }}>
                 <div className="flex items-center gap-2.5 mb-1">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(249,24,20,0.15)' }}>
-                    <iconify-icon icon="solar:share-linear" width="15" style={{ color: '#f91814' }} />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(59,130,246,0.15)' }}>
+                    <iconify-icon icon="solar:share-linear" width="15" style={{ color: '#3b82f6' }} />
                   </div>
-                  <h3 className="text-lg font-semibold tracking-tight text-white ds-text-shadow">{tr('share_title')}</h3>
+                  <h3 className="text-lg font-semibold tracking-tight" style={{ color: '#111827' }}>{tr('share_title')}</h3>
                   <button onClick={() => setShowShareModal(false)}
                     className="ml-auto w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0"
-                    style={{ color: 'rgba(255,255,255,0.5)' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                    style={{ color: 'rgba(0,0,0,0.4)' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                     aria-label="Close">
                     <iconify-icon icon="solar:close-circle-linear" width="18" />
                   </button>
                 </div>
-                <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.45)' }}>{tr('share_subtitle')}</p>
+                <p className="text-sm mb-5" style={{ color: 'rgba(0,0,0,0.4)' }}>{tr('share_subtitle')}</p>
 
                 <div className="flex flex-col gap-2 mb-6">
                   {([
@@ -2230,18 +2230,18 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                       <button key={opt.key} onClick={() => setShareVisibility(opt.key)}
                         className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-colors"
                         style={{
-                          backgroundColor: active ? 'rgba(249,24,20,0.08)' : 'rgba(255,255,255,0.03)',
-                          border: active ? '1px solid rgba(249,24,20,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                          backgroundColor: active ? 'rgba(59,130,246,0.08)' : 'rgba(0,0,0,0.03)',
+                          border: active ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(0,0,0,0.08)',
                         }}>
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: active ? 'rgba(249,24,20,0.15)' : 'rgba(255,255,255,0.06)' }}>
-                          <iconify-icon icon={opt.icon} width="16" style={{ color: active ? '#f91814' : 'rgba(255,255,255,0.55)' }} />
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: active ? 'rgba(59,130,246,0.15)' : 'rgba(0,0,0,0.06)' }}>
+                          <iconify-icon icon={opt.icon} width="16" style={{ color: active ? '#3b82f6' : 'rgba(0,0,0,0.4)' }} />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-white">{opt.title}</p>
-                          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{opt.desc}</p>
+                          <p className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>{opt.desc}</p>
                         </div>
-                        <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0" style={{ border: `2px solid ${active ? '#f91814' : 'rgba(255,255,255,0.25)'}` }}>
-                          {active && <span className="w-[8px] h-[8px] rounded-full" style={{ backgroundColor: '#f91814' }} />}
+                        <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0" style={{ border: `2px solid ${active ? '#3b82f6' : 'rgba(0,0,0,0.2)'}` }}>
+                          {active && <span className="w-[8px] h-[8px] rounded-full" style={{ backgroundColor: '#3b82f6' }} />}
                         </div>
                       </button>
                     )
@@ -2251,7 +2251,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
                 <div className="flex justify-end">
                   <button onClick={handleCreateShareLink}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#f91814' }}>
+                    style={{ backgroundColor: '#3b82f6' }}>
                     <iconify-icon icon="solar:link-round-linear" width="14" />
                     {tr('share_create_link')}
                   </button>
