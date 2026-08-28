@@ -28,7 +28,7 @@ export function ClosingCta(props: ClosingCtaProps) {
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium ring-1 ring-white/15 mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 <iconify-icon icon="solar:rocket-linear" width="16" />
-                <span>{props.kicker}</span>
+                <iconify-icon icon="solar:star-shine-linear" width="13" /><span>{props.kicker}</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal tracking-tighter" style={{ color: '#ffffff' }}>

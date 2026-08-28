@@ -27,7 +27,7 @@ export function Faq(props: FaqProps) {
         {/* Centered heading */}
         <div className="text-center mb-16">
           <div className="inline-flex text-[11px] ring-1 ring-black/10 font-medium bg-black/5 rounded-full pt-1.5 pr-3 pb-1.5 pl-3 gap-x-2 gap-y-2 items-center" style={{ color: LIGHT_TEXT_MUTED }}>
-            <span>{props.kicker}</span>
+            <iconify-icon icon="solar:star-shine-linear" width="13" /><span>{props.kicker}</span>
           </div>
           <h2 className="mt-4 text-3xl md:text-4xl tracking-tight font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>
             {props.titleSans}{' '}
