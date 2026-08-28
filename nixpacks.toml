@@ -1,7 +1,0 @@
-# The server shells out to `git` for per-project version control (M1-05+).
-# Nixpacks' Node image does not include git, and apt-installed packages don't
-# reliably survive into the runtime layer — so add git as a Nix package.
-# The `...` token keeps Nixpacks' auto-detected packages (nodejs) and appends.
-[phases.setup]
-nixPkgs = ['...', 'git']
-aptPkgs = ['...', 'git']
