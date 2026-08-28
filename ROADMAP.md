@@ -12,7 +12,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
-| M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
 | M3-01 | Commit per generation | Versioning via git | ⚪ Planned | unassigned |
 | M3-02 | Rollback via git | Versioning via git | ⚪ Planned | unassigned |
 | M3-03 | Version history + diff API | Versioning via git | ⚪ Planned | unassigned |
@@ -26,25 +25,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | M5-05 | Per-tenant isolation for engine tool execution | Durability & lifecycle | ⚪ Planned | unassigned |
 
 ---
-
-## M1 — Project entity & storage foundation
-
-**Goal:** Introduce a first-class `projects` entity and a persistent per-project directory on disk that becomes the source of truth for every generated artifact. Postgres keeps only an index.
-
-### M1-04 · Railway Volume provisioning + single-instance constraint
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and document that the API service now runs as a single instance (no horizontal scaling) because the volume is single-attach.
-
-**Why:** The filesystem is now canonical for artifacts, so it must survive redeploys. Railway container disk is ephemeral; a Volume is the persistent option.
-
-**Acceptance criteria:**
-- [ ] Volume mounted and `PROJECTS_ROOT` set in Railway
-- [ ] Boot check logs a clear fatal error if `PROJECTS_ROOT` is missing or not writable
-- [ ] README.md / PRODUCT.md updated with the single-instance constraint
-
-**Notes:** The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.
 
 ## M3 — Versioning via git
 

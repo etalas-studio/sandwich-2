@@ -3,27 +3,6 @@
   "description": "Collaboration roadmap for SANDWICH v2 — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.",
   "milestones": [
     {
-      "id": "m1",
-      "name": "Project entity & storage foundation",
-      "goal": "Introduce a first-class `projects` entity and a persistent per-project directory on disk that becomes the source of truth for every generated artifact. Postgres keeps only an index.",
-      "issues": [
-        {
-          "id": "M1-04",
-          "title": "Railway Volume provisioning + single-instance constraint",
-          "what": "Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and document that the API service now runs as a single instance (no horizontal scaling) because the volume is single-attach.",
-          "why": "The filesystem is now canonical for artifacts, so it must survive redeploys. Railway container disk is ephemeral; a Volume is the persistent option.",
-          "acceptance": [
-            "Volume mounted and `PROJECTS_ROOT` set in Railway",
-            "Boot check logs a clear fatal error if `PROJECTS_ROOT` is missing or not writable",
-            "README.md / PRODUCT.md updated with the single-instance constraint"
-          ],
-          "notes": "The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.",
-          "owner": "unassigned",
-          "status": "planned"
-        }
-      ]
-    },
-    {
       "id": "m3",
       "name": "Versioning via git",
       "goal": "Replace the Postgres version snapshots with git operations on each project repository.",
