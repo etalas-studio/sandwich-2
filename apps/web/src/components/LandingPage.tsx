@@ -77,7 +77,7 @@ export default function LandingPage() {
     } catch { /* ignore storage failures */ }
     trackPostHog('landing_prompt_submitted')
     const isAuthed = authState.status === 'authenticated'
-    router.push(isAuthed ? '/dashboard' : '/register')
+    if (isAuthed) { router.push('/dashboard') } else { setRegisterModalOpen(true) }
   }
 
   const pipelineSteps = [
