@@ -77,10 +77,10 @@ export default function LandingPage() {
   }
 
   const pipelineSteps = [
-    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), image: '/pipeline-savana.webp' },
-    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), image: '/pipeline-paper.webp' },
-    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), image: '/pipeline-glass.webp' },
-    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), image: '/pipeline-daisy.webp' },
+    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), image: '/pipeline-1.webp' },
+    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), image: '/pipeline-2.webp' },
+    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), image: '/pipeline-3.webp' },
+    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), image: '/pipeline-4.webp' },
   ]
 
   return (

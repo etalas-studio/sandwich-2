@@ -25,14 +25,8 @@ export function Footer(props: FooterProps) {
 
   return (
     <footer className="overflow-hidden border-white/20 border-t relative z-20">
-      {/* Background: image, fade to white at top, solid blue at bottom — no dark overlay */}
-      <div className="absolute inset-0 -z-10">
-        <img src="/footer-bg-final.jpg" alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110" />
-        {/* Top: fade to white so it blends with the section above */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 35%)' }} />
-        {/* Bottom: solid blue fill — same hue as the image, no black */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(80,115,150,1) 0%, rgba(80,115,150,0.5) 40%, rgba(80,115,150,0) 65%)' }} />
-      </div>
+      {/* Background: solid blue at bottom fading to transparent at top */}
+      <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(to top, #1e3a5f 0%, #2d5a8e 40%, rgba(45,90,142,0) 100%)' }} />
 
       <div className="z-10 md:px-8 max-w-7xl mr-auto ml-auto pt-64 pr-6 pb-16 pl-6 relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">

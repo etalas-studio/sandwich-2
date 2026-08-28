@@ -22,7 +22,7 @@ export interface PipelineProps {
 export function Pipeline(props: PipelineProps) {
   // First card is expanded by default. Hovering a card expands it sideways
   // (to the width of card 1) and shrinks the others. Leaving the row resets.
-  const [open, setOpen] = useState<number>(0)
+  const [open, setOpen] = useState<number | null>(null)
 
   return (
     <section id="pipeline" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
@@ -43,7 +43,7 @@ export function Pipeline(props: PipelineProps) {
             the others shrink. Content appears inside the expanded card. */}
         <div
           className="flex flex-col md:flex-row gap-4 items-stretch mt-10"
-          onMouseLeave={() => setOpen(0)}
+          onMouseLeave={() => setOpen(null)}
         >
           {props.steps.map((s, i) => {
             const isOpen = open === i
@@ -57,12 +57,7 @@ export function Pipeline(props: PipelineProps) {
                 }`}
                 style={{ height: '26rem', flexBasis: 0 }}
               >
-                {/* Image background */}
-                <img
-                  src={s.image}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                <img src={s.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/35" />
 
                 {/* Top label: number */}
@@ -72,10 +67,10 @@ export function Pipeline(props: PipelineProps) {
                   </span>
                 </div>
 
-                {/* Bottom text — title always visible, description reveals when expanded */}
+                {/* Bottom text — title only when open on mobile, always on desktop collapsed */}
                 <div className="absolute bottom-0 inset-x-0 z-10 p-6 md:p-7">
                   <h3
-                    className={`font-normal tracking-tight text-white leading-tight ${isOpen ? 'text-3xl md:text-4xl' : 'text-lg md:text-xl'}`}
+                    className={`font-normal tracking-tight text-white leading-tight transition-all duration-300 ${isOpen ? 'text-3xl md:text-4xl opacity-100' : 'text-lg md:text-xl opacity-0'}`}
                   >
                     {s.title}
                   </h3>

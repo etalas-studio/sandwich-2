@@ -18,7 +18,7 @@ export function ClosingCta(props: ClosingCtaProps) {
         <div id="start-card" className="relative overflow-hidden rounded-3xl ring-1 ring-black/10">
           {/* Grass background image with a dark scrim for text legibility */}
           <img
-            src="/hero-grass.webp"
+            src="/cta-bg.webp"
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
