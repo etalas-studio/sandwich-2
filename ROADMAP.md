@@ -13,7 +13,6 @@ This roadmap is **forward-looking**: it lists only work we intend to do. When an
 | ID | Item | Milestone | Status | Owner |
 | --- | --- | --- | --- | --- |
 | M1-04 | Railway Volume provisioning + single-instance constraint | Project entity & storage foundation | ⚪ Planned | unassigned |
-| M1-06 | Project UI — group conversations, create, rename, new chat in project | Project entity & storage foundation | ⚪ Planned | unassigned |
 | M3-01 | Commit per generation | Versioning via git | ⚪ Planned | unassigned |
 | M3-02 | Rollback via git | Versioning via git | ⚪ Planned | unassigned |
 | M3-03 | Version history + diff API | Versioning via git | ⚪ Planned | unassigned |
@@ -46,23 +45,6 @@ Mount a Railway Volume at `/data`, set `PROJECTS_ROOT=/data/projects`, and docum
 - [ ] README.md / PRODUCT.md updated with the single-instance constraint
 
 **Notes:** The existing Redis in-flight coordination stays as a safety net but is no longer load-bearing.
-
-### M1-06 · Project UI — group conversations, create, rename, new chat in project
-
-**Status:** ⚪ Planned  |  **Owner:** unassigned
-
-Frontend for the projects entity (backend shipped in #58, no UI yet). Sidebar groups conversations by project (GET /api/conversations?groupBy=project). "New chat" inside a project sends that projectId. Project rename (PATCH /api/projects/:id). A top-level "New project" that starts a fresh project + its first chat. Moving a chat between projects is out of scope (needs cross-repo file moves).
-
-**Why:** Today every chat auto-creates its own project 1:1. The API already supports 1 project : many conversations and grouped listing; there is simply no UI, so the core product model (a project holds several related chats + shared deliverables) is invisible to users.
-
-**Acceptance criteria:**
-- [ ] Sidebar lists conversations grouped under their project, newest project first
-- [ ] "New chat" within a project attaches to that project (same projectId, same on-disk dir)
-- [ ] Project title editable from the UI
-- [ ] "New project" creates a fresh project and opens its first chat
-- [ ] Document panel can be filtered/viewed per project
-
-**Notes:** apps/web/src/components/Dashboard.tsx (2163 lines — the sidebar + conversation list live here), apps/web/src/lib/conversations.ts, apps/web/src/api/conversations.ts (already has projectId param), new apps/web/src/api/projects.ts. Next.js 16 / next/navigation — see apps/web/AGENTS.md.
 
 ## M3 — Versioning via git
 
