@@ -76,8 +76,7 @@ export function Membership(props: MembershipProps) {
       <div className="z-10 md:px-8 max-w-7xl mr-auto ml-auto pr-6 pl-6 relative">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex text-[11px] ring-1 ring-white/30 font-medium bg-white/15 rounded-full pt-1.5 pr-3 pb-1.5 pl-3 gap-x-2 gap-y-2 items-center" style={{ color: '#ffffff' }}>
-            <iconify-icon icon="solar:layers-minimalistic-linear" width="14" />
-            <iconify-icon icon="solar:star-shine-linear" width="13" /><span>{props.kicker}</span>
+            <iconify-icon icon="solar:layers-minimalistic-linear" width="14" /><span>{props.kicker}</span>
           </div>
           <h2 className="mt-4 sm:text-5xl md:text-6xl text-4xl font-normal tracking-tighter" style={{ color: '#ffffff' }}>
             {props.titleSans}{' '}
