@@ -38,14 +38,6 @@ export function Footer(props: FooterProps) {
               <span className="text-base font-medium tracking-tight uppercase" style={{ color: white }}>SANDWICH</span>
             </div>
             <p className="mt-4 text-base leading-relaxed max-w-xs" style={{ color: white }}>{props.footerDesc}</p>
-            <div className="mt-6 flex items-center gap-3">
-              <a href="https://www.instagram.com/etalas.id/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/15 ring-1 ring-white/30 flex items-center justify-center transition hover:bg-white/25" style={{ color: white }} aria-label="Instagram">
-                <iconify-icon icon="mdi:instagram" width="18" />
-              </a>
-              <a href="https://www.linkedin.com/company/etalas/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/15 ring-1 ring-white/30 flex items-center justify-center transition hover:bg-white/25" style={{ color: white }} aria-label="LinkedIn">
-                <iconify-icon icon="mdi:linkedin" width="18" />
-              </a>
-            </div>
           </div>
 
           <div>
@@ -81,7 +73,15 @@ export function Footer(props: FooterProps) {
                 </Link>
               </li>
             </ul>
-            <p className="mt-6 text-sm" style={{ color: white, opacity: 0.85 }}>{props.footerNote}</p>
+            <div className="flex items-center gap-3 mt-6">
+                  <a href="https://www.instagram.com/etalas.id/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/15 ring-1 ring-white/30 flex items-center justify-center transition hover:bg-white/25" style={{ color: white }} aria-label="Instagram">
+                    <iconify-icon icon="mdi:instagram" width="18" />
+                  </a>
+                  <a href="https://www.linkedin.com/company/etalas/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/15 ring-1 ring-white/30 flex items-center justify-center transition hover:bg-white/25" style={{ color: white }} aria-label="LinkedIn">
+                    <iconify-icon icon="mdi:linkedin" width="18" />
+                  </a>
+                </div>
+            <p className="mt-4 text-sm" style={{ color: white, opacity: 0.85 }}>{props.footerNote}</p>
           </div>
         </div>
 
