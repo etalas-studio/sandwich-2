@@ -22,7 +22,7 @@ export interface PipelineProps {
 export function Pipeline(props: PipelineProps) {
   // First card is expanded by default. Hovering a card expands it sideways
   // (to the width of card 1) and shrinks the others. Leaving the row resets.
-  const [open, setOpen] = useState<number | null>(null)
+  const [open, setOpen] = useState<number | null>(0)
 
   return (
     <section id="pipeline" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
