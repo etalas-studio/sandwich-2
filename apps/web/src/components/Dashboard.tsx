@@ -1819,7 +1819,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const renderPage = () => {
     if (activeNav === 'settings') return <Settings />
     if (activeNav === 'help') return <HelpPage />
-    if (activeNav === 'documents') return <DocumentsPanel initialProjectId={documentsProjectId} onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
+    if (activeNav === 'documents') return <DocumentsPanel onOpenDocument={setOpenDocumentId} onOpenConversation={(convId, docTitle) => {
       const conv = convId
         ? conversations.find(c => c.id === convId)
         : conversations.find(c => c.summary.includes(docTitle))

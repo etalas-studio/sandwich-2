@@ -20,45 +20,26 @@ export default function DocumentReaderPanel({
   const [doc, setDoc] = useState<DocumentDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
-  const [versionNo, setVersionNo] = useState<number | null>(null)
-
+  // ponytail: version selector removed — DocumentDetail no longer exposes versions
   useEffect(() => {
     if (!documentId) return
     let cancelled = false
     setLoading(true)
     setError(false)
     getDocument(documentId)
-      .then((d) => {
-        if (cancelled) return
-        setDoc(d)
-        const current = d.versions.find((v) => v.id === d.currentVersionId)
-        setVersionNo(
-          current?.versionNo ??
-            d.latestVersion?.versionNo ??
-            d.versions[0]?.versionNo ??
-            null,
-        )
-      })
-      .catch(() => {
-        if (!cancelled) setError(true)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
+      .then((d) => { if (!cancelled) setDoc(d) })
+      .catch(() => { if (!cancelled) setError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [documentId])
 
   if (!documentId) return null
 
   const isPrototype = doc?.type === 'prototype'
   const label = TYPE_LABEL[doc?.type ?? ''] ?? (doc?.type ?? 'Document')
-  const selectedVersion =
-    doc?.versions.find((v) => v.versionNo === versionNo) ?? null
-  const content = selectedVersion?.content ?? doc?.latestVersion?.content ?? ''
+  const content = doc?.content ?? ''
   const base = (doc?.previewUrl ?? apiUrl(`/p/${documentId}`)).replace(/\/$/, '')
-  const previewSrc = versionNo ? `${base}/v/${versionNo}/` : `${base}/`
+  const previewSrc = `${base}/`
 
   return (
     <div className="fixed inset-0 z-50">
@@ -116,23 +97,6 @@ export default function DocumentReaderPanel({
             <iconify-icon icon="solar:close-circle-bold" width="20" />
           </button>
         </div>
-
-        {/* Version selector */}
-        {doc && doc.versions.length > 1 && (
-          <div className="flex items-center gap-2 px-5 py-2.5 border-b shrink-0" style={{ borderColor: 'rgba(0,0,0,0.06)', backgroundColor: '#fafafa' }}>
-            <span className="text-xs" style={{ color: '#6b7280' }}>Version</span>
-            <select
-              value={versionNo ?? undefined}
-              onChange={(e) => setVersionNo(Number(e.target.value))}
-              className="text-xs px-2 py-1 rounded border bg-white"
-              style={{ borderColor: 'rgba(0,0,0,0.15)', color: '#111827' }}
-            >
-              {doc.versions.map((v) => (
-                <option key={v.id} value={v.versionNo}>v{v.versionNo}</option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
