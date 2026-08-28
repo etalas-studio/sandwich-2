@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import Header from './Header'
+import { LandingNav } from './landing/LandingNav'
 import { GridLines } from './landing/GridLines'
 import { ACCENT, LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from './landing/tokens'
 import type { PostMeta } from '../lib/blog'
@@ -18,12 +18,10 @@ export default function BlogLayout({
     year: 'numeric',
   })
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden" style={{ fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
       <GridLines />
-      <div className="pt-8 pb-6 px-6 flex justify-center relative z-10">
-        <Header />
-      </div>
-      <main className="max-w-2xl mx-auto px-6 py-12 relative z-10">
+      <LandingNav />
+      <main className="max-w-2xl mx-auto px-6 pt-24 pb-12 relative z-10">
         <Link
           href="/blog"
           className="inline-flex items-center gap-1.5 text-sm transition-colors mb-8 hover:text-neutral-900"

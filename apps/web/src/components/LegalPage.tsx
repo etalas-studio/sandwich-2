@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { useLanguage } from '../lib/i18n'
+import { LandingNav } from './landing/LandingNav'
 
-const bowlby = "'Bowlby One', system-ui"
+const interTight = "'Inter Tight', 'Inter', sans-serif"
 
 export interface LegalSection {
   heading: { en: string; id: string }
@@ -20,8 +21,9 @@ export default function LegalPage({ title, updated, sections }: LegalPageProps) 
   const { lang, t } = useLanguage()
 
   return (
-    <div className="min-h-screen antialiased" style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}>
-      <div className="max-w-2xl mx-auto px-6 py-12 md:py-16">
+    <div className="min-h-screen antialiased" style={{ fontFamily: interTight, backgroundColor: '#ffffff' }}>
+      <LandingNav />
+      <div className="max-w-2xl mx-auto px-6 pt-24 pb-12 md:pb-16">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold mb-8 hover:opacity-70 transition-opacity"
@@ -31,7 +33,7 @@ export default function LegalPage({ title, updated, sections }: LegalPageProps) 
           {t('legal_back')}
         </Link>
 
-        <h1 className="text-3xl md:text-4xl tracking-tight mb-2" style={{ fontFamily: bowlby, color: '#111827' }}>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2" style={{ fontFamily: interTight, color: '#111827' }}>
           {title[lang]}
         </h1>
         <p className="text-xs text-zinc-500 mb-10">

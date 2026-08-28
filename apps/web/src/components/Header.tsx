@@ -82,8 +82,8 @@ export default function Header() {
         {/* Get Started */}
         <button
           onClick={() => router.push('/register')}
-          className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-semibold transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
-          style={{ backgroundColor: LIGHT_TEXT_PRIMARY, color: '#ffffff' }}
+          className="shrink-0 px-3 sm:px-4 min-h-11 flex items-center rounded-full text-xs sm:text-sm font-medium ring-1 ring-black/10 bg-black/5 hover:bg-black/10 backdrop-blur-sm transition-all active:scale-95 whitespace-nowrap"
+          style={{ color: LIGHT_TEXT_PRIMARY }}
         >
           {t('nav_get_started')}
         </button>

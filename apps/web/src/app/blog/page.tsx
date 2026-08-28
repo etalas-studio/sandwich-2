@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import Header from '../../components/Header'
+import { LandingNav } from '../../components/landing/LandingNav'
 import BlogCard from '../../components/BlogCard'
 import { GridLines } from '../../components/landing/GridLines'
+import { FooterBlog } from '../../components/landing/FooterBlog'
 import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from '../../components/landing/tokens'
 import { getAllPosts } from '../../lib/blog'
 
@@ -14,12 +15,10 @@ export const metadata: Metadata = {
 export default async function BlogIndexPage() {
   const posts = await getAllPosts()
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden" style={{ fontFamily: "'Inter Tight', 'Inter', sans-serif" }}>
       <GridLines />
-      <div className="pt-8 pb-6 px-6 flex justify-center relative z-10">
-        <Header />
-      </div>
-      <main className="max-w-6xl mx-auto px-6 py-12 relative z-10">
+      <LandingNav />
+      <main className="max-w-6xl mx-auto px-6 pt-24 pb-12 relative z-10">
         <div className="mb-10">
           <h1
             className="text-5xl md:text-6xl font-medium tracking-tighter leading-none"
@@ -41,6 +40,7 @@ export default async function BlogIndexPage() {
           </div>
         )}
       </main>
+      <FooterBlog />
     </div>
   )
 }
