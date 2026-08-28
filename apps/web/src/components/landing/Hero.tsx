@@ -115,14 +115,16 @@ export function Hero(props: HeroProps) {
   useEffect(() => {
     const onScroll = () => {
       const pastHero = window.scrollY > window.innerHeight - 100
-      // The ClosingCta card sits on a dark grass background — keep the navbar
-      // in white/glass mode while it overlaps that dark card (not the section's
-      // white padding above/below it).
+      // Keep white pill state over dark/colored sections (Pricing blue, ClosingCta dark card)
       const darkCard = document.getElementById('start-card')
       const overDarkCard = darkCard
         ? darkCard.getBoundingClientRect().top <= 90 && darkCard.getBoundingClientRect().bottom >= 90
         : false
-      setScrolled(pastHero && !overDarkCard)
+      const pricingSection = document.getElementById('pricing')
+      const overPricing = pricingSection
+        ? pricingSection.getBoundingClientRect().top <= 90 && pricingSection.getBoundingClientRect().bottom >= 90
+        : false
+      setScrolled(pastHero && !overDarkCard && !overPricing)
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
