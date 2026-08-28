@@ -3,24 +3,23 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
-import LoginForm from './LoginForm'
+import SetupForm from './SetupForm'
 
-interface LoginModalProps {
+interface RegisterModalProps {
   onClose: () => void
-  onSwitchToRegister?: () => void
+  onSwitchToLogin: () => void
 }
 
-export function LoginModal({ onClose, onSwitchToRegister }: LoginModalProps) {
-  const { state, login, loginError, loginPending } = useAuth()
+export function RegisterModal({ onClose, onSwitchToLogin }: RegisterModalProps) {
+  const { state, register, login, registerError, registerPending } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (state.status === 'authenticated') {
-      router.push(state.role === 'admin' ? '/admin/dashboard' : '/dashboard')
+      router.push('/dashboard')
     }
   }, [state.status, router])
 
-  // close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
@@ -33,15 +32,13 @@ export function LoginModal({ onClose, onSwitchToRegister }: LoginModalProps) {
       style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <LoginForm
-        onSubmit={async (username, password) => {
-          try { await login(username, password) } catch { /* loginError surfaces */ }
-        }}
-        error={loginError}
-        isPending={loginPending}
+      <SetupForm
+        onSubmit={register}
+        login={login}
+        error={registerError}
+        isPending={registerPending}
         onBack={onClose}
-        onSwitchToRegister={onSwitchToRegister ?? (() => router.push('/register'))}
-        onForgotPassword={() => router.push('/forgot-password')}
+        onSwitchToLogin={onSwitchToLogin}
         modal
       />
     </div>

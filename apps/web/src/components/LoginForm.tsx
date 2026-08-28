@@ -54,12 +54,18 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
       style={modal ? { fontFamily: interTight } : { fontFamily: interTight, backgroundColor: '#F4EBE1' }}
     >
       <div
-        className="w-full max-w-sm rounded-3xl p-8"
+        className="w-full max-w-sm rounded-3xl p-8 relative"
         style={modal
           ? { backgroundColor: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.15)' }
           : { backgroundColor: '#ffffff', boxShadow: '0 20px 50px rgba(0,0,0,0.08)' }
         }
       >
+        {modal && (
+          <button onClick={onBack} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full transition hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.6)' }} aria-label="Close">
+            <iconify-icon icon="solar:close-linear" width="18" />
+          </button>
+        )}
+
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#3b82f6' }}>
             <iconify-icon icon="solar:login-3-bold" width="24" className="text-white" />

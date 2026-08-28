@@ -17,6 +17,7 @@ import { Faq } from './landing/Faq'
 import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
 import { LoginModal } from './LoginModal'
+import { RegisterModal } from './RegisterModal'
 import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
@@ -60,11 +61,12 @@ export default function LandingPage() {
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
-  const goToRegister = () => router.push('/register')
+  const goToRegister = () => setRegisterModalOpen(true)
 
   // Persist the typed brief so it survives the redirect (the dashboard
   // PromptBox reads `sandwich_draft` on mount), then route the user either
@@ -216,7 +218,18 @@ export default function LandingPage() {
         footerRights={FOOTER_RIGHTS[lang]}
         onNavClick={scrollToSection}
       />
-      {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
+      {loginModalOpen && (
+        <LoginModal
+          onClose={() => setLoginModalOpen(false)}
+          onSwitchToRegister={() => { setLoginModalOpen(false); setRegisterModalOpen(true) }}
+        />
+      )}
+      {registerModalOpen && (
+        <RegisterModal
+          onClose={() => setRegisterModalOpen(false)}
+          onSwitchToLogin={() => { setRegisterModalOpen(false); setLoginModalOpen(true) }}
+        />
+      )}
     </div>
   )
 }
