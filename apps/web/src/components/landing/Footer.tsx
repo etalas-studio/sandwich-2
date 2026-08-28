@@ -6,6 +6,8 @@ import { ACCENT } from './tokens'
 export interface FooterProps {
   navPipeline: string
   navHow: string
+  navDeliverables: string
+  navComparison: string
   navPricing: string
   navFaq: string
   footerDesc: string
@@ -50,7 +52,9 @@ export function Footer(props: FooterProps) {
             <h3 className="text-base font-medium" style={{ color: white }}>{props.footerProductTitle}</h3>
             <ul className="mt-4 space-y-3">
               <li><a href="#why" onClick={(e) => { e.preventDefault(); props.onNavClick('why') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navPipeline}</a></li>
-              <li><a href="#deliverables" onClick={(e) => { e.preventDefault(); props.onNavClick('deliverables') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navHow}</a></li>
+              <li><a href="#pipeline" onClick={(e) => { e.preventDefault(); props.onNavClick('pipeline') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navHow}</a></li>
+              <li><a href="#deliverables" onClick={(e) => { e.preventDefault(); props.onNavClick('deliverables') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navDeliverables}</a></li>
+              <li><a href="#comparison" onClick={(e) => { e.preventDefault(); props.onNavClick('comparison') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navComparison}</a></li>
               <li><a href="#pricing" onClick={(e) => { e.preventDefault(); props.onNavClick('pricing') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navPricing}</a></li>
               <li><a href="#faq" onClick={(e) => { e.preventDefault(); props.onNavClick('faq') }} className="text-base hover:text-white transition" style={{ color: white }}>{props.navFaq}</a></li>
               <li><Link href="/blog" className="text-base hover:text-white transition" style={{ color: white }}>Blog</Link></li>

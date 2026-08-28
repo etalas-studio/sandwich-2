@@ -198,7 +198,9 @@ export default function LandingPage() {
 
       <Footer
         navPipeline={t('nav_diff')}
-        navHow={t('nav_deliverables')}
+        navHow={t('nav_how')}
+        navDeliverables={t('nav_deliverables')}
+        navComparison={t('nav_comparison')}
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         footerDesc={t('footer_desc')}
