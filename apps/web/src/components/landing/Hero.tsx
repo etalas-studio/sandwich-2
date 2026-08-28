@@ -1,16 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { GridLines } from './GridLines'
-import { ACCENT, TEXT_PRIMARY, LIGHT_TEXT_PRIMARY } from './tokens'
+import { ACCENT, TEXT_PRIMARY, LIGHT_TEXT_PRIMARY, FONT_SANS } from './tokens'
+
+export interface HeroSuggestion {
+  label: string
+  prompt: string
+}
+
+export interface HeroAttachment {
+  name: string
+  type: string
+  dataUrl: string
+}
 
 export interface HeroProps {
   heroTagline: string
+  heroTaglineSans: string
   heroBenefit: string
-  navPipeline: string
   navHow: string
   navDiff: string
+  navDeliverables: string
+  navComparison: string
   navPricing: string
   navFaq: string
   navGetStarted: string
@@ -23,14 +36,19 @@ export interface HeroProps {
   onGetStartedClick: () => void
   onLoginClick: () => void
   onSecondaryClick: () => void
+  onPromptSubmit: (prompt: string, attachments: HeroAttachment[]) => void
+  heroPromptPlaceholder: string
+  heroSendLabel: string
+  suggestions: HeroSuggestion[]
   mobileNavOpen: boolean
   setMobileNavOpen: (v: boolean) => void
 }
 
 const LINKS = (p: HeroProps) => [
-  { id: 'ingredients', label: p.navPipeline },
-  { id: 'harnesses', label: p.navHow },
-  { id: 'pipeline', label: p.navDiff },
+  { id: 'why', label: p.navDiff },
+  { id: 'pipeline', label: p.navHow },
+  { id: 'deliverables', label: p.navDeliverables },
+  { id: 'comparison', label: p.navComparison },
   { id: 'pricing', label: p.navPricing },
   { id: 'faq', label: p.navFaq },
 ]
@@ -38,9 +56,74 @@ const LINKS = (p: HeroProps) => [
 export function Hero(props: HeroProps) {
   const links = LINKS(props)
 
+  const [prompt, setPrompt] = useState('')
+  const [images, setImages] = useState<HeroAttachment[]>([])
+  const [typed, setTyped] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const submitPrompt = () => {
+    const value = prompt.trim()
+    if (!value && images.length === 0) return
+    props.onPromptSubmit(value, images)
+  }
+
+  // Typing placeholder animation — types out the placeholder when the box is empty.
+  useEffect(() => {
+    if (prompt !== '') {
+      setTyped('')
+      return
+    }
+    const full = props.heroPromptPlaceholder
+    let i = 0
+    let deleting = false
+    const interval = setInterval(() => {
+      if (!deleting) {
+        i += 1
+        setTyped(full.slice(0, i))
+        if (i >= full.length) deleting = true
+      } else {
+        i -= 1
+        setTyped(full.slice(0, i))
+        if (i <= 0) deleting = false
+      }
+    }, deleting ? 35 : 55)
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt, props.heroPromptPlaceholder])
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) return
+      const reader = new FileReader()
+      reader.onload = () => {
+        setImages((prev) => [
+          ...prev,
+          { name: file.name, type: file.type, dataUrl: String(reader.result) },
+        ])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removeImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx))
+  }
+
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > window.innerHeight - 100)
+    const onScroll = () => {
+      const pastHero = window.scrollY > window.innerHeight - 100
+      // The ClosingCta card sits on a dark grass background — keep the navbar
+      // in white/glass mode while it overlaps that dark card (not the section's
+      // white padding above/below it).
+      const darkCard = document.getElementById('start-card')
+      const overDarkCard = darkCard
+        ? darkCard.getBoundingClientRect().top <= 90 && darkCard.getBoundingClientRect().bottom >= 90
+        : false
+      setScrolled(pastHero && !overDarkCard)
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -72,7 +155,7 @@ export function Hero(props: HeroProps) {
       <header className={`fixed top-0 inset-x-0 z-30 border-b transition-colors duration-300 ${scrolled ? 'border-black/5' : 'border-white/5'}`}>
         <div className="flex md:px-8 max-w-7xl mr-auto ml-auto pt-5 pr-6 pb-5 pl-6 items-center justify-between">
           <div className={`flex md:gap-6 ring-1 rounded-full pt-1 pr-1 pb-1 pl-1 gap-x-4 gap-y-4 items-center transition-colors duration-300 ${groupRingClass}`}>
-            <a href="/" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className="flex items-center gap-2 pl-2 pr-3 shrink-0">
+            <a href="/" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className={`flex items-center gap-2 pl-2 pr-3 shrink-0 rounded-full ring-1 backdrop-blur-md transition-colors duration-300 ${scrolled ? 'bg-black/5 ring-black/10 hover:bg-black/10' : 'bg-white/5 ring-white/10 hover:bg-white/10'}`} style={{ boxShadow: scrolled ? '0 1px 2px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.06)' }}>
               <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
               <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium transition-colors duration-300" style={{ color: navTextColor }}>SANDWICH</span>
             </a>
@@ -114,8 +197,9 @@ export function Hero(props: HeroProps) {
             <button
               onClick={props.onGetStartedClick}
               className={`inline-flex items-center gap-2 transition-colors duration-300 text-sm font-medium rounded-full pt-2 pr-3.5 pb-2 pl-3.5 ${
-                scrolled ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-white/10 text-white/90 ring-1 ring-white/15 hover:bg-white/15 hover:ring-white/25 backdrop-blur-sm'
+                scrolled ? 'text-white hover:opacity-90' : 'bg-white/10 text-white/90 ring-1 ring-white/15 hover:bg-white/15 hover:ring-white/25 backdrop-blur-sm'
               }`}
+              style={scrolled ? { backgroundColor: ACCENT } : undefined}
             >
               {props.navGetStarted}
             </button>
@@ -174,30 +258,111 @@ export function Hero(props: HeroProps) {
 
       {/* Hero content */}
       <main className="z-20 flex h-[calc(100vh-80px)] relative items-center">
-        <section className="md:px-8 w-full max-w-4xl mr-auto ml-auto pr-6 pl-6 text-center">
-          <h1 className="leading-tight sm:text-4xl md:text-4xl lg:text-5xl text-3xl tracking-tighter">
-            <span style={{ color: TEXT_PRIMARY }}>SANDWICH</span>
-            <span className="block tracking-tighter" style={{ color: TEXT_PRIMARY }}>
+        <section className="md:px-8 w-full max-w-6xl mr-auto ml-auto pr-6 pl-6 text-center">
+          <h1 className="leading-tight tracking-tight" style={{ fontSize: 'clamp(1.5rem, 5vw, 4rem)' }}>
+            <span
+              className="block"
+              style={{ color: TEXT_PRIMARY, fontFamily: FONT_SANS, fontStyle: 'normal', letterSpacing: '-0.02em' }}
+            >
+              {props.heroTaglineSans}
+            </span>
+            <span
+              className="block tracking-tight"
+              style={{ color: TEXT_PRIMARY, fontStyle: 'italic' }}
+            >
               {props.heroTagline}
             </span>
           </h1>
 
-          <div className="flex flex-row items-center justify-center gap-x-3 gap-y-3 mt-8">
-            <button
-              onClick={props.onGetStartedClick}
-              className="inline-flex items-center justify-center gap-2 transition hover:bg-white/15 hover:ring-white/25 whitespace-nowrap text-sm font-medium text-white/90 bg-white/10 ring-white/15 ring-1 rounded-full pt-2.5 pr-4 pb-2.5 pl-4 backdrop-blur-sm"
-            >
-              <span>{props.navGetStarted}</span>
-              <iconify-icon icon="solar:arrow-right-linear" width="16" />
-            </button>
-            <button
-              onClick={props.onSecondaryClick}
-              className="inline-flex items-center justify-center gap-2 ring-1 ring-white/20 transition hover:bg-neutral-100 whitespace-nowrap text-sm font-medium text-neutral-900 bg-white rounded-full pt-2.5 pr-4 pb-2.5 pl-4"
-            >
-              <span>{props.navDiff}</span>
-              <iconify-icon icon="solar:widget-2-linear" width="16" />
-            </button>
-          </div>
+          {/* Prompt box — transparent/glass, taller, with image attach, suggestions & typing placeholder */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); submitPrompt() }}
+            className="mx-auto mt-10 w-full max-w-2xl rounded-3xl bg-slate-400/15 ring-1 ring-white/15 backdrop-blur-xl transition hover:ring-white/25 focus-within:ring-white/30 p-4 md:p-5"
+          >
+            {/* Textarea with typing placeholder overlay */}
+            <div className="relative">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={4}
+                aria-label={props.heroPromptPlaceholder}
+                className="w-full resize-none bg-transparent px-3 py-2 text-base md:text-lg text-white/90 outline-none placeholder:text-transparent leading-relaxed"
+              />
+              {prompt === '' && (
+                <div className="pointer-events-none absolute inset-0 px-3 py-2 text-base md:text-lg text-white/40 leading-relaxed">
+                  {typed}
+                  <span className="inline-block w-0.5 h-5 bg-white/60 align-text-bottom ml-0.5 animate-pulse" />
+                </div>
+              )}
+            </div>
+
+            {/* Attached images preview */}
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-1 pb-2">
+                {images.map((img, i) => (
+                  <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden ring-1 ring-white/20">
+                    <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      aria-label="Remove image"
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                    >
+                      <iconify-icon icon="solar:close-linear" width="12" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bottom row: attach + suggestions + send */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach image"
+                className="shrink-0 flex h-9 w-9 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white/90 transition"
+              >
+                <iconify-icon icon="solar:gallery-add-linear" width="18" />
+              </button>
+
+              <button
+                type="submit"
+                disabled={!prompt.trim() && images.length === 0}
+                aria-label={props.heroSendLabel}
+                title={props.heroSendLabel}
+                className="ml-auto shrink-0 flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-95 disabled:opacity-40"
+                style={{ backgroundColor: ACCENT }}
+              >
+                <iconify-icon icon="solar:arrow-up-linear" width="16" style={{ color: '#ffffff' }} />
+              </button>
+            </div>
+          </form>
+
+          {/* Suggestion badges — click to fill the prompt */}
+          {props.suggestions.length > 0 && (
+            <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-2 max-w-2xl">
+              {props.suggestions.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => setPrompt(s.prompt)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/5 ring-1 ring-white/15 px-3 py-1.5 text-xs font-medium text-white/70 backdrop-blur-sm hover:bg-white/10 hover:text-white/90 hover:ring-white/25 transition"
+                >
+                  <iconify-icon icon="solar:sparkles-linear" width="13" />
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>

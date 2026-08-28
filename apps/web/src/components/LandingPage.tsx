@@ -3,15 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../lib/i18n'
+import { useAuth } from '../hooks/useAuth'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
 import { Hero } from './landing/Hero'
-import { IngredientsGrid } from './landing/IngredientsGrid'
-import { FormatTicker } from './landing/FormatTicker'
-import { Harnesses } from './landing/Harnesses'
+import { LogoCloud } from './landing/LogoCloud'
+import { Deliverables } from './landing/Deliverables'
 import { Pipeline } from './landing/Pipeline'
 import { Membership } from './landing/Membership'
-import { Proof } from './landing/Proof'
+import { Comparison } from './landing/Comparison'
+import { Why } from './landing/Why'
 import { Faq } from './landing/Faq'
 import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
@@ -24,9 +25,26 @@ const FOOTER_NOTE = {
 }
 const FOOTER_RIGHTS = { en: 'All rights reserved.', id: 'Hak cipta dilindungi.' }
 
+const HERO_SUGGESTIONS = (lang: 'en' | 'id') => [
+  { label: 'PRD', prompt: lang === 'id' ? 'Buatkan PRD lengkap untuk project ini' : 'Create a complete PRD for this project' },
+  { label: 'Prototype', prompt: lang === 'id' ? 'Buatkan prototype brief untuk project ini' : 'Create a prototype brief for this project' },
+  { label: 'Quotation', prompt: lang === 'id' ? 'Buatkan quotation untuk project ini' : 'Create a quotation for this project' },
+  { label: 'Specs', prompt: lang === 'id' ? 'Buatkan specs dan task breakdown untuk fitur ini' : 'Create specs and a task breakdown for this feature' },
+]
+
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
+  const { state: authState } = useAuth()
   const router = useRouter()
+
+  // Split the hero tagline: the leading text uses Inter Tight (sans),
+  // the last few words stay in Instrument Serif italic (screenbolt-style mix).
+  const heroTagline = t('hero_tagline')
+  // The serif tail covers the final short phrase (last few words).
+  const serifMarker = lang === 'id' ? 'Satu pipeline terpandu.' : 'One guided pipeline.'
+  const serifIdx = heroTagline.lastIndexOf(serifMarker)
+  const heroTaglineSans = serifIdx >= 0 ? heroTagline.slice(0, serifIdx).trimEnd() : heroTagline
+  const heroTaglineSerif = serifIdx >= 0 ? heroTagline.slice(serifIdx) : ''
   const PLANS = PLANS_META.map((p) => ({
     slug: p.slug,
     name: p.name,
@@ -39,7 +57,6 @@ export default function LandingPage() {
     oldPrice: p.oldPrice,
   }))
 
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const scrollToSection = (id: string) => {
@@ -47,30 +64,37 @@ export default function LandingPage() {
   }
   const goToRegister = () => router.push('/register')
 
-  const ingredientItems = [
-    { title: 'PRD', desc: t('stack_order_desc') },
-    { title: 'Prototype', desc: t('stack_prep_desc') },
-    { title: 'Quotation', desc: t('stack_recipe_desc') },
-    { title: 'Specs', desc: t('stack_validate_desc') },
-  ]
+  // Persist the typed brief so it survives the redirect (the dashboard
+  // PromptBox reads `sandwich_draft` on mount), then route the user either
+  // into the dashboard (already logged in) or registration (anonymous).
+  const handlePromptSubmit = (prompt: string, attachments: { name: string; type: string; dataUrl: string }[]) => {
+    try {
+      localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType: null }))
+    } catch { /* ignore storage failures */ }
+    trackPostHog('landing_prompt_submitted')
+    const isAuthed = authState.status === 'authenticated'
+    router.push(isAuthed ? '/dashboard' : '/register')
+  }
 
   const pipelineSteps = [
-    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc') },
-    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc') },
-    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc') },
-    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc') },
+    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), image: '/pipeline-savana.webp' },
+    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), image: '/pipeline-paper.webp' },
+    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), image: '/pipeline-glass.webp' },
+    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), image: '/pipeline-daisy.webp' },
   ]
 
   return (
-    <div className="min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: LIGHT_BG, color: LIGHT_TEXT_MUTED }}>
+    <div className="sb-landing min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: LIGHT_BG, color: LIGHT_TEXT_MUTED }}>
       <style>{`::selection { background: rgba(59,130,246,0.3); color: #ffffff; }`}</style>
 
       <Hero
-        heroTagline={t('hero_tagline')}
+        heroTagline={heroTaglineSerif}
+        heroTaglineSans={heroTaglineSans}
         heroBenefit={t('nav_how')}
-        navPipeline={t('stack_kicker')}
-        navHow={t('harnesses_kicker')}
+        navHow={t('nav_how')}
         navDiff={t('nav_diff')}
+        navDeliverables={t('nav_deliverables')}
+        navComparison={t('nav_comparison')}
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         navGetStarted={t('nav_get_started')}
@@ -83,71 +107,98 @@ export default function LandingPage() {
         onGetStartedClick={goToRegister}
         onLoginClick={() => router.push('/login')}
         onSecondaryClick={() => scrollToSection('pipeline')}
+        onPromptSubmit={handlePromptSubmit}
+        heroPromptPlaceholder={t('hero_prompt_placeholder')}
+        heroSendLabel={t('hero_send_label')}
+        suggestions={HERO_SUGGESTIONS(lang)}
         mobileNavOpen={mobileNavOpen}
         setMobileNavOpen={setMobileNavOpen}
       />
 
-      <IngredientsGrid
-        kicker={t('stack_kicker')}
-        title={t('stack_title')}
-        desc={t('stack_desc')}
-        linkLabel={t('nav_pricing')}
-        onLinkClick={() => scrollToSection('pricing')}
-        items={ingredientItems}
-      />
+      <LogoCloud label={t('trusted_by')} />
 
-      <FormatTicker label={t('nav_pipeline')} />
-
-      <Harnesses
-        kicker={t('harnesses_kicker')}
-        title={t('harnesses_title')}
-        desc={t('harnesses_desc')}
-        linkLabel={t('nav_how')}
-        onLinkClick={() => scrollToSection('pipeline')}
+      <Why
+        kicker={t('diff_kicker')}
+        titleSans={t('diff_title_sans')}
+        titleSerif={t('diff_title_serif')}
+        items={[
+          { title: t('diff_1_title'), desc: t('diff_1_desc') },
+          { title: t('diff_2_title'), desc: t('diff_2_desc') },
+          { title: t('diff_3_title'), desc: t('diff_3_desc') },
+          { title: t('diff_4_title'), desc: t('diff_4_desc') },
+        ]}
       />
 
       <Pipeline
         kicker={t('pipeline_kicker')}
-        title={`${t('pipeline_title_l1')} ${t('pipeline_title_l2')}`}
-        desc={t('diff_title')}
+        titleLine1={t('pipeline_title_l1')}
+        titleLine2={t('pipeline_title_l2')}
+        desc={t('pipeline_subtitle')}
         steps={pipelineSteps}
-        ctaLabel={t('pipeline_cta')}
-        onCtaClick={goToRegister}
+      />
+
+      <Deliverables
+        kicker={t('deliverables_kicker')}
+        titleSans={t('deliverables_title_sans')}
+        titleSerif={t('deliverables_title_serif')}
+        desc={t('deliverables_desc')}
+        colName={t('deliverables_col_name')}
+        colDesc={t('deliverables_col_desc')}
+        rows={[
+          { name: t('deliverables_prd'), desc: t('deliverables_prd_desc') },
+          { name: t('deliverables_proto'), desc: t('deliverables_proto_desc') },
+          { name: t('deliverables_quotation'), desc: t('deliverables_quotation_desc') },
+          { name: t('deliverables_specs'), desc: t('deliverables_specs_desc') },
+        ]}
+      />
+
+      <Comparison
+        kicker={t('comparison_kicker')}
+        titleSans={t('comparison_title_sans')}
+        titleSerif={t('comparison_title_serif')}
+        desc={t('comparison_desc')}
+        colAspect={t('comparison_col_aspect')}
+        colSandwich={t('comparison_col_sandwich')}
+        colManual={t('comparison_col_manual')}
+        rows={[
+          { aspect: t('comparison_row_pd'), sandwich: t('comparison_row_pd_s'), manual: t('comparison_row_pd_m') },
+          { aspect: t('comparison_row_quote'), sandwich: t('comparison_row_quote_s'), manual: t('comparison_row_quote_m') },
+          { aspect: t('comparison_row_proto'), sandwich: t('comparison_row_proto_s'), manual: t('comparison_row_proto_m') },
+          { aspect: t('comparison_row_version'), sandwich: t('comparison_row_version_s'), manual: t('comparison_row_version_m') },
+          { aspect: t('comparison_row_share'), sandwich: t('comparison_row_share_s'), manual: t('comparison_row_share_m') },
+          { aspect: t('comparison_row_quality'), sandwich: t('comparison_row_quality_s'), manual: t('comparison_row_quality_m') },
+        ]}
       />
 
       <Membership
         kicker={t('pricing_kicker')}
-        title={`${t('pricing_title_l1')} ${t('pricing_title_l2')}`}
+        titleSans={t('pricing_title_l1')}
+        titleSerif={t('pricing_title_l2')}
         desc={t('pricing_desc')}
         bestValue={t('pricing_best_value')}
         plans={PLANS}
         onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
       />
 
-      <Proof kicker={t('samples_kicker')} title={`${t('samples_title_l1')} ${t('samples_title_l2')}`} />
-
       <Faq
         kicker={t('faq_kicker')}
-        title={t('faq_title')}
+        titleSans={t('faq_title_sans')}
+        titleSerif={t('faq_title_serif')}
         lang={lang}
-        openFaq={openFaq}
-        setOpenFaq={setOpenFaq}
       />
 
       <ClosingCta
         kicker={t('faq_cta')}
-        title={t('diff_title')}
+        titleSans={t('diff_title_sans')}
+        titleSerif={t('diff_title_serif')}
         desc={t('hero_tagline')}
-        ctaPrimary={t('nav_get_started')}
-        ctaSecondary={t('nav_pricing')}
+        ctaPrimary={t('closing_cta')}
         onPrimaryClick={goToRegister}
-        onSecondaryClick={() => scrollToSection('pricing')}
-        bullets={[t('diff_1_title'), t('diff_2_title'), t('diff_3_title')]}
       />
 
       <Footer
-        navPipeline={t('nav_pipeline')}
-        navHow={t('nav_how')}
+        navPipeline={t('nav_diff')}
+        navHow={t('nav_deliverables')}
         navPricing={t('nav_pricing')}
         navFaq={t('nav_faq')}
         footerDesc={t('footer_desc')}

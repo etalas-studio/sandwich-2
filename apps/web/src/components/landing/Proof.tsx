@@ -1,6 +1,5 @@
 'use client'
 
-import { GridLines } from './GridLines'
 import { ACCENT, LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED, LIGHT_TEXT_SECONDARY } from './tokens'
 
 const PRD_SAMPLE = {
@@ -40,8 +39,6 @@ export interface ProofProps {
 export function Proof(props: ProofProps) {
   return (
     <section id="samples" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
-      <GridLines />
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <div className="inline-flex text-[11px] ring-1 ring-black/10 font-medium bg-black/5 rounded-full pt-1.5 pr-3 pb-1.5 pl-3 gap-x-2 gap-y-2 items-center" style={{ color: LIGHT_TEXT_MUTED }}>
@@ -51,7 +48,7 @@ export function Proof(props: ProofProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 p-8 md:p-10 rounded-3xl bg-neutral-50 ring-1 ring-black/10 backdrop-blur-md flex flex-col justify-between">
+          <div className="lg:col-span-3 p-8 md:p-10 rounded-3xl bg-neutral-50 ring-1 ring-black/10 flex flex-col justify-between">
             <div>
               <span className="inline-flex text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-6" style={{ backgroundColor: `${ACCENT}26`, color: ACCENT }}>PRD</span>
               <h3 className="text-2xl md:text-3xl tracking-tight font-medium leading-snug mb-2" style={{ color: LIGHT_TEXT_PRIMARY }}>{PRD_SAMPLE.heading}</h3>
@@ -69,7 +66,7 @@ export function Proof(props: ProofProps) {
 
           <div className="lg:col-span-2 flex flex-col gap-6">
             {SIDE_SAMPLES.map((sample) => (
-              <div key={sample.badge} className="p-6 rounded-3xl bg-neutral-50 ring-1 ring-black/10 backdrop-blur-md flex flex-col justify-between h-full">
+              <div key={sample.badge} className="p-6 rounded-3xl bg-neutral-50 ring-1 ring-black/10 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}26`, color: ACCENT }}>{sample.badge}</span>
                   <span className="text-xs" style={{ color: LIGHT_TEXT_MUTED }}>{sample.project}</span>

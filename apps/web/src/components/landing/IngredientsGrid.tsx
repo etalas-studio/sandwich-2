@@ -1,14 +1,11 @@
 'use client'
 
-import { GridLines } from './GridLines'
 import { ACCENT, LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from './tokens'
 
 export interface IngredientsGridProps {
   kicker: string
   title: string
   desc: string
-  linkLabel: string
-  onLinkClick: () => void
   items: { title: string; desc: string }[]
 }
 
@@ -17,9 +14,6 @@ export function IngredientsGrid(props: IngredientsGridProps) {
 
   return (
     <section id="ingredients" className="overflow-hidden relative z-10 py-32 px-6 lg:px-12 scroll-mt-24">
-      <GridLines />
-      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: `radial-gradient(50% 40% at 90% 0%, ${ACCENT}14, transparent 70%)` }} />
-
       <div className="relative max-w-7xl mr-auto ml-auto">
         <div className="flex flex-col lg:flex-row justify-between items-start mb-16 gap-12">
           <div>
@@ -28,10 +22,6 @@ export function IngredientsGrid(props: IngredientsGridProps) {
           </div>
           <div className="max-w-md flex flex-col gap-6 lg:pt-2">
             <p className="text-lg font-light leading-relaxed" style={{ color: LIGHT_TEXT_MUTED }}>{props.desc}</p>
-            <button onClick={props.onLinkClick} className="group inline-flex items-center font-medium hover:text-neutral-600 transition-colors text-left" style={{ color: LIGHT_TEXT_PRIMARY }}>
-              <span>{props.linkLabel}</span>
-              <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
           </div>
         </div>
 

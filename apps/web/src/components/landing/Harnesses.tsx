@@ -1,21 +1,17 @@
 'use client'
 
-import { GridLines } from './GridLines'
-import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_SECONDARY, LIGHT_TEXT_MUTED } from './tokens'
+import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_SECONDARY, LIGHT_TEXT_MUTED, FONT_SERIF } from './tokens'
 
 export interface HarnessesProps {
   kicker: string
   title: string
+  titleSerif: string
   desc: string
-  linkLabel: string
-  onLinkClick: () => void
 }
 
 export function Harnesses(props: HarnessesProps) {
   return (
     <section id="harnesses" className="overflow-hidden lg:py-24 pt-16 pb-16 relative z-20 scroll-mt-24">
-      <GridLines />
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-7">
@@ -38,17 +34,13 @@ export function Harnesses(props: HarnessesProps) {
             </div>
 
             <h2 className="sm:text-5xl md:text-6xl md:font-normal md:tracking-tighter text-4xl font-semibold tracking-tight mt-4" style={{ color: LIGHT_TEXT_PRIMARY }}>
-              {props.title}
+              {props.title}{' '}
+              <span className="italic" style={{ fontFamily: FONT_SERIF }}>{props.titleSerif}</span>
             </h2>
 
             <p className="md:mt-5 md:text-lg leading-relaxed text-base mt-5" style={{ color: LIGHT_TEXT_MUTED }}>
               {props.desc}
             </p>
-
-            <button onClick={props.onLinkClick} className="group inline-flex items-center gap-2 mt-6 text-sm font-medium underline decoration-black/30 underline-offset-4 hover:decoration-black/60" style={{ color: LIGHT_TEXT_PRIMARY }}>
-              <span>{props.linkLabel}</span>
-              <iconify-icon icon="solar:arrow-right-linear" width="16" className="transition-transform duration-200 group-hover:translate-x-0.5" />
-            </button>
           </div>
         </div>
       </div>

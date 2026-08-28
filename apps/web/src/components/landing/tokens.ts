@@ -2,7 +2,8 @@
 // reference: slate-950 base, white/5-10 glass rings, blue as the one accent
 // (the reference already leans on blue-300/400 in places, same as
 // SANDWICH's own accent — no conflict).
-export const FONT_SANS = "'Inter', sans-serif"
+export const FONT_SANS = "'Inter Tight', sans-serif"
+export const FONT_SERIF = "'Instrument Serif', serif"
 export const ACCENT = '#3b82f6'
 export const ACCENT_DEEP = '#2554c7'
 export const BG = '#020617'

@@ -462,3 +462,26 @@ body {
   font-weight: 600;
   color: #18181b;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LANDING PAGE — SCREENBOLT-STYLE FONTS
+   Body: Inter Tight · Headings: Instrument Serif
+   Scoped to .sb-landing so it never leaks into admin/dashboard.
+   ═══════════════════════════════════════════════════════════════ */
+
+.sb-landing h1,
+.sb-landing h2,
+.sb-landing h3 {
+  font-family: 'Instrument Serif', serif;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+.sb-landing h1 {
+  font-style: italic;
+}
+
+.sb-landing h2,
+.sb-landing h3 {
+  font-style: normal;
+}
