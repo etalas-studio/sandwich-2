@@ -1,70 +1,50 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createConversationLocal } from '../lib/conversations'
-import { createMessage } from '../api/conversations'
-import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../lib/i18n'
-import Header from './Header'
+import { useAuth } from '../hooks/useAuth'
 import { PLANS_META } from '../lib/plans'
 import { trackPostHog } from '../lib/posthog'
-import { DeliverableTypeSelect } from './DeliverableTypeSelect'
+import { Hero } from './landing/Hero'
+import { LogoCloud } from './landing/LogoCloud'
+import { Deliverables } from './landing/Deliverables'
+import { Pipeline } from './landing/Pipeline'
+import { Membership } from './landing/Membership'
+import { Comparison } from './landing/Comparison'
+import { Why } from './landing/Why'
+import { Faq } from './landing/Faq'
+import { ClosingCta } from './landing/ClosingCta'
+import { Footer } from './landing/Footer'
+import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
-import { FAQS } from '../lib/faqs'
-
-const bowlby = "'Bowlby One', system-ui"
-const mousememoirs = "'Mouse Memoirs', sans-serif"
-
-const PRD_SAMPLE = {
-  project: 'Padel court booking platform',
-  heading: 'Business Requirements',
-  rows: [
-    { req: 'Multi-location support', detail: 'Manage courts across multiple venues from one dashboard' },
-    { req: 'Phase 1: third-party booking API', detail: 'Use existing platform for availability + exposure' },
-    { req: 'Custom payment UI', detail: 'In-page checkout, no redirect to reduce drop-off' },
-    { req: 'Fraud / double-booking prevention', detail: 'Lock slot on payment start, auto-release after 10 min' },
-  ],
+const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
+const FOOTER_NOTE = {
+  en: 'Email us, we usually reply within 1-2 business days.',
+  id: 'Kirim email ke kami, biasanya kami balas dalam 1-2 hari kerja.',
 }
+const FOOTER_RIGHTS = { en: 'All rights reserved.', id: 'Hak cipta dilindungi.' }
 
-const QUOTATION_SAMPLE = {
-  project: 'Fleet management portal',
-  heading: 'Scope & Pricing',
-  items: [
-    { module: 'Vehicle tracking dashboard', days: 8, price: 'Rp 12.000.000' },
-    { module: 'Driver assignment flow', days: 5, price: 'Rp 7.500.000' },
-    { module: 'Maintenance scheduling', days: 4, price: 'Rp 6.000.000' },
-  ],
-  assumptions: 'Client provides GPS API access.',
-  terms: '50% upfront, 50% on delivery.',
-}
-
-const SPECS_SAMPLE = {
-  project: 'Housekeeping ops app',
-  feature: 'Room status sync',
-  scope: 'Housekeeper marks room clean/dirty from mobile; front desk sees live status.',
-  criteria: [
-    'Status updates reflect in front desk view within 5s',
-    'Offline updates queue and sync on reconnect',
-    'Only assigned housekeeper can update their rooms',
-  ],
-}
-
-const PROTOTYPE_SAMPLE = {
-  project: 'Restaurant table reservation',
-  file: 'dashboard.html',
-  slots: [
-    { time: '19:00', status: 'available' },
-    { time: '19:30', status: 'booked' },
-    { time: '20:00', status: 'available' },
-  ],
-}
+const HERO_SUGGESTIONS = (lang: 'en' | 'id') => [
+  { label: 'PRD', prompt: lang === 'id' ? 'Buatkan PRD lengkap untuk project ini' : 'Create a complete PRD for this project' },
+  { label: 'Prototype', prompt: lang === 'id' ? 'Buatkan prototype brief untuk project ini' : 'Create a prototype brief for this project' },
+  { label: 'Quotation', prompt: lang === 'id' ? 'Buatkan quotation untuk project ini' : 'Create a quotation for this project' },
+  { label: 'Specs', prompt: lang === 'id' ? 'Buatkan specs dan task breakdown untuk fitur ini' : 'Create specs and a task breakdown for this feature' },
+]
 
 export default function LandingPage() {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
   const router = useRouter()
+
+  // Split the hero tagline: the leading text uses Inter Tight (sans),
+  // the last few words stay in Instrument Serif italic (screenbolt-style mix).
+  const heroTagline = t('hero_tagline')
+  // The serif tail covers the final short phrase (last few words).
+  const serifMarker = lang === 'id' ? 'Satu pipeline terpandu.' : 'One guided pipeline.'
+  const serifIdx = heroTagline.lastIndexOf(serifMarker)
+  const heroTaglineSans = serifIdx >= 0 ? heroTagline.slice(0, serifIdx).trimEnd() : heroTagline
+  const heroTaglineSerif = serifIdx >= 0 ? heroTagline.slice(serifIdx) : ''
   const PLANS = PLANS_META.map((p) => ({
     slug: p.slug,
     name: p.name,
@@ -76,716 +56,162 @@ export default function LandingPage() {
     highlight: p.highlight,
     oldPrice: p.oldPrice,
   }))
-  const [prompt, setPrompt] = useState('')
-  const [pendingType, setPendingType] = useState<string>('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-  useEffect(() => {
-    if (window.location.hash === '#pricing') {
-      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [])
 
-  const handleSubmit = async () => {
-    if (!prompt.trim()) return
-    if (authState.status !== 'authenticated') {
-      try {
-        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
-      } catch { /* best-effort draft save, e.g. storage quota */ }
-      router.push('/register')
-      return
-    }
-    setIsSubmitting(true)
-    setError(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
+  const goToRegister = () => router.push('/register')
+
+  // Persist the typed brief so it survives the redirect (the dashboard
+  // PromptBox reads `sandwich_draft` on mount), then route the user either
+  // into the dashboard (already logged in) or registration (anonymous).
+  const handlePromptSubmit = (prompt: string, attachments: { name: string; type: string; dataUrl: string }[]) => {
     try {
-      const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
-      await createMessage(local.id, { content: prompt.trim() })
-      // Hand off to the dashboard with the new session already auto-running.
-      try {
-        localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
-      } catch { /* ignore storage errors */ }
-      router.push('/dashboard')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : ''
-      if (msg === 'active subscription required') {
-        // Already logged in but out of quota — stash the draft and send to checkout,
-        // not /register (which would just bounce an authenticated user to /dashboard).
-        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
-        router.push('/pay?plan=pro')
-        return
-      }
-      setError(msg || t('hero_error_generic'))
-      setIsSubmitting(false)
-    }
+      localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType: null }))
+    } catch { /* ignore storage failures */ }
+    trackPostHog('landing_prompt_submitted')
+    const isAuthed = authState.status === 'authenticated'
+    router.push(isAuthed ? '/dashboard' : '/register')
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      void handleSubmit()
-    }
-  }
+  const pipelineSteps = [
+    { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), image: '/pipeline-savana.webp' },
+    { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), image: '/pipeline-paper.webp' },
+    { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), image: '/pipeline-glass.webp' },
+    { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), image: '/pipeline-daisy.webp' },
+  ]
 
   return (
-    <div
-      className="min-h-screen flex flex-col overflow-x-hidden selection:bg-[#f91814] selection:text-white text-zinc-800 antialiased"
-      style={{ fontFamily: "'Inter', sans-serif", backgroundColor: '#F4EBE1' }}
-    >
-      {/* ── NAV ── */}
-      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-        <Header />
-      </div>
+    <div className="sb-landing min-h-screen antialiased" style={{ fontFamily: FONT_SANS, backgroundColor: LIGHT_BG, color: LIGHT_TEXT_MUTED }}>
+      <style>{`::selection { background: rgba(59,130,246,0.3); color: #ffffff; }`}</style>
 
-      <main>
-      {/* ── HERO ── */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 flex flex-col items-center text-center px-6 overflow-hidden">
-        {/* watermark */}
-        <div className="absolute inset-0 flex items-center justify-center z-0 opacity-5 pointer-events-none select-none">
-          <span className="text-[25vw] leading-none text-[#F4A804]" style={{ fontFamily: bowlby }}>
-            SANDWICH
-          </span>
-        </div>
+      <Hero
+        heroTagline={heroTaglineSerif}
+        heroTaglineSans={heroTaglineSans}
+        heroBenefit={t('nav_how')}
+        navHow={t('nav_how')}
+        navDiff={t('nav_diff')}
+        navDeliverables={t('nav_deliverables')}
+        navComparison={t('nav_comparison')}
+        navPricing={t('nav_pricing')}
+        navFaq={t('nav_faq')}
+        navGetStarted={t('nav_get_started')}
+        navLogin={t('nav_login')}
+        navMenuOpen={t('nav_menu_open')}
+        navMenuClose={t('nav_menu_close')}
+        lang={lang}
+        onToggleLang={() => setLang(lang === 'en' ? 'id' : 'en')}
+        onNavClick={scrollToSection}
+        onGetStartedClick={goToRegister}
+        onLoginClick={() => router.push('/login')}
+        onSecondaryClick={() => scrollToSection('pipeline')}
+        onPromptSubmit={handlePromptSubmit}
+        heroPromptPlaceholder={t('hero_prompt_placeholder')}
+        heroSendLabel={t('hero_send_label')}
+        suggestions={HERO_SUGGESTIONS(lang)}
+        mobileNavOpen={mobileNavOpen}
+        setMobileNavOpen={setMobileNavOpen}
+      />
 
-        <h1
-          className="relative z-10 text-5xl md:text-7xl leading-none text-[#f91814] tracking-tighter max-w-5xl mx-auto drop-shadow-sm"
-          style={{ fontFamily: bowlby }}
-        >
-          SANDWICH
-        </h1>
+      <LogoCloud label={t('trusted_by')} />
 
-        <p
-          className="relative z-10 text-2xl md:text-4xl tracking-tight mt-6 text-[#92400E]"
-          style={{ fontFamily: mousememoirs }}
-        >
-          {t('hero_tagline')}
-        </p>
+      <Why
+        kicker={t('diff_kicker')}
+        titleSans={t('diff_title_sans')}
+        titleSerif={t('diff_title_serif')}
+        items={[
+          { title: t('diff_1_title'), desc: t('diff_1_desc') },
+          { title: t('diff_2_title'), desc: t('diff_2_desc') },
+          { title: t('diff_3_title'), desc: t('diff_3_desc') },
+          { title: t('diff_4_title'), desc: t('diff_4_desc') },
+        ]}
+      />
 
-        {/* sandwich image */}
-        <div className="relative w-full max-w-xs mt-12 mb-8 z-10">
-          <img
-            src="/sandwich.webp"
-            alt="sandwich"
-            fetchPriority="high"
-            loading="eager"
-            className="w-full h-auto drop-shadow-2xl hover:scale-[1.02] transition-transform duration-700 object-contain"
-          />
-        </div>
+      <Pipeline
+        kicker={t('pipeline_kicker')}
+        titleLine1={t('pipeline_title_l1')}
+        titleLine2={t('pipeline_title_l2')}
+        desc={t('pipeline_subtitle')}
+        steps={pipelineSteps}
+      />
 
-        {/* prompt box */}
-        <div className="w-full max-w-xl mx-auto mt-0 z-10">
-          <>
+      <Deliverables
+        kicker={t('deliverables_kicker')}
+        titleSans={t('deliverables_title_sans')}
+        titleSerif={t('deliverables_title_serif')}
+        desc={t('deliverables_desc')}
+        colName={t('deliverables_col_name')}
+        colDesc={t('deliverables_col_desc')}
+        rows={[
+          { name: t('deliverables_prd'), desc: t('deliverables_prd_desc') },
+          { name: t('deliverables_proto'), desc: t('deliverables_proto_desc') },
+          { name: t('deliverables_quotation'), desc: t('deliverables_quotation_desc') },
+          { name: t('deliverables_specs'), desc: t('deliverables_specs_desc') },
+        ]}
+      />
 
-              <div
-                className="relative rounded-xl overflow-hidden shadow-lg"
-                style={{ backgroundColor: '#111113' }}
-              >
-                {/* deliverable selector */}
-                <div className="flex items-center gap-2 px-5 pt-5 pb-2">
-                  <DeliverableTypeSelect value={pendingType} onChange={setPendingType} />
-                </div>
+      <Comparison
+        kicker={t('comparison_kicker')}
+        titleSans={t('comparison_title_sans')}
+        titleSerif={t('comparison_title_serif')}
+        desc={t('comparison_desc')}
+        colAspect={t('comparison_col_aspect')}
+        colSandwich={t('comparison_col_sandwich')}
+        colManual={t('comparison_col_manual')}
+        rows={[
+          { aspect: t('comparison_row_pd'), sandwich: t('comparison_row_pd_s'), manual: t('comparison_row_pd_m') },
+          { aspect: t('comparison_row_quote'), sandwich: t('comparison_row_quote_s'), manual: t('comparison_row_quote_m') },
+          { aspect: t('comparison_row_proto'), sandwich: t('comparison_row_proto_s'), manual: t('comparison_row_proto_m') },
+          { aspect: t('comparison_row_version'), sandwich: t('comparison_row_version_s'), manual: t('comparison_row_version_m') },
+          { aspect: t('comparison_row_share'), sandwich: t('comparison_row_share_s'), manual: t('comparison_row_share_m') },
+          { aspect: t('comparison_row_quality'), sandwich: t('comparison_row_quality_s'), manual: t('comparison_row_quality_m') },
+        ]}
+      />
 
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('hero_prompt_placeholder')}
-                  rows={4}
-                  className="w-full resize-none bg-transparent text-white text-sm outline-none px-5 pt-3 pb-2 leading-relaxed placeholder:text-white/30"
-                />
+      <Membership
+        kicker={t('pricing_kicker')}
+        titleSans={t('pricing_title_l1')}
+        titleSerif={t('pricing_title_l2')}
+        desc={t('pricing_desc')}
+        bestValue={t('pricing_best_value')}
+        plans={PLANS}
+        onSelectPlan={(slug) => { trackPostHog('plan_selected', { plan_slug: slug }); router.push(`/register?plan=${slug}`) }}
+      />
 
-                <div className="flex items-center justify-between px-4 pb-4 pt-1">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.3)' }}>⌘↵</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => void handleSubmit()}
-                      disabled={isSubmitting || !prompt.trim()}
-                      aria-label={t('hero_send_label')}
-                      className="flex items-center justify-center w-11 h-11 rounded-full transition-all hover:opacity-80 disabled:opacity-50 active:scale-95"
-                      style={{ backgroundColor: '#f91814' }}
-                    >
-                      {isSubmitting
-                        ? <iconify-icon icon="solar:refresh-linear" width="15" style={{ color: '#ffffff' }} className="animate-spin" />
-                        : <iconify-icon icon="solar:arrow-up-linear" width="15" style={{ color: '#ffffff' }} />}
-                    </button>
-                  </div>
-                </div>
-              </div>
+      <Faq
+        kicker={t('faq_kicker')}
+        titleSans={t('faq_title_sans')}
+        titleSerif={t('faq_title_serif')}
+        lang={lang}
+      />
 
-              {error && <p className="mt-2 text-xs text-center" style={{ color: '#f91814' }}>{error}</p>}
-          </>
-        </div>
+      <ClosingCta
+        kicker={t('faq_cta')}
+        titleSans={t('diff_title_sans')}
+        titleSerif={t('diff_title_serif')}
+        desc={t('hero_tagline')}
+        ctaPrimary={t('closing_cta')}
+        onPrimaryClick={goToRegister}
+      />
 
-      </section>
-
-      {/* ── HARNESSES / HOW IT WORKS ── */}
-      <section id="harnesses" className="py-24 md:py-32 relative overflow-hidden bg-[#f91814] scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <p
-              className="text-xl md:text-2xl tracking-tight mb-4 uppercase text-white"
-              style={{ fontFamily: mousememoirs }}
-            >
-              {t('harnesses_kicker')}
-            </p>
-            <h2
-              className="text-4xl md:text-5xl tracking-tighter leading-tight text-white mb-6"
-              style={{ fontFamily: bowlby }}
-            >
-              {t('harnesses_title')}
-            </h2>
-            <p className="max-w-lg mx-auto text-white/80 text-sm font-medium tracking-tight leading-relaxed">
-              {t('harnesses_desc')}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap md:flex-nowrap flex-row items-center justify-center gap-6 md:gap-10 mt-8">
-            {/* Left — output types */}
-            <div className="flex flex-row md:flex-col gap-4 md:gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white order-2 md:order-1 basis-full md:basis-auto justify-center md:justify-start">
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(-10deg)' }}>
-                <iconify-icon icon="solar:document-text-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>PRD</span>
-              </div>
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(-5deg)' }}>
-                <iconify-icon icon="solar:notes-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Specs</span>
-              </div>
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(4deg)' }}>
-                <iconify-icon icon="solar:widget-2-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>Prototype</span>
-              </div>
-            </div>
-
-            {/* Center — spec illustration */}
-            <div className="flex items-center justify-center w-full max-w-sm md:w-96 shrink-0 order-1 md:order-2">
-              <picture>
-                <source srcSet="/spec-illustration.avif" type="image/avif" />
-                <source srcSet="/spec-illustration.webp" type="image/webp" />
-                <img
-                  src="/spec-illustration.png"
-                  alt="SPEC"
-                  loading="lazy"
-                  className="w-full h-auto hover:scale-[1.02] transition-transform duration-700 object-contain"
-                />
-              </picture>
-            </div>
-
-            {/* Right — output types */}
-            <div className="flex flex-row md:flex-col gap-4 md:gap-10 items-start shrink-0 text-xs uppercase tracking-tight font-medium text-white order-3 basis-full md:basis-auto justify-center md:justify-start">
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(10deg)' }}>
-                <iconify-icon icon="solar:pen-new-square-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>{t('right_write_spec')}</span>
-              </div>
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(5deg)' }}>
-                <iconify-icon icon="solar:list-check-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>{t('right_structure_brief')}</span>
-              </div>
-              <div className="flex items-center gap-3" style={{ transform: 'rotate(-4deg)' }}>
-                <iconify-icon icon="solar:money-bag-linear" className="text-xl" style={{strokeWidth: 1.5}}></iconify-icon>
-                <span>{t('right_quotation')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PIPELINE / HOW IT WORKS ── */}
-      <section id="pipeline" className="py-24 md:py-32 bg-black scroll-mt-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('pipeline_kicker')}</p>
-            <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight text-white" style={{ fontFamily: bowlby }}>
-              {t('pipeline_title_l1')} {t('pipeline_title_l2')}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 sm:auto-rows-[16rem] gap-6">
-            {[
-              { n: '01', icon: 'solar:clipboard-text-linear', title: t('pipeline_step_1_title'), desc: t('pipeline_step_1_desc'), span: 'sm:col-span-1 sm:row-span-2' },
-              { n: '02', icon: 'solar:widget-2-linear', title: t('pipeline_step_2_title'), desc: t('pipeline_step_2_desc'), span: 'sm:col-span-2 sm:row-span-1' },
-              { n: '03', icon: 'solar:question-circle-linear', title: t('pipeline_step_3_title'), desc: t('pipeline_step_3_desc'), span: 'sm:col-span-1 sm:row-span-1' },
-              { n: '04', icon: 'solar:share-linear', title: t('pipeline_step_4_title'), desc: t('pipeline_step_4_desc'), span: 'sm:col-span-1 sm:row-span-1' },
-            ].map((step) => (
-              <div
-                key={step.n}
-                className={`rounded-3xl p-8 h-64 sm:h-auto flex flex-col justify-between ${step.span}`}
-                style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                <div className="flex items-center justify-between">
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-                  >
-                    <iconify-icon icon={step.icon} width="24" style={{ color: '#ffffff' }} />
-                  </div>
-                  <span className="text-2xl font-bold text-[#f91814] tabular-nums" style={{ fontFamily: bowlby }}>{step.n}</span>
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-lg tracking-tight mb-2">{step.title}</p>
-                  <p className="text-sm text-white/60 font-medium leading-relaxed tracking-tight">{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <button
-              onClick={() => router.push('/register')}
-              className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
-            >
-              {t('pipeline_cta')}
-              <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── STACK / INGREDIENTS ── */}
-      <section id="about" className="py-24 md:py-32 bg-[#F4EBE1] scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>
-            {t('stack_kicker')}
-          </p>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-6 text-black" style={{ fontFamily: bowlby }}>
-            {t('stack_title')}
-          </h2>
-          <p className="max-w-lg mx-auto text-black/50 mb-16 text-sm font-medium tracking-tight leading-relaxed">
-            {t('stack_desc')}
-          </p>
-          <div className="grid grid-cols-2 md:flex md:flex-row justify-center items-start gap-x-6 gap-y-10 md:gap-24">
-            {[
-              { img: '/ingredients/tomato.webp', name: 'PRD', desc: t('stack_order_desc'), offset: false },
-              { img: '/ingredients/cheese.webp', name: 'Prototype', desc: t('stack_prep_desc'), offset: true },
-              { img: '/ingredients/meat.webp', name: 'Quotation', desc: t('stack_recipe_desc'), offset: false },
-              { img: '/ingredients/lettuce.webp', name: 'Specs', desc: t('stack_validate_desc'), offset: true },
-            ].map((item) => (
-              <div key={item.name} className={`flex flex-col items-center text-center w-full md:w-40 ${item.offset ? 'md:translate-y-8' : ''}`}>
-                <img
-                  src={item.img}
-                  alt={item.name}
-                  loading="lazy"
-                  className="w-20 h-20 sm:w-36 sm:h-36 object-contain drop-shadow-md mb-5 hover:scale-110 transition-transform duration-500"
-                />
-                <h3 className="tracking-tight text-black font-bold text-base uppercase">{item.name}</h3>
-                <p className="text-xs text-black/50 mt-1 font-medium">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SAMPLE OUTPUTS ── */}
-      <section id="samples" className="py-24 md:py-32 bg-white scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12 text-center">
-            <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814]" style={{ fontFamily: mousememoirs }}>{t('samples_kicker')}</p>
-            <h2 className="text-4xl md:text-6xl tracking-tighter leading-tight mb-4 text-black" style={{ fontFamily: bowlby }}>
-              {t('samples_title_l1')} {t('samples_title_l2')}
-            </h2>
-            <p className="text-sm text-black/50 font-medium max-w-md mx-auto">{t('samples_desc')}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-            {/* PRD */}
-            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">PRD</span>
-                <span className="text-xs text-black/40 font-medium">{PRD_SAMPLE.project}</span>
-              </div>
-              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="ml-2 text-[11px] font-mono text-black/40">prd.md</span>
-                </div>
-                <div className="p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-black/40 mb-2">{PRD_SAMPLE.heading}</p>
-                  <div className="rounded-lg overflow-hidden border border-black/8">
-                    {PRD_SAMPLE.rows.map((row, i) => (
-                      <div key={row.req} className={`px-3.5 py-3 ${i !== 0 ? 'border-t border-black/8' : ''}`}>
-                        <p className="text-xs font-semibold text-black tracking-tight">{row.req}</p>
-                        <p className="text-xs text-black/50 mt-0.5 leading-relaxed">{row.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quotation */}
-            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Quotation</span>
-                <span className="text-xs text-black/40 font-medium">{QUOTATION_SAMPLE.project}</span>
-              </div>
-              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="ml-2 text-[11px] font-mono text-black/40">quotation.md</span>
-                </div>
-                <div className="p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-black/40 mb-2">{QUOTATION_SAMPLE.heading}</p>
-                  <div className="rounded-lg overflow-hidden border border-black/8 mb-3">
-                    {QUOTATION_SAMPLE.items.map((item, i) => (
-                      <div key={item.module} className={`flex items-center justify-between gap-3 px-3.5 py-3 ${i !== 0 ? 'border-t border-black/8' : ''}`}>
-                        <div>
-                          <p className="text-xs font-semibold text-black tracking-tight">{item.module}</p>
-                          <p className="text-[11px] text-black/40 mt-0.5">{item.days} days</p>
-                        </div>
-                        <span className="text-xs font-semibold text-black shrink-0">{item.price}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-black/50 leading-relaxed"><span className="font-semibold text-black/70">Assumptions:</span> {QUOTATION_SAMPLE.assumptions}</p>
-                  <p className="text-[11px] text-black/50 leading-relaxed"><span className="font-semibold text-black/70">Terms:</span> {QUOTATION_SAMPLE.terms}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Specs */}
-            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Specs</span>
-                <span className="text-xs text-black/40 font-medium">{SPECS_SAMPLE.project}</span>
-              </div>
-              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="ml-2 text-[11px] font-mono text-black/40">specs.md</span>
-                </div>
-                <div className="p-4">
-                  <p className="text-sm font-semibold text-black tracking-tight mb-1">{SPECS_SAMPLE.feature}</p>
-                  <p className="text-xs text-black/50 leading-relaxed mb-4">{SPECS_SAMPLE.scope}</p>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 mb-2">Acceptance criteria</p>
-                  <div className="flex flex-col gap-2">
-                    {SPECS_SAMPLE.criteria.map((c) => (
-                      <div key={c} className="flex items-start gap-2">
-                        <iconify-icon icon="solar:check-circle-bold" width="15" style={{ color: '#f91814', flexShrink: 0, marginTop: '1px' }} />
-                        <p className="text-xs text-black/70 leading-relaxed">{c}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Prototype */}
-            <div className="rounded-2xl border border-black/10 p-4 bg-[#F4EBE1]">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black text-white">Prototype</span>
-                <span className="text-xs text-black/40 font-medium">{PROTOTYPE_SAMPLE.project}</span>
-              </div>
-              <div className="rounded-xl overflow-hidden border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-black/8" style={{ backgroundColor: '#F7F5F2' }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f91814' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-black/15" />
-                  <span className="ml-2 text-[11px] font-mono text-black/40">{PROTOTYPE_SAMPLE.file}</span>
-                </div>
-                <div className="flex gap-2 p-4">
-                  {PROTOTYPE_SAMPLE.slots.map((slot) => (
-                    <div
-                      key={slot.time}
-                      className="flex-1 text-center rounded-lg py-2.5 text-xs font-semibold tracking-tight"
-                      style={
-                        slot.status === 'booked'
-                          ? { backgroundColor: '#0a0a0a', color: '#ffffff' }
-                          : { backgroundColor: 'rgba(0,0,0,0.05)', color: '#0a0a0a' }
-                      }
-                    >
-                      {slot.time}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── DIFFERENTIATORS ── */}
-      <section id="differentiators" className="py-24 md:py-32 bg-black scroll-mt-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-2xl tracking-tight mb-4 uppercase text-[#f91814] text-center" style={{ fontFamily: mousememoirs }}>{t('diff_kicker')}</p>
-          <h2 className="text-3xl md:text-5xl tracking-tighter leading-tight text-white text-center mb-16" style={{ fontFamily: bowlby }}>
-            {t('diff_title')}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {[
-              { icon: 'solar:history-linear', title: t('diff_1_title'), desc: t('diff_1_desc'), highlight: false },
-              { icon: 'solar:cloud-check-linear', title: t('diff_2_title'), desc: t('diff_2_desc'), highlight: true },
-              { icon: 'solar:link-round-linear', title: t('diff_3_title'), desc: t('diff_3_desc'), highlight: false },
-              { icon: 'solar:list-check-linear', title: t('diff_4_title'), desc: t('diff_4_desc'), highlight: false },
-            ].map((d) => (
-              <div
-                key={d.title}
-                className="rounded-3xl p-8 min-h-[260px] flex flex-col justify-between"
-                style={
-                  d.highlight
-                    ? { background: 'linear-gradient(160deg, #f91814 0%, #8a0f0c 100%)' }
-                    : { backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.18)' }
-                }
-              >
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: d.highlight ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)' }}
-                >
-                  <iconify-icon icon={d.icon} width="24" style={{ color: '#ffffff' }} />
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-lg tracking-tight mb-2">{d.title}</p>
-                  <p className="text-sm font-medium leading-relaxed tracking-tight" style={{ color: d.highlight ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)' }}>
-                    {d.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING ── */}
-      <section id="pricing" className="py-24 md:py-32 bg-[#F9CD25] scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12 text-center">
-            <p
-              className="text-2xl uppercase tracking-tight mb-4 text-white"
-              style={{ fontFamily: mousememoirs }}
-            >
-              {t('pricing_kicker')}
-            </p>
-            <h2
-              className="text-4xl md:text-5xl tracking-tighter mb-6 leading-tight text-white"
-              style={{ fontFamily: bowlby }}
-            >
-              {t('pricing_title_l1')}<br />{t('pricing_title_l2')}
-            </h2>
-            <p className="text-sm font-semibold leading-relaxed max-w-sm mx-auto text-white/80">
-              {t('pricing_desc')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className="flex flex-col rounded-3xl overflow-hidden hover:-translate-y-1 transition-transform duration-300"
-                style={{ backgroundColor: plan.highlight ? '#000000' : '#ffffff' }}
-              >
-                <div className="px-6 pt-6 pb-5">
-                  <div className="flex items-start justify-between mb-6">
-                    <span className="text-lg font-semibold" style={{ color: plan.highlight ? '#ffffff' : '#111827' }}>{plan.name}</span>
-                    {plan.highlight && (
-                      <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' }}>
-                        {t('pricing_best_value')}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-1 flex-wrap mb-1">
-                    <span className="font-bold" style={{ fontSize: '2.5rem', lineHeight: 1, color: plan.highlight ? '#ffffff' : '#111827' }}>{plan.price}</span>
-                    <span className="text-sm ml-1" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#9ca3af' }}>{plan.priceNote}</span>
-                    {plan.oldPrice && <span className="text-sm line-through ml-2" style={{ color: plan.highlight ? 'rgba(255,255,255,0.4)' : '#d1d5db' }}>{plan.oldPrice}</span>}
-                  </div>
-                  <p className="text-sm" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>{plan.desc}</p>
-                </div>
-
-                <div className="px-6 pb-5">
-                  <button
-                    onClick={() => { trackPostHog('plan_selected', { plan_slug: plan.slug }); router.push(`/register?plan=${plan.slug}`) }}
-                    className="w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
-                    style={plan.highlight
-                      ? { backgroundColor: '#f91814', color: '#ffffff' }
-                      : { backgroundColor: '#111827', color: '#ffffff' }
-                    }
-                  >
-                    {plan.cta}
-                  </button>
-                </div>
-
-                <ul className="flex flex-col gap-3 px-6 py-5 flex-1 border-t" style={{ borderColor: plan.highlight ? 'rgba(255,255,255,0.08)' : '#f3f4f6' }}>
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.highlight ? 'rgba(255,255,255,0.8)' : '#374151' }}>
-                      <iconify-icon
-                        icon="solar:check-circle-linear"
-                        width="15"
-                        style={{ color: plan.highlight ? '#f91814' : '#9ca3af', flexShrink: 0, marginTop: '2px' }}
-                      />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section id="faq" className="py-24 md:py-32 bg-black scroll-mt-24">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <p
-              className="text-xl md:text-2xl tracking-tight mb-4 uppercase text-[#f91814]"
-              style={{ fontFamily: mousememoirs }}
-            >
-              {t('faq_kicker')}
-            </p>
-            <h2
-              className="text-4xl md:text-6xl tracking-tighter leading-tight text-white"
-              style={{ fontFamily: bowlby }}
-            >
-              {t('faq_title')}
-            </h2>
-          </div>
-
-          <div className="flex flex-col divide-y divide-zinc-800">
-            {FAQS.map((faq, i) => (
-              <details key={i} className="group py-6" open={openFaq === i} onClick={(e) => { e.preventDefault(); setOpenFaq(openFaq === i ? null : i) }}>
-                <summary className="flex items-center justify-between cursor-pointer list-none gap-4">
-                  <span className="text-base font-semibold text-white tracking-tight">{faq.q[lang]}</span>
-                  <iconify-icon
-                    icon="solar:alt-arrow-down-linear"
-                    className={`text-[#f91814] text-xl shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`}
-                  ></iconify-icon>
-                </summary>
-                <p className="mt-4 text-sm text-zinc-400 leading-relaxed font-medium">
-                  {faq.a[lang]}
-                </p>
-              </details>
-            ))}
-          </div>
-
-          <div className="mt-14 text-center">
-            <button
-              onClick={() => router.push('/register')}
-              className="inline-flex items-center gap-2 bg-[#f91814] text-white px-8 py-3.5 rounded-full font-medium text-xs uppercase tracking-tight hover:bg-red-700 transition-colors shadow-md shadow-red-500/20"
-            >
-              {t('faq_cta')}
-              <iconify-icon icon="solar:arrow-right-up-linear" style={{strokeWidth: 1.5}}></iconify-icon>
-            </button>
-          </div>
-        </div>
-      </section>
-      </main>
-
-      {/* ── FOOTER ── */}
-      <footer className="bg-black border-t border-zinc-800 pt-16 pb-10 text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Top row */}
-          <div className="flex flex-col md:flex-row gap-12 md:gap-20 pb-12 border-b border-zinc-800">
-            {/* Brand */}
-            <div className="flex-1 max-w-xs">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#f91814' }}>
-                  <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
-                </div>
-                <span className="text-base font-bold tracking-tight" style={{ fontFamily: bowlby }}>SANDWICH</span>
-              </div>
-              <p className="text-sm text-zinc-400 leading-relaxed font-medium">
-                {t('footer_desc')}
-              </p>
-              <div className="flex items-center gap-3 mt-5">
-                {[
-                  { icon: 'mdi:instagram', href: 'https://www.instagram.com/etalas.id/', label: 'Instagram' },
-                  { icon: 'mdi:linkedin', href: 'https://www.linkedin.com/company/etalas/', label: 'LinkedIn' },
-                ].map(({ icon, href, label }) => (
-                  <a key={label} href={href} target="_blank" rel="noreferrer"
-                    className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
-                    style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
-                    aria-label={label}
-                  >
-                    <iconify-icon icon={icon} width="15" style={{strokeWidth: 1.5}}></iconify-icon>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-col sm:flex-row gap-10 flex-1 justify-end">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">{t('footer_product')}</p>
-                <ul className="flex flex-col gap-3">
-                  {[
-                    { label: t('nav_pipeline'), id: 'harnesses' },
-                    { label: t('nav_how'), id: 'pipeline' },
-                    { label: t('nav_pricing'), id: 'pricing' },
-                    { label: t('nav_faq'), id: 'faq' },
-                  ].map(({ label, id }) => (
-                    <li key={id}>
-                      <a
-                        href={`#${id}`}
-                        onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }}
-                        className="text-sm text-zinc-400 hover:text-white transition-colors font-medium"
-                      >
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                  <li>
-                    <Link href="/blog" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
-                      Blog
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">Sandwich</p>
-                <ul className="flex flex-col gap-3">
-                  {[
-                    { label: 'Website', href: 'https://etalas.com' },
-                    { label: 'Instagram', href: 'https://www.instagram.com/etalas.id/' },
-                    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/etalas/' },
-                  ].map(({ label, href }) => (
-                    <li key={label}>
-                      <a href={href} target="_blank" rel="noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">{t('footer_legal')}</p>
-                <ul className="flex flex-col gap-3">
-                  {[
-                    { label: t('footer_privacy'), href: '/privacy' },
-                    { label: t('footer_terms'), href: '/terms' },
-                    { label: t('footer_refund'), href: '/refund' },
-                    { label: t('footer_contact'), href: '/contact' },
-                  ].map(({ label, href }) => (
-                    <li key={href}>
-                      <Link href={href} className="text-sm text-zinc-400 hover:text-white transition-colors font-medium">
-                        {label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom row */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
-            <p className="text-xs text-zinc-600 font-medium">© 2026 SANDWICH</p>
-            <a
-              href="https://www.etalas.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors"
-            >
-              <span className="text-sm">{t('footer_product_by')}</span>
-              <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto brightness-0 invert" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer
+        navPipeline={t('nav_diff')}
+        navHow={t('nav_deliverables')}
+        navPricing={t('nav_pricing')}
+        navFaq={t('nav_faq')}
+        footerDesc={t('footer_desc')}
+        footerProductTitle={t('footer_product')}
+        footerContactTitle={CONTACT_TITLE[lang]}
+        footerContact={t('footer_contact')}
+        footerPrivacy={t('footer_privacy')}
+        footerTerms={t('footer_terms')}
+        footerProductBy={t('footer_product_by')}
+        footerNote={FOOTER_NOTE[lang]}
+        footerRights={FOOTER_RIGHTS[lang]}
+        onNavClick={scrollToSection}
+      />
     </div>
   )
 }

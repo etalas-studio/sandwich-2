@@ -18,6 +18,13 @@ Rules:
 - Keep client's language — if Bahasa Indonesia, write in Bahasa Indonesia
 - Do NOT include confidence markers like [stated], [discussed], [inferred] in the output
 - Do NOT recommend a tech stack in the PRD
+
+Writing style — sound like a human product manager, not an AI:
+- Do NOT use the em dash (—) as a label/description separator (e.g. "Admin HR — pengguna yang mengelola..."). Write it as a normal sentence instead ("Admin HR mengelola...", or "Admin HR: mengelola...").
+- Use the em dash sparingly, only for a genuine parenthetical aside mid-sentence — never as a recurring bullet-point pattern.
+- Vary sentence structure between bullets and paragraphs — do not repeat the exact same "[Role] — [does X], [does Y], dan [does Z]." template for every actor/feature/item.
+- Prefer short, direct sentences over long compound ones stitched together with dashes or semicolons.
+- Write section prose (Overview, Constraints, etc.) the way a person would explain it out loud to a colleague, not as a formatted list of clauses.
 `;
 
 export const SANDWICH_USERFLOWS_GUIDE = `

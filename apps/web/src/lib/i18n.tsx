@@ -16,12 +16,15 @@ const STRINGS = {
   nav_how: { en: 'How It Works', id: 'Cara Kerja' },
   nav_pipeline: { en: 'Pipeline', id: 'Pipeline' },
   nav_diff: { en: 'Why SANDWICH', id: 'Kenapa SANDWICH' },
+  nav_deliverables: { en: 'Deliverables', id: 'Deliverables' },
+  nav_comparison: { en: 'Comparison', id: 'Perbandingan' },
   nav_pricing: { en: 'Pricing', id: 'Harga' },
   nav_faq: { en: 'FAQ', id: 'FAQ' },
   nav_get_started: { en: 'Start from your brief', id: 'Mulai dari brief' },
   nav_login: { en: 'Login', id: 'Masuk' },
   nav_menu_open: { en: 'Open menu', id: 'Buka menu' },
   nav_menu_close: { en: 'Close menu', id: 'Tutup menu' },
+  trusted_by: { en: 'Trusted by teams', id: 'Dipercaya tim-tim' },
 
   // ── Hero ──
   hero_tagline: {
@@ -36,41 +39,59 @@ const STRINGS = {
   hero_send_label: { en: 'Send message', id: 'Kirim pesan' },
 
   // ── Harnesses / How it works ──
-  harnesses_kicker: { en: 'The Harnesses', id: 'Prosesnya' },
-  harnesses_title: { en: 'MESSY INPUT. CLEAN SPEC.', id: 'INPUT BERANTAKAN. SPEC RAPI.' },
+  harnesses_kicker: { en: 'What You Can Build', id: 'Apa yang Bisa Lo Bikin' },
+  harnesses_title: { en: 'Messy input. Ready-to-use', id: 'Input berantakan. Output siap' },
+  harnesses_title_serif: { en: 'output.', id: 'pakai.' },
   harnesses_desc: {
-    en: 'Paste the brief here to start. Once you\'re in, attach voice notes, screenshots, and docs too. SANDWICH turns all of it into structured, machine-readable specs your agent can execute.',
-    id: 'Tempel brief di sini buat mulai. Setelah login, kamu juga bisa lampirkan voice note, screenshot, dan dokumen. SANDWICH ubah semua itu jadi spec terstruktur yang bisa dieksekusi agent kamu.',
+    en: 'Paste the client brief here. You can also attach voice notes, screenshots, or documents. SANDWICH turns all of it into structured documents ready to use or send to your client.',
+    id: 'Paste brief klien di sini. Bisa juga lampirin voice note, screenshot, atau dokumen. SANDWICH ubah semuanya jadi dokumen terstruktur yang siap lo pakai atau kirim ke klien.',
   },
   step_1_label: { en: 'Send Brief', id: 'Kasih Brief' },
   step_1_desc: { en: 'Raw input, any language', id: 'Input kasar, bahasa apapun' },
   step_2_label: { en: 'AI Processes', id: 'AI Proses' },
-  step_2_desc: { en: 'Order → Prep → Recipe', id: 'Order → Prep → Recipe' },
+  step_2_desc: { en: 'Brief → PRD → Output', id: 'Brief → PRD → Output' },
   step_3_label: { en: 'Get the Spec', id: 'Dapat Spec' },
   step_3_desc: { en: 'PRD, Specs, Quotation', id: 'PRD, Specs, Quotation' },
   step_4_label: { en: 'Agent Executes', id: 'Agent Eksekusi' },
-  step_4_desc: { en: 'Claude, Pi, or Codex', id: 'Claude, Pi, atau Codex' },
+  step_4_desc: { en: 'Send to your agent', id: 'Kirim ke agent kamu' },
   right_write_spec: { en: 'Write Spec', id: 'Tulis Spec' },
   right_structure_brief: { en: 'Structure the Brief', id: 'Struktur Brief' },
   right_quotation: { en: 'Quotation', id: 'Quotation' },
 
   // ── Pipeline / How it works ──
   pipeline_kicker: { en: 'How it works', id: 'Cara kerja' },
-  pipeline_title_l1: { en: 'BRIEF IN,', id: 'BRIEF MASUK,' },
-  pipeline_title_l2: { en: 'SPEC OUT.', id: 'SPEC KELUAR.' },
-  pipeline_step_1_title: { en: 'Paste your brief', id: 'Tempel brief kamu' },
-  pipeline_step_1_desc: { en: 'Drop in the messy client email, voice note transcript, or meeting notes as-is.', id: 'Masukin email klien, transkrip voice note, atau notulen rapat apa adanya.' },
-  pipeline_step_2_title: { en: 'Choose a deliverable', id: 'Pilih deliverable' },
-  pipeline_step_2_desc: { en: 'PRD, quotation, prototype, or specs, pick what you need first.', id: 'PRD, quotation, prototype, atau specs, pilih yang kamu butuh duluan.' },
-  pipeline_step_3_title: { en: 'Answer a few questions', id: 'Jawab beberapa pertanyaan' },
-  pipeline_step_3_desc: { en: 'The AI asks clarifying questions instead of guessing at your requirements.', id: 'AI nanya hal-hal yang belum jelas, bukan asal nebak requirement kamu.' },
-  pipeline_step_4_title: { en: 'Review, revise, share', id: 'Review, revisi, share' },
-  pipeline_step_4_desc: { en: 'Every version is saved. Revise in chat, or share a read-only link with your client.', id: 'Setiap versi tersimpan. Revisi lewat chat, atau share link read-only ke klien.' },
+  pipeline_title_l1: { en: 'Four steps.', id: 'Empat langkah.' },
+  pipeline_title_l2: { en: 'No guesswork.', id: 'Tidak ada tebak-tebakan.' },
+  pipeline_subtitle: {
+    en: "SANDWICH doesn't fill a generic template. It asks first, then generates.",
+    id: 'SANDWICH tidak mengisi template generik. Dia tanya dulu, baru generate.',
+  },
+  pipeline_step_1_title: { en: 'Paste brief', id: 'Paste brief' },
+  pipeline_step_1_desc: {
+    en: 'Plain text, voice notes, screenshots, or documents — any format works. No special format needed.',
+    id: 'Teks biasa, voice note, screenshot, atau dokumen — semua format diterima. Tidak perlu format khusus.',
+  },
+  pipeline_step_2_title: { en: 'Choose output', id: 'Pilih output' },
+  pipeline_step_2_desc: {
+    en: 'PRD, quotation, prototype, specs — or all at once. You decide what you need.',
+    id: 'PRD, quotation, prototype, specs — atau semua sekaligus. Lo yang menentukan yang dibutuhkan.',
+  },
+  pipeline_step_3_title: { en: 'Answer questions', id: 'Jawab pertanyaan' },
+  pipeline_step_3_desc: {
+    en: 'AI asks what needs confirming — not guessing. This usually wraps up in 5-8 minutes.',
+    id: 'AI tanya hal-hal yang perlu dikonfirmasi — bukan tebak-tebakan. Proses ini biasanya selesai dalam 5-8 menit.',
+  },
+  pipeline_step_4_title: { en: 'Review & share', id: 'Review & bagikan' },
+  pipeline_step_4_desc: {
+    en: 'Documents are saved, revisable, and shareable by link. Every version, nothing lost.',
+    id: 'Dokumen tersimpan, bisa direvisi, dan punya shareable link. Setiap versi tidak ada yang hilang.',
+  },
   pipeline_cta: { en: 'Start from your brief', id: 'Mulai dari brief' },
 
   // ── Ingredients / Stack ──
   stack_kicker: { en: 'Ingredients', id: 'Bahan-Bahan' },
-  stack_title: { en: 'WHAT YOU GET', id: 'APA YANG KAMU DAPAT' },
+  stack_title: { en: 'What you', id: 'Apa yang' },
+  stack_title_serif: { en: 'get.', id: 'kamu dapat.' },
   stack_desc: {
     en: 'Four deliverables from one brief, each generated through the same pipeline.',
     id: 'Empat deliverables dari satu brief, semua di-generate lewat pipeline yang sama.',
@@ -82,8 +103,8 @@ const STRINGS = {
 
   // ── Pricing ──
   pricing_kicker: { en: 'Pricing', id: 'Harga' },
-  pricing_title_l1: { en: 'SIMPLE PRICING.', id: 'HARGA SIMPEL.' },
-  pricing_title_l2: { en: 'NO SURPRISES.', id: 'TANPA KEJUTAN.' },
+  pricing_title_l1: { en: 'Simple pricing.', id: 'Harga simpel.' },
+  pricing_title_l2: { en: 'No surprises.', id: 'Tanpa kejutan.' },
   pricing_desc: {
     en: 'Clear options for different needs. Start small, upgrade anytime.',
     id: 'Pilihan jelas untuk kebutuhan berbeda. Mulai dari yang kecil, upgrade kapan saja.',
@@ -106,16 +127,78 @@ const STRINGS = {
 
   // ── Sample outputs ──
   samples_kicker: { en: 'Proof, Not Promises', id: 'Bukti, Bukan Janji' },
-  samples_title_l1: { en: 'SEE THE', id: 'LIHAT' },
-  samples_title_l2: { en: 'REAL OUTPUT.', id: 'HASIL ASLINYA.' },
+  samples_title_l1: { en: 'See the real', id: 'Lihat hasil' },
+  samples_title_l2: { en: 'output.', id: 'aslinya.' },
   samples_desc: {
     en: 'Real excerpts from documents SANDWICH generated, not mockups.',
     id: 'Cuplikan asli dari dokumen yang dibuat SANDWICH, bukan mockup.',
   },
 
+  // ── Comparison / SANDWICH vs manual ──
+  comparison_kicker: { en: 'Comparison', id: 'Perbandingan' },
+  comparison_title_sans: { en: 'SANDWICH vs', id: 'SANDWICH vs' },
+  comparison_title_serif: { en: 'the old way', id: 'cara lama' },
+  comparison_desc: {
+    en: 'No assumptions, no email ping-pong. Same documents, done in far less time.',
+    id: 'Tanpa asumsi, tanpa bolak-balik email. Dokumen yang sama, waktu yang jauh lebih singkat.',
+  },
+  comparison_col_aspect: { en: 'Aspect', id: 'Aspek' },
+  comparison_col_sandwich: { en: 'SANDWICH', id: 'SANDWICH' },
+  comparison_col_manual: { en: 'Old way (manual)', id: 'Cara lama (manual)' },
+  comparison_row_pd: { en: 'Time to write PRD', id: 'Waktu buat PRD' },
+  comparison_row_pd_s: { en: '~5–10 min', id: '~5–10 menit' },
+  comparison_row_pd_m: { en: '2–4 hours', id: '2–4 jam' },
+  comparison_row_quote: { en: 'Accurate quotation', id: 'Quotation akurat' },
+  comparison_row_quote_s: { en: 'Automatic from spec', id: 'Otomatis dari spec' },
+  comparison_row_quote_m: { en: 'Manual estimation', id: 'Ngira-ngira manual' },
+  comparison_row_proto: { en: 'Prototype UI', id: 'Prototype UI' },
+  comparison_row_proto_s: { en: 'Generated instantly', id: 'Langsung generate' },
+  comparison_row_proto_m: { en: 'Need Figma + designer', id: 'Butuh Figma + desainer' },
+  comparison_row_version: { en: 'Document versioning', id: 'Versioning dokumen' },
+  comparison_row_version_s: { en: 'Saved automatically', id: 'Tersimpan otomatis' },
+  comparison_row_version_m: { en: 'Google Docs chaos', id: 'Google Docs kacau' },
+  comparison_row_share: { en: 'Shareable link', id: 'Shareable link' },
+  comparison_row_share_s: { en: 'Read-only, send instantly', id: 'Read-only, langsung kirim' },
+  comparison_row_share_m: { en: 'Need manual export', id: 'Perlu export manual' },
+  comparison_row_quality: { en: 'Output quality', id: 'Kualitas output' },
+  comparison_row_quality_s: { en: 'Unique per project', id: 'Spesifik per proyek' },
+  comparison_row_quality_m: { en: 'Generic template', id: 'Template generik' },
+
+  // ── Deliverables ──
+  deliverables_kicker: { en: 'Deliverables', id: 'Deliverables' },
+  deliverables_title_sans: { en: 'Four documents.', id: 'Empat dokumen.' },
+  deliverables_title_serif: { en: 'One brief.', id: 'Satu brief.' },
+  deliverables_desc: {
+    en: 'Everything a client project needs, generated from a single brief.',
+    id: 'Semua yang dibutuhkan proyek klien, di-generate dari satu brief.',
+  },
+  deliverables_col_name: { en: 'Deliverable', id: 'Deliverable' },
+  deliverables_col_desc: { en: 'Description (Output-focused)', id: 'Deskripsi (Output-focused)' },
+  deliverables_prd: { en: 'PRD', id: 'PRD' },
+  deliverables_prd_desc: {
+    en: 'A full document ready to hand to developers — no need to re-explain.',
+    id: 'Dokumen lengkap yang langsung bisa lo kasih ke developer — tanpa perlu dijelaskan ulang.',
+  },
+  deliverables_proto: { en: 'Prototype', id: 'Prototype' },
+  deliverables_proto_desc: {
+    en: 'A clickable UI you can show clients before any coding starts.',
+    id: 'Tampilan yang bisa lo klik dan tunjukan ke klien sebelum mulai coding.',
+  },
+  deliverables_quotation: { en: 'Quotation', id: 'Quotation' },
+  deliverables_quotation_desc: {
+    en: 'A client-ready estimate — includes assumptions, per-item pricing, and payment terms.',
+    id: 'RAB siap kirim — sudah include asumsi, harga per item, dan terms pembayaran.',
+  },
+  deliverables_specs: { en: 'Specs', id: 'Specs' },
+  deliverables_specs_desc: {
+    en: 'A technical checklist per feature — the team reference so nothing is missed or mismatched.',
+    id: 'Checklist teknis per fitur — jadi patokan tim supaya ga ada yang missed atau mismatch.',
+  },
+
   // ── Differentiators ──
   diff_kicker: { en: 'Why SANDWICH', id: 'Kenapa SANDWICH' },
-  diff_title: { en: 'Built for real client work.', id: 'Dibuat buat kerjaan klien beneran.' },
+  diff_title_sans: { en: 'Built for real', id: 'Dibuat buat' },
+  diff_title_serif: { en: 'client work.', id: 'kerjaan klien beneran.' },
   diff_1_title: { en: 'Version history, not overwrites', id: 'Riwayat versi, bukan ditimpa' },
   diff_1_desc: { en: 'Every revision creates a new version. Nothing you generated is ever lost.', id: 'Setiap revisi bikin versi baru. Hasil generate kamu nggak pernah hilang.' },
   diff_2_title: { en: 'Documents persist, across sessions', id: 'Dokumen tersimpan, lintas sesi' },
@@ -127,8 +210,10 @@ const STRINGS = {
 
   // ── FAQ ──
   faq_kicker: { en: 'Shout Out', id: 'Nanya Yuk' },
-  faq_title: { en: 'GOT QUESTIONS?', id: 'ADA PERTANYAAN?' },
+  faq_title_sans: { en: 'Got', id: 'Ada' },
+  faq_title_serif: { en: 'questions?', id: 'pertanyaan?' },
   faq_cta: { en: 'Start from your brief', id: 'Mulai dari brief' },
+  closing_cta: { en: 'Start now', id: 'Mulai sekarang' },
 
   // ── Footer ──
   footer_desc: {

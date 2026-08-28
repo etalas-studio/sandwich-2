@@ -634,7 +634,7 @@ function ChatView({
                         initial={m.document}
                         onClick={() => {
                           if (m.document!.type === 'prototype') {
-                            const url = m.document!.previewUrl ?? `/p/${m.document!.id}/`
+                            const url = m.document!.previewUrl ?? apiUrl(`/p/${m.document!.id}/`)
                             window.open(url, '_blank')
                           } else {
                             onOpenDocument(m.document!.id)
