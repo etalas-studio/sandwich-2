@@ -26,7 +26,11 @@ const NAV_LINKS_ID = [
   { id: 'faq', label: 'FAQ' },
 ]
 
-export function LandingNav() {
+interface LandingNavProps {
+  onLoginClick?: () => void
+}
+
+export function LandingNav({ onLoginClick }: LandingNavProps = {}) {
   const { lang, setLang, t } = useLanguage()
   const router = useRouter()
   const pathname = usePathname()
@@ -78,7 +82,7 @@ export function LandingNav() {
             <span className="uppercase tracking-wide text-xs font-bold" style={{ color: LIGHT_TEXT_PRIMARY }}>{lang === 'en' ? 'EN' : 'ID'}</span>
           </button>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => onLoginClick ? onLoginClick() : router.push('/login')}
             className={`inline-flex items-center gap-2 transition-colors duration-300 text-sm font-medium ring-1 rounded-full pt-2 pr-3.5 pb-2 pl-3.5 backdrop-blur-sm ${pillClass}`}
           >
             {t('nav_login')}

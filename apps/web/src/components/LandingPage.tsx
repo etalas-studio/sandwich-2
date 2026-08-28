@@ -16,6 +16,7 @@ import { Why } from './landing/Why'
 import { Faq } from './landing/Faq'
 import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
+import { LoginModal } from './LoginModal'
 import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
@@ -58,6 +59,7 @@ export default function LandingPage() {
   }))
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -105,7 +107,7 @@ export default function LandingPage() {
         onToggleLang={() => setLang(lang === 'en' ? 'id' : 'en')}
         onNavClick={scrollToSection}
         onGetStartedClick={goToRegister}
-        onLoginClick={() => router.push('/login')}
+        onLoginClick={() => setLoginModalOpen(true)}
         onSecondaryClick={() => scrollToSection('pipeline')}
         onPromptSubmit={handlePromptSubmit}
         heroPromptPlaceholder={t('hero_prompt_placeholder')}
@@ -214,6 +216,7 @@ export default function LandingPage() {
         footerRights={FOOTER_RIGHTS[lang]}
         onNavClick={scrollToSection}
       />
+      {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
     </div>
   )
 }
