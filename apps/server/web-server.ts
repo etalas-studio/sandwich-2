@@ -30,7 +30,7 @@ import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 import { registerPreferenceRoutes } from "./routes/preferences.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
 import { expireStalePayments } from "./db/payments.js";
-import { processExtraction } from "./pipeline/extract.js";
+import { processExtraction } from "./attachments/extract.js";
 import { registerPrototypePublicRoutes } from "./prototype/routes.js";
 import { registerDocumentRoutes } from "./routes/documents.js";
 import { registerAdminRoutes } from "./routes/admin.js";

@@ -21,7 +21,7 @@ interface ReferenceIndex {
 function referencesRoot(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    join(here, "references"),
+    join(here, "..", "pipeline", "references"),
     join(here, "..", "..", "apps", "server", "pipeline", "references"),
   ];
   for (const candidate of candidates) {

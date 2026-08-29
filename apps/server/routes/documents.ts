@@ -9,7 +9,7 @@ import {
   sanitizeFilename,
   parseQueryParam,
   type ExportResult,
-} from "../pipeline/export.js";
+} from "../documents/export.js";
 import {
   findDocumentByTitle,
   getOwnedDocument,

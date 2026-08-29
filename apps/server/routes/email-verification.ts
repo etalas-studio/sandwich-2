@@ -9,7 +9,7 @@ import {
 import { sendEmail } from "../notifications/email.js";
 import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
-import { parseQueryParam } from "../pipeline/export.js";
+import { parseQueryParam } from "../documents/export.js";
 
 const verifyLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 const resendLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 3 });

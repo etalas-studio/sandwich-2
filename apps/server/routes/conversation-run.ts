@@ -54,7 +54,7 @@ import {
   SANDWICH_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
 } from "../pipeline/prompts.js";
-import { buildReferenceBlock } from "../pipeline/references.js";
+import { buildReferenceBlock } from "../notifications/references.js";
 
 export interface DocumentRef {
   id: string;

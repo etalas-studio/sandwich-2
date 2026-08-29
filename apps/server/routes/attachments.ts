@@ -13,7 +13,7 @@ import {
 } from "../storage/r2.js";
 import { createAttachment, listAttachments } from "../db/repo/attachments.js";
 import { getConversation } from "../db/conversations.js";
-import { processExtraction } from "../pipeline/extract.js";
+import { processExtraction } from "../attachments/extract.js";
 
 interface UploadedFile {
   filename: string;
