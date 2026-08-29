@@ -18,7 +18,7 @@ import type { Database } from "../db/connection.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
-import { PLANS } from "../pipeline/plans.js";
+import { PLANS } from "../billing/plans.js";
 
 function parseUpdateInput(candidate: Record<string, unknown>): UpdateConversationInput {
   const input: UpdateConversationInput = {};

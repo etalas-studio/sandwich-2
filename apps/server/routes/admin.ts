@@ -26,7 +26,7 @@ import {
   cancelSubscription,
   activateSubscription,
 } from "../db/repo/subscriptions.js";
-import { getPlan } from "../pipeline/plans.js";
+import { getPlan } from "../billing/plans.js";
 
 /**
  * Internal Etalas operator panel — AI engine configuration.

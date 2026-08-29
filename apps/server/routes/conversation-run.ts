@@ -22,7 +22,7 @@ import { getPendingAttachmentIds } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
-import { PLANS } from "../pipeline/plans.js";
+import { PLANS } from "../billing/plans.js";
 import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
 import {
   upsertDocument,
