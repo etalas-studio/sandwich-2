@@ -6,13 +6,13 @@ import {
   createSnapTransaction,
   getTransactionStatus,
   verifyNotificationSignature,
-} from "../billing/midtrans.js";
+} from "./midtrans.js";
 import {
   mapTransactionStatus,
   shouldTransition,
   type LocalPaymentStatus,
-} from "../billing/payment-status.js";
-import { getPlan, generateOrderId } from "../billing/plans.js";
+} from "./payment-status.js";
+import { getPlan, generateOrderId } from "./plans.js";
 import { createPayment, getPayment, updatePayment } from "../db/payments.js";
 import {
   activateSubscription,

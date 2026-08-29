@@ -2,7 +2,7 @@ import type { Router } from "../router.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getMonthlyUsage } from "../db/repo/usage.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
-import { PLANS } from "../billing/plans.js";
+import { PLANS } from "./plans.js";
 import { sendJson } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
 

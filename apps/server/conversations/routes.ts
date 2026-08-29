@@ -1,5 +1,5 @@
 import type { Router } from "../router.js";
-import { closeInFlight } from "./conversation-run.js";
+import { closeInFlight } from "../routes/conversation-run.js";
 import { deleteConversationSession } from "../projects/sessions.js";
 import {
   createConversation,
@@ -8,7 +8,7 @@ import {
   deleteConversation,
   getConversation,
   type UpdateConversationInput,
-} from "../conversations/db.js";
+} from "./db.js";
 import {
   listProjectsWithConversations,
   ProjectNotFoundError,

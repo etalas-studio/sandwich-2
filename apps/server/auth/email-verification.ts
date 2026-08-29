@@ -7,7 +7,7 @@ import {
   markVerificationTokenUsed,
 } from "../db/repo/email-verifications.js";
 import { sendEmail } from "../notifications/email.js";
-import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
+import { createRateLimiter, clientIp } from "./rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { parseQueryParam } from "../documents/export.js";
 

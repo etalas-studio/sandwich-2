@@ -9,14 +9,14 @@ import {
   sanitizeFilename,
   parseQueryParam,
   type ExportResult,
-} from "../documents/export.js";
+} from "./export.js";
 import {
   findDocumentByTitle,
   getOwnedDocument,
   listDocumentsForUser,
   updateDocumentTitle,
   type Document,
-} from "../documents/db.js";
+} from "./db.js";
 import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";
 

@@ -1,6 +1,6 @@
 import type { Router } from "../router.js";
-import { AuthError, type AuthResult, login, logout, register } from "../auth/service.js";
-import { authenticateRequest } from "../auth/middleware.js";
+import { AuthError, type AuthResult, login, logout, register } from "./service.js";
+import { authenticateRequest } from "./middleware.js";
 import { getUserById, deleteUser } from "../db/users.js";
 import { deleteSubscriptionByUser } from "../db/repo/subscriptions.js";
 import {
@@ -8,9 +8,9 @@ import {
   buildClearedSessionCookie,
   buildSessionCookie,
   parseCookies,
-} from "../auth/cookie.js";
+} from "./cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
-import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
+import { createRateLimiter, clientIp } from "./rate-limit.js";
 import { createVerificationToken, deleteVerificationTokensByUser } from "../db/repo/email-verifications.js";
 import { sendEmail } from "../notifications/email.js";
 import { verificationLink } from "./email-verification.js";
