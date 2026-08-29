@@ -1,4 +1,4 @@
-import type { DocumentType } from "../db/documents.js";
+import type { DocumentType } from "../documents/db.js";
 
 /**
  * Guided-pipeline state machine (model-driven). The backend owns the stage

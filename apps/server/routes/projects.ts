@@ -8,7 +8,7 @@ import {
   renameProject,
   deleteProject,
   ProjectNotEmptyError,
-} from "../db/projects.js";
+} from "../projects/db.js";
 
 export function registerProjectRoutes(router: Router, db: Database): void {
   router.get("/api/projects", async (req, res) => {

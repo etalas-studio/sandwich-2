@@ -16,7 +16,7 @@ import {
   listDocumentsForUser,
   updateDocumentTitle,
   type Document,
-} from "../db/documents.js";
+} from "../documents/db.js";
 import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";
 

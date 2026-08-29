@@ -1,7 +1,7 @@
 import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { projects, conversations } from "./schema.js";
-import type { Database } from "./connection.js";
+import { projects, conversations } from "../db/schema.js";
+import type { Database } from "../db/connection.js";
 
 export interface Project {
   id: string;

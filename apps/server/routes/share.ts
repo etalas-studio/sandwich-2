@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { Router } from "../router.js";
-import { getConversation, updateConversation } from "../db/conversations.js";
+import { getConversation, updateConversation } from "../conversations/db.js";
 import { getMessages } from "../db/repo/chat-messages.js";
 import { listAttachments } from "../db/repo/attachments.js";
 import { authenticateRequest } from "../auth/middleware.js";

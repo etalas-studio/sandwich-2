@@ -1,15 +1,15 @@
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { conversations, chatMessages, attachments } from "./schema.js";
-import type { Database } from "./connection.js";
-import type { DocumentType } from "./documents.js";
-import { clearConversationDocuments } from "./documents.js";
+import { conversations, chatMessages, attachments } from "../db/schema.js";
+import type { Database } from "../db/connection.js";
+import type { DocumentType } from "../documents/db.js";
+import { clearConversationDocuments } from "../documents/db.js";
 import {
   createProject,
   getProject,
   deriveProjectTitle,
   ProjectNotFoundError,
-} from "./projects.js";
+} from "../projects/db.js";
 
 export type ConversationType =
   | "prd"

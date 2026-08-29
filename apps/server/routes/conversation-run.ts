@@ -8,7 +8,7 @@ import {
   publishEvent,
   subscribeToConversation,
 } from "../redis.js";
-import { getConversation, updateConversation, type Conversation } from "../db/conversations.js";
+import { getConversation, updateConversation, type Conversation } from "../conversations/db.js";
 import {
   addChatMessage,
   createMessage,
@@ -29,7 +29,7 @@ import {
   findProjectDocument,
   listConversationDocuments,
   type DocumentType,
-} from "../db/documents.js";
+} from "../documents/db.js";
 import { formatPrototypeSummary, generatePrototypeDocument } from "../prototype/engine.js";
 import { parseRollbackIntent } from "../prototype/rollback.js";
 import { getProjectDir } from "../projects/workspace.js";
@@ -43,7 +43,7 @@ import {
 import { buildBriefMarkdown, writeBrief, type BriefRole } from "../projects/brief.js";
 import { acquireProjectLease, isLease, type ProjectLease } from "../projects/locks.js";
 import { openConversationSession, sessionExists } from "../projects/sessions.js";
-import { ensureProjectForConversation } from "../db/projects.js";
+import { ensureProjectForConversation } from "../projects/db.js";
 import { createToolBudget, TOOL_BUDGETS } from "../generation/budget.js";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";

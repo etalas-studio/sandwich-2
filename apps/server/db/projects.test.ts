@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 import { PgDialect } from "drizzle-orm/pg-core";
-import { ownedProject, normaliseTitle, deriveProjectTitle } from "./projects.js";
+import { ownedProject, normaliseTitle, deriveProjectTitle } from "../projects/db.js";
 
 describe("ownedProject predicate", () => {
   it("scopes on BOTH user_id and id, in that order", () => {

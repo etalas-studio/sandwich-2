@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { documents, projects } from "./schema.js";
-import type { Database } from "./connection.js";
+import { documents, projects } from "../db/schema.js";
+import type { Database } from "../db/connection.js";
 
 export type DocumentType = "prd" | "quotation" | "prototype" | "specs" | "mom";
 

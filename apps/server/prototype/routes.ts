@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { posix } from "node:path";
 import type { Router } from "../router.js";
 import { sendJson } from "../http-utils.js";
-import { getOwnedDocument } from "../db/documents.js";
+import { getOwnedDocument } from "../documents/db.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";

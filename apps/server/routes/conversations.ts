@@ -8,11 +8,11 @@ import {
   deleteConversation,
   getConversation,
   type UpdateConversationInput,
-} from "../db/conversations.js";
+} from "../conversations/db.js";
 import {
   listProjectsWithConversations,
   ProjectNotFoundError,
-} from "../db/projects.js";
+} from "../projects/db.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import type { Database } from "../db/connection.js";
 import { authenticateRequest } from "../auth/middleware.js";
