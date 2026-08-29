@@ -6,8 +6,8 @@ import {
   getValidVerificationToken,
   markVerificationTokenUsed,
 } from "../db/repo/email-verifications.js";
-import { sendEmail } from "../pipeline/email.js";
-import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
+import { sendEmail } from "../notifications/email.js";
+import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 import { parseQueryParam } from "../pipeline/export.js";
 

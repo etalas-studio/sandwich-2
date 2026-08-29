@@ -10,9 +10,9 @@ import {
   parseCookies,
 } from "../auth/cookie.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
-import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
+import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
 import { createVerificationToken, deleteVerificationTokensByUser } from "../db/repo/email-verifications.js";
-import { sendEmail } from "../pipeline/email.js";
+import { sendEmail } from "../notifications/email.js";
 import { verificationLink } from "./email-verification.js";
 import type { Database } from "../db/connection.js";
 

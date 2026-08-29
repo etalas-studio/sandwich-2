@@ -8,8 +8,8 @@ import {
   markResetTokenUsed,
 } from "../db/repo/password-resets.js";
 import { hashPassword } from "../auth/password.js";
-import { sendEmail } from "../pipeline/email.js";
-import { createRateLimiter, clientIp } from "../pipeline/rate-limit.js";
+import { sendEmail } from "../notifications/email.js";
+import { createRateLimiter, clientIp } from "../auth/rate-limit.js";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";
 
 const forgotLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 3 });
