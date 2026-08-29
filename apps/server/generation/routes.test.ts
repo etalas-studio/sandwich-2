@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { prototypePreviewUrl } from "./conversation-run.js";
+import { prototypePreviewUrl } from "./routes.js";
 import {
   composePrototypeBrief,
   composeRefineInstruction,
@@ -9,7 +9,7 @@ import {
   commitMessageFor,
   chatOutputFor,
   CHAT_INLINE_CAP,
-} from "../generation/run.js";
+} from "./run.js";
 
 describe("deliverablePathFor", () => {
   it("maps each type to its fixed on-disk filename", () => {

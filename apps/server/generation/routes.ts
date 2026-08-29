@@ -22,7 +22,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../billing/plans.js";
-import { detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../generation/orchestrate.js";
+import { detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "./orchestrate.js";
 import {
   upsertDocument,
   findProjectDocument,
@@ -56,7 +56,7 @@ import {
   waitForExtraction,
   enrichMessageContent,
   DELIVERABLE_LABEL,
-} from "../generation/run.js";
+} from "./run.js";
 
 export interface DocumentRef {
   id: string;

@@ -1,5 +1,5 @@
 import type { Router } from "../router.js";
-import { closeInFlight } from "../routes/conversation-run.js";
+import { closeInFlight } from "../generation/routes.js";
 import { deleteConversationSession } from "../projects/sessions.js";
 import {
   createConversation,

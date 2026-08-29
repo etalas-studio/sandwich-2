@@ -20,7 +20,7 @@ import { registerPasswordResetRoutes } from "./auth/password-reset.js";
 import { registerEmailVerificationRoutes } from "./auth/email-verification.js";
 import { registerConversationRoutes } from "./conversations/routes.js";
 import { registerProjectRoutes } from "./projects/routes.js";
-import { registerConversationRunRoutes } from "./routes/conversation-run.js";
+import { registerConversationRunRoutes } from "./generation/routes.js";
 import { registerAttachmentRoutes } from "./attachments/routes.js";
 import { registerUsageRoutes } from "./billing/usage.js";
 import { registerShareRoutes } from "./sharing/routes.js";
