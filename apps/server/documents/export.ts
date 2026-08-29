@@ -215,7 +215,7 @@ const COLORS = {
   quotationHeaderFill: "#dbe4f7",
 };
 
-const LOGO_PATH = fileURLToPath(new URL("../pipeline/assets/etalas-logo.png", import.meta.url));
+const LOGO_PATH = fileURLToPath(new URL("./assets/etalas-logo.png", import.meta.url));
 
 /**
  * Renders a line of styled inline runs (bold/italic/code, each optionally

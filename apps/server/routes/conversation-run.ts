@@ -23,7 +23,7 @@ import { authenticateRequest } from "../auth/middleware.js";
 import { getActiveSubscription } from "../db/repo/subscriptions.js";
 import { incrementUsage, getMonthlyUsage } from "../db/repo/usage.js";
 import { PLANS } from "../billing/plans.js";
-import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../pipeline/orchestrate.js";
+import { stageInstruction, detectDeliverableType, detectPreviewIntent, detectCancelIntent, hasLogoAndColorDetails, type PipelineStage } from "../generation/orchestrate.js";
 import {
   upsertDocument,
   findProjectDocument,
@@ -53,7 +53,7 @@ import {
   SANDWICH_QUOTATION_GUIDE,
   SANDWICH_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
-} from "../pipeline/prompts.js";
+} from "../generation/prompts.js";
 import { buildReferenceBlock } from "../notifications/references.js";
 
 export interface DocumentRef {

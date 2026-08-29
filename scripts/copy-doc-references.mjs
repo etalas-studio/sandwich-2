@@ -1,13 +1,13 @@
 import { cpSync, existsSync, mkdirSync } from "node:fs";
 
-const src = new URL("../apps/server/pipeline/references/", import.meta.url);
-const dest = new URL("../dist/pipeline/references/", import.meta.url);
+const src = new URL("../apps/server/notifications/references/", import.meta.url);
+const dest = new URL("../dist/notifications/references/", import.meta.url);
 
 if (!existsSync(src)) {
   console.error(`doc references not found at ${src.pathname}`);
   process.exit(1);
 }
 
-mkdirSync(new URL("../dist/pipeline/", import.meta.url), { recursive: true });
+mkdirSync(new URL("../dist/notifications/", import.meta.url), { recursive: true });
 cpSync(src, dest, { recursive: true, filter: (path) => !path.endsWith(".ts") });
-console.log("copied doc references -> dist/pipeline/references");
+console.log("copied doc references -> dist/notifications/references");
