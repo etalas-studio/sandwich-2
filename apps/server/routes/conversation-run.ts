@@ -44,7 +44,7 @@ import { buildBriefMarkdown, writeBrief, type BriefRole } from "../projects/brie
 import { acquireProjectLease, isLease, type ProjectLease } from "../projects/locks.js";
 import { openConversationSession, sessionExists } from "../projects/sessions.js";
 import { ensureProjectForConversation } from "../db/projects.js";
-import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
+import { createToolBudget, TOOL_BUDGETS } from "../generation/budget.js";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { sendJson, sendCaughtError, readJsonBody } from "../http-utils.js";

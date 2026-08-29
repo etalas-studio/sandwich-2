@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { createToolBudget } from "./tool-budget.js";
+import { createToolBudget } from "./budget.js";
 
 describe("createToolBudget — ceiling", () => {
   it("fires on the (max+1)th tool call and latches", () => {
