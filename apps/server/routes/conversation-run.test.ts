@@ -1,15 +1,15 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
+import { prototypePreviewUrl } from "./conversation-run.js";
 import {
   composePrototypeBrief,
   composeRefineInstruction,
-  prototypePreviewUrl,
   deliverablePathFor,
   textEngineTools,
   commitMessageFor,
   chatOutputFor,
   CHAT_INLINE_CAP,
-} from "./conversation-run.js";
+} from "../generation/run.js";
 
 describe("deliverablePathFor", () => {
   it("maps each type to its fixed on-disk filename", () => {
