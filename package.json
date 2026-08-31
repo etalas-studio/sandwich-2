@@ -2,7 +2,7 @@
   "name": "sandwich",
   "version": "0.1.0",
   "private": true,
-  "description": "SANDWICH — from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
+  "description": "SANDWICH \u2014 from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -18,7 +18,8 @@
     "roadmap:generate": "node scripts/roadmap/generate.mjs",
     "roadmap:check": "node scripts/roadmap/generate.mjs --check",
     "serve": "node dist/web-server.js",
-    "start": "npm run serve"
+    "start": "npm run serve",
+    "lint:boundaries": "eslint \"apps/server/domain/**/*.ts\" \"apps/server/application/**/*.ts\" \"apps/server/infrastructure/**/*.ts\" || true"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -30,6 +31,7 @@
     "@types/pg": "^8.21.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.0",
+    "eslint-plugin-boundaries": "^7.2.0",
     "prettier": "^3.9.6",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.66.0"
