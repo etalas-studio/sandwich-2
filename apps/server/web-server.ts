@@ -200,7 +200,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
       if (!(await authenticateRequest(db, req))) {
         res.status(401).json({ error: "unauthorized" });
         return;
-        return;
       }
     }
     next();
