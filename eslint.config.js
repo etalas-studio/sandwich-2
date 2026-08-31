@@ -25,9 +25,9 @@ export default tseslint.config(
     plugins: { boundaries },
     settings: {
       "boundaries/elements": [
-        { type: "domain",         pattern: "apps/server/domain/*" },
-        { type: "application",   pattern: "apps/server/application/*" },
-        { type: "infrastructure", pattern: "apps/server/infrastructure/*" },
+        { type: "domain",         pattern: "apps/server/domain/**/*" },
+        { type: "application",   pattern: "apps/server/application/**/*" },
+        { type: "infrastructure", pattern: "apps/server/infrastructure/**/*" },
         { type: "shared",        pattern: ["apps/server/*.ts", "apps/server/db/connection.ts"] },
       ],
     },

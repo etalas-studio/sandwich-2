@@ -19,7 +19,7 @@
     "roadmap:check": "node scripts/roadmap/generate.mjs --check",
     "serve": "node dist/web-server.js",
     "start": "npm run serve",
-    "lint:boundaries": "eslint \"apps/server/domain/**/*.ts\" \"apps/server/application/**/*.ts\" \"apps/server/infrastructure/**/*.ts\" || true"
+    "lint:boundaries": "eslint --no-error-on-unmatched-pattern \"apps/server/domain/**/*.ts\" \"apps/server/application/**/*.ts\" \"apps/server/infrastructure/**/*.ts\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
