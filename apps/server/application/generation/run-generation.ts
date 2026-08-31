@@ -1,6 +1,5 @@
 import type { ConversationRepository } from "../ports/conversation-repository.js";
 import type { DocumentRepository } from "../ports/document-repository.js";
-import type { ProjectRepository } from "../ports/project-repository.js";
 import type { GenerationPort } from "../ports/generation-port.js";
 import type { PipelineStage } from "../../domain/generation/index.js";
 import type { DocumentType } from "../../domain/documents/index.js";
@@ -15,7 +14,6 @@ import {
 // ponytail: move to domain/generation/index.js or application/generation/ helpers after Task 9
 import {
   deliverablePathFor,
-  commitMessageFor,
   chatOutputFor,
   composePrototypeBrief,
   composeRefineInstruction,
@@ -30,6 +28,8 @@ export interface RunGenerationInput {
   signal: AbortSignal;
   /** Called for every generation event; infra (SSE route) provides this. */
   onEvent: (event: GenerationEvent) => void;
+  /** Route handler supplies this to build prototype preview URLs (HTTP concern). */
+  buildPreviewUrl?: (docId: string) => string | null;
 }
 
 export type GenerationEvent =
@@ -41,7 +41,7 @@ export type GenerationEvent =
 export interface RunGenerationDeps {
   conversations: ConversationRepository;
   documents: DocumentRepository;
-  projects: ProjectRepository;
+  // ponytail: reserved for project workspace lookup when generation needs project root path
   generation: GenerationPort;
 }
 
@@ -69,6 +69,16 @@ export async function runGeneration(
   let stage = (conversation.pipelineStage as PipelineStage) ?? INITIAL_STAGE;
   let pendingType = (conversation.pendingType ?? null) as DocumentType | null;
   let refineInstruction: string | null = null;
+
+  // ── Preview intent short-circuits before any stage transition ────────────
+  if (detectPreviewIntent(lastUserMessage)) {
+    // Preview URL is an HTTP concern; the route handler builds it from docId.
+    // We still store the assistant reply so history is consistent.
+    const previewMsg = "Preview prototype tersedia. Cek panel dokumen untuk linknya.";
+    await deps.conversations.addMessage(conversationId, "assistant", previewMsg);
+    input.onEvent({ type: "done", wroteFile: false });
+    return;
+  }
 
   // ── Stage transitions ─────────────────────────────────────────────────────
   if (stage === "intake" || stage === "choosing_deliverable") {
@@ -129,80 +139,79 @@ export async function runGeneration(
   // Emit current stage so SSE can forward it.
   input.onEvent({ type: "stage", stage });
 
-  // ── Preview intent (no AI call) ───────────────────────────────────────────
-  if (detectPreviewIntent(lastUserMessage)) {
-    // Preview URL is an HTTP concern; emit done without a documentId so the
-    // route handler can build the URL. The route knows the doc from its own
-    // DB query.
-    input.onEvent({ type: "done", wroteFile: false });
-    await deps.conversations.updateStage(conversationId, stage, pendingType);
-    return;
-  }
-
   // ── Persist stage before the (potentially long) AI call ──────────────────
   await deps.conversations.updateStage(conversationId, stage, pendingType);
 
   // ── Generate or chat ──────────────────────────────────────────────────────
-  if (stage === "generating" && pendingType) {
-    const type = pendingType;
-    const relPath = deliverablePathFor(type);
-    const title = conversation.title.trim() || DELIVERABLE_LABEL[type];
-    const mode: "generate" | "refine" = refineInstruction ? "refine" : "generate";
+  try {
+    if (stage === "generating" && pendingType) {
+      const type = pendingType;
+      const relPath = deliverablePathFor(type);
+      const title = conversation.title.trim() || DELIVERABLE_LABEL[type];
 
-    const result = await deps.generation.run({
-      projectDir,
-      conversationId,
-      history: turns,
-      signal,
-      stage,
-      pendingType: type,
-      refineInstruction,
-    });
+      // ponytail: enforce monthly quota and increment usage via SubscriptionRepository/UsageRepository before/after generation
 
-    if (!result.wroteFile && stage === "generating") {
-      throw new Error(`${DELIVERABLE_LABEL[type]} tidak berhasil dibuat.`);
+      // ponytail: Task 9 adapter must call writeBrief(projectDir, ...) before creating Pi session
+      const result = await deps.generation.run({
+        projectDir,
+        conversationId,
+        history: turns,
+        signal,
+        stage,
+        pendingType: type,
+        refineInstruction,
+      });
+
+      if (!result.wroteFile) {
+        throw new Error(`${DELIVERABLE_LABEL[type]} tidak berhasil dibuat.`);
+      }
+
+      const doc = await deps.documents.upsert({
+        userId: input.userId,
+        projectId,
+        conversationId,
+        title,
+        type,
+        relativePath: relPath,
+      });
+
+      const previewUrl = input.buildPreviewUrl ? input.buildPreviewUrl(doc.id) : null;
+      const chatOutput = chatOutputFor(type, result.text, previewUrl);
+
+      await deps.conversations.addMessage(conversationId, "assistant", chatOutput);
+      // Keep pendingType non-null so refine-by-default works on the next turn.
+      await deps.conversations.updateStage(conversationId, "awaiting_next", type);
+
+      input.onEvent({
+        type: "done",
+        wroteFile: result.wroteFile,
+        documentId: doc.id,
+      });
+    } else {
+      // Non-generating stages: plain chat reply.
+      // ponytail: Task 9 adapter must call writeBrief(projectDir, ...) before creating Pi session
+      const result = await deps.generation.run({
+        projectDir,
+        conversationId,
+        history: turns,
+        signal,
+        stage,
+        pendingType,
+        refineInstruction,
+      });
+
+      if (!result.text) throw new Error("Model returned no response. Try again.");
+
+      const nextStage: PipelineStage =
+        stage === "intake" ? "choosing_deliverable" : stage;
+
+      await deps.conversations.addMessage(conversationId, "assistant", result.text);
+      await deps.conversations.updateStage(conversationId, nextStage, pendingType);
+
+      input.onEvent({ type: "text", text: result.text });
+      input.onEvent({ type: "done", wroteFile: false });
     }
-
-    const doc = await deps.documents.upsert({
-      userId: input.userId,
-      projectId,
-      conversationId,
-      title,
-      type,
-      relativePath: relPath,
-    });
-
-    const chatOutput = chatOutputFor(type, result.text, null);
-
-    await deps.conversations.addMessage(conversationId, "assistant", chatOutput);
-    await deps.conversations.updateStage(conversationId, "awaiting_next", null);
-
-    input.onEvent({
-      type: "done",
-      wroteFile: result.wroteFile,
-      documentId: doc.id,
-    });
-  } else {
-    // Non-generating stages: plain chat reply.
-    const result = await deps.generation.run({
-      projectDir,
-      conversationId,
-      history: turns,
-      signal,
-      stage,
-      pendingType,
-      refineInstruction,
-    });
-
-    if (!result.text) throw new Error("Model returned no response. Try again.");
-
-    const nextStage: PipelineStage =
-      stage === "intake" ? "choosing_deliverable" : stage;
-
-    await deps.conversations.addMessage(conversationId, "assistant", result.text);
-    await deps.conversations.updateStage(conversationId, nextStage, pendingType);
-
-    input.onEvent({ type: "text", text: result.text });
-    input.onEvent({ type: "done", wroteFile: false });
+  } catch (err) {
+    input.onEvent({ type: "error", message: err instanceof Error ? err.message : String(err) });
   }
 }
