@@ -1,7 +1,10 @@
-import type { UserRepository, SessionRepository } from "../ports/index.js";
+import type { UserRepository } from "../ports/index.js";
 import type { User } from "../../domain/users/index.js";
 // ponytail: path moves to ../../infrastructure/auth/password.js after Task 8 restructures auth/
 import { hashPassword } from "../../auth/password.js";
+// ponytail: move to SubscriptionRepository port and wrap in UnitOfWork transaction when available
+import { activateSubscription } from "../../db/repo/subscriptions.js";
+import type { Database } from "../../db/connection.js";
 
 export interface RegisterInput {
   username: string;
@@ -23,7 +26,9 @@ export class RegisterError extends Error {
 }
 
 export async function registerUser(
-  repos: { users: UserRepository; sessions: SessionRepository },
+  repos: { users: UserRepository },
+  // ponytail: db removed when SubscriptionRepository port and UnitOfWork transaction are added
+  db: Database,
   input: RegisterInput,
 ): Promise<RegisterResult> {
   const passwordHash = await hashPassword(input.password);
@@ -36,6 +41,7 @@ export async function registerUser(
       email: input.email,
       passwordHash,
     });
+    await activateSubscription(db, { userId: user.id, planSlug: "starter" });
   } catch (err) {
     const code =
       (err as { code?: string })?.code ??

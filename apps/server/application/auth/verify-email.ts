@@ -30,8 +30,9 @@ export async function verifyEmail(
     throw new VerifyEmailError(400, "invalid or expired token");
   }
 
-  await repos.users.updateEmailVerified(tokenRow.userId, true);
+  // ponytail: wrap in transaction (markVerificationTokenUsed then updateEmailVerified) when UnitOfWork port is available
   await markVerificationTokenUsed(db, input.token);
+  await repos.users.updateEmailVerified(tokenRow.userId, true);
 }
 
 // Self-check

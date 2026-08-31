@@ -1,6 +1,8 @@
 import type { UserRepository } from "../ports/index.js";
 // ponytail: move to PasswordResetRepository port when Task 3 is extended
 import { getValidResetToken, markResetTokenUsed } from "../../db/repo/password-resets.js";
+// ponytail: move to SessionRepository.deleteByUserId when port is extended
+import { deleteSessionsForUser } from "../../db/sessions.js";
 import type { Database } from "../../db/connection.js";
 // ponytail: path moves to ../../infrastructure/auth/password.js after Task 8 restructures auth/
 import { hashPassword } from "../../auth/password.js";
@@ -33,6 +35,7 @@ export async function resetPassword(
   const newHash = await hashPassword(input.newPassword);
   await repos.users.updatePassword(tokenRow.userId, newHash);
   await markResetTokenUsed(db, input.token);
+  await deleteSessionsForUser(db, tokenRow.userId);
 }
 
 // Self-check
