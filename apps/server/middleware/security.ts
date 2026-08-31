@@ -43,10 +43,13 @@ export function hostGuard(trustedHosts: Set<string>, boundPort: number): Request
 
 export function csrfGuard(trustedHosts: Set<string>): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Match router.ts exactly: CORS_ORIGIN requests are exempt (same as isCorsRequest in router.ts)
+    const corsOrigin = process.env.CORS_ORIGIN ?? "";
+    const requestOrigin = req.headers.origin ?? "";
+    const isCorsRequest = corsOrigin !== "" && requestOrigin === corsOrigin;
     const method = req.method.toUpperCase();
     const isSafe = method === "GET" || method === "HEAD";
-    const isPreflight = method === "OPTIONS";
-    if (!isSafe && !isPreflight) {
+    if (!isSafe && !isCorsRequest) {
       const origin = req.headers.origin;
       if (
         origin !== undefined &&
@@ -60,30 +63,13 @@ export function csrfGuard(trustedHosts: Set<string>): RequestHandler {
   };
 }
 
-export function corsMiddleware(trustedHosts: Set<string>): RequestHandler {
-  // Match router.ts: CORS_ORIGIN is the primary allowed origin (exact string match)
-  const corsOrigin = process.env.CORS_ORIGIN ?? "";
+export function corsMiddleware(): RequestHandler {
+  // Match router.ts exactly: only CORS_ORIGIN env var is the allowed origin
   return cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, false);
-      // Primary: exact match against CORS_ORIGIN env var (matches original router.ts)
-      if (corsOrigin !== "" && origin === corsOrigin) return callback(null, true);
-      // Secondary: loopback + trustedHosts set (dev/internal)
-      let originHost: string;
-      try {
-        originHost = new URL(origin).host.toLowerCase();
-      } catch {
-        return callback(null, false);
-      }
-      const allowed =
-        originHost === "localhost" ||
-        originHost.startsWith("localhost:") ||
-        originHost === "127.0.0.1" ||
-        originHost.startsWith("127.0.0.1:") ||
-        originHost === "[::1]" ||
-        originHost.startsWith("[::1]:") ||
-        trustedHosts.has(originHost);
-      callback(null, allowed);
+      const corsOrigin = process.env.CORS_ORIGIN ?? "";
+      callback(null, corsOrigin !== "" && origin === corsOrigin);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
