@@ -216,7 +216,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   if (existsSync(webRoot)) {
     app.use(express.static(webRoot));
   }
-  app.get("*", (req: Request, res: Response) => {
+  app.get("/{*splat}", (req: Request, res: Response) => {
     const indexPath = resolve(webRoot, "index.html");
     if (existsSync(indexPath)) {
       res.sendFile(indexPath);
