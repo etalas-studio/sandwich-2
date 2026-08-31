@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Response } from "express";
 import { AuthError } from "./auth/service.js";
 
 export const MIME: Record<string, string> = {
@@ -50,6 +51,15 @@ export function decodePathSegment(segment: string): string | null {
     return decodeURIComponent(segment);
   } catch {
     return null;
+  }
+}
+
+export function sendCaughtErrorExpress(res: Response, err: unknown, context: string): void {
+  if (err instanceof AuthError) {
+    res.status(err.status).json({ error: err.message });
+  } else {
+    console.error(`[${context}] error:`, err);
+    if (!res.headersSent) res.status(500).json({ error: "internal error" });
   }
 }
 
