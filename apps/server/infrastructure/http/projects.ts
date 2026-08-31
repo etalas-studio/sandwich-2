@@ -1,7 +1,7 @@
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
 import { authenticateRequest } from "../../auth/middleware.js";
-import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
+import { sendCaughtErrorExpress } from "../../http-utils.js";
 import {
   listProjects,
   getProject,
@@ -16,66 +16,62 @@ export function registerProjectRoutes(router: Router, deps: HttpDeps): void {
   router.get("/api/projects", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    sendJson(res, 200, await listProjects(db, auth.userId));
+    res.status(200).json(await listProjects(db, auth.userId));
   });
 
-  router.get("/api/projects/:id", async (req, res, params) => {
+  router.get("/api/projects/:id", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const project = await getProject(db, auth.userId, params.id!);
+    const project = await getProject(db, auth.userId, req.params.id!);
     if (!project) {
-      sendJson(res, 404, { error: "project not found" });
+      res.status(404).json({ error: "project not found" });
       return;
     }
-    sendJson(res, 200, project);
+    res.status(200).json(project);
   });
 
-  router.patch("/api/projects/:id", async (req, res, params) => {
+  router.patch("/api/projects/:id", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       title?: unknown;
     } | null;
     if (!body || typeof body.title !== "string" || body.title.trim() === "") {
-      sendJson(res, 400, { error: "title required" });
+      res.status(400).json({ error: "title required" });
       return;
     }
-    const project = await renameProject(db, auth.userId, params.id!, body.title.trim());
+    const project = await renameProject(db, auth.userId, req.params.id!, body.title.trim());
     if (!project) {
-      sendJson(res, 404, { error: "project not found" });
+      res.status(404).json({ error: "project not found" });
       return;
     }
-    sendJson(res, 200, project);
+    res.status(200).json(project);
   });
 
-  router.delete("/api/projects/:id", async (req, res, params) => {
+  router.delete("/api/projects/:id", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      const deleted = await deleteProject(db, auth.userId, params.id!);
-      if (!deleted) {
-        sendJson(res, 404, { error: "project not found" });
-        return;
-      }
-      res.writeHead(204).end();
+      await deleteProject(db, auth.userId, req.params.id!);
+      res.status(200).json({ ok: true });
     } catch (err) {
       if (err instanceof ProjectNotEmptyError) {
-        sendJson(res, 409, { error: "project still has conversations" });
+        res.status(409).json({ error: "project still has conversations" });
         return;
       }
-      sendCaughtError(res, err, "project deletion");
+      sendCaughtErrorExpress(res, err, "project deletion");
     }
   });
 }
