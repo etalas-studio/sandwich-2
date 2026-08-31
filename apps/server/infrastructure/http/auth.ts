@@ -19,8 +19,12 @@ import {
   markVerificationTokenUsed,
 } from "../../db/repo/email-verifications.js";
 import { sendEmail } from "../../notifications/email.js";
-import { verificationLink } from "../../auth/email-verification.js";
 import { deleteSessionsForUser } from "../../db/sessions.js";
+
+function verificationLink(token: string): string {
+  const base = process.env.APP_URL ?? "http://localhost:3000";
+  return `${base.replace(/\/+$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
+}
 import {
   createResetToken,
   getValidResetToken,

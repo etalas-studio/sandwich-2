@@ -1,6 +1,6 @@
 import type { Router } from "../../router.js";
 import type { HttpDeps } from "./types.js";
-import { closeInFlight } from "../../generation/routes.js";
+import { closeInFlight } from "./generation.js";
 import { deleteConversationSession } from "../../projects/sessions.js";
 import {
   createConversation,

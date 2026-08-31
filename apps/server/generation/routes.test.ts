@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { prototypePreviewUrl } from "./routes.js";
+import { prototypePreviewUrl } from "../infrastructure/http/generation.js";
 import {
   composePrototypeBrief,
   composeRefineInstruction,
