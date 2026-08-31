@@ -55,7 +55,7 @@ export function registerShareRoutes(router: Router, deps: HttpDeps): void {
       .where(eq(conversationsTable.shareToken, req.params.token!));
     const conversation = rows[0];
     if (!conversation) {
-      res.status(404).json({ error: "shared conversation not found" });
+      res.status(404).json({ error: "share link not found" });
       return;
     }
     const messages = await getMessages(db, conversation.id);
