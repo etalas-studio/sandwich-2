@@ -1,6 +1,6 @@
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
-import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
+import { sendCaughtErrorExpress } from "../../http-utils.js";
 import { authenticateRequest } from "../../auth/middleware.js";
 import { getUserById } from "../../db/users.js";
 import {
@@ -32,16 +32,16 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
   router.post("/api/midtrans/transaction", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
 
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       planSlug?: string;
     } | null;
     const plan = body?.planSlug ? getPlan(body.planSlug) : undefined;
     if (!plan) {
-      sendJson(res, 400, { error: "planSlug must be 'starter' or 'pro'" });
+      res.status(400).json({ error: "planSlug must be 'starter' or 'pro'" });
       return;
     }
 
@@ -59,7 +59,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         localStatus: "paid",
       });
       await activateSubscription(db, { userId: auth.userId, planSlug: plan.slug });
-      sendJson(res, 200, { orderId, simulated: true, clientKey, isProduction });
+      res.status(200).json({ orderId, simulated: true, clientKey, isProduction });
       return;
     }
 
@@ -85,7 +85,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         redirectUrl: result.redirectUrl,
       });
 
-      sendJson(res, 200, {
+      res.status(200).json({
         token: result.token,
         redirectUrl: result.redirectUrl,
         orderId,
@@ -94,19 +94,19 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         isProduction,
       });
     } catch (err) {
-      sendCaughtError(res, err, "midtrans create transaction");
+      sendCaughtErrorExpress(res, err, "midtrans create transaction");
     }
   });
 
-  router.get("/api/payments/:orderId", async (req, res, params) => {
+  router.get("/api/payments/:orderId", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const payment = await getPayment(db, params.orderId!);
+    const payment = await getPayment(db, req.params.orderId!);
     if (!payment || payment.userId !== auth.userId) {
-      sendJson(res, 404, { error: "payment not found" });
+      res.status(404).json({ error: "payment not found" });
       return;
     }
     let providerData: unknown = {};
@@ -117,7 +117,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         providerData = {};
       }
     }
-    sendJson(res, 200, {
+    res.status(200).json({
       orderId: payment.orderId,
       localStatus: payment.localStatus,
       transactionStatus: payment.transactionStatus,
@@ -133,18 +133,18 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
   router.post("/api/midtrans/verify", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as { orderId?: string } | null;
+    const body = req.body as { orderId?: string } | null;
     const orderId = body?.orderId?.trim() ?? "";
     if (!orderId) {
-      sendJson(res, 400, { error: "orderId is required" });
+      res.status(400).json({ error: "orderId is required" });
       return;
     }
     const payment = await getPayment(db, orderId);
     if (!payment || payment.userId !== auth.userId) {
-      sendJson(res, 404, { error: "payment not found" });
+      res.status(404).json({ error: "payment not found" });
       return;
     }
 
@@ -177,22 +177,19 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
       }
 
       const localStatus = transitioned ? incoming : (payment.localStatus as LocalPaymentStatus);
-      sendJson(res, 200, {
+      res.status(200).json({
         orderId,
         localStatus,
         transactionStatus: status.transactionStatus,
         active: localStatus === "paid",
       });
     } catch (err) {
-      sendCaughtError(res, err, "midtrans verify");
+      sendCaughtErrorExpress(res, err, "midtrans verify");
     }
   });
 
   router.post("/api/midtrans/notification", async (req, res) => {
-    const body = (await readJsonBody(req).catch(() => null)) as Record<
-      string,
-      unknown
-    > | null;
+    const body = req.body as Record<string, unknown> | null;
 
     if (
       !body ||
@@ -201,7 +198,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
       typeof body.gross_amount !== "string" ||
       typeof body.signature_key !== "string"
     ) {
-      sendJson(res, 400, { error: "invalid notification payload" });
+      res.status(400).json({ error: "invalid notification payload" });
       return;
     }
 
@@ -213,14 +210,14 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         signature_key: body.signature_key,
       })
     ) {
-      sendJson(res, 400, { error: "invalid signature" });
+      res.status(400).json({ error: "invalid signature" });
       return;
     }
 
     const orderId = body.order_id;
     const payment = await getPayment(db, orderId);
     if (!payment) {
-      sendJson(res, 200, { received: true });
+      res.status(200).json({ received: true });
       return;
     }
 
@@ -231,7 +228,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
 
     // Never regress paid/refunded, never double-run.
     if (!shouldTransition(payment.localStatus as LocalPaymentStatus, incoming)) {
-      sendJson(res, 200, { received: true });
+      res.status(200).json({ received: true });
       return;
     }
 
@@ -262,11 +259,11 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
         await cancelSubscription(db, payment.userId);
       }
     } catch (err) {
-      sendCaughtError(res, err, "midtrans persist notification");
+      sendCaughtErrorExpress(res, err, "midtrans persist notification");
       return;
     }
 
-    sendJson(res, 200, { received: true });
+    res.status(200).json({ received: true });
   });
 
   // ── Usage ─────────────────────────────────────────────────────────────────
@@ -274,7 +271,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
   router.get("/api/usage", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
 
@@ -288,7 +285,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
     const chatUsed = await getMonthlyUsage(db, auth.userId, "chat");
 
     const now = new Date();
-    sendJson(res, 200, {
+    res.status(200).json({
       used,
       prototypeUsed,
       chatUsed,
@@ -306,17 +303,17 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
   router.get("/api/subscriptions/active", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
 
     const sub = await getActiveSubscription(db, auth.userId);
     if (!sub) {
       const any = await getSubscriptionForUser(db, auth.userId);
-      sendJson(res, 200, { planSlug: null, expired: !!any });
+      res.status(200).json({ planSlug: null, expired: !!any });
       return;
     }
-    sendJson(res, 200, {
+    res.status(200).json({
       planSlug: sub.planSlug,
       status: sub.status,
       startedAt: sub.startedAt,
