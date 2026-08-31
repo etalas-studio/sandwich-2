@@ -17,7 +17,6 @@ import {
 import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
 import { authenticateRequest } from "../../auth/middleware.js";
 import { getActiveSubscription } from "../../db/repo/subscriptions.js";
-import { PLANS } from "../../billing/plans.js";
 
 function parseUpdateInput(candidate: Record<string, unknown>): UpdateConversationInput {
   const input: UpdateConversationInput = {};

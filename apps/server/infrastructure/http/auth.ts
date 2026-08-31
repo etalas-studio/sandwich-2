@@ -30,7 +30,7 @@ import {
   getValidResetToken,
   markResetTokenUsed,
 } from "../../db/repo/password-resets.js";
-import { hashPassword, verifyPassword } from "../../auth/password.js";
+import { hashPassword } from "../../auth/password.js";
 import { parseQueryParam } from "../../documents/export.js";
 
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";

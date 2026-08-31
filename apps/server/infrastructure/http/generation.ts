@@ -1,4 +1,3 @@
-import type { Database } from "../../db/connection.js";
 import type { ServerResponse } from "node:http";
 import type { Router } from "../../router.js";
 import type { HttpDeps } from "./types.js";
@@ -52,11 +51,9 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
 import {
-  textEngineTools,
   runTextGeneration,
   deliverablePathFor,
   commitMessageFor,
-  CHAT_INLINE_CAP,
   chatOutputFor,
   composePrototypeBrief,
   composeRefineInstruction,
@@ -64,7 +61,8 @@ import {
   enrichMessageContent,
   DELIVERABLE_LABEL,
 } from "../../generation/run.js";
-import { runGeneration, type GenerationEvent } from "../../application/generation/index.js";
+// ponytail: wire runGeneration from application layer after generation/run.ts helpers move to domain
+
 
 export interface DocumentRef {
   id: string;
