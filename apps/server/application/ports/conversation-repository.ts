@@ -5,7 +5,7 @@ import type { DocumentType } from "../../domain/documents/index.js";
 export interface ConversationRepository {
   findById(id: string): Promise<Conversation | undefined>;
   listForUser(userId: string): Promise<Conversation[]>;
-  create(input: { userId: string; projectId: string; title: string }): Promise<Conversation>;
+  create(input: { userId: string; projectId: string | null; title: string; prompt?: string; pendingType?: string | null }): Promise<Conversation>;
   updateStage(id: string, stage: PipelineStage, pendingType: DocumentType | null): Promise<void>;
   updateTitle(id: string, title: string): Promise<void>;
   delete(id: string): Promise<void>;

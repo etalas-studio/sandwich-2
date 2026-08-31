@@ -41,7 +41,7 @@ export async function renameProject(
 ): Promise<void> {
   const project = await repo.findOwnedById(userId, id);
   if (!project) throw new ProjectNotFoundError();
-  await repo.updateTitle(id, title);
+  await repo.updateTitle(id, title.trim());
 }
 
 export async function deleteProject(
