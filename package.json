@@ -2,7 +2,7 @@
   "name": "sandwich",
   "version": "0.1.0",
   "private": true,
-  "description": "SANDWICH \u2014 from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
+  "description": "SANDWICH — from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -24,7 +24,9 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/busboy": "^1.5.4",
+    "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.7.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/pdfkit": "^0.17.6",
@@ -41,9 +43,11 @@
     "@aws-sdk/s3-request-presigner": "^3.1109.0",
     "@earendil-works/pi-coding-agent": "^0.84.2",
     "busboy": "^1.6.0",
+    "cors": "^2.8.6",
     "docx": "^9.7.1",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
     "ioredis": "^6.0.0",
     "mammoth": "^1.12.1",
     "marked": "^18.0.9",
