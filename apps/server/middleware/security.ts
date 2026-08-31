@@ -61,9 +61,14 @@ export function csrfGuard(trustedHosts: Set<string>): RequestHandler {
 }
 
 export function corsMiddleware(trustedHosts: Set<string>): RequestHandler {
+  // Match router.ts: CORS_ORIGIN is the primary allowed origin (exact string match)
+  const corsOrigin = process.env.CORS_ORIGIN ?? "";
   return cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, false);
+      // Primary: exact match against CORS_ORIGIN env var (matches original router.ts)
+      if (corsOrigin !== "" && origin === corsOrigin) return callback(null, true);
+      // Secondary: loopback + trustedHosts set (dev/internal)
       let originHost: string;
       try {
         originHost = new URL(origin).host.toLowerCase();
