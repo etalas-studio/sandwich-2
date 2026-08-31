@@ -7,7 +7,6 @@ import {
   getUserById,
   getUserByEmail,
   getUserByUsername,
-  createUser,
   updatePassword,
   ensureAdminUser,
 } from "../../db/users.js";
@@ -62,7 +61,9 @@ export class DrizzleUserRepository implements UserRepository {
       passwordHash: input.passwordHash,
       createdAt: new Date(),
     });
-    return toUser((await getUserById(this.db, input.id))!);
+    const u = await getUserById(this.db, input.id);
+    if (!u) throw new Error("UserRepository.create: user not found after insert");
+    return toUser(u);
   }
 
   async updatePassword(id: string, passwordHash: string): Promise<void> {
