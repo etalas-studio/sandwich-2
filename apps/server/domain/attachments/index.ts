@@ -11,7 +11,7 @@ export interface Attachment {
   mimeType: string;
   sizeBytes: number;
   extractedText: string | null;
-  extractStatus: string;
+  extractStatus: ExtractStatus;
   createdAt: Date;
   url: string;
 }

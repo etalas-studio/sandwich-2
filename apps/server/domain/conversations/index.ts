@@ -9,10 +9,16 @@ export interface ConversationTurn {
 export interface Conversation {
   id: string;
   userId: string;
-  projectId: string;
+  projectId: string | null;
   title: string;
-  stage: string;
+  prompt: string;
+  pipelineStage: string;
   pendingType: string | null;
+  feedback: string | null;
+  pinned: boolean;
+  unread: boolean;
+  shareToken: string | null;
+  sharedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,5 +28,6 @@ export interface ChatMessage {
   conversationId: string;
   role: Role;
   content: string;
+  documentId: string | null;
   createdAt: Date;
 }
