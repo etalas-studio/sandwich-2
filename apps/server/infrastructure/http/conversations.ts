@@ -42,23 +42,29 @@ export function registerConversationRoutes(router: Router, deps: HttpDeps): void
 
     const body = req.body as Record<string, unknown> | null;
     if (!body || typeof body !== "object") {
-      res.status(400).json({ error: "body required" });
+      res.status(400).json({ error: "body must be a JSON object" });
       return;
     }
 
-    const {
-      id,
-      title,
-      prompt,
-      pendingType,
-      projectId,
-    } = body as {
-      id?: string;
-      title?: string;
-      prompt?: string;
-      pendingType?: DocumentType;
-      projectId?: string;
-    };
+    const id = typeof body.id === "string" ? body.id.trim() : "";
+    const rawPendingType = typeof body.pendingType === "string" ? body.pendingType : undefined;
+    const pendingType: DocumentType | undefined =
+      rawPendingType === "prd" || rawPendingType === "quotation" ||
+      rawPendingType === "prototype" || rawPendingType === "specs"
+        ? rawPendingType
+        : undefined;
+    const title =
+      typeof body.title === "string" && body.title.trim() !== ""
+        ? body.title.trim()
+        : null;
+    const prompt =
+      typeof body.prompt === "string" && body.prompt.trim() !== ""
+        ? body.prompt.trim()
+        : null;
+    const projectId =
+      typeof body.projectId === "string" && body.projectId.trim() !== ""
+        ? body.projectId.trim()
+        : undefined;
 
     if (!prompt) {
       res.status(400).json({ error: "prompt is required" });
@@ -74,8 +80,8 @@ export function registerConversationRoutes(router: Router, deps: HttpDeps): void
     try {
       const conversation = await createConversation(db, auth.userId, {
         id: id || undefined,
-        title: title ?? prompt,
-        prompt,
+        title: title ?? prompt!,
+        prompt: prompt!,
         pendingType,
         projectId,
       });

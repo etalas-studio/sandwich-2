@@ -4,6 +4,7 @@ import Busboy from "busboy";
 import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
 import { authenticateRequest } from "../../auth/middleware.js";
+import { sendCaughtErrorExpress } from "../../http-utils.js";
 import {
   makeStorageKey,
   uploadToStorage,
@@ -135,7 +136,7 @@ export function registerAttachmentRoutes(router: Router, deps: HttpDeps): void {
         storageKey,
       });
 
-      await processExtraction(db, {
+      void processExtraction(db, {
         id: attachment.id,
         storageKey: attachment.storageKey,
         filename: attachment.filename,
@@ -143,9 +144,7 @@ export function registerAttachmentRoutes(router: Router, deps: HttpDeps): void {
       });
       res.status(201).json(attachment);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "upload failed";
-      const status = msg.includes("too large") ? 413 : msg.includes("no file") ? 400 : 500;
-      res.status(status).json({ error: msg });
+      sendCaughtErrorExpress(res, err, "attachment upload");
     }
   });
 

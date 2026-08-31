@@ -64,8 +64,12 @@ export function registerProjectRoutes(router: Router, deps: HttpDeps): void {
       return;
     }
     try {
-      await deleteProject(db, auth.userId, req.params.id!);
-      res.status(200).json({ ok: true });
+      const deleted = await deleteProject(db, auth.userId, req.params.id!);
+      if (!deleted) {
+        res.status(404).json({ error: "project not found" });
+        return;
+      }
+      res.status(204).end();
     } catch (err) {
       if (err instanceof ProjectNotEmptyError) {
         res.status(409).json({ error: "project still has conversations" });
