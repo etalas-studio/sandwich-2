@@ -1,5 +1,5 @@
 import type { ServerResponse } from "node:http";
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
 import {
   markInFlight,
@@ -49,7 +49,7 @@ import { acquireProjectLease, isLease, type ProjectLease } from "../../projects/
 import { ensureProjectForConversation } from "../../projects/db.js";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
+import { sendCaughtErrorExpress } from "../../http-utils.js";
 import {
   runTextGeneration,
   deliverablePathFor,
@@ -112,24 +112,24 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
   const db = deps.db;
 
   // Persist user message (+ optional attachments).
-  router.post("/api/conversations/:id/messages", async (req, res, params) => {
+  router.post("/api/conversations/:id/messages", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const conversation = await getConversation(db, params.id!);
+    const conversation = await getConversation(db, req.params.id!);
     if (!conversation || conversation.userId !== auth.userId) {
-      sendJson(res, 404, { error: "not found" });
+      res.status(404).json({ error: "not found" });
       return;
     }
 
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       content?: string;
       attachmentIds?: string[];
     } | null;
     if (!body?.content?.trim()) {
-      sendJson(res, 400, { error: "content is required" });
+      res.status(400).json({ error: "content is required" });
       return;
     }
 
@@ -140,62 +140,62 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
     const sub = await getActiveSubscription(db, auth.userId);
     const plan = sub?.planSlug ? PLANS[sub.planSlug as keyof typeof PLANS] : undefined;
     if (!plan) {
-      sendJson(res, 403, { error: "active subscription required" });
+      res.status(403).json({ error: "active subscription required" });
       return;
     }
     if (plan.chatLimit !== null) {
       const chatUsed = await getMonthlyUsage(db, auth.userId, "chat");
       if (chatUsed >= plan.chatLimit) {
-        sendJson(res, 403, { error: "chat quota reached" });
+        res.status(403).json({ error: "chat quota reached" });
         return;
       }
     }
 
     try {
       const message = await createMessage(db, {
-        conversationId: params.id!,
+        conversationId: req.params.id!,
         userId: auth.userId,
         content: body.content.trim(),
         attachmentIds,
       });
       await incrementUsage(db, auth.userId, "chat");
-      sendJson(res, 201, message);
+      res.status(201).json(message);
     } catch (err) {
-      sendCaughtError(res, err, "message creation");
+      sendCaughtErrorExpress(res, err, "message creation");
     }
   });
 
   // Update user message content (for edit-and-resend).
-  router.patch("/api/conversations/:id/messages/:messageId", async (req, res, params) => {
+  router.patch("/api/conversations/:id/messages/:messageId", async (req, res) => {
     const auth = await authenticateRequest(db, req);
-    if (!auth) { sendJson(res, 401, { error: "unauthorized" }); return; }
-    const conversation = await getConversation(db, params.id!);
-    if (!conversation || conversation.userId !== auth.userId) { sendJson(res, 404, { error: "not found" }); return; }
-    const body = (await readJsonBody(req).catch(() => null)) as { content?: string } | null;
-    if (!body?.content?.trim()) { sendJson(res, 400, { error: "content is required" }); return; }
-    const msgId = params.messageId!;
-    if (!msgId) { sendJson(res, 400, { error: "invalid messageId" }); return; }
+    if (!auth) { res.status(401).json({ error: "unauthorized" }); return; }
+    const conversation = await getConversation(db, req.params.id!);
+    if (!conversation || conversation.userId !== auth.userId) { res.status(404).json({ error: "not found" }); return; }
+    const body = req.body as { content?: string } | null;
+    if (!body?.content?.trim()) { res.status(400).json({ error: "content is required" }); return; }
+    const msgId = req.params.messageId!;
+    if (!msgId) { res.status(400).json({ error: "invalid messageId" }); return; }
     await updateMessageContent(db, msgId, body.content.trim());
-    sendJson(res, 200, { ok: true });
+    res.status(200).json({ ok: true });
   });
 
   // Generate assistant reply — reads history from DB.
-  router.post("/api/conversations/:id/generate", async (req, res, params) => {
+  router.post("/api/conversations/:id/generate", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
 
-    const conversationId = params.id!;
+    const conversationId = req.params.id!;
     const conversation = await getConversation(db, conversationId);
     if (!conversation || conversation.userId !== auth.userId) {
-      sendJson(res, 404, { error: "Conversation not found" });
+      res.status(404).json({ error: "Conversation not found" });
       return;
     }
 
     if (inFlight.has(conversationId) || await isInFlightRemote(conversationId)) {
-      sendJson(res, 200, { conversationId, started: true });
+      res.status(200).json({ conversationId, started: true });
       return;
     }
 
@@ -209,7 +209,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
       const msg =
         "Gagal menyiapkan workspace proyek. Coba lagi sebentar — kalau terus terjadi, hubungi support.";
       await addChatMessage(db, { conversationId, role: "assistant", content: msg }).catch(() => {});
-      sendJson(res, 200, { conversationId, started: false, error: "workspace setup failed" });
+      res.status(200).json({ conversationId, started: false, error: "workspace setup failed" });
       void publishEvent(
         conversationId,
         `data: ${JSON.stringify({ type: "error", text: msg })}\n\n`,
@@ -219,7 +219,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
 
     const leaseResult = await acquireProjectLease(projectId, conversationId);
     if (!isLease(leaseResult)) {
-      sendJson(res, 409, {
+      res.status(409).json({
         error: "project busy",
         conversationId: leaseResult.busyWith,
       });
@@ -227,7 +227,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
     }
     const lease: ProjectLease = leaseResult;
 
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       regenerate?: boolean;
     } | null;
 
@@ -276,7 +276,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
       }
     };
 
-    sendJson(res, 200, { conversationId, started: true });
+    res.status(200).json({ conversationId, started: true });
 
     void (async () => {
       try {
@@ -572,32 +572,32 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
   });
 
   // Message history (with attachments).
-  router.get("/api/conversations/:id/messages", async (req, res, params) => {
+  router.get("/api/conversations/:id/messages", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const conversation = await getConversation(db, params.id!);
+    const conversation = await getConversation(db, req.params.id!);
     if (!conversation || conversation.userId !== auth.userId) {
-      sendJson(res, 404, { error: "Conversation not found" });
+      res.status(404).json({ error: "Conversation not found" });
       return;
     }
-    sendJson(res, 200, await getMessages(db, params.id!));
+    res.status(200).json(await getMessages(db, req.params.id!));
   });
 
   // SSE stream for generation progress.
-  router.get("/api/conversations/:id/stream", async (req, res, params) => {
+  router.get("/api/conversations/:id/stream", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
 
-    const conversationId = params.id!;
+    const conversationId = req.params.id!;
     const conversation = await getConversation(db, conversationId);
     if (!conversation || conversation.userId !== auth.userId) {
-      sendJson(res, 404, { error: "Conversation not found" });
+      res.status(404).json({ error: "Conversation not found" });
       return;
     }
 
