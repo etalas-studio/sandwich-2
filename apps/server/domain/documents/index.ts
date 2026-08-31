@@ -5,7 +5,7 @@ export interface Document {
   id: string;
   projectId: string;
   conversationId: string | null;
-  type: string;
+  type: DocumentType;
   title: string;
   relativePath: string;
   lastCommitSha: string | null;
