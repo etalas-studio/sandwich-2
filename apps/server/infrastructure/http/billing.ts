@@ -130,13 +130,18 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
     });
   });
 
-  router.post("/api/payments/:orderId/verify", async (req, res, params) => {
+  router.post("/api/midtrans/verify", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
       sendJson(res, 401, { error: "unauthenticated" });
       return;
     }
-    const orderId = params.orderId!;
+    const body = (await readJsonBody(req).catch(() => null)) as { orderId?: string } | null;
+    const orderId = body?.orderId?.trim() ?? "";
+    if (!orderId) {
+      sendJson(res, 400, { error: "orderId is required" });
+      return;
+    }
     const payment = await getPayment(db, orderId);
     if (!payment || payment.userId !== auth.userId) {
       sendJson(res, 404, { error: "payment not found" });

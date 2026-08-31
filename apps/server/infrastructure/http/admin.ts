@@ -215,7 +215,7 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
     }
   });
 
-  router.patch("/api/admin/users/:id/role", async (req, res, params) => {
+  router.post("/api/admin/users/:id/role", async (req, res, params) => {
     if (!(await requireAdmin(db, req))) {
       sendJson(res, 401, { error: "unauthorized" });
       return;
