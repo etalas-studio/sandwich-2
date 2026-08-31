@@ -1,9 +1,8 @@
 import type { IncomingMessage } from "node:http";
 import { randomUUID } from "node:crypto";
 import Busboy from "busboy";
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
-import { sendJson, sendCaughtError } from "../../http-utils.js";
 import { authenticateRequest } from "../../auth/middleware.js";
 import {
   makeStorageKey,
@@ -49,8 +48,10 @@ function parseUpload(req: IncomingMessage): Promise<ParsedUpload> {
       stream.on("data", (chunk: Buffer) => {
         size += chunk.length;
         if (size > MAX_UPLOAD_BYTES) {
-          settled = true;
-          reject(new Error("file too large (max 25 MB)"));
+          if (!settled) {
+            settled = true;
+            reject(new Error("file too large (max 25 MB)"));
+          }
           stream.destroy();
           return;
         }
@@ -67,14 +68,15 @@ function parseUpload(req: IncomingMessage): Promise<ParsedUpload> {
 
     bb.on("finish", () => {
       if (settled) return;
+      settled = true;
       if (!file) {
         reject(new Error("no file uploaded"));
-      } else {
-        resolve({ file, conversationId });
+        return;
       }
+      resolve({ file, conversationId });
     });
 
-    bb.on("error", (err) => {
+    bb.on("error", (err: unknown) => {
       if (!settled) {
         settled = true;
         reject(err);
@@ -102,11 +104,11 @@ export function registerAttachmentRoutes(router: Router, deps: HttpDeps): void {
   router.post("/api/attachments", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     if (!storageConfigured()) {
-      sendJson(res, 503, {
+      res.status(503).json({
         error: "file storage not configured on this instance",
       });
       return;
@@ -115,7 +117,7 @@ export function registerAttachmentRoutes(router: Router, deps: HttpDeps): void {
     try {
       const parsed = await parseUpload(req);
       if (!isAllowedFileType(parsed.file.buffer)) {
-        sendJson(res, 415, { error: "file type not supported" });
+        res.status(415).json({ error: "file type not supported" });
         return;
       }
 
@@ -126,37 +128,38 @@ export function registerAttachmentRoutes(router: Router, deps: HttpDeps): void {
       const attachment = await createAttachment(db, {
         id,
         userId: auth.userId,
-        conversationId: parsed.conversationId,
+        conversationId: parsed.conversationId ?? null,
         filename: parsed.file.filename,
         mimeType: parsed.file.mimeType,
-        storageKey,
         sizeBytes: parsed.file.buffer.length,
-      });
-
-      void processExtraction(db, {
-        id: attachment.id,
         storageKey,
-        filename: parsed.file.filename,
-        mimeType: parsed.file.mimeType,
       });
 
-      sendJson(res, 201, attachment);
+      await processExtraction(db, {
+        id: attachment.id,
+        storageKey: attachment.storageKey,
+        filename: attachment.filename,
+        mimeType: attachment.mimeType,
+      });
+      res.status(201).json(attachment);
     } catch (err) {
-      sendCaughtError(res, err, "attachment upload");
+      const msg = err instanceof Error ? err.message : "upload failed";
+      const status = msg.includes("too large") ? 413 : msg.includes("no file") ? 400 : 500;
+      res.status(status).json({ error: msg });
     }
   });
 
-  router.get("/api/conversations/:id/attachments", async (req, res, params) => {
+  router.get("/api/conversations/:id/attachments", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const conv = await getConversation(db, params.id!);
-    if (!conv || conv.userId !== auth.userId) {
-      sendJson(res, 404, { error: "conversation not found" });
+    const conversation = await getConversation(db, req.params.id!);
+    if (!conversation || conversation.userId !== auth.userId) {
+      res.status(404).json({ error: "conversation not found" });
       return;
     }
-    sendJson(res, 200, await listAttachments(db, params.id!));
+    res.status(200).json(await listAttachments(db, req.params.id!));
   });
 }
