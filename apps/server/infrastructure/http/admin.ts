@@ -1,7 +1,7 @@
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
 import { requireAdmin } from "../../auth/middleware.js";
-import { sendJson, sendCaughtError, readJsonBody } from "../../http-utils.js";
+import { sendCaughtErrorExpress } from "../../http-utils.js";
 import {
   getIntegrationStatus,
   connectWithApiKey,
@@ -35,89 +35,89 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
 
   router.get("/api/admin/integrations", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      sendJson(res, 200, await getIntegrationStatus());
+      res.status(200).json(await getIntegrationStatus());
     } catch (err) {
-      sendCaughtError(res, err, "admin integrations list");
+      sendCaughtErrorExpress(res, err, "admin integrations list");
     }
   });
 
-  router.post("/api/admin/integrations/:providerId/connect", async (req, res, params) => {
+  router.post("/api/admin/integrations/:providerId/connect", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       apiKey?: string;
       baseUrl?: string;
     } | null;
     if (!body || typeof body.apiKey !== "string" || !body.apiKey.trim()) {
-      sendJson(res, 400, { error: "apiKey is required" });
+      res.status(400).json({ error: "apiKey is required" });
       return;
     }
     try {
       const result = await connectWithApiKey(
-        params.providerId!,
+        req.params.providerId!,
         body.apiKey.trim(),
         typeof body.baseUrl === "string" ? body.baseUrl.trim() : undefined,
       );
-      sendJson(res, result.ok ? 200 : 400, result);
+      res.status(result.ok ? 200 : 400).json(result);
     } catch (err) {
-      sendCaughtError(res, err, "admin integration connect");
+      sendCaughtErrorExpress(res, err, "admin integration connect");
     }
   });
 
-  router.post("/api/admin/integrations/:providerId/test", async (req, res, params) => {
+  router.post("/api/admin/integrations/:providerId/test", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       apiKey?: string;
       baseUrl?: string;
     } | null;
     if (!body || typeof body.apiKey !== "string" || !body.apiKey.trim()) {
-      sendJson(res, 400, { error: "apiKey is required" });
+      res.status(400).json({ error: "apiKey is required" });
       return;
     }
     try {
       const result = await testProviderConnection(
-        params.providerId!,
+        req.params.providerId!,
         body.apiKey.trim(),
         typeof body.baseUrl === "string" ? body.baseUrl.trim() : undefined,
       );
-      sendJson(res, result.ok ? 200 : 400, result);
+      res.status(result.ok ? 200 : 400).json(result);
     } catch (err) {
-      sendCaughtError(res, err, "admin integration test");
+      sendCaughtErrorExpress(res, err, "admin integration test");
     }
   });
 
-  router.post("/api/admin/integrations/:providerId/ping", async (req, res, params) => {
+  router.post("/api/admin/integrations/:providerId/ping", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      const result = await pingStoredProvider(params.providerId!);
-      sendJson(res, result.ok ? 200 : 400, result);
+      const result = await pingStoredProvider(req.params.providerId!);
+      res.status(result.ok ? 200 : 400).json(result);
     } catch (err) {
-      sendCaughtError(res, err, "admin integration ping");
+      sendCaughtErrorExpress(res, err, "admin integration ping");
     }
   });
 
-  router.post("/api/admin/integrations/:providerId/disconnect", async (req, res, params) => {
+  router.post("/api/admin/integrations/:providerId/disconnect", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      const result = await disconnectApiKey(params.providerId!);
-      sendJson(res, result.ok ? 200 : 400, result);
+      const result = await disconnectApiKey(req.params.providerId!);
+      res.status(result.ok ? 200 : 400).json(result);
     } catch (err) {
-      sendCaughtError(res, err, "admin integration disconnect");
+      sendCaughtErrorExpress(res, err, "admin integration disconnect");
     }
   });
 
@@ -125,7 +125,7 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
 
   router.get("/api/admin/engine", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
@@ -135,20 +135,20 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
         stages[stage] = { ...cfg, value: `${cfg.provider}/${cfg.model}` };
       }
       const integrations = await getIntegrationStatus();
-      sendJson(res, 200, { stages, defaults: STAGE_DEFAULTS, integrations });
+      res.status(200).json({ stages, defaults: STAGE_DEFAULTS, integrations });
     } catch (err) {
-      sendCaughtError(res, err, "admin engine get");
+      sendCaughtErrorExpress(res, err, "admin engine get");
     }
   });
 
   router.post("/api/admin/engine", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as Record<string, unknown> | null;
+    const body = req.body as Record<string, unknown> | null;
     if (!body || typeof body !== "object") {
-      sendJson(res, 400, { error: "invalid body" });
+      res.status(400).json({ error: "invalid body" });
       return;
     }
     try {
@@ -156,21 +156,21 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
         const value = body[stage];
         if (value === undefined) continue;
         if (typeof value !== "string" || !value.trim()) {
-          sendJson(res, 400, { error: `invalid value for ${stage}` });
+          res.status(400).json({ error: `invalid value for ${stage}` });
           return;
         }
         const trimmed = value.trim();
         const slash = trimmed.indexOf("/");
         if (slash <= 0 || slash === trimmed.length - 1) {
-          sendJson(res, 400, { error: `invalid value for ${stage}: expected "provider/model"` });
+          res.status(400).json({ error: `invalid value for ${stage}: expected "provider/model"` });
           return;
         }
         await setEngineSetting(db, STAGE_SETTING_KEYS[stage], trimmed);
       }
       refreshEngineConfig();
-      sendJson(res, 200, { ok: true });
+      res.status(200).json({ ok: true });
     } catch (err) {
-      sendCaughtError(res, err, "admin engine update");
+      sendCaughtErrorExpress(res, err, "admin engine update");
     }
   });
 
@@ -178,14 +178,14 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
 
   router.get("/api/admin/stats", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
       const stats = await getAdminStats(db);
-      sendJson(res, 200, stats);
+      res.status(200).json(stats);
     } catch (err) {
-      sendCaughtError(res, err, "admin stats");
+      sendCaughtErrorExpress(res, err, "admin stats");
     }
   });
 
@@ -193,94 +193,93 @@ export function registerAdminRoutes(router: Router, deps: HttpDeps): void {
 
   router.get("/api/admin/users", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      const url = new URL(req.url ?? "/", "http://localhost");
       const page = (() => {
-        const n = parseInt(url.searchParams.get("page") ?? "1", 10);
+        const n = parseInt(String(req.query.page ?? "1"), 10);
         return Number.isFinite(n) && n > 0 ? n : 1;
       })();
       const limit = (() => {
-        const n = parseInt(url.searchParams.get("limit") ?? "20", 10);
+        const n = parseInt(String(req.query.limit ?? "20"), 10);
         return Number.isFinite(n) && n > 0 && n <= 100 ? n : 20;
       })();
-      const search = url.searchParams.get("search")?.trim() || undefined;
-      const role = url.searchParams.get("role") || undefined;
+      const search = typeof req.query.search === "string" ? req.query.search.trim() || undefined : undefined;
+      const role = typeof req.query.role === "string" ? req.query.role || undefined : undefined;
       const result = await getAdminUsers(db, page, limit, search, role);
-      sendJson(res, 200, { ...result, page });
+      res.status(200).json({ ...result, page });
     } catch (err) {
-      sendCaughtError(res, err, "admin users list");
+      sendCaughtErrorExpress(res, err, "admin users list");
     }
   });
 
-  router.post("/api/admin/users/:id/role", async (req, res, params) => {
+  router.post("/api/admin/users/:id/role", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as { role?: string } | null;
+    const body = req.body as { role?: string } | null;
     if (!body || (body.role !== "user" && body.role !== "admin")) {
-      sendJson(res, 400, { error: "role must be 'user' or 'admin'" });
+      res.status(400).json({ error: "role must be 'user' or 'admin'" });
       return;
     }
     try {
-      await updateUserRole(db, params.id!, body.role);
-      sendJson(res, 200, { ok: true });
+      await updateUserRole(db, req.params.id!, body.role);
+      res.status(200).json({ ok: true });
     } catch (err) {
-      sendCaughtError(res, err, "admin user role");
+      sendCaughtErrorExpress(res, err, "admin user role");
     }
   });
 
   // ── User subscription manage ──────────────────────────────────────────────
 
-  router.post("/api/admin/users/:id/subscription", async (req, res, params) => {
+  router.post("/api/admin/users/:id/subscription", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as {
+    const body = req.body as {
       action?: string;
       planSlug?: string;
     } | null;
     if (!body || (body.action !== "cancel" && body.action !== "grant")) {
-      sendJson(res, 400, { error: "action must be 'cancel' or 'grant'" });
+      res.status(400).json({ error: "action must be 'cancel' or 'grant'" });
       return;
     }
     if (body.action === "grant") {
       if (!body.planSlug || !getPlan(body.planSlug)) {
-        sendJson(res, 400, { error: "planSlug must be 'starter' or 'pro'" });
+        res.status(400).json({ error: "planSlug must be 'starter' or 'pro'" });
         return;
       }
       try {
-        await activateSubscription(db, { userId: params.id!, planSlug: body.planSlug });
-        sendJson(res, 200, { ok: true });
+        await activateSubscription(db, { userId: req.params.id!, planSlug: body.planSlug });
+        res.status(200).json({ ok: true });
       } catch (err) {
-        sendCaughtError(res, err, "admin user grant subscription");
+        sendCaughtErrorExpress(res, err, "admin user grant subscription");
       }
     } else {
       try {
-        await cancelSubscription(db, params.id!);
-        sendJson(res, 200, { ok: true });
+        await cancelSubscription(db, req.params.id!);
+        res.status(200).json({ ok: true });
       } catch (err) {
-        sendCaughtError(res, err, "admin user cancel subscription");
+        sendCaughtErrorExpress(res, err, "admin user cancel subscription");
       }
     }
   });
 
   // ── Delete user ────────────────────────────────────────────────────────────
 
-  router.delete("/api/admin/users/:id", async (req, res, params) => {
+  router.delete("/api/admin/users/:id", async (req, res) => {
     if (!(await requireAdmin(db, req))) {
-      sendJson(res, 401, { error: "unauthorized" });
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     try {
-      await deleteUser(db, params.id!);
-      sendJson(res, 200, { ok: true });
+      await deleteUser(db, req.params.id!);
+      res.status(200).json({ ok: true });
     } catch (err) {
-      sendCaughtError(res, err, "admin user delete");
+      sendCaughtErrorExpress(res, err, "admin user delete");
     }
   });
 }
