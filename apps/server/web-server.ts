@@ -1,10 +1,9 @@
 import "dotenv/config";
-import { createServer } from "node:http";
-import type { Server, ServerResponse } from "node:http";
+import type { Server } from "node:http";
 import { closeRedis } from "./redis.js";
-import { existsSync, readFileSync, mkdirSync, accessSync, constants } from "node:fs";
+import { existsSync, mkdirSync, accessSync, constants } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { extname, join, normalize, resolve } from "node:path";
+import { resolve } from "node:path";
 import { projectsRoot } from "./projects/workspace.js";
 import { openDb } from "./db/connection.js";
 import { ensureAdminUser, getUserByEmail } from "./db/users.js";
@@ -13,8 +12,7 @@ import { eq } from "drizzle-orm";
 import { hashPassword } from "./auth/password.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import { initIntegrations } from "./integrations/integrations.js";
-import { MIME, sendJson } from "./http-utils.js";
-import { Router } from "./router.js";
+import { sendJson } from "./http-utils.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
 import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./attachments/extract.js";
@@ -38,6 +36,9 @@ import {
   DrizzleProjectRepository,
 } from "./infrastructure/db/index.js";
 import { PiGenerationAdapter } from "./infrastructure/ai/index.js";
+import express from "express";
+import type { Request, Response, NextFunction } from "express";
+import { hostGuard, csrfGuard, corsMiddleware } from "./middleware/security.js";
 
 export interface WebServerOptions {
   port: number;
@@ -174,9 +175,16 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   const trustedHosts = parseTrustedHosts();
   let boundPort = port;
 
-  const router = new Router(trustedHosts, boundPort);
+  const app = express();
 
-  router.use(async (req, res) => {
+  // Middleware stack (order matters)
+  app.use(corsMiddleware());
+  app.use(hostGuard(trustedHosts, boundPort));
+  app.use(csrfGuard(trustedHosts));
+  app.use(express.json());
+
+  // Auth guard — runs before route handlers
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
     const url = req.url ?? "/";
     const path = url.split("?")[0] ?? "/";
     const isApiPath = path === "/api" || path.startsWith("/api/");
@@ -184,50 +192,47 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     if (isApiPath && !isPublicShare && !PUBLIC_API_PATHS.has(path)) {
       if (!(await authenticateRequest(db, req))) {
         sendJson(res, 401, { error: "unauthorized" });
-        return false;
+        return;
       }
+    }
+    next();
+  });
+
+  // Route registrations — TypeScript errors on these are expected; Task 4 updates
+  // the register* signatures to accept Express Router instead of the custom Router.
+  registerAuthRoutes(app as never, deps);
+  registerConversationRoutes(app as never, deps);
+  registerGenerationRoutes(app as never, deps);
+  registerProjectRoutes(app as never, deps);
+  registerDocumentRoutes(app as never, deps);
+  registerBillingRoutes(app as never, deps);
+  registerAttachmentRoutes(app as never, deps);
+  registerShareRoutes(app as never, deps);
+  registerAccountRoutes(app as never, deps);
+  registerPrototypePublicRoutes(app as never, db);
+  registerAdminRoutes(app as never, deps);
+
+  // Static SPA serving
+  if (existsSync(webRoot)) {
+    app.use(express.static(webRoot));
+  }
+  app.get("*", (req: Request, res: Response) => {
+    const indexPath = resolve(webRoot, "index.html");
+    if (existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: "not found" });
     }
   });
 
-  registerAuthRoutes(router, deps);
-  registerConversationRoutes(router, deps);
-  registerGenerationRoutes(router, deps);
-  registerProjectRoutes(router, deps);
-  registerDocumentRoutes(router, deps);
-  registerBillingRoutes(router, deps);
-  registerAttachmentRoutes(router, deps);
-  registerShareRoutes(router, deps);
-  registerAccountRoutes(router, deps);
-  registerPrototypePublicRoutes(router, db);
-  registerAdminRoutes(router, deps);
-
-  const server = createServer((req, res) => {
-    void (async () => {
-      try {
-        const url = req.url ?? "/";
-        const path = url.split("?")[0] ?? "/";
-        const isApiPath = path === "/api" || path.startsWith("/api/");
-        const isPrototypePath = path === "/p" || path.startsWith("/p/");
-        if (isApiPath || isPrototypePath) {
-          await router.dispatch(req, res);
-          return;
-        }
-        if (
-          (req.method ?? "GET") === "GET" &&
-          serveStatic(path, webRoot, res)
-        )
-          return;
-        sendJson(res, 404, { error: "not found" });
-      } catch (err) {
-        console.error("unhandled request error:", err);
-        res.headersSent
-          ? res.destroy()
-          : sendJson(res, 500, { error: "internal error" });
-      }
-    })();
+  // Error handler (must have 4 params for Express to recognise it)
+  app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    console.error("unhandled request error:", err);
+    if (res.headersSent) return;
+    res.status(500).json({ error: "internal error" });
   });
 
-  server.listen(port, "0.0.0.0", () => {
+  const server = app.listen(port, "0.0.0.0", () => {
     const address = server.address();
     boundPort =
       typeof address === "object" && address ? address.port : port;
@@ -240,31 +245,6 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   }
 
   return server;
-}
-
-function serveStatic(
-  urlPath: string,
-  webRoot: string,
-  res: ServerResponse,
-): boolean {
-  if (!existsSync(webRoot)) return false;
-  const relative =
-    urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
-  const target = resolve(webRoot, normalize(relative));
-  if (!target.startsWith(resolve(webRoot))) return false;
-  const file =
-    existsSync(target) && !target.endsWith("/")
-      ? target
-      : join(webRoot, "index.html");
-  if (!existsSync(file)) return false;
-  const body = readFileSync(file);
-  res.writeHead(200, {
-    "content-type":
-      MIME[extname(file)] ?? "application/octet-stream",
-    "content-length": body.length,
-  });
-  res.end(body);
-  return true;
 }
 
 if (
