@@ -1,14 +1,12 @@
-import type { Router } from "../../router.js";
+import type { Router } from "express";
 import type { HttpDeps } from "./types.js";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { authenticateRequest } from "../../auth/middleware.js";
-import { sendJson, readJsonBody } from "../../http-utils.js";
 import {
   exportDocument,
   normalizeFormat,
   sanitizeFilename,
-  parseQueryParam,
   type ExportResult,
 } from "../../documents/export.js";
 import {
@@ -47,95 +45,91 @@ export function registerDocumentRoutes(router: Router, deps: HttpDeps): void {
   router.get("/api/documents", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
     const docs = await listDocumentsForUser(db, auth.userId);
-    sendJson(
-      res,
-      200,
-      docs.map((doc) => withPreviewUrl(doc)),
-    );
+    res.status(200).json(docs.map((doc) => withPreviewUrl(doc)));
   });
 
-  router.get("/api/documents/by-title/:title", async (req, res, params) => {
+  router.get("/api/documents/by-title/:title", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const doc = await findDocumentByTitle(db, auth.userId, params.title!);
+    const doc = await findDocumentByTitle(db, auth.userId, req.params.title!);
     if (!doc) {
-      sendJson(res, 404, { error: "document not found" });
+      res.status(404).json({ error: "document not found" });
       return;
     }
-    sendJson(res, 200, withPreviewUrl(doc));
+    res.status(200).json(withPreviewUrl(doc));
   });
 
-  router.get("/api/documents/:id", async (req, res, params) => {
+  router.get("/api/documents/:id", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    const doc = await getOwnedDocument(db, auth.userId, req.params.id!);
     if (!doc) {
-      sendJson(res, 404, { error: "document not found" });
+      res.status(404).json({ error: "document not found" });
       return;
     }
     const content = await readDocumentContent(auth.userId, doc);
-    sendJson(res, 200, { ...withPreviewUrl(doc), content });
+    res.status(200).json({ ...withPreviewUrl(doc), content });
   });
 
-  router.get("/api/documents/:id/export", async (req, res, params) => {
+  router.get("/api/documents/:id/export", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    const doc = await getOwnedDocument(db, auth.userId, req.params.id!);
     if (!doc) {
-      sendJson(res, 404, { error: "document not found" });
+      res.status(404).json({ error: "document not found" });
       return;
     }
     const content = await readDocumentContent(auth.userId, doc);
     if (content === null) {
-      sendJson(res, 400, { error: "document has no content yet" });
+      res.status(400).json({ error: "document has no content yet" });
       return;
     }
-    const format = normalizeFormat(parseQueryParam(req.url, "format"));
+    const format = normalizeFormat(String(req.query["format"] ?? ""));
     try {
       const result: ExportResult = await exportDocument(content, format);
       const filename = sanitizeFilename(doc.title, result.extension);
-      res.writeHead(200, {
-        "content-type": result.mimeType,
-        "content-length": result.buffer.length,
-        "content-disposition": `attachment; filename="${filename}"`,
-        "cache-control": "no-store",
-      });
-      res.end(result.buffer);
+      res
+        .status(200)
+        .setHeader("content-type", result.mimeType)
+        .setHeader("content-length", result.buffer.length)
+        .setHeader("content-disposition", `attachment; filename="${filename}"`)
+        .setHeader("cache-control", "no-store")
+        .end(result.buffer);
     } catch {
-      sendJson(res, 500, { error: "export failed" });
+      res.status(500).json({ error: "export failed" });
     }
   });
 
-  router.patch("/api/documents/:id", async (req, res, params) => {
+  router.patch("/api/documents/:id", async (req, res) => {
     const auth = await authenticateRequest(db, req);
     if (!auth) {
-      sendJson(res, 401, { error: "unauthenticated" });
+      res.status(401).json({ error: "unauthenticated" });
       return;
     }
-    const doc = await getOwnedDocument(db, auth.userId, params.id!);
+    const doc = await getOwnedDocument(db, auth.userId, req.params.id!);
     if (!doc) {
-      sendJson(res, 404, { error: "document not found" });
+      res.status(404).json({ error: "document not found" });
       return;
     }
-    const body = (await readJsonBody(req).catch(() => null)) as { title?: string } | null;
+    const body = req.body as { title?: string } | null;
     if (!body?.title?.trim()) {
-      sendJson(res, 400, { error: "title is required" });
+      res.status(400).json({ error: "title is required" });
       return;
     }
     await updateDocumentTitle(db, doc.id, body.title.trim());
-    sendJson(res, 200, withPreviewUrl((await getOwnedDocument(db, auth.userId, doc.id))!));
+    res.status(200).json(withPreviewUrl((await getOwnedDocument(db, auth.userId, doc.id))!));
   });
 }
