@@ -15,25 +15,29 @@ import { authenticateRequest } from "./auth/middleware.js";
 import { initIntegrations } from "./integrations/integrations.js";
 import { MIME, sendJson } from "./http-utils.js";
 import { Router } from "./router.js";
-import { registerAuthRoutes } from "./auth/routes.js";
-import { registerPasswordResetRoutes } from "./auth/password-reset.js";
-import { registerEmailVerificationRoutes } from "./auth/email-verification.js";
-import { registerConversationRoutes } from "./conversations/routes.js";
-import { registerProjectRoutes } from "./projects/routes.js";
-import { registerConversationRunRoutes } from "./generation/routes.js";
-import { registerAttachmentRoutes } from "./attachments/routes.js";
-import { registerUsageRoutes } from "./billing/usage.js";
-import { registerShareRoutes } from "./sharing/routes.js";
-import { registerSettingsRoutes } from "./account/settings.js";
-import { registerMidtransRoutes } from "./billing/midtrans-routes.js";
-import { registerSubscriptionRoutes } from "./billing/subscriptions.js";
-import { registerPreferenceRoutes } from "./account/preferences.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
 import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./attachments/extract.js";
 import { registerPrototypePublicRoutes } from "./prototype/routes.js";
-import { registerDocumentRoutes } from "./documents/routes.js";
-import { registerAdminRoutes } from "./admin/routes.js";
+import {
+  registerAuthRoutes,
+  registerConversationRoutes,
+  registerGenerationRoutes,
+  registerProjectRoutes,
+  registerDocumentRoutes,
+  registerBillingRoutes,
+  registerAttachmentRoutes,
+  registerShareRoutes,
+  registerAccountRoutes,
+  registerAdminRoutes,
+} from "./infrastructure/http/index.js";
+import type { HttpDeps } from "./infrastructure/http/types.js";
+import {
+  DrizzleConversationRepository,
+  DrizzleDocumentRepository,
+  DrizzleProjectRepository,
+} from "./infrastructure/db/index.js";
+import { PiGenerationAdapter } from "./infrastructure/ai/index.js";
 
 export interface WebServerOptions {
   port: number;
@@ -149,6 +153,13 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   const { port, webRoot } = options;
   assertWorkspacePrereqs();
   const db = await openDb(process.env.DATABASE_URL!);
+  const deps: HttpDeps = {
+    db,
+    conversations: new DrizzleConversationRepository(db),
+    documents: new DrizzleDocumentRepository(db),
+    projects: new DrizzleProjectRepository(db),
+    generation: new PiGenerationAdapter(),
+  };
   await resetStaleExtractions(db);
   await expireStalePayments(db);
   // Re-process attachments that were left pending (e.g. uploaded before the
@@ -178,22 +189,17 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     }
   });
 
-  registerAuthRoutes(router, db, PUBLIC_API_PATHS);
-  registerPasswordResetRoutes(router, db);
-  registerEmailVerificationRoutes(router, db);
-  registerConversationRoutes(router, db);
-  registerProjectRoutes(router, db);
-  registerConversationRunRoutes(router, db);
-  registerAttachmentRoutes(router, db);
-  registerUsageRoutes(router, db);
-  registerShareRoutes(router, db);
-  registerSettingsRoutes(router, db);
-  registerMidtransRoutes(router, db);
-  registerSubscriptionRoutes(router, db);
-  registerPreferenceRoutes(router, db);
+  registerAuthRoutes(router, deps);
+  registerConversationRoutes(router, deps);
+  registerGenerationRoutes(router, deps);
+  registerProjectRoutes(router, deps);
+  registerDocumentRoutes(router, deps);
+  registerBillingRoutes(router, deps);
+  registerAttachmentRoutes(router, deps);
+  registerShareRoutes(router, deps);
+  registerAccountRoutes(router, deps);
   registerPrototypePublicRoutes(router, db);
-  registerDocumentRoutes(router, db);
-  registerAdminRoutes(router, db);
+  registerAdminRoutes(router, deps);
 
   const server = createServer((req, res) => {
     void (async () => {
