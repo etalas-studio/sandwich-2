@@ -1,8 +1,18 @@
+export type LocalPaymentStatus =
+  | "creating_payment"
+  | "awaiting_payment"
+  | "paid"
+  | "partially_refunded"
+  | "refunded"
+  | "failed"
+  | "cancelled"
+  | "expired";
+
 export interface Payment {
   orderId: string;
   userId: string | null;
   planSlug: string | null;
-  localStatus: string;
+  localStatus: LocalPaymentStatus;
   transactionStatus: string;
   statusCode: string;
   grossAmount: string;
@@ -21,7 +31,7 @@ export interface CreatePaymentInput {
   userId: string;
   planSlug: string;
   grossAmount: number;
-  localStatus?: string;
+  localStatus?: LocalPaymentStatus;
 }
 
 export interface PaymentRepository {
