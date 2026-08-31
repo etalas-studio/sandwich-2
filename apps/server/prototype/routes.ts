@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { posix } from "node:path";
+import express from "express";
 import type { Router, Request, Response } from "express";
 import { getOwnedDocument } from "../documents/db.js";
 import { authenticateRequest } from "../auth/middleware.js";
@@ -58,22 +59,26 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     res.status(200).setHeader("content-type", MIME[extFor(abs)] ?? "application/octet-stream").end(readFileSync(abs));
   }
 
+  const strictRouter = express.Router({ strict: true });
+
   // No trailing slash — redirect to canonical /p/:docId/
-  router.get("/p/:docId", (req, res) => {
+  strictRouter.get("/p/:docId", (req, res) => {
     res.redirect(301, `/p/${req.params.docId}/`);
   });
 
   // Latest index — /p/:docId/
-  router.get("/p/:docId/", async (req, res) => {
+  strictRouter.get("/p/:docId/", async (req, res) => {
     const resolved = await resolvePrototypeDir(req, req.params.docId);
     if (!resolved) { res.status(404).json({ error: "not found" }); return; }
     serveFile(res, resolved.dir, `${resolved.protoDir}/index.html`);
   });
 
   // Latest asset — /p/:docId/{*path}
-  router.get("/p/:docId/{*path}", async (req, res) => {
+  strictRouter.get("/p/:docId/{*path}", async (req, res) => {
     const resolved = await resolvePrototypeDir(req, req.params.docId);
     if (!resolved) { res.status(404).json({ error: "not found" }); return; }
     serveFile(res, resolved.dir, `${resolved.protoDir}/${req.params.path}`);
   });
+
+  router.use(strictRouter);
 }

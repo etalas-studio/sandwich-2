@@ -12,7 +12,6 @@ import { eq } from "drizzle-orm";
 import { hashPassword } from "./auth/password.js";
 import { authenticateRequest } from "./auth/middleware.js";
 import { initIntegrations } from "./integrations/integrations.js";
-import { sendJson } from "./http-utils.js";
 import { resetStaleExtractions, listAttachmentsByStatus } from "./db/repo/attachments.js";
 import { expireStalePayments } from "./db/payments.js";
 import { processExtraction } from "./attachments/extract.js";
@@ -181,7 +180,15 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   app.use(corsMiddleware());
   app.use(hostGuard(trustedHosts, boundPort));
   app.use(csrfGuard(trustedHosts));
-  app.use(express.json());
+  app.use(express.json({ limit: "64kb" }));
+
+  // Prevent browsers and proxies from caching API responses
+  app.use((_req, res, next) => {
+    if (_req.path.startsWith("/api/") || _req.path === "/api") {
+      res.setHeader("cache-control", "no-store");
+    }
+    next();
+  });
 
   // Auth guard — runs before route handlers
   app.use(async (req: Request, res: Response, next: NextFunction) => {
@@ -191,26 +198,25 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
     const isPublicShare = path.startsWith("/api/share/");
     if (isApiPath && !isPublicShare && !PUBLIC_API_PATHS.has(path)) {
       if (!(await authenticateRequest(db, req))) {
-        sendJson(res, 401, { error: "unauthorized" });
+        res.status(401).json({ error: "unauthorized" });
+        return;
         return;
       }
     }
     next();
   });
 
-  // Route registrations — TypeScript errors on these are expected; Task 4 updates
-  // the register* signatures to accept Express Router instead of the custom Router.
-  registerAuthRoutes(app as never, deps);
-  registerConversationRoutes(app as never, deps);
-  registerGenerationRoutes(app as never, deps);
-  registerProjectRoutes(app as never, deps);
-  registerDocumentRoutes(app as never, deps);
-  registerBillingRoutes(app as never, deps);
-  registerAttachmentRoutes(app as never, deps);
-  registerShareRoutes(app as never, deps);
-  registerAccountRoutes(app as never, deps);
-  registerPrototypePublicRoutes(app as never, db);
-  registerAdminRoutes(app as never, deps);
+  registerAuthRoutes(app, deps);
+  registerConversationRoutes(app, deps);
+  registerGenerationRoutes(app, deps);
+  registerProjectRoutes(app, deps);
+  registerDocumentRoutes(app, deps);
+  registerBillingRoutes(app, deps);
+  registerAttachmentRoutes(app, deps);
+  registerShareRoutes(app, deps);
+  registerAccountRoutes(app, deps);
+  registerPrototypePublicRoutes(app, db);
+  registerAdminRoutes(app, deps);
 
   // Static SPA serving
   if (existsSync(webRoot)) {
@@ -229,7 +235,12 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error("unhandled request error:", err);
     if (res.headersSent) return;
-    res.status(500).json({ error: "internal error" });
+    const status =
+      typeof (err as Record<string, unknown>)?.status === "number"
+        ? (err as Record<string, unknown>).status as number
+        : 500;
+    const msg = status < 500 ? "invalid request" : "internal error";
+    res.status(status).json({ error: msg });
   });
 
   const server = app.listen(port, "0.0.0.0", () => {
