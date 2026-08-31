@@ -7,8 +7,6 @@ import {
   getProject,
   listProjects,
   createProject,
-  renameProject,
-  deleteProject,
   normaliseTitle,
 } from "../../projects/db.js";
 

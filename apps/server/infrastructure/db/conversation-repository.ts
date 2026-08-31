@@ -1,5 +1,7 @@
 import type { ConversationRepository } from "../../application/ports/conversation-repository.js";
 import type { Conversation, ChatMessage, ConversationTurn } from "../../domain/conversations/index.js";
+import type { PipelineStage } from "../../domain/generation/index.js";
+import type { DocumentType } from "../../domain/documents/index.js";
 import type { Database } from "../../db/connection.js";
 import {
   getConversation,
@@ -8,7 +10,6 @@ import {
   updateConversation,
   deleteConversation,
 } from "../../conversations/db.js";
-import type { DocumentType } from "../../documents/db.js";
 import {
   getMessagesForPrompt,
   addChatMessage,
@@ -60,7 +61,7 @@ export class DrizzleConversationRepository implements ConversationRepository {
     });
   }
 
-  async updateStage(id: string, stage: string, pendingType: string | null): Promise<void> {
+  async updateStage(id: string, stage: PipelineStage, pendingType: DocumentType | null): Promise<void> {
     await updateConversation(this.db, id, { pipelineStage: stage, pendingType });
   }
 
@@ -80,7 +81,8 @@ export class DrizzleConversationRepository implements ConversationRepository {
   async addMessage(conversationId: string, role: string, content: string): Promise<ChatMessage> {
     const id = await addChatMessage(this.db, { conversationId, role, content });
     const msg = await getMessage(this.db, id);
-    return toDomainMessage(msg!);
+    if (!msg) throw new Error("addMessage: inserted row not found");
+    return toDomainMessage(msg);
   }
 
   async listMessages(conversationId: string): Promise<ChatMessage[]> {

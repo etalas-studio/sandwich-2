@@ -2,6 +2,7 @@ import type {
   PaymentRepository,
   Payment,
   CreatePaymentInput,
+  LocalPaymentStatus,
 } from "../../application/ports/payment-repository.js";
 import type { Database } from "../../db/connection.js";
 import {
@@ -9,6 +10,15 @@ import {
   getPayment,
   expireStalePayments,
 } from "../../db/payments.js";
+
+type RawPayment = NonNullable<Awaited<ReturnType<typeof getPayment>>>;
+
+function toPayment(p: RawPayment): Payment {
+  return {
+    ...p,
+    localStatus: p.localStatus as LocalPaymentStatus,
+  };
+}
 
 export class DrizzlePaymentRepository implements PaymentRepository {
   constructor(private db: Database) {}
@@ -20,8 +30,7 @@ export class DrizzlePaymentRepository implements PaymentRepository {
   async findByOrderId(orderId: string): Promise<Payment | null> {
     const p = await getPayment(this.db, orderId);
     if (!p) return null;
-    // db/payments.ts Payment.localStatus is `string`; port expects LocalPaymentStatus union.
-    return p as unknown as Payment;
+    return toPayment(p);
   }
 
   expireStale(): Promise<void> {
