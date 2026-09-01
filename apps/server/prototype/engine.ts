@@ -9,8 +9,8 @@ import {
 } from "./webref.js";
 import { resolveInsideProject } from "../projects/workspace.js";
 import { openConversationSession } from "../projects/sessions.js";
-import { createToolBudget, TOOL_BUDGETS } from "../engine/tool-budget.js";
-import { scrubbedBashTool } from "../engine/bash-tool.js";
+import { createToolBudget, TOOL_BUDGETS } from "../generation/budget.js";
+import { scrubbedBashTool } from "../generation/bash-tool.js";
 
 const ENGINE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes — outer backstop
 

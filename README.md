@@ -6,7 +6,7 @@ From a messy brief to an execution-ready spec. One pipeline — PRD, prototype, 
 
 | Layer | Technology |
 |-------|-----------|
-| **Backend** | Node.js, TypeScript, `node:http` |
+| **Backend** | Node.js, TypeScript, Express 5 |
 | **Database** | PostgreSQL + Drizzle ORM |
 | **Frontend** | React 19, Vite, Tailwind CSS 4 |
 | **AI** | Pi SDK (OpenCode), Groq (fallback) |
@@ -18,15 +18,21 @@ From a messy brief to an execution-ready spec. One pipeline — PRD, prototype, 
 ```
 sandwich-2/
 ├── apps/
-│   ├── server/          # Backend API server (port 4319)
+│   ├── server/          # Backend API server (port 4319) — Clean Architecture
+│   │   ├── domain/      # Entities and core types (no external deps)
+│   │   ├── application/ # Use cases and port interfaces
+│   │   ├── infrastructure/
+│   │   │   ├── http/    # Express route handlers (one file per domain area)
+│   │   │   ├── db/      # Drizzle repository implementations
+│   │   │   └── ai/      # AI engine adapter (Pi SDK)
+│   │   ├── middleware/  # Express middleware (security: CORS, CSRF, host guard)
 │   │   ├── auth/        # Authentication (scrypt password hashing, sessions)
 │   │   ├── db/          # Database layer
 │   │   │   ├── schema.ts          # Drizzle schema (all tables)
 │   │   │   ├── connection.ts       # PostgreSQL connection pool
 │   │   │   ├── repo/              # Repository modules
 │   │   │   └── drizzle/           # Auto-generated migrations
-│   │   ├── pipeline/    # Midtrans, integrations
-│   │   └── routes/      # API route handlers
+│   │   └── web-server.ts          # Express app entry point
 │   └── web/             # Frontend React app (Vite dev on port 3000)
 │       └── src/
 │           ├── components/  # AuthGate, Dashboard, CheckoutPage, LandingPage, SharePage

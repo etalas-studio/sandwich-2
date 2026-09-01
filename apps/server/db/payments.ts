@@ -1,7 +1,7 @@
 import { and, eq, lt } from "drizzle-orm";
 import { payments } from "./schema.js";
 import type { Database } from "./connection.js";
-import type { LocalPaymentStatus } from "../pipeline/payment-status.js";
+import type { LocalPaymentStatus } from "../billing/payment-status.js";
 
 export interface Payment {
   orderId: string;

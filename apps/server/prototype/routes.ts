@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { posix } from "node:path";
-import type { Router } from "../router.js";
-import { sendJson } from "../http-utils.js";
-import { getOwnedDocument } from "../db/documents.js";
+import express from "express";
+import type { Router, Request, Response } from "express";
+import { getOwnedDocument } from "../documents/db.js";
 import { authenticateRequest } from "../auth/middleware.js";
 import { getProjectDir, resolveInsideProject } from "../projects/workspace.js";
 import type { Database } from "../db/connection.js";
@@ -25,17 +25,6 @@ function extFor(path: string): string {
   return dot >= 0 ? path.slice(dot).toLowerCase() : "";
 }
 
-interface ServerResponseLike {
-  writeHead(status: number, headers?: Record<string, string>): void;
-  end(body?: string | Buffer): void;
-}
-
-function redirectTrailing(res: ServerResponseLike, location: string): boolean {
-  res.writeHead(301, { location });
-  res.end();
-  return true;
-}
-
 /**
  * Public prototype preview — serves the prototype document's files from the
  * project's git working tree. `/p/{docId}/` → `prototype/index.html`;
@@ -44,7 +33,7 @@ function redirectTrailing(res: ServerResponseLike, location: string): boolean {
  */
 export function registerPrototypePublicRoutes(router: Router, db: Database): void {
   async function resolvePrototypeDir(
-    req: Parameters<Parameters<Router["get"]>[1]>[0],
+    req: Request,
     docId: string,
   ): Promise<{ dir: string; protoDir: string } | null> {
     const auth = await authenticateRequest(db, req);
@@ -55,38 +44,41 @@ export function registerPrototypePublicRoutes(router: Router, db: Database): voi
     return { dir, protoDir: posix.dirname(doc.relativePath) };
   }
 
-  function serveFile(res: ServerResponseLike, dir: string, relPath: string): void {
+  function serveFile(res: Response, dir: string, relPath: string): void {
     let abs: string;
     try {
       abs = resolveInsideProject(dir, relPath);
     } catch {
-      sendJson(res as never, 404, { error: "not found" });
+      res.status(404).json({ error: "not found" });
       return;
     }
     if (!existsSync(abs)) {
-      sendJson(res as never, 404, { error: "not found" });
+      res.status(404).json({ error: "not found" });
       return;
     }
-    res.writeHead(200, { "content-type": MIME[extFor(abs)] ?? "application/octet-stream" });
-    res.end(readFileSync(abs));
+    res.status(200).setHeader("content-type", MIME[extFor(abs)] ?? "application/octet-stream").end(readFileSync(abs));
   }
 
+  const strictRouter = express.Router({ strict: true });
+
+  // No trailing slash — redirect to canonical /p/:docId/
+  strictRouter.get("/p/:docId", (req, res) => {
+    res.redirect(301, `/p/${req.params.docId}/`);
+  });
+
   // Latest index — /p/:docId/
-  router.get("/p/:docId", async (req, res, params) => {
-    const urlPath = (req.url ?? "").split("?")[0] ?? "";
-    if (!urlPath.endsWith("/")) {
-      redirectTrailing(res, `/p/${params.docId!}/`);
-      return;
-    }
-    const resolved = await resolvePrototypeDir(req, params.docId!);
-    if (!resolved) { sendJson(res, 404, { error: "not found" }); return; }
+  strictRouter.get("/p/:docId/", async (req, res) => {
+    const resolved = await resolvePrototypeDir(req, req.params.docId);
+    if (!resolved) { res.status(404).json({ error: "not found" }); return; }
     serveFile(res, resolved.dir, `${resolved.protoDir}/index.html`);
   });
 
-  // Latest asset — /p/:docId/:path
-  router.get("/p/:docId/*path", async (req, res, params) => {
-    const resolved = await resolvePrototypeDir(req, params.docId!);
-    if (!resolved) { sendJson(res, 404, { error: "not found" }); return; }
-    serveFile(res, resolved.dir, `${resolved.protoDir}/${params.path!}`);
+  // Latest asset — /p/:docId/{*path}
+  strictRouter.get("/p/:docId/{*path}", async (req, res) => {
+    const resolved = await resolvePrototypeDir(req, req.params.docId);
+    if (!resolved) { res.status(404).json({ error: "not found" }); return; }
+    serveFile(res, resolved.dir, `${resolved.protoDir}/${req.params.path}`);
   });
+
+  router.use(strictRouter);
 }

@@ -1,7 +1,7 @@
 import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { subscriptions } from "../schema.js";
 import type { Database } from "../connection.js";
-import { PLANS } from "../../pipeline/plans.js";
+import { PLANS } from "../../billing/plans.js";
 
 export interface Subscription {
   id: string;
