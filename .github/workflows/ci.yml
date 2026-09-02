@@ -7,13 +7,16 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
+      - run: sudo apt-get install -y --no-install-recommends chromium-browser
       - run: npm ci
-      - run: npm test
+      - run: PUPPETEER_EXECUTABLE_PATH=$(which chromium-browser) npm test
       - name: Lint (layer boundaries)
         run: npm run lint:boundaries
