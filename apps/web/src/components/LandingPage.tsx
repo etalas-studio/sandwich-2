@@ -119,7 +119,7 @@ export default function LandingPage() {
         setMobileNavOpen={setMobileNavOpen}
       />
 
-      <LogoCloud label={t('trusted_by')} />
+      {/* <LogoCloud label={t('trusted_by')} /> */}
 
       <Why
         kicker={t('diff_kicker')}

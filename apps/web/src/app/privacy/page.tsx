@@ -59,8 +59,8 @@ export default function Page() {
           heading: { en: 'Your rights and choices', id: 'Hak dan pilihan kamu' },
           body: [
             {
-              en: 'You can request an export or deletion of your account and its documents at any time by emailing support@spectr.id. We will confirm and act on verified requests within a reasonable time.',
-              id: 'Kamu bisa meminta export atau penghapusan akun beserta dokumennya kapan saja dengan email ke support@spectr.id. Kami akan mengonfirmasi dan memproses permintaan yang terverifikasi dalam waktu yang wajar.',
+              en: 'You can request an export or deletion of your account and its documents at any time by emailing hello@etalas.com. We will confirm and act on verified requests within a reasonable time.',
+              id: 'Kamu bisa meminta export atau penghapusan akun beserta dokumennya kapan saja dengan email ke hello@etalas.com. Kami akan mengonfirmasi dan memproses permintaan yang terverifikasi dalam waktu yang wajar.',
             },
             {
               en: 'You can clear the local "spectr_draft" entry at any time by clearing your browser storage for this site.',
@@ -72,8 +72,8 @@ export default function Page() {
           heading: { en: 'Contact', id: 'Kontak' },
           body: [
             {
-              en: 'Questions about this policy? Email support@spectr.id.',
-              id: 'Ada pertanyaan tentang kebijakan ini? Email support@spectr.id.',
+              en: 'Questions about this policy? Email hello@etalas.com.',
+              id: 'Ada pertanyaan tentang kebijakan ini? Email hello@etalas.com.',
             },
           ],
         },

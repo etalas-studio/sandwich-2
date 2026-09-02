@@ -1499,8 +1499,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f8fafc' }}>
         <div className="text-center max-w-sm px-4">
           <p className="text-sm text-zinc-500 mb-4">No active plan found. Please contact support.</p>
-          <a href="mailto:support@spectr.id" className="text-sm font-semibold underline" style={{ color: '#3b82f6' }}>
-            support@spectr.id
+          <a href="mailto:hello@etalas.com" className="text-sm font-semibold underline" style={{ color: '#3b82f6' }}>
+            hello@etalas.com
           </a>
         </div>
       </div>

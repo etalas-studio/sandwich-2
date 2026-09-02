@@ -25,7 +25,7 @@ export default function Header() {
       <nav className="flex items-center gap-1 px-2 sm:px-3 py-2 rounded-full ring-1 ring-black/10 bg-white/80 backdrop-blur-sm max-w-full">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 pl-1 pr-2 shrink-0">
-          <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
+          <img src="/logo.png" alt="Spectr" className="h-7 w-auto brightness-0" />
         </Link>
 
         {/* Desktop anchor links */}

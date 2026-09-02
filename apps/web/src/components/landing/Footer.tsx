@@ -34,7 +34,7 @@ export function Footer(props: FooterProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
+              <img src="/logo.png" alt="Spectr" className="h-8 w-auto brightness-0 invert" />
               <span className="text-base font-medium tracking-tight uppercase" style={{ color: white }}>Spectr</span>
             </div>
             <p className="mt-4 text-base leading-relaxed max-w-xs" style={{ color: white }}>{props.footerDesc}</p>
@@ -57,20 +57,20 @@ export function Footer(props: FooterProps) {
             <h3 className="text-base font-medium" style={{ color: white }}>{props.footerContactTitle}</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a href="mailto:support@spectr.id" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
+                <a href="mailto:hello@etalas.com" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
                   <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30">
                     <iconify-icon icon="solar:letter-linear" width="14" />
                   </span>
-                  <span>support@spectr.id</span>
+                  <span>hello@etalas.com</span>
                 </a>
               </li>
               <li>
-                <Link href="/contact" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
+                <a href="https://api.whatsapp.com/send/?phone=62811297339&text=Hi%2C+I+have+an+inquiry+about+your+services.&type=phone_number&app_absent=0" target="_blank" rel="noreferrer" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
                   <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30">
-                    <iconify-icon icon="solar:chat-round-linear" width="14" />
+                    <iconify-icon icon="mdi:whatsapp" width="14" />
                   </span>
                   <span>{props.footerContact}</span>
-                </Link>
+                </a>
               </li>
             </ul>
             <div className="flex items-center gap-3 mt-6">
