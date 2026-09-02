@@ -23,8 +23,12 @@ RUN npx tsc -p tsconfig.json \
 # ---- runtime ----
 FROM node:22-slim
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates \
+ && apt-get install -y --no-install-recommends \
+      git ca-certificates \
+      chromium libx11-xcb1 libnss3 libxss1 libatk1.0-0 libatk-bridge2.0-0 \
+      libgtk-3-0 libgbm1 libasound2 \
  && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 ENV NODE_ENV=production
