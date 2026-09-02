@@ -644,9 +644,7 @@ function ChatView({
                       {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
-                            <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
-                          </div>
+                          <img src="/logo.png" alt="Spectr" className="h-4 w-auto" style={{ opacity: 0.35, filter: 'brightness(0)' }} />
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <AiMessageActions output={m.output} conversationId={conversationId} onRegenerate={handleRefreshResponse} />
@@ -671,9 +669,7 @@ function ChatView({
                       {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
-                            <span className="text-white font-black" style={{ fontSize: '7px', fontFamily: "'Bowlby One', system-ui" }}>S</span>
-                          </div>
+                          <img src="/logo.png" alt="Spectr" className="h-4 w-auto" style={{ opacity: 0.35, filter: 'brightness(0)' }} />
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <AiMessageActions output={m.output} conversationId={conversationId} onRegenerate={handleRefreshResponse} />
@@ -1854,10 +1850,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
         <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
         <aside className="flex flex-col w-56 shrink-0 fixed md:static inset-y-0 left-0 z-50 md:z-auto h-full border-r" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
         <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6' }}>
-              <span className="text-white font-black text-xs" style={{ fontFamily: bowlby }}>S</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Spectr" className="h-6 w-auto brightness-0" />
+            <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: '#111827' }}>Spectr</span>
           </div>
           <button className="p-1 rounded transition-colors hover:bg-black/5" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
             <iconify-icon icon="solar:sidebar-minimalistic-linear" width="15" style={{ color: 'rgba(0,0,0,0.4)' }} />
