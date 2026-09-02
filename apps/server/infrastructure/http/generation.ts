@@ -199,6 +199,13 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
       return;
     }
 
+    // Claim the slot NOW — before any async setup — so an SSE connection that
+    // arrives while ensureProjectForConversation (git init) is still running
+    // finds inFlight set and stays open instead of closing immediately.
+    const controller = new AbortController();
+    inFlight.set(conversationId, controller);
+    void markInFlight(conversationId);
+
     let projectId: string;
     let projectDir: string;
     try {
@@ -214,11 +221,13 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
         conversationId,
         `data: ${JSON.stringify({ type: "error", text: msg })}\n\n`,
       );
+      closeInFlight(conversationId);
       return;
     }
 
     const leaseResult = await acquireProjectLease(projectId, conversationId);
     if (!isLease(leaseResult)) {
+      closeInFlight(conversationId);
       res.status(409).json({
         error: "project busy",
         conversationId: leaseResult.busyWith,
@@ -252,10 +261,6 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
         }
       }
     }
-
-    const controller = new AbortController();
-    inFlight.set(conversationId, controller);
-    void markInFlight(conversationId);
 
     const finishRun = () => {
       void lease.release();
