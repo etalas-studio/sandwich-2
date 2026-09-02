@@ -1,1 +1,10 @@
-{}
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.spectr.id" }],
+      "destination": "https://spectr.id/:path*",
+      "permanent": true
+    }
+  ]
+}
