@@ -48,12 +48,14 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "html-to-docx": "^1.8.0",
     "ioredis": "^6.0.0",
     "mammoth": "^1.12.1",
     "marked": "^18.0.9",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.19.1",
     "pg": "^8.23.0",
+    "puppeteer": "^25.9.0",
     "tesseract.js": "^7.0.0"
   }
 }
