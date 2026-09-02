@@ -1,7 +1,7 @@
 # Next.js Migration Design
 
 **Date:** 2026-08-19
-**Scope:** Replace `apps/web` (React 19 SPA, Vite) with Next.js App Router. Same subdomain `sandwich.etalas.com`. Primary goal: SEO for landing page.
+**Scope:** Replace `apps/web` (React 19 SPA, Vite) with Next.js App Router. Same subdomain `spectr.id`. Primary goal: SEO for landing page.
 
 ---
 
@@ -78,7 +78,7 @@ export default function Page() {
 **Navigation** — every `useNavigate()` becomes `useRouter()` from `next/navigation`; every `<Link>` import changes from `react-router-dom` to `next/link`. Call sites are identical.
 
 **`AppEffects.tsx`** — new `'use client'` component mounted in `app/layout.tsx`. Contains:
-- Pending plan redirect (`sandwich_pending_plan` localStorage check)
+- Pending plan redirect (`spectr_pending_plan` localStorage check)
 - PostHog identify effect
 
 These currently live in `App.tsx` which is deleted.
@@ -93,16 +93,16 @@ These currently live in `App.tsx` which is deleted.
 
 ```tsx
 export const metadata: Metadata = {
-  title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+  title: 'Spectr — Turn a Messy Client Brief into an Execution-Ready Spec',
   description: 'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
   keywords: ['PRD generator', 'client brief to spec', 'AI product spec', 'product requirements document', 'prototype generator', 'quotation generator', 'AI pipeline', 'brief to PRD'],
-  metadataBase: new URL('https://sandwich.etalas.com'),
+  metadataBase: new URL('https://spectr.id'),
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'SANDWICH — Brief to Spec',
+    title: 'Spectr — Brief to Spec',
     description: 'From a messy brief to a validated PRD, prototype, quotation, and specs.',
-    url: 'https://sandwich.etalas.com',
-    siteName: 'SANDWICH',
+    url: 'https://spectr.id',
+    siteName: 'Spectr',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image' },
@@ -121,10 +121,10 @@ export const metadata: Metadata = {
 ```
 User-agent: *
 Allow: /
-Sitemap: https://sandwich.etalas.com/sitemap.xml
+Sitemap: https://spectr.id/sitemap.xml
 ```
 
-**`public/sitemap.xml`:** single URL entry for `https://sandwich.etalas.com/`.
+**`public/sitemap.xml`:** single URL entry for `https://spectr.id/`.
 
 **`og-image.png`** (1200×630) — does not exist yet; needs to be created separately before deploy.
 

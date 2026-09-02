@@ -2,7 +2,7 @@
 
 ## Overview
 
-Restyle the SANDWICH marketing landing page (`apps/web/src/components/LandingPage.tsx`) to match the visual language of a reference React landing page the user provided (a "Limited" design-agency template: glass pill nav, video/animated hero background, manifesto quote block, ecosystem cards with a big feature banner, numbered process steps with connecting line, branded pricing cards, application-form-style final CTA, footer). **All existing SANDWICH copy, content, sections, i18n strings, and interactive behavior are kept — only the visual system and component structure change.**
+Restyle the Spectr marketing landing page (`apps/web/src/components/LandingPage.tsx`) to match the visual language of a reference React landing page the user provided (a "Limited" design-agency template: glass pill nav, video/animated hero background, manifesto quote block, ecosystem cards with a big feature banner, numbered process steps with connecting line, branded pricing cards, application-form-style final CTA, footer). **All existing Spectr copy, content, sections, i18n strings, and interactive behavior are kept — only the visual system and component structure change.**
 
 Not a content rewrite. Not a new product. Not a new pricing model.
 
@@ -38,7 +38,7 @@ Each section component receives already-resolved copy (from the existing `i18n.t
 
 ## Section-by-section mapping (approved)
 
-| Reference section | SANDWICH section | Content source |
+| Reference section | Spectr section | Content source |
 |---|---|---|
 | Nav pill | Nav pill | existing nav links/behavior |
 | Hero | Hero | existing headline + interactive prompt panel |

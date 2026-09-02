@@ -111,7 +111,7 @@ describe("createSnapTransaction", () => {
         createSnapTransaction({
           orderId: "starter-u4-1700000000000-ghi012",
           grossAmount: 50000,
-          itemName: "SANDWICH Starter",
+          itemName: "Spectr Starter",
         }),
         /MIDTRANS_SERVER_KEY is not set/,
       );

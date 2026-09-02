@@ -105,9 +105,9 @@ export function Faq(props: FaqProps) {
 
 function faqsLabel(props: FaqProps) {
   if (props.lang === 'id') {
-    return 'Pertanyaan yang paling sering ditanya sebelum mulai pakai SANDWICH dan jawaban cepatnya, biar kamu langsung paham alurnya.'
+    return 'Pertanyaan yang paling sering ditanya sebelum mulai pakai Spectr dan jawaban cepatnya, biar kamu langsung paham alurnya.'
   }
-  return 'The questions people ask most before getting started with SANDWICH and quick answers, so you understand the flow right away.'
+  return 'The questions people ask most before getting started with Spectr and quick answers, so you understand the flow right away.'
 }
 
 function categoryHint(props: FaqProps, category: string) {

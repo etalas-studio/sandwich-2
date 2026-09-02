@@ -12,10 +12,10 @@ describe('apiUrl', () => {
   })
 
   it('prefixes path with VITE_API_URL when set', async () => {
-    vi.stubEnv('VITE_API_URL', 'https://api.sandwich.etalas.com')
+    vi.stubEnv('VITE_API_URL', 'https://api.spectr.id')
     // Re-import to pick up stubbed env
     vi.resetModules()
     const { apiUrl } = await import('./base')
-    expect(apiUrl('/api/conversations')).toBe('https://api.sandwich.etalas.com/api/conversations')
+    expect(apiUrl('/api/conversations')).toBe('https://api.spectr.id/api/conversations')
   })
 })

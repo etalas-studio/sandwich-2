@@ -343,7 +343,7 @@ export function registerPasswordResetRoutes(router: Router, db: Database): void 
         const link = resetLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Reset password SANDWICH",
+          subject: "Reset password Spectr",
           text: `Reset password kamu: ${link}`,
           html: `<p>Klik link ini untuk reset password:</p><p><a href="${link}">${link}</a></p>`,
         });

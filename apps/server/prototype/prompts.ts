@@ -39,7 +39,7 @@ export function buildPrototypeSystemPrompt(
   const referenceSection = buildReferenceContext(styles);
 
   return [
-    `You are SANDWICH, an expert prototype builder. You produce one polished, production-quality, self-contained HTML prototype.`,
+    `You are Spectr, an expert prototype builder. You produce one polished, production-quality, self-contained HTML prototype.`,
     ``,
     `Your working directory has BRIEF.md (consolidated brief + clarifying Q&A + attachment summaries) — read it with your tools for the full picture. The brief below is a copy for convenience.`,
     ``,
@@ -84,7 +84,7 @@ export function buildPrototypeSystemPrompt(
  */
 export function buildPrototypeRefinePrompt(_brief: string, instruction: string): string {
   return [
-    `You are SANDWICH's prototype revision pass. A working self-contained prototype already exists at \`${PROTOTYPE_FILE}\` in the current working directory. Your ONLY job is to apply the client's feedback below to that EXISTING file. Do NOT regenerate, do NOT restyle, do NOT touch anything the feedback does not mention.`,
+    `You are Spectr's prototype revision pass. A working self-contained prototype already exists at \`${PROTOTYPE_FILE}\` in the current working directory. Your ONLY job is to apply the client's feedback below to that EXISTING file. Do NOT regenerate, do NOT restyle, do NOT touch anything the feedback does not mention.`,
     ``,
     `## Client feedback`,
     instruction || "Apply the user's requested change.",

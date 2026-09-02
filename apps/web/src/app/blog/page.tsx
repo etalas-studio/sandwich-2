@@ -7,7 +7,7 @@ import { LIGHT_TEXT_PRIMARY, LIGHT_TEXT_MUTED } from '../../components/landing/t
 import { getAllPosts } from '../../lib/blog'
 
 export const metadata: Metadata = {
-  title: 'Insights — SANDWICH',
+  title: 'Insights — Spectr',
   description: 'Articles on PRD writing, freelance project scoping, and AI tools.',
   alternates: { canonical: '/blog' },
 }

@@ -1,6 +1,6 @@
 // ── Sandwich methodology prompts (from sandwich plugin) ──────────────────────
 
-export const SANDWICH_PRD_GUIDE = `
+export const Spectr_PRD_GUIDE = `
 Write a professional PRD document covering:
 1. Overview: 2-3 sentence prose — what the product is, who it's for, the core problem it solves
 2. Actors: who uses the system (user roles)
@@ -27,7 +27,7 @@ Writing style — sound like a human product manager, not an AI:
 - Write section prose (Overview, Constraints, etc.) the way a person would explain it out loud to a colleague, not as a formatted list of clauses.
 `;
 
-export const SANDWICH_USERFLOWS_GUIDE = `
+export const Spectr_USERFLOWS_GUIDE = `
 ## User Flows Structure (Sandwich methodology)
 Document primary actor journeys derived from the brief. Each flow:
 - ID: UF-001, UF-002, ... (sequential)
@@ -41,7 +41,7 @@ Document primary actor journeys derived from the brief. Each flow:
 Cover primary journeys for each main actor. In refinement mode, emit the full updated set.
 `;
 
-export const SANDWICH_TECHNICAL_GUIDE = `
+export const Spectr_TECHNICAL_GUIDE = `
 ## Technical Notes Structure (Sandwich methodology)
 Document:
 1. Stack: for each layer (frontend / backend / db / infra), the chosen technology and rationale
@@ -55,7 +55,7 @@ Rules:
 - Risks and open decisions may be empty if none apply
 `;
 
-export const SANDWICH_QUOTATION_GUIDE = `
+export const Spectr_QUOTATION_GUIDE = `
 ## Quotation Structure (Sandwich methodology)
 Produce a professional project quotation covering:
 1. Project Overview: what is being built and for whom
@@ -71,7 +71,7 @@ Produce a professional project quotation covering:
 Use professional business language. Mark uncertain estimates with a note.
 `;
 
-export const SANDWICH_SPECS_GUIDE = `
+export const Spectr_SPECS_GUIDE = `
 ## Specs & Feature Queue (Sandwich methodology)
 Produce a prioritized feature queue plus one spec per feature:
 1. Feature Queue — a table listing every feature: ID (F-001, F-002, ...), title, impact (1-10), effort (1-10), risk (1-10), priority score.

@@ -247,7 +247,7 @@ export function buildPrototypeSystemPrompt(input: PrototypePromptInput): string 
     : `## Logo\nCreate a simple text-based logo placeholder that fits the brand.\n`;
 
   return [
-    `You are SANDWICH, an expert prototype builder. You generate complete, production-quality static prototypes.`,
+    `You are Spectr, an expert prototype builder. You generate complete, production-quality static prototypes.`,
     ``,
     `## Client Brief`,
     input.brief,

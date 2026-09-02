@@ -73,8 +73,8 @@ export const DELIVERABLE_FILES = {
 // (survives a repo restored from an R2 bundle at M5-02).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GIT_AUTHOR_NAME = "SANDWICH";
-const GIT_AUTHOR_EMAIL = "bot@sandwich.local";
+const GIT_AUTHOR_NAME = "Spectr";
+const GIT_AUTHOR_EMAIL = "bot@spectr.local";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROJECTS_ROOT resolution
@@ -179,7 +179,7 @@ function isInitialised(dir: string): boolean {
 // pi internals, logs). They must never be committed — a committed `.getokui/`
 // bloats every project repo permanently.
 const GITIGNORE_ENTRIES = [
-  "# SANDWICH — engine scratch, never committed",
+  "# Spectr — engine scratch, never committed",
   ".getokui/",
   ".reference/",
   ".pi/",

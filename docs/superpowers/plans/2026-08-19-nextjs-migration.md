@@ -310,9 +310,9 @@ export default function AppEffects() {
 
   useEffect(() => {
     if (state?.status === 'authenticated') {
-      const pending = localStorage.getItem('sandwich_pending_plan')
+      const pending = localStorage.getItem('spectr_pending_plan')
       if (pending === 'pro') {
-        localStorage.removeItem('sandwich_pending_plan')
+        localStorage.removeItem('spectr_pending_plan')
         router.replace('/checkout?plan=pro')
       }
     }
@@ -336,7 +336,7 @@ import './globals.css'
 initPostHog()
 
 export const metadata: Metadata = {
-  title: 'SANDWICH',
+  title: 'Spectr',
   description: 'From a messy brief to an execution-ready spec.',
 }
 
@@ -417,12 +417,12 @@ Create `apps/web/src/lib/faqs.ts`:
 ```ts
 export const FAQS = [
   {
-    q: 'What can SANDWICH actually produce?',
+    q: 'What can Spectr actually produce?',
     a: 'From a single client brief: clickable prototype, complete PRD, user flows, technical notes, client-ready quotation — all generated through one pipeline, not five separate tools.',
   },
   {
     q: 'Can it turn a messy brief into a PRD?',
-    a: "Yes — that's the core job. SANDWICH takes raw, chaotic client input and structures it into a validated, machine-checkable PRD an AI agent can execute against, no guessing required.",
+    a: "Yes — that's the core job. Spectr takes raw, chaotic client input and structures it into a validated, machine-checkable PRD an AI agent can execute against, no guessing required.",
   },
   {
     q: 'Does it build prototypes too, or just docs?',
@@ -430,7 +430,7 @@ export const FAQS = [
   },
   {
     q: 'How does the quotation get generated?',
-    a: 'Once the scope is defined, SANDWICH breaks it into priced, dependency-aware line items — so the quotation is grounded in actual scope, not a guess.',
+    a: 'Once the scope is defined, Spectr breaks it into priced, dependency-aware line items — so the quotation is grounded in actual scope, not a guess.',
   },
   {
     q: 'Is it free?',
@@ -495,7 +495,7 @@ import LandingPage from '../components/LandingPage'
 import { FAQS } from '../lib/faqs'
 
 export const metadata: Metadata = {
-  title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+  title: 'Spectr — Turn a Messy Client Brief into an Execution-Ready Spec',
   description:
     'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
   keywords: [
@@ -508,14 +508,14 @@ export const metadata: Metadata = {
     'AI pipeline',
     'brief to PRD',
   ],
-  metadataBase: new URL('https://sandwich.etalas.com'),
+  metadataBase: new URL('https://spectr.id'),
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'SANDWICH — Brief to Spec',
+    title: 'Spectr — Brief to Spec',
     description:
       'From a messy brief to a validated PRD, prototype, quotation, and specs.',
-    url: 'https://sandwich.etalas.com',
-    siteName: 'SANDWICH',
+    url: 'https://spectr.id',
+    siteName: 'Spectr',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image' },
@@ -856,13 +856,13 @@ export default function Page() {
 }
 ```
 
-Note: The old route was `/checkout` and `/checkout/return`. The spec maps these to `/pay` and `/pay/return`. Confirm with the team whether existing Midtrans webhook return URLs need updating — the backend payment callback URL is `https://api.sandwich.etalas.com/api/midtrans/notification` (unaffected), but the frontend return URL passed to Snap may hardcode `/checkout/return`. Search:
+Note: The old route was `/checkout` and `/checkout/return`. The spec maps these to `/pay` and `/pay/return`. Confirm with the team whether existing Midtrans webhook return URLs need updating — the backend payment callback URL is `https://api.spectr.id/api/midtrans/notification` (unaffected), but the frontend return URL passed to Snap may hardcode `/checkout/return`. Search:
 
 ```bash
 grep -rn "checkout/return\|checkout\?plan" apps/web/src apps/server/src 2>/dev/null | grep -v node_modules
 ```
 
-If found in frontend files, update those string literals to `/pay` and `/pay/return`. If found in backend files (e.g. Midtrans return URL passed to Snap), update the corresponding env var or hardcoded string in `apps/server/` to point to `https://sandwich.etalas.com/pay/return`.
+If found in frontend files, update those string literals to `/pay` and `/pay/return`. If found in backend files (e.g. Midtrans return URL passed to Snap), update the corresponding env var or hardcoded string in `apps/server/` to point to `https://spectr.id/pay/return`.
 
 - [ ] **Step 6: Verify protected routes**
 
@@ -955,7 +955,7 @@ Add `robots.txt`, `sitemap.xml` to `public/`. Delete the now-unused Vite entry f
 ```
 User-agent: *
 Allow: /
-Sitemap: https://sandwich.etalas.com/sitemap.xml
+Sitemap: https://spectr.id/sitemap.xml
 ```
 
 - [ ] **Step 2: Create `apps/web/public/sitemap.xml`**
@@ -964,7 +964,7 @@ Sitemap: https://sandwich.etalas.com/sitemap.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sandwich.etalas.com/</loc>
+    <loc>https://spectr.id/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>

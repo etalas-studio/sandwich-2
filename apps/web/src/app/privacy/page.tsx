@@ -16,8 +16,8 @@ export default function Page() {
               id: 'Data akun: username, alamat email, dan password (disimpan sebagai salted hash, tidak pernah dalam bentuk teks biasa).',
             },
             {
-              en: 'Brief and document content: the client briefs you submit, and the PRDs, prototypes, specs, and quotations SANDWICH generates from them. Before you sign up, a brief you type on the landing page is saved only in your browser\'s local storage (as "sandwich_draft") so it survives the redirect into registration. It is not sent to our servers until you have an account.',
-              id: 'Konten brief dan dokumen: brief klien yang kamu kirim, serta PRD, prototype, specs, dan quotation yang dihasilkan SANDWICH darinya. Sebelum kamu mendaftar, brief yang kamu ketik di landing page hanya disimpan di local storage browser kamu (sebagai "sandwich_draft") agar tetap ada saat diarahkan ke halaman registrasi. Data ini belum dikirim ke server kami sampai kamu punya akun.',
+              en: 'Brief and document content: the client briefs you submit, and the PRDs, prototypes, specs, and quotations Spectr generates from them. Before you sign up, a brief you type on the landing page is saved only in your browser\'s local storage (as "spectr_draft") so it survives the redirect into registration. It is not sent to our servers until you have an account.',
+              id: 'Konten brief dan dokumen: brief klien yang kamu kirim, serta PRD, prototype, specs, dan quotation yang dihasilkan Spectr darinya. Sebelum kamu mendaftar, brief yang kamu ketik di landing page hanya disimpan di local storage browser kamu (sebagai "spectr_draft") agar tetap ada saat diarahkan ke halaman registrasi. Data ini belum dikirim ke server kami sampai kamu punya akun.',
             },
             {
               en: 'Usage and billing data: document/prototype/chat counts against your monthly quota, subscription plan and status, and payment confirmation state (we do not store your card or bank details; payments are processed by our payment provider).',
@@ -46,8 +46,8 @@ export default function Page() {
           heading: { en: 'Who we share it with', id: 'Dengan siapa kami membagikannya' },
           body: [
             {
-              en: 'Infrastructure and processing partners strictly needed to run SANDWICH: hosting/database providers, the AI model providers that generate your documents, and our payment provider for checkout. Each only receives what it needs to perform its function.',
-              id: 'Mitra infrastruktur dan pemrosesan yang benar-benar dibutuhkan untuk menjalankan SANDWICH: penyedia hosting/database, penyedia model AI yang menghasilkan dokumen kamu, dan payment provider untuk checkout. Masing-masing hanya menerima data yang diperlukan untuk menjalankan fungsinya.',
+              en: 'Infrastructure and processing partners strictly needed to run Spectr: hosting/database providers, the AI model providers that generate your documents, and our payment provider for checkout. Each only receives what it needs to perform its function.',
+              id: 'Mitra infrastruktur dan pemrosesan yang benar-benar dibutuhkan untuk menjalankan Spectr: penyedia hosting/database, penyedia model AI yang menghasilkan dokumen kamu, dan payment provider untuk checkout. Masing-masing hanya menerima data yang diperlukan untuk menjalankan fungsinya.',
             },
             {
               en: 'We do not sell personal data to third parties, and we only disclose it further if required by law.',
@@ -59,12 +59,12 @@ export default function Page() {
           heading: { en: 'Your rights and choices', id: 'Hak dan pilihan kamu' },
           body: [
             {
-              en: 'You can request an export or deletion of your account and its documents at any time by emailing support@etalas.ai. We will confirm and act on verified requests within a reasonable time.',
-              id: 'Kamu bisa meminta export atau penghapusan akun beserta dokumennya kapan saja dengan email ke support@etalas.ai. Kami akan mengonfirmasi dan memproses permintaan yang terverifikasi dalam waktu yang wajar.',
+              en: 'You can request an export or deletion of your account and its documents at any time by emailing support@spectr.id. We will confirm and act on verified requests within a reasonable time.',
+              id: 'Kamu bisa meminta export atau penghapusan akun beserta dokumennya kapan saja dengan email ke support@spectr.id. Kami akan mengonfirmasi dan memproses permintaan yang terverifikasi dalam waktu yang wajar.',
             },
             {
-              en: 'You can clear the local "sandwich_draft" entry at any time by clearing your browser storage for this site.',
-              id: 'Kamu bisa menghapus entri lokal "sandwich_draft" kapan saja dengan membersihkan storage browser untuk situs ini.',
+              en: 'You can clear the local "spectr_draft" entry at any time by clearing your browser storage for this site.',
+              id: 'Kamu bisa menghapus entri lokal "spectr_draft" kapan saja dengan membersihkan storage browser untuk situs ini.',
             },
           ],
         },
@@ -72,8 +72,8 @@ export default function Page() {
           heading: { en: 'Contact', id: 'Kontak' },
           body: [
             {
-              en: 'Questions about this policy? Email support@etalas.ai.',
-              id: 'Ada pertanyaan tentang kebijakan ini? Email support@etalas.ai.',
+              en: 'Questions about this policy? Email support@spectr.id.',
+              id: 'Ada pertanyaan tentang kebijakan ini? Email support@spectr.id.',
             },
           ],
         },

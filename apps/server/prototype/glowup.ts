@@ -143,7 +143,7 @@ export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
         ].join("\n");
 
   return [
-    `You are SANDWICH's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
+    `You are Spectr's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
     ``,
     `## Client Brief (for reference matching)`,
     input.brief,

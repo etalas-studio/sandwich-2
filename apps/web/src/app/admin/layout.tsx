@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="text-lg tracking-wide text-white"
             style={{ fontFamily: "'Bowlby One', sans-serif" }}
           >
-            SANDWICH
+            Spectr
           </span>
           <div className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
             Admin

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restyle `apps/web/src/components/LandingPage.tsx` to match the visual language of the reference "Limited" agency template (glass pill nav, video hero background, manifesto quote block, ecosystem/big-banner cards, numbered process path, branded pricing cards, closing CTA banner) while keeping 100% of the existing SANDWICH copy, i18n strings, pricing data, FAQ content, and interactive behavior (hero prompt submit routing, language toggle, scroll-spy nav, mobile menu).
+**Goal:** Restyle `apps/web/src/components/LandingPage.tsx` to match the visual language of the reference "Limited" agency template (glass pill nav, video hero background, manifesto quote block, ecosystem/big-banner cards, numbered process path, branded pricing cards, closing CTA banner) while keeping 100% of the existing Spectr copy, i18n strings, pricing data, FAQ content, and interactive behavior (hero prompt submit routing, language toggle, scroll-spy nav, mobile menu).
 
 **Architecture:** Split the current single ~1020-line component into `LandingPage.tsx` (state, effects, composition) plus one component per section under `apps/web/src/components/landing/`. A shared `PromptPanel` component is used by both the hero and the new closing CTA banner so there's one source of truth for the prompt-submit interaction.
 
@@ -502,7 +502,7 @@ export function Hero(props: HeroProps) {
           className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] font-light tracking-tighter"
           style={{ color: TEXT_PRIMARY }}
         >
-          SANDWICH
+          Spectr
         </h1>
 
         <p className="text-lg sm:text-xl leading-relaxed max-w-2xl mt-6 font-light" style={{ color: TEXT_SECONDARY }}>
@@ -750,7 +750,7 @@ git commit -m "feat(web): add Harnesses manifesto-block component"
   ```
 - Consumes: `ACCENT`, `PANEL`, `TEXT_PRIMARY`, `TEXT_MUTED` from `./tokens`.
 
-Restyle direction: replace the current bento-grid step cards (lines 526-553) with the reference's "Process Path" pattern — a horizontal row of numbered circles connected by a line (`md:grid-cols-4` since SANDWICH has 4 steps vs. the reference's 3), each with title+description below the circle.
+Restyle direction: replace the current bento-grid step cards (lines 526-553) with the reference's "Process Path" pattern — a horizontal row of numbered circles connected by a line (`md:grid-cols-4` since Spectr has 4 steps vs. the reference's 3), each with title+description below the circle.
 
 - [ ] **Step 1: Write the component**
 
@@ -1568,7 +1568,7 @@ export function Footer(props: FooterProps) {
               <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ACCENT }}>
                 <span className="text-white font-bold text-xs">S</span>
               </div>
-              <span className="text-base font-medium tracking-tight uppercase">SANDWICH</span>
+              <span className="text-base font-medium tracking-tight uppercase">Spectr</span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: TEXT_SECONDARY }}>{props.footerDesc}</p>
             <div className="flex items-center gap-3 mt-5">
@@ -1647,7 +1647,7 @@ export function Footer(props: FooterProps) {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2026 SANDWICH</p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2026 Spectr</p>
           <a href="https://www.etalas.com/" target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors hover:text-blue-400" style={{ color: TEXT_SECONDARY }}>
             <span className="text-sm">{props.footerProductBy}</span>
             <img src="/logos/etalas-logo.png" alt="Etalas" loading="lazy" className="h-4 w-auto brightness-0 invert" />
@@ -1790,7 +1790,7 @@ export default function LandingPage() {
     if (!prompt.trim()) return
     if (authState.status !== 'authenticated') {
       try {
-        localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
+        localStorage.setItem('spectr_draft', JSON.stringify({ prompt, activeType: pendingType || undefined }))
       } catch { /* best-effort draft save, e.g. storage quota */ }
       router.push('/register')
       return
@@ -1801,13 +1801,13 @@ export default function LandingPage() {
       const local = await createConversationLocal({ type: 'general', pendingType: pendingType || undefined, summary: prompt.trim(), description: prompt.trim() })
       await createMessage(local.id, { content: prompt.trim() })
       try {
-        localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
+        localStorage.setItem('spectr_last_chat', JSON.stringify({ prompt: prompt.trim(), conversationId: local.id, autoRun: true }))
       } catch { /* ignore storage errors */ }
       router.push('/dashboard')
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'active subscription required') {
-        try { localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
+        try { localStorage.setItem('spectr_draft', JSON.stringify({ prompt, activeType: pendingType || undefined })) } catch { /* ignore */ }
         router.push('/pay?plan=pro')
         return
       }
@@ -2019,7 +2019,7 @@ Check:
 - Hero video background plays (or gradient fallback shows if the video 404s) behind the headline.
 - Nav is a glass pill, links scroll to the right section, active link highlights in blue, mobile hamburger menu opens/closes at narrow widths.
 - Language toggle switches all visible copy between EN/ID including FAQ.
-- Submitting the hero prompt while logged out redirects to `/register` (check `localStorage.sandwich_draft` is set).
+- Submitting the hero prompt while logged out redirects to `/register` (check `localStorage.spectr_draft` is set).
 - Pricing cards show the real Starter/Pro data with correct prices, "Best value" badge on Pro, clicking a plan CTA navigates to `/register?plan=<slug>`.
 - FAQ accordion opens/closes on click.
 - Scrolling reveals each section with the fade/blur-in animation.

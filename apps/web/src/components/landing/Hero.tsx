@@ -159,7 +159,7 @@ export function Hero(props: HeroProps) {
           <div className={`flex md:gap-6 ring-1 rounded-full pt-1 pr-1 pb-1 pl-1 gap-x-4 gap-y-4 items-center transition-colors duration-300 ${groupRingClass}`}>
             <a href="/" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className={`flex items-center gap-2 pl-2 pr-3 shrink-0 rounded-full ring-1 backdrop-blur-md transition-colors duration-300 ${scrolled ? 'bg-black/5 ring-black/10 hover:bg-black/10' : 'bg-white/5 ring-white/10 hover:bg-white/10'}`} style={{ boxShadow: scrolled ? '0 1px 2px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.06)' }}>
               <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
-              <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium transition-colors duration-300" style={{ color: navTextColor }}>SANDWICH</span>
+              <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium transition-colors duration-300" style={{ color: navTextColor }}>Spectr</span>
             </a>
 
             <nav className="hidden md:flex gap-2 gap-x-2 gap-y-2 items-center">

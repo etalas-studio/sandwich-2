@@ -1,6 +1,6 @@
 {
-  "project": "SANDWICH v2",
-  "description": "Collaboration roadmap for SANDWICH v2 — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.",
+  "project": "Spectr",
+  "description": "Collaboration roadmap for Spectr — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.",
   "milestones": [
     {
       "id": "m3",

@@ -235,7 +235,7 @@ In `apps/server/routes/auth.ts`, replace the register handler:
       const link = verificationLink(token);
       await sendEmail({
         to: user.email,
-        subject: "Verify your email — SANDWICH",
+        subject: "Verify your email — Spectr",
         text: `Verifikasi email kamu: ${link}`,
         html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
       });
@@ -313,7 +313,7 @@ export function registerEmailVerificationRoutes(router: Router, db: Database): v
         const link = verificationLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Verify your email — SANDWICH",
+          subject: "Verify your email — Spectr",
           text: `Verifikasi email kamu: ${link}`,
           html: `<p>Klik link ini untuk verifikasi email:</p><p><a href="${link}">${link}</a></p>`,
         });

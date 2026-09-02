@@ -35,7 +35,7 @@ export function Footer(props: FooterProps) {
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
               <span className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
-              <span className="text-base font-medium tracking-tight uppercase" style={{ color: white }}>SANDWICH</span>
+              <span className="text-base font-medium tracking-tight uppercase" style={{ color: white }}>Spectr</span>
             </div>
             <p className="mt-4 text-base leading-relaxed max-w-xs" style={{ color: white }}>{props.footerDesc}</p>
           </div>
@@ -57,11 +57,11 @@ export function Footer(props: FooterProps) {
             <h3 className="text-base font-medium" style={{ color: white }}>{props.footerContactTitle}</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a href="mailto:support@etalas.ai" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
+                <a href="mailto:support@spectr.id" className="text-base hover:text-white transition inline-flex items-center gap-2" style={{ color: white }}>
                   <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30">
                     <iconify-icon icon="solar:letter-linear" width="14" />
                   </span>
-                  <span>support@etalas.ai</span>
+                  <span>support@spectr.id</span>
                 </a>
               </li>
               <li>
@@ -87,7 +87,7 @@ export function Footer(props: FooterProps) {
 
         <div className="mt-14 pt-8 border-t border-white/25 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <p className="text-sm" style={{ color: white, opacity: 0.85 }}>
-            © {new Date().getFullYear()} SANDWICH <span style={{ color: 'rgba(255,255,255,0.7)' }}>•</span> {props.footerRights}
+            © {new Date().getFullYear()} Spectr <span style={{ color: 'rgba(255,255,255,0.7)' }}>•</span> {props.footerRights}
           </p>
 
           <div className="flex flex-wrap items-center gap-3">

@@ -7,8 +7,8 @@ const HELP_SECTIONS = [
     icon: 'solar:rocket-2-linear',
     items: [
       {
-        q: { en: 'What is SANDWICH?', id: 'Apa itu SANDWICH?' },
-        a: { en: 'SANDWICH is an AI pipeline that generates technical documents (PRD, MOM, Quotation, Specs) from client briefs automatically. Text input → ready-to-use document output.', id: 'SANDWICH adalah pipeline AI untuk membuat dokumen teknis (PRD, MOM, Quotation, Specs) dari brief klien secara otomatis. Input teks → output dokumen siap pakai.' },
+        q: { en: 'What is Spectr?', id: 'Apa itu Spectr?' },
+        a: { en: 'Spectr is an AI pipeline that generates technical documents (PRD, MOM, Quotation, Specs) from client briefs automatically. Text input → ready-to-use document output.', id: 'Spectr adalah pipeline AI untuk membuat dokumen teknis (PRD, MOM, Quotation, Specs) dari brief klien secara otomatis. Input teks → output dokumen siap pakai.' },
       },
       {
         q: { en: 'How do I create my first document?', id: 'Bagaimana cara membuat dokumen pertama?' },
@@ -97,7 +97,7 @@ export default function HelpPage() {
             HELP & DOCS
           </h1>
           <p style={{ color: 'rgba(0,0,0,0.5)', fontSize: '13px', marginTop: '4px' }}>
-            {lang === 'id' ? 'Panduan penggunaan SANDWICH' : 'SANDWICH usage guide'}
+            {lang === 'id' ? 'Panduan penggunaan Spectr' : 'Spectr usage guide'}
           </p>
         </div>
 

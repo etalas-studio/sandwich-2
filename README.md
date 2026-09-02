@@ -1,4 +1,4 @@
-# SANDWICH
+# Spectr
 
 From a messy brief to an execution-ready spec. One pipeline — PRD, prototype, MOM, quotation — not five separate tools.
 

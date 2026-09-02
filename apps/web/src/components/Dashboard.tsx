@@ -621,7 +621,7 @@ function ChatView({
                   if (m.isDone && m.output && m.document) return (
                     <div key={i} className="group relative flex flex-col gap-3">
                       {m.document.type !== 'prototype' && (
-                        <div className="text-sm sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                        <div className="text-sm spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                           dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
                       )}
                       {m.document.type === 'prototype' && (
@@ -641,7 +641,7 @@ function ChatView({
                           }
                         }}
                       />
-                      {/* SANDWICH logo + hover actions */}
+                      {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
                           <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
@@ -666,9 +666,9 @@ function ChatView({
                     <div key={i} className="group relative">
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       </div>
-                      <div className="text-sm break-words overflow-x-hidden sandwich-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                      <div className="text-sm break-words overflow-x-hidden spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
                         dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
-                      {/* SANDWICH logo + hover actions */}
+                      {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
                           <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#3b82f6', opacity: 0.55 }}>
@@ -795,9 +795,9 @@ interface PromptBoxProps {
 }
 function loadDraft(): { prompt: string; attachments: AttachedFile[]; activeType: ConversationType | null } {
   try {
-    const raw = localStorage.getItem('sandwich_draft')
+    const raw = localStorage.getItem('spectr_draft')
     if (!raw) return { prompt: '', attachments: [], activeType: null }
-    localStorage.removeItem('sandwich_draft')
+    localStorage.removeItem('spectr_draft')
     const parsed = JSON.parse(raw) as { prompt?: string; attachments?: AttachedFile[]; activeType?: ConversationType }
     return { prompt: parsed.prompt ?? '', attachments: parsed.attachments ?? [], activeType: parsed.activeType ?? null }
   } catch {
@@ -1405,7 +1405,7 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
   const [activeNav, setActiveNav] = useState('home')
 
   const [chatState, setChatState] = useState<{ prompt: string; conversationId: string; autoRun: boolean } | null>(() => {
-    const saved = localStorage.getItem('sandwich_last_chat')
+    const saved = localStorage.getItem('spectr_last_chat')
     if (!saved) return null
     try {
       const parsed = JSON.parse(saved) as { prompt: string; conversationId: string; autoRun?: boolean }
@@ -1445,9 +1445,9 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
 
   // Fire Snap for a pending Pro upgrade set during registration
   useEffect(() => {
-    const pending = localStorage.getItem('sandwich_pending_plan')
+    const pending = localStorage.getItem('spectr_pending_plan')
     if (pending !== 'pro') return
-    localStorage.removeItem('sandwich_pending_plan') // clear immediately — don't loop
+    localStorage.removeItem('spectr_pending_plan') // clear immediately — don't loop
 
     const fireSnap = async () => {
       try {
@@ -1499,8 +1499,8 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f8fafc' }}>
         <div className="text-center max-w-sm px-4">
           <p className="text-sm text-zinc-500 mb-4">No active plan found. Please contact support.</p>
-          <a href="mailto:support@etalas.ai" className="text-sm font-semibold underline" style={{ color: '#3b82f6' }}>
-            support@etalas.ai
+          <a href="mailto:support@spectr.id" className="text-sm font-semibold underline" style={{ color: '#3b82f6' }}>
+            support@spectr.id
           </a>
         </div>
       </div>
@@ -1669,14 +1669,14 @@ export default function Dashboard({ onBack: _onBack }: { onBack: () => void }) {
     setRenamingTitle(false)
     setConfirmDeleteChat(false)
     if (chatState) {
-      localStorage.setItem('sandwich_last_chat', JSON.stringify({ prompt: chatState.prompt, conversationId: chatState.conversationId }))
+      localStorage.setItem('spectr_last_chat', JSON.stringify({ prompt: chatState.prompt, conversationId: chatState.conversationId }))
       // Sync conversation ID to URL (?c=<id>) without adding a history entry
       const params = new URLSearchParams(window.location.search)
       if (params.get('c') !== chatState.conversationId) {
         router.replace(`/dashboard?c=${chatState.conversationId}`, { scroll: false })
       }
     } else {
-      localStorage.removeItem('sandwich_last_chat')
+      localStorage.removeItem('spectr_last_chat')
       const params = new URLSearchParams(window.location.search)
       if (params.has('c')) router.replace('/dashboard', { scroll: false })
     }

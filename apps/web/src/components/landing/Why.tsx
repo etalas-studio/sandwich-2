@@ -77,7 +77,7 @@ function ShareLink() {
       <div className="p-3">
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-400 truncate flex items-center gap-1.5">
           <iconify-icon icon="solar:lock-keyhole-linear" width="12" className="shrink-0" />
-          sandwich.app/read-only/abc123
+          spectr.id/read-only/abc123
         </div>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-[10px] text-slate-400">View only — no account needed</span>

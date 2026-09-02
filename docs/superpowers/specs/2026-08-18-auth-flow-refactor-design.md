@@ -52,7 +52,7 @@ Replaces `AuthGate`. Single responsibility: if `useAuth()` returns `unauthentica
 
 ### `RegisterPage`
 - Renders `SetupForm` (existing component, no logic change)
-- Reads `?plan=pro` from query string; if present, stores `sandwich_pending_plan = 'pro'` in localStorage before submit
+- Reads `?plan=pro` from query string; if present, stores `spectr_pending_plan = 'pro'` in localStorage before submit
 - On success → show "check your email" state (no redirect yet)
 - Has link to `/login`
 - If already authenticated → redirect to `/dashboard`
@@ -62,7 +62,7 @@ Replaces `AuthGate`. Single responsibility: if `useAuth()` returns `unauthentica
 - No other changes
 
 ### `Dashboard` (existing — small fix)
-- On mount: read `sandwich_pending_plan` from localStorage
+- On mount: read `spectr_pending_plan` from localStorage
 - If `'pro'`: clear it immediately, then fire Snap modal
 - Clear the key on Snap success, error, and close — not just success
 - If user has no subscription (DB edge case): show error state with support link, no redirect loop
@@ -102,7 +102,7 @@ Owns all route declarations. Expands from thin wrapper to the actual router:
 
 ### Pro signup (from landing page CTA)
 ```
-/ → /register?plan=pro → [stores sandwich_pending_plan='pro'] → [email sent]
+/ → /register?plan=pro → [stores spectr_pending_plan='pro'] → [email sent]
   → /verify-email?token=... → /login → /dashboard → [Snap fires automatically]
   → [payment success] → stays on /dashboard
 ```

@@ -3,7 +3,7 @@ export const FAQ_CATEGORIES = ['All Questions', 'Basics', 'Outputs', 'Pricing'] 
 export const FAQS = [
   {
     category: 'Basics',
-    q: { en: 'What can SANDWICH actually produce?', id: 'SANDWICH sebenarnya bisa menghasilkan apa?' },
+    q: { en: 'What can Spectr actually produce?', id: 'Spectr sebenarnya bisa menghasilkan apa?' },
     a: {
       en: 'From a single client brief: a complete PRD (with user flows and technical notes built in), a clickable prototype, feature specs, and a client-ready quotation, all generated through one pipeline, not five separate tools.',
       id: 'Dari satu brief klien: PRD lengkap (dengan user flow dan technical notes), prototype yang bisa diklik, feature specs, dan quotation siap kirim ke klien, semua di-generate lewat satu pipeline, bukan lima tools terpisah.',
@@ -13,8 +13,8 @@ export const FAQS = [
     category: 'Basics',
     q: { en: 'Can it turn a messy brief into a PRD?', id: 'Bisa mengubah brief berantakan jadi PRD?' },
     a: {
-      en: "Yes, that's the core job. SANDWICH takes raw, chaotic client input and structures it into a validated, machine-checkable PRD an AI agent can execute against, no guessing required.",
-      id: 'Bisa, itu tugas utamanya. SANDWICH mengambil input mentah dan berantakan dari klien lalu menyusunnya jadi PRD yang tervalidasi dan machine-checkable, siap dieksekusi AI agent tanpa perlu menebak-nebak.',
+      en: "Yes, that's the core job. Spectr takes raw, chaotic client input and structures it into a validated, machine-checkable PRD an AI agent can execute against, no guessing required.",
+      id: 'Bisa, itu tugas utamanya. Spectr mengambil input mentah dan berantakan dari klien lalu menyusunnya jadi PRD yang tervalidasi dan machine-checkable, siap dieksekusi AI agent tanpa perlu menebak-nebak.',
     },
   },
   {
@@ -29,8 +29,8 @@ export const FAQS = [
     category: 'Outputs',
     q: { en: 'How does the quotation get generated?', id: 'Bagaimana quotation dibuat?' },
     a: {
-      en: 'Once the scope is defined, SANDWICH breaks it into priced, dependency-aware line items, so the quotation is grounded in actual scope, not a guess.',
-      id: 'Setelah scope ditentukan, SANDWICH memecahnya jadi item-item dengan harga dan dependency yang jelas, jadi quotation didasarkan pada scope sebenarnya, bukan tebakan.',
+      en: 'Once the scope is defined, Spectr breaks it into priced, dependency-aware line items, so the quotation is grounded in actual scope, not a guess.',
+      id: 'Setelah scope ditentukan, Spectr memecahnya jadi item-item dengan harga dan dependency yang jelas, jadi quotation didasarkan pada scope sebenarnya, bukan tebakan.',
     },
   },
   {

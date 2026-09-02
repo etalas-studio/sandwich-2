@@ -5,7 +5,7 @@
 
 ## Goal
 
-Add a `/blog` section to the SANDWICH Next.js app that serves static MDX articles, fully SSR'd for SEO, with per-article `generateMetadata` for title, description, and OG tags.
+Add a `/blog` section to the Spectr Next.js app that serves static MDX articles, fully SSR'd for SEO, with per-article `generateMetadata` for title, description, and OG tags.
 
 ## Architecture
 
@@ -76,7 +76,7 @@ Server component. Calls `getAllPosts()`, renders a list of `<BlogCard>` componen
 
 ```ts
 export const metadata: Metadata = {
-  title: 'Blog — SANDWICH',
+  title: 'Blog — Spectr',
   description: 'Articles on PRD writing, freelance project scoping, and AI tools.',
 }
 ```
@@ -89,7 +89,7 @@ Server component. Calls `getPost(slug)`, 404s via `notFound()` if missing. Expor
 export async function generateMetadata({ params }) {
   const { meta } = await getPost(params.slug)
   return {
-    title: `${meta.title} — SANDWICH`,
+    title: `${meta.title} — Spectr`,
     description: meta.description,
     openGraph: { title: meta.title, description: meta.description },
     twitter: { card: 'summary_large_image', title: meta.title, description: meta.description },

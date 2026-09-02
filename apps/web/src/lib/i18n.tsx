@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export type Lang = 'en' | 'id'
 
-const STORAGE_KEY = 'sandwich_lang'
+const STORAGE_KEY = 'spectr_lang'
 
 const STRINGS = {
   // ── Prompt chips ──
@@ -15,7 +15,7 @@ const STRINGS = {
   // ── Nav ──
   nav_how: { en: 'How It Works', id: 'Cara Kerja' },
   nav_pipeline: { en: 'Pipeline', id: 'Pipeline' },
-  nav_diff: { en: 'Why SANDWICH', id: 'Kenapa SANDWICH' },
+  nav_diff: { en: 'Why Spectr', id: 'Kenapa Spectr' },
   nav_deliverables: { en: 'Deliverables', id: 'Deliverables' },
   nav_comparison: { en: 'Comparison', id: 'Perbandingan' },
   nav_pricing: { en: 'Pricing', id: 'Harga' },
@@ -43,8 +43,8 @@ const STRINGS = {
   harnesses_title: { en: 'Messy input. Ready-to-use', id: 'Input berantakan. Output siap' },
   harnesses_title_serif: { en: 'output.', id: 'pakai.' },
   harnesses_desc: {
-    en: 'Paste the client brief here. You can also attach voice notes, screenshots, or documents. SANDWICH turns all of it into structured documents ready to use or send to your client.',
-    id: 'Paste brief klien di sini. Bisa juga lampirin voice note, screenshot, atau dokumen. SANDWICH ubah semuanya jadi dokumen terstruktur yang siap lo pakai atau kirim ke klien.',
+    en: 'Paste the client brief here. You can also attach voice notes, screenshots, or documents. Spectr turns all of it into structured documents ready to use or send to your client.',
+    id: 'Paste brief klien di sini. Bisa juga lampirin voice note, screenshot, atau dokumen. Spectr ubah semuanya jadi dokumen terstruktur yang siap lo pakai atau kirim ke klien.',
   },
   step_1_label: { en: 'Send Brief', id: 'Kasih Brief' },
   step_1_desc: { en: 'Raw input, any language', id: 'Input kasar, bahasa apapun' },
@@ -63,8 +63,8 @@ const STRINGS = {
   pipeline_title_l1: { en: 'Four steps.', id: 'Empat langkah.' },
   pipeline_title_l2: { en: 'No guesswork.', id: 'Tidak ada tebak-tebakan.' },
   pipeline_subtitle: {
-    en: "SANDWICH doesn't fill a generic template. It asks first, then generates.",
-    id: 'SANDWICH tidak mengisi template generik. Dia tanya dulu, baru generate.',
+    en: "Spectr doesn't fill a generic template. It asks first, then generates.",
+    id: 'Spectr tidak mengisi template generik. Dia tanya dulu, baru generate.',
   },
   pipeline_step_1_title: { en: 'Paste brief', id: 'Paste brief' },
   pipeline_step_1_desc: {
@@ -130,20 +130,20 @@ const STRINGS = {
   samples_title_l1: { en: 'See the real', id: 'Lihat hasil' },
   samples_title_l2: { en: 'output.', id: 'aslinya.' },
   samples_desc: {
-    en: 'Real excerpts from documents SANDWICH generated, not mockups.',
-    id: 'Cuplikan asli dari dokumen yang dibuat SANDWICH, bukan mockup.',
+    en: 'Real excerpts from documents Spectr generated, not mockups.',
+    id: 'Cuplikan asli dari dokumen yang dibuat Spectr, bukan mockup.',
   },
 
-  // ── Comparison / SANDWICH vs manual ──
+  // ── Comparison / Spectr vs manual ──
   comparison_kicker: { en: 'Comparison', id: 'Perbandingan' },
-  comparison_title_sans: { en: 'SANDWICH vs', id: 'SANDWICH vs' },
+  comparison_title_sans: { en: 'Spectr vs', id: 'Spectr vs' },
   comparison_title_serif: { en: 'the old way', id: 'cara lama' },
   comparison_desc: {
     en: 'No assumptions, no email ping-pong. Same documents, done in far less time.',
     id: 'Tanpa asumsi, tanpa bolak-balik email. Dokumen yang sama, waktu yang jauh lebih singkat.',
   },
   comparison_col_aspect: { en: 'Aspect', id: 'Aspek' },
-  comparison_col_sandwich: { en: 'SANDWICH', id: 'SANDWICH' },
+  comparison_col_sandwich: { en: 'Spectr', id: 'Spectr' },
   comparison_col_manual: { en: 'Old way (manual)', id: 'Cara lama (manual)' },
   comparison_row_pd: { en: 'Time to write PRD', id: 'Waktu buat PRD' },
   comparison_row_pd_s: { en: '~5–10 min', id: '~5–10 menit' },
@@ -196,7 +196,7 @@ const STRINGS = {
   },
 
   // ── Differentiators ──
-  diff_kicker: { en: 'Why SANDWICH', id: 'Kenapa SANDWICH' },
+  diff_kicker: { en: 'Why Spectr', id: 'Kenapa Spectr' },
   diff_title_sans: { en: 'Built for real', id: 'Dibuat buat' },
   diff_title_serif: { en: 'client work.', id: 'kerjaan klien beneran.' },
   diff_1_title: { en: 'Version history, not overwrites', id: 'Riwayat versi, bukan ditimpa' },
@@ -303,7 +303,7 @@ const STRINGS = {
 
   // ── Login ──
   login_title: { en: 'Welcome back', id: 'Selamat datang lagi' },
-  login_subtitle: { en: 'Log in to continue to SANDWICH', id: 'Login untuk lanjut ke SANDWICH' },
+  login_subtitle: { en: 'Log in to continue to Spectr', id: 'Login untuk lanjut ke Spectr' },
   login_identifier: { en: 'Username or Email', id: 'Username atau Email' },
   login_cta: { en: 'Log in', id: 'Masuk' },
   login_pending: { en: 'Logging in…', id: 'Masuk...' },
@@ -334,7 +334,7 @@ const STRINGS = {
 
   // ── Setup / Register ──
   setup_title: { en: 'Create account', id: 'Buat akun' },
-  setup_subtitle: { en: 'Create your free SANDWICH account to turn briefs into PRDs, prototypes, and quotations.', id: 'Buat akun SANDWICH gratis untuk mengubah brief jadi PRD, prototype, dan quotation.' },
+  setup_subtitle: { en: 'Create your free Spectr account to turn briefs into PRDs, prototypes, and quotations.', id: 'Buat akun Spectr gratis untuk mengubah brief jadi PRD, prototype, dan quotation.' },
   setup_username_placeholder: { en: 'Username', id: 'Username' },
   setup_email_placeholder: { en: 'Email', id: 'Email' },
   setup_pass_placeholder: { en: 'Min. 8 characters', id: 'Min. 8 karakter' },

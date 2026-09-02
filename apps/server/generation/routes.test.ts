@@ -44,9 +44,9 @@ describe("commitMessageFor", () => {
     const m = commitMessageFor("prd", "generate", "conv-123", "generating", "Build a POS  \n for a cafe");
     assert.equal(m.subject, "prd: generate");
     assert.match(m.body, /Prompt: Build a POS for a cafe/);
-    assert.match(m.body, /Sandwich-Deliverable: prd/);
-    assert.match(m.body, /Sandwich-Conversation: conv-123/);
-    assert.match(m.body, /Sandwich-Stage: generating/);
+    assert.match(m.body, /Spectr-Deliverable: prd/);
+    assert.match(m.body, /Spectr-Conversation: conv-123/);
+    assert.match(m.body, /Spectr-Stage: generating/);
   });
 });
 

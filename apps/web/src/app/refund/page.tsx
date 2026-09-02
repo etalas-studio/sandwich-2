@@ -21,8 +21,8 @@ export default function Page() {
           heading: { en: 'Pro plan', id: 'Paket Pro' },
           body: [
             {
-              en: 'If a Pro payment is charged but never confirmed as successful (e.g. a failed or duplicate charge), we will refund it in full once verified. Email support@etalas.ai with your account email and payment reference.',
-              id: 'Jika pembayaran Pro tertagih tapi tidak pernah terkonfirmasi berhasil (misalnya charge gagal atau duplikat), kami akan me-refund penuh setelah terverifikasi. Email support@etalas.ai dengan email akun dan referensi pembayaran kamu.',
+              en: 'If a Pro payment is charged but never confirmed as successful (e.g. a failed or duplicate charge), we will refund it in full once verified. Email support@spectr.id with your account email and payment reference.',
+              id: 'Jika pembayaran Pro tertagih tapi tidak pernah terkonfirmasi berhasil (misalnya charge gagal atau duplikat), kami akan me-refund penuh setelah terverifikasi. Email support@spectr.id dengan email akun dan referensi pembayaran kamu.',
             },
             {
               en: 'Pro is billed per period in advance. We do not prorate or refund partial periods for unused time. Cancelling stops future renewal, and access continues until the current period ends.',
@@ -38,8 +38,8 @@ export default function Page() {
           heading: { en: 'How to request', id: 'Cara mengajukan' },
           body: [
             {
-              en: 'Email support@etalas.ai from your account email with the payment date and amount. We aim to respond within 2 business days and, once approved, process refunds to the original payment method within 7 business days.',
-              id: 'Email support@etalas.ai dari email akun kamu dengan tanggal dan jumlah pembayaran. Kami berusaha merespons dalam 2 hari kerja dan, setelah disetujui, memproses refund ke metode pembayaran semula dalam 7 hari kerja.',
+              en: 'Email support@spectr.id from your account email with the payment date and amount. We aim to respond within 2 business days and, once approved, process refunds to the original payment method within 7 business days.',
+              id: 'Email support@spectr.id dari email akun kamu dengan tanggal dan jumlah pembayaran. Kami berusaha merespons dalam 2 hari kerja dan, setelah disetujui, memproses refund ke metode pembayaran semula dalam 7 hari kerja.',
             },
           ],
         },
