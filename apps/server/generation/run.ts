@@ -161,10 +161,13 @@ export async function runTextGeneration(opts: {
     stage === "generating" ? TOOL_BUDGETS.text : TOOL_BUDGETS.chat,
   );
   let budgetVerdict: "ok" | "ceiling" | "stalled" = "ok";
+  let lastEventType = "(none)";
+  const runTag = `[text convId=${conversationId} stage=${stage} relPath=${relPath ?? "none"}]`;
+  console.log(`${runTag} starting`);
   const guardBudget = (v: "ok" | "ceiling" | "stalled") => {
     if (v !== "ok" && budgetVerdict === "ok") {
       budgetVerdict = v;
-      console.warn(`[text] budget ${v} after ${budget.toolCalls} tool calls`);
+      console.warn(`${runTag} budget ${v} after ${budget.toolCalls} tool calls, last event=${lastEventType}`);
       session.abort();
     }
   };
@@ -176,6 +179,8 @@ export async function runTextGeneration(opts: {
     messages?: unknown;
   }) => {
     if (signal.aborted) return;
+    lastEventType = event.type;
+    console.debug(`${runTag} event=${event.type} toolCalls=${budget.toolCalls}`);
     guardBudget(budget.onEvent(event.type, Date.now()));
 
     if (
@@ -243,7 +248,10 @@ export async function runTextGeneration(opts: {
     await Promise.race([
       promptPromise,
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("AI generation timed out")), ENGINE_TIMEOUT_MS),
+        setTimeout(() => {
+          console.error(`${runTag} ENGINE_TIMEOUT_MS (${ENGINE_TIMEOUT_MS}ms) hit — toolCalls=${budget.toolCalls} lastEvent=${lastEventType}`);
+          reject(new Error("AI generation timed out"));
+        }, ENGINE_TIMEOUT_MS),
       ),
     ]);
     await new Promise((r) => setTimeout(r, 100));
@@ -251,10 +259,15 @@ export async function runTextGeneration(opts: {
 
     const wroteFile = !!relPath && existsSync(resolveInsideProject(projectDir, relPath));
     if (!wroteFile && !responseText && errorMessage) {
+      console.error(`${runTag} failed with model error: ${errorMessage}`);
       throw new Error(errorMessage);
     }
     if (relPath && !wroteFile) {
-      if (budgetVerdict !== "ok") throw new Error(`text generation ${budgetVerdict} before writing ${relPath}`);
+      if (budgetVerdict !== "ok") {
+        console.error(`${runTag} ${budgetVerdict} before writing ${relPath} — toolCalls=${budget.toolCalls} lastEvent=${lastEventType}`);
+        throw new Error(`text generation ${budgetVerdict} before writing ${relPath}`);
+      }
+      console.error(`${runTag} session ended without writing ${relPath} — toolCalls=${budget.toolCalls} lastEvent=${lastEventType} errorMessage=${errorMessage || "(none)"}`);
       throw new Error(`text generation did not write ${relPath}`);
     }
     return { text: responseText, wroteFile };
