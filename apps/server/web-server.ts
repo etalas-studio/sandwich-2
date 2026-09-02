@@ -162,6 +162,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Server>
   };
   await resetStaleExtractions(db);
   await expireStalePayments(db);
+  setInterval(() => { void expireStalePayments(db); }, 60 * 60 * 1000);
   // Re-process attachments that were left pending (e.g. uploaded before the
   // extraction pipeline existed, or the server restarted mid-extraction).
   const pending = await listAttachmentsByStatus(db, "pending");
