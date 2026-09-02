@@ -14,7 +14,7 @@ import {
   type LocalPaymentStatus,
 } from "../../billing/payment-status.js";
 import { getPlan, generateOrderId } from "../../billing/plans.js";
-import { createPayment, getPayment, updatePayment } from "../../db/payments.js";
+import { createPayment, getPayment, getPendingPaymentForUser, updatePayment } from "../../db/payments.js";
 import {
   activateSubscription,
   cancelSubscription,
@@ -64,22 +64,45 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
     }
 
     try {
-      await createPayment(db, {
-        orderId,
-        userId: auth.userId,
-        planSlug: plan.slug,
-        grossAmount: plan.amount,
-        localStatus: "creating_payment",
-      });
+      // Reuse an existing in-progress payment so repeated attempts by the
+      // same user don't accumulate orphaned rows in the DB.
+      const existing = await getPendingPaymentForUser(db, auth.userId, plan.slug);
+      if (existing?.snapToken && existing.localStatus === "awaiting_payment") {
+        res.status(200).json({
+          token: existing.snapToken,
+          redirectUrl: existing.redirectUrl,
+          orderId: existing.orderId,
+          simulated: false,
+          clientKey,
+          isProduction,
+        });
+        return;
+      }
+
       const user = await getUserById(db, auth.userId);
+
+      // If a stuck `creating_payment` row exists, reuse its orderId to avoid
+      // a second orphaned row; otherwise mint a fresh one.
+      const activeOrderId = existing?.orderId ?? generateOrderId(plan.slug, auth.userId);
+
+      if (!existing) {
+        await createPayment(db, {
+          orderId: activeOrderId,
+          userId: auth.userId,
+          planSlug: plan.slug,
+          grossAmount: plan.amount,
+          localStatus: "creating_payment",
+        });
+      }
+
       const result = await createSnapTransaction({
-        orderId,
+        orderId: activeOrderId,
         grossAmount: plan.amount,
         itemName: `Spectr ${plan.name}`,
         customerEmail: user?.email,
       });
 
-      await updatePayment(db, orderId, {
+      await updatePayment(db, activeOrderId, {
         localStatus: "awaiting_payment",
         snapToken: result.token,
         redirectUrl: result.redirectUrl,
@@ -88,7 +111,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
       res.status(200).json({
         token: result.token,
         redirectUrl: result.redirectUrl,
-        orderId,
+        orderId: activeOrderId,
         simulated: false,
         clientKey,
         isProduction,

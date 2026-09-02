@@ -1,4 +1,4 @@
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, lt, or } from "drizzle-orm";
 import { payments } from "./schema.js";
 import type { Database } from "./connection.js";
 import type { LocalPaymentStatus } from "../billing/payment-status.js";
@@ -50,6 +50,26 @@ export async function createPayment(db: Database, input: CreatePaymentInput): Pr
 
 export async function getPayment(db: Database, orderId: string): Promise<Payment | null> {
   const rows = await db.select().from(payments).where(eq(payments.orderId, orderId)).limit(1);
+  return rows[0] ?? null;
+}
+
+/** Return an existing in-progress payment for a user+plan, if one exists. */
+export async function getPendingPaymentForUser(
+  db: Database,
+  userId: string,
+  planSlug: string,
+): Promise<Payment | null> {
+  const rows = await db
+    .select()
+    .from(payments)
+    .where(
+      and(
+        eq(payments.userId, userId),
+        eq(payments.planSlug, planSlug),
+        or(eq(payments.localStatus, "creating_payment"), eq(payments.localStatus, "awaiting_payment")),
+      ),
+    )
+    .limit(1);
   return rows[0] ?? null;
 }
 
