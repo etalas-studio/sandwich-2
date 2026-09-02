@@ -23,6 +23,8 @@ const BLOG_MODULES: Record<string, () => BlogModule> = {
   'cara-bikin-prd': () => import('../../content/blog/cara-bikin-prd.mdx') as BlogModule,
   'kenapa-vibe-coding-butuh-prd': () => import('../../content/blog/kenapa-vibe-coding-butuh-prd.mdx') as BlogModule,
   'lovable-alternative': () => import('../../content/blog/lovable-alternative.mdx') as BlogModule,
+  'prd-adalah': () => import('../../content/blog/prd-adalah.mdx') as BlogModule,
+  'scope-pekerjaan-adalah': () => import('../../content/blog/scope-pekerjaan-adalah.mdx') as BlogModule,
 }
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
