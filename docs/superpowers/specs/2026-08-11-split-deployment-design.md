@@ -6,12 +6,12 @@ App currently deploys as a single unit. Goal: serve the React SPA from Vercel an
 
 ## Domains
 
-- FE: `sandwich.etalas.com` → Vercel
-- BE: `api.sandwich.etalas.com` → Railway
+- FE: `spectr.id` → Vercel
+- BE: `api.spectr.id` → Railway
 
 DNS records (to be added by DNS admin):
-- `sandwich.etalas.com` CNAME → Vercel-provided value
-- `api.sandwich.etalas.com` CNAME → Railway-provided value
+- `spectr.id` CNAME → Vercel-provided value
+- `api.spectr.id` CNAME → Railway-provided value
 
 ## Auth Strategy
 
@@ -26,8 +26,8 @@ Session cookie with `Domain=.etalas.com`. Both subdomains share the same parent 
 | File | Change |
 |------|--------|
 | `src/auth/cookie.ts` | Add `Domain=.etalas.com` to cookie attrs when `COOKIE_SECURE=1` |
-| `src/router.ts` | Add CORS headers: `Access-Control-Allow-Origin: https://sandwich.etalas.com`, `Access-Control-Allow-Credentials: true`, handle `OPTIONS` preflight |
-| Railway env vars | `TRUSTED_HOSTS=api.sandwich.etalas.com`, `COOKIE_SECURE=1` |
+| `src/router.ts` | Add CORS headers: `Access-Control-Allow-Origin: https://spectr.id`, `Access-Control-Allow-Credentials: true`, handle `OPTIONS` preflight |
+| Railway env vars | `TRUSTED_HOSTS=api.spectr.id`, `COOKIE_SECURE=1` |
 
 ### FE (Vercel)
 
@@ -35,7 +35,7 @@ Session cookie with `Domain=.etalas.com`. Both subdomains share the same parent 
 |------|--------|
 | `web/src/api/base.ts` (new) | `apiUrl(path)` helper — prefixes with `VITE_API_URL` env var, falls back to `""` |
 | `web/src/api/*.ts` | Replace `fetch("/api/...")` with `fetch(apiUrl("/api/..."), { credentials: "include" })` |
-| `vercel.json` | Add `env: { VITE_API_URL: "https://api.sandwich.etalas.com" }` |
+| `vercel.json` | Add `env: { VITE_API_URL: "https://api.spectr.id" }` |
 
 ## Dev Experience
 

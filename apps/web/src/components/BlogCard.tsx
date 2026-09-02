@@ -12,7 +12,7 @@ export default function BlogCard({ post }: { post: PostMeta }) {
       <article className="rounded-2xl overflow-hidden ring-1 ring-black/10 hover:ring-black/20 transition bg-white">
         <div className="relative w-full aspect-[16/9] bg-black/5">
           <Image
-            src={post.image ?? 'https://placehold.co/800x450/f7f7f8/3b82f6?text=SANDWICH'}
+            src={post.image ?? 'https://placehold.co/800x450/f7f7f8/3b82f6?text=Spectr'}
             alt={post.title}
             fill
             className="object-cover"

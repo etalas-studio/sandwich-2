@@ -51,7 +51,7 @@ export default function SetupForm({
       await onSubmit(username.trim(), email.trim(), password);
       // Remember the chosen plan so a Pro signup is charged right after
       // email verification + login (the verify link can't carry this).
-      if (plan === 'pro') localStorage.setItem('sandwich_pending_plan', 'pro');
+      if (plan === 'pro') localStorage.setItem('spectr_pending_plan', 'pro');
       trackPostHog('signup_completed', { plan });
       setRegistered(true);
     } catch {

@@ -31,9 +31,9 @@ describe("sanitizeFilename", () => {
     assert.equal(sanitizeFilename("  Quotation / Estimate  ", "docx"), "Quotation-Estimate.docx");
   });
 
-  it("falls back to sandwich for empty titles", () => {
-    assert.equal(sanitizeFilename("   ", "md"), "sandwich.md");
-    assert.equal(sanitizeFilename("", "pdf"), "sandwich.pdf");
+  it("falls back to spectr for empty titles", () => {
+    assert.equal(sanitizeFilename("   ", "md"), "spectr.md");
+    assert.equal(sanitizeFilename("", "pdf"), "spectr.pdf");
   });
 });
 

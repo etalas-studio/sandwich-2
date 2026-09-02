@@ -69,11 +69,11 @@ export default function LandingPage() {
   const goToRegister = () => setRegisterModalOpen(true)
 
   // Persist the typed brief so it survives the redirect (the dashboard
-  // PromptBox reads `sandwich_draft` on mount), then route the user either
+  // PromptBox reads `spectr_draft` on mount), then route the user either
   // into the dashboard (already logged in) or registration (anonymous).
   const handlePromptSubmit = (prompt: string, attachments: { name: string; type: string; dataUrl: string }[]) => {
     try {
-      localStorage.setItem('sandwich_draft', JSON.stringify({ prompt, attachments, activeType: null }))
+      localStorage.setItem('spectr_draft', JSON.stringify({ prompt, attachments, activeType: null }))
     } catch { /* ignore storage failures */ }
     trackPostHog('landing_prompt_submitted')
     const isAuthed = authState.status === 'authenticated'

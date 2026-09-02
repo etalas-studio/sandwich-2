@@ -75,7 +75,7 @@ export function registerBillingRoutes(router: Router, deps: HttpDeps): void {
       const result = await createSnapTransaction({
         orderId,
         grossAmount: plan.amount,
-        itemName: `SANDWICH ${plan.name}`,
+        itemName: `Spectr ${plan.name}`,
         customerEmail: user?.email,
       });
 

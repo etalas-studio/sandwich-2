@@ -1,6 +1,6 @@
-# SANDWICH v2 — Roadmap
+# Spectr — Roadmap
 
-Collaboration roadmap for SANDWICH v2 — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.
+Collaboration roadmap for Spectr — from a messy brief to an execution-ready spec. See [`PRODUCT.md`](./PRODUCT.md) for product intent and [`README.md`](./README.md) for setup.
 
 > **Generated file — do not edit by hand.** Source of truth: [`registry/roadmap.json`](./registry/roadmap.json). Regenerate with `npm run roadmap:generate`.
 

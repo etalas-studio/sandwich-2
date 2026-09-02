@@ -7,9 +7,9 @@ import { openConversationSession, sessionExists } from "../projects/sessions.js"
 import { createToolBudget, TOOL_BUDGETS } from "./budget.js";
 import { buildReferenceBlock } from "../notifications/references.js";
 import {
-  SANDWICH_PRD_GUIDE,
-  SANDWICH_QUOTATION_GUIDE,
-  SANDWICH_SPECS_GUIDE,
+  Spectr_PRD_GUIDE,
+  Spectr_QUOTATION_GUIDE,
+  Spectr_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
 } from "./prompts.js";
 import { stageInstruction } from "./orchestrate.js";
@@ -35,7 +35,7 @@ function buildMessages(
   const instruction = stageInstruction(stage, pendingType);
 
   const base = [
-    `You are SANDWICH, an expert product consultant AI built by Etalas.`,
+    `You are Spectr, an expert product consultant AI built by Etalas.`,
     `You help clients turn ideas and briefs into structured product documents.`,
     `Reply in the same language as the client (Indonesian or English).`,
     `Your working directory holds BRIEF.md (the consolidated brief, clarifying Q&A, and attachment summaries) and any deliverables generated so far — read them with your tools when you need context.`,
@@ -71,10 +71,10 @@ function buildMessages(
         guideKind === "prototype"
           ? GETOKUI_PROTOTYPE_GUIDE
           : guideKind === "quotation"
-            ? SANDWICH_QUOTATION_GUIDE
+            ? Spectr_QUOTATION_GUIDE
             : guideKind === "specs"
-              ? SANDWICH_SPECS_GUIDE
-              : SANDWICH_PRD_GUIDE;
+              ? Spectr_SPECS_GUIDE
+              : Spectr_PRD_GUIDE;
 
       const outputInstruction =
         guideKind === "prototype"
@@ -280,9 +280,9 @@ export function commitMessageFor(
     body: [
       oneLine ? `Prompt: ${oneLine}` : "",
       "",
-      `Sandwich-Deliverable: ${type}`,
-      `Sandwich-Conversation: ${conversationId}`,
-      `Sandwich-Stage: ${stage}`,
+      `Spectr-Deliverable: ${type}`,
+      `Spectr-Conversation: ${conversationId}`,
+      `Spectr-Stage: ${stage}`,
     ]
       .join("\n")
       .trim(),

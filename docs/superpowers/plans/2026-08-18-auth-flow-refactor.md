@@ -28,7 +28,7 @@
 | Create | `src/components/RegisterPage.tsx` | Wraps `SetupForm`, wires navigate callbacks |
 | Modify | `src/App.tsx` | Owns all routes, replaces thin wrapper |
 | Modify | `src/components/VerifyEmailPage.tsx` | On success → `/login` instead of `/` |
-| Modify | `src/components/Dashboard.tsx` | On mount: read + clear `sandwich_pending_plan`, fire Snap |
+| Modify | `src/components/Dashboard.tsx` | On mount: read + clear `spectr_pending_plan`, fire Snap |
 | Modify | `src/components/CheckoutPage.tsx` → rename `PaymentPage.tsx` | Remove `PlanPicker`; keep `PaymentTrigger` + success/error |
 | Delete | `src/components/AuthGate.tsx` | Replaced by `PrivateRoute` + `App.tsx` routes |
 
@@ -212,7 +212,7 @@ git commit -m "feat(auth): add LoginPage route component"
 - Consumes: `SetupForm` from `./SetupForm` — props: `onSubmit`, `error`, `isPending`, `onBack`, `onSwitchToLogin`
 - Produces: `export default function RegisterPage(): JSX.Element` — no props
 
-Note: `SetupForm` already reads `?plan=pro` from the URL via `useSearchParams` and sets `localStorage.sandwich_pending_plan` on successful submit. `RegisterPage` does not need to duplicate that logic.
+Note: `SetupForm` already reads `?plan=pro` from the URL via `useSearchParams` and sets `localStorage.spectr_pending_plan` on successful submit. `RegisterPage` does not need to duplicate that logic.
 
 - [ ] **Step 1: Implement `RegisterPage`**
 
@@ -291,7 +291,7 @@ git commit -m "fix(auth): verify email success redirects to /login"
 
 ---
 
-### Task 5: Fix `Dashboard` — handle `sandwich_pending_plan` safely
+### Task 5: Fix `Dashboard` — handle `spectr_pending_plan` safely
 
 **Files:**
 - Modify: `apps/web/src/components/Dashboard.tsx`
@@ -299,11 +299,11 @@ git commit -m "fix(auth): verify email success redirects to /login"
 **Interfaces:**
 - No interface changes. Snap is loaded globally from `window.snap` (already set up by `PaymentTrigger`'s script injection pattern).
 
-The current `sandwich_pending_plan` handling in `AuthGate` (lines 40-48) only clears the key on success. We need to: read on mount, clear immediately, fire Snap, clear again on error/close.
+The current `spectr_pending_plan` handling in `AuthGate` (lines 40-48) only clears the key on success. We need to: read on mount, clear immediately, fire Snap, clear again on error/close.
 
 - [ ] **Step 1: Find the top of the `Dashboard` default export and the existing `useEffect` blocks**
 
-In `apps/web/src/components/Dashboard.tsx`, find the main exported component (not the sub-components). It currently has no `sandwich_pending_plan` handling — that lived in `AuthGate`.
+In `apps/web/src/components/Dashboard.tsx`, find the main exported component (not the sub-components). It currently has no `spectr_pending_plan` handling — that lived in `AuthGate`.
 
 - [ ] **Step 2: Add the pending plan effect**
 
@@ -318,9 +318,9 @@ Add this effect inside the main `Dashboard` component, after existing state decl
 // Fire Snap for a pending Pro upgrade set during registration
 const queryClient = useQueryClient()
 useEffect(() => {
-  const pending = localStorage.getItem('sandwich_pending_plan')
+  const pending = localStorage.getItem('spectr_pending_plan')
   if (pending !== 'pro') return
-  localStorage.removeItem('sandwich_pending_plan') // clear immediately — don't loop
+  localStorage.removeItem('spectr_pending_plan') // clear immediately — don't loop
 
   const fireSnap = async () => {
     try {
@@ -385,8 +385,8 @@ if (!sub?.planSlug) {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4EBE1' }}>
       <div className="text-center max-w-sm px-4">
         <p className="text-sm text-zinc-500 mb-4">No active plan found. Please contact support.</p>
-        <a href="mailto:support@etalas.ai" className="text-sm font-semibold underline" style={{ color: '#f91814' }}>
-          support@etalas.ai
+        <a href="mailto:support@spectr.id" className="text-sm font-semibold underline" style={{ color: '#f91814' }}>
+          support@spectr.id
         </a>
       </div>
     </div>

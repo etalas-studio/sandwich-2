@@ -119,7 +119,7 @@ async function extractImageWithOcr(buffer: Buffer): Promise<string> {
   // Lazy import so the (large) OCR worker/wasm only loads when needed.
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker(OCR_LANGS, 1, {
-    cachePath: `${os.tmpdir()}/sandwich-tesseract`,
+    cachePath: `${os.tmpdir()}/spectr-tesseract`,
   });
   try {
     const { data } = await worker.recognize(buffer);

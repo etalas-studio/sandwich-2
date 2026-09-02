@@ -64,7 +64,7 @@ export default function BlogLayout({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: ACCENT }}
           >
-            {'Coba SANDWICH'}
+            {'Coba Spectr'}
             <iconify-icon icon="solar:arrow-right-linear" width="16" />
           </Link>
         </div>

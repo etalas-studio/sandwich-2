@@ -63,7 +63,7 @@ function parseTrustedHosts(): Set<string> {
  * defaults to the Etalas operator inbox.
  */
 async function seedAdminUser(db: Awaited<ReturnType<typeof openDb>>): Promise<void> {
-  const email = process.env.ADMIN_SEED_EMAIL ?? "admin@sandwich.etalas.com";
+  const email = process.env.ADMIN_SEED_EMAIL ?? "admin@spectr.id";
   const password = process.env.ADMIN_SEED_PASSWORD;
   if (!password) {
     console.warn("[admin] ADMIN_SEED_PASSWORD not set — skipping admin seed");

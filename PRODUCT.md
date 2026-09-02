@@ -1,20 +1,20 @@
-# SANDWICH v2 — Product & Business Source of Truth
+# Spectr — Product & Business Source of Truth
 
-> This document is the canonical source of truth for **what SANDWICH v2 is, what it
+> This document is the canonical source of truth for **what Spectr is, what it
 > does, and every business decision**. When in doubt about product behavior,
 > pricing, quotas, payment, or AI behavior, this document wins. Technical setup
 > lives in `README.md`; this document owns product intent and business rules.
 
 ---
 
-## 1. What SANDWICH v2 is
+## 1. What Spectr is
 
-SANDWICH turns a messy client brief into an execution-ready spec — **one AI
+Spectr turns a messy client brief into an execution-ready spec — **one AI
 pipeline, not five tools**. Built by **Etalas Studio** for teams and agencies
 that work with AI agents (Pi, Claude Code, Codex).
 
-SANDWICH v2 is the **end-user (web) evolution** of
-[SANDWICH v1](https://github.com/etalasaccounts/sandwich) — a Claude Code
+Spectr is the **end-user (web) evolution** of
+[Spectr v1 (formerly Sandwich)](https://github.com/etalasaccounts/sandwich) — a Claude Code
 plugin/skill stack (terminal-based). v1's pipeline (`/order` → `/craft` →
 `/prep`) is the conceptual ancestor of v2's chat-based document generation.
 
@@ -37,7 +37,7 @@ Core promise: *"From a messy brief to an execution-ready spec."*
 
 ## 3. Document types (deliverables)
 
-| Type | What SANDWICH produces |
+| Type | What Spectr produces |
 |------|------------------------|
 | `prd` | Canonical requirements: modules, features, constraints, confidence markers. Includes **user flows** and **technical notes** as sections. |
 | `quotation` | Client cost estimate: scope, timeline, pricing, assumptions, terms. |
@@ -222,11 +222,11 @@ Key backend areas:
 
 | Domain | Purpose |
 |--------|---------|
-| `sandwich.etalas.com` | Frontend (static) |
-| `api.sandwich.etalas.com` | Backend API + webhook |
-| `preview.sandwich.etalas.com` | Prototype previews (`/p/{shareId}/`) |
+| `spectr.id` | Frontend (static) |
+| `api.spectr.id` | Backend API + webhook |
+| `preview.spectr.id` | Prototype previews (`/p/{shareId}/`) |
 
-Midtrans webhook: `https://api.sandwich.etalas.com/api/midtrans/notification`.
+Midtrans webhook: `https://api.spectr.id/api/midtrans/notification`.
 
 ## 14. Removed / deferred (explicit decisions)
 

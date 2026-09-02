@@ -208,7 +208,7 @@ export default function DocumentsPanel({ onOpenDocument, onOpenConversation }: {
           <p className="text-sm" style={{ color: '#9ca3af' }}>Loading…</p>
         ) : items.length === 0 ? (
           <p className="text-sm" style={{ color: '#9ca3af' }}>
-            No documents yet. Start a chat and ask SANDWICH to generate one.
+            No documents yet. Start a chat and ask Spectr to generate one.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -42,6 +42,6 @@
 
 ## Section structure (matches ai-sales-platform's layout, not just its colors)
 1. Sticky nav (unchanged position — floating dashed pill)
-2. Hero — split 2-col: left = badge + h1 + tagline + dashed-divided CTA button pair; right = the glass prompt panel (SANDWICH's version of the reference's dashboard mockup slot)
+2. Hero — split 2-col: left = badge + h1 + tagline + dashed-divided CTA button pair; right = the glass prompt panel (Spectr's version of the reference's dashboard mockup slot)
 3. Full-bleed marquee strip directly under hero — dashed label column + scrolling output-format row (maps to the reference's "TRUSTED TEAMS" strip position)
 4. Harnesses (output types), Pipeline (bento grid), About (ingredients), Samples (terminal-style cards), Differentiators (bento grid), Pricing, FAQ, Footer — unchanged content, all restyled to the dashed/glass/lime system above

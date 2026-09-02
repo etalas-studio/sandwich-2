@@ -17,7 +17,7 @@ export async function generateMetadata({
   try {
     const post = await getPost(slug)
     return {
-      title: `${post.meta.title} — SANDWICH`,
+      title: `${post.meta.title} — Spectr`,
       description: post.meta.description,
       alternates: { canonical: `/blog/${slug}` },
       openGraph: {
@@ -25,10 +25,10 @@ export async function generateMetadata({
         description: post.meta.description,
         type: 'article',
         publishedTime: post.meta.date,
-        url: `https://sandwich.etalas.com/blog/${slug}`,
-        siteName: 'SANDWICH',
+        url: `https://spectr.id/blog/${slug}`,
+        siteName: 'Spectr',
         ...(post.meta.image && {
-          images: [{ url: `https://sandwich.etalas.com${post.meta.image}` }],
+          images: [{ url: `https://spectr.id${post.meta.image}` }],
         }),
       },
       twitter: {
@@ -36,7 +36,7 @@ export async function generateMetadata({
         title: post.meta.title,
         description: post.meta.description,
         ...(post.meta.image && {
-          images: [`https://sandwich.etalas.com${post.meta.image}`],
+          images: [`https://spectr.id${post.meta.image}`],
         }),
       },
     }

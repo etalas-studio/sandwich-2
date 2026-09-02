@@ -3,7 +3,7 @@ import LandingPage from '../components/LandingPage'
 import { FAQS } from '../lib/faqs'
 
 export const metadata: Metadata = {
-  title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+  title: 'Spectr — Turn a Messy Client Brief into an Execution-Ready Spec',
   description:
     'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
   keywords: [
@@ -38,10 +38,10 @@ export const metadata: Metadata = {
     'Design Prototype',
     'Prototype Design Tool',
     'Design Prototype Tool',
-    'Sandwich',
-    'Sandwich PRD',
-    'Sandwich Prototype',
-    'Sandwich Etalas',
+    'Spectr',
+    'Spectr PRD',
+    'Spectr Prototype',
+    'Spectr Etalas',
     'Etalas',
     'Product Etalas',
     'Product Etalas Indonesia',
@@ -97,19 +97,19 @@ export const metadata: Metadata = {
     'web developer quotation template',
     'web developer quotation template indonesia',
   ],
-  metadataBase: new URL('https://sandwich.etalas.com'),
+  metadataBase: new URL('https://spectr.id'),
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+    title: 'Spectr — Turn a Messy Client Brief into an Execution-Ready Spec',
     description:
       'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
-    url: 'https://sandwich.etalas.com',
-    siteName: 'SANDWICH',
+    url: 'https://spectr.id',
+    siteName: 'Spectr',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SANDWICH — Turn a Messy Client Brief into an Execution-Ready Spec',
+    title: 'Spectr — Turn a Messy Client Brief into an Execution-Ready Spec',
     description:
       'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
   },
@@ -119,9 +119,9 @@ export const metadata: Metadata = {
 const appJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'SANDWICH',
+  name: 'Spectr',
   description: 'From a messy brief to a validated PRD, prototype, quotation, and specs — one AI pipeline, not five tools.',
-  url: 'https://sandwich.etalas.com',
+  url: 'https://spectr.id',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

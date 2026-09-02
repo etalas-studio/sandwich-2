@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Serve the React SPA from Vercel (`sandwich.etalas.com`) and the Node API from Railway (`api.sandwich.etalas.com`) as separate deployments, sharing session cookies via `Domain=.etalas.com`.
+**Goal:** Serve the React SPA from Vercel (`spectr.id`) and the Node API from Railway (`api.spectr.id`) as separate deployments, sharing session cookies via `Domain=.etalas.com`.
 
 **Architecture:** FE is a static Vite build deployed to Vercel. All `/api/*` requests are made directly to the Railway BE URL via an `apiUrl()` helper that reads `VITE_API_URL` at build time. Session cookies are shared across subdomains by setting `Domain=.etalas.com` on the BE in production. CORS on the BE allows the Vercel origin with credentials.
 
@@ -45,11 +45,11 @@ describe('apiUrl', () => {
   })
 
   it('prefixes path with VITE_API_URL when set', async () => {
-    vi.stubEnv('VITE_API_URL', 'https://api.sandwich.etalas.com')
+    vi.stubEnv('VITE_API_URL', 'https://api.spectr.id')
     // Re-import to pick up stubbed env
     vi.resetModules()
     const { apiUrl } = await import('./base')
-    expect(apiUrl('/api/tickets')).toBe('https://api.sandwich.etalas.com/api/tickets')
+    expect(apiUrl('/api/tickets')).toBe('https://api.spectr.id/api/tickets')
   })
 })
 ```
@@ -308,7 +308,7 @@ CORS requires two changes:
 1. Handle `OPTIONS` preflight — respond 204 with CORS headers before the host/origin guard
 2. Add CORS headers to every response when the request `Origin` matches the allowed FE origin
 
-The allowed origin is read from `CORS_ORIGIN` env var (set to `https://sandwich.etalas.com` in Railway). Falls back to nothing (no CORS headers) when unset, so local dev is unaffected.
+The allowed origin is read from `CORS_ORIGIN` env var (set to `https://spectr.id` in Railway). Falls back to nothing (no CORS headers) when unset, so local dev is unaffected.
 
 - [ ] **Step 1: Check existing CORS test coverage**
 
@@ -325,7 +325,7 @@ Find the test file's helper `rawRequest` and add these cases after the existing 
 ```typescript
 // CORS preflight from allowed origin
 {
-  const corsOrigin = 'https://sandwich.etalas.com'
+  const corsOrigin = 'https://spectr.id'
   const res = await rawRequest(port, {
     method: 'OPTIONS',
     path: '/api/auth/login',
@@ -406,7 +406,7 @@ git commit -m "feat(be): add CORS support via CORS_ORIGIN env var"
 **Files:**
 - Modify: `src/auth/cookie.ts`
 
-`Domain=.etalas.com` lets the browser send the session cookie from `sandwich.etalas.com` to `api.sandwich.etalas.com`. Only added when `COOKIE_SECURE=1` (production).
+`Domain=.etalas.com` lets the browser send the session cookie from `spectr.id` to `api.spectr.id`. Only added when `COOKIE_SECURE=1` (production).
 
 - [ ] **Step 1: Add test to `src/auth/cookie.ts`** (inline assert at bottom of file, gated by `process.argv[1]`)
 
@@ -464,7 +464,7 @@ Railway env vars are set in the Railway dashboard (not in code). This task docum
   "outputDirectory": "web/dist",
   "framework": null,
   "env": {
-    "VITE_API_URL": "https://api.sandwich.etalas.com"
+    "VITE_API_URL": "https://api.spectr.id"
   }
 }
 ```
@@ -475,23 +475,23 @@ Go to Railway project → Variables and set:
 
 | Key | Value |
 |-----|-------|
-| `TRUSTED_HOSTS` | `api.sandwich.etalas.com` |
+| `TRUSTED_HOSTS` | `api.spectr.id` |
 | `COOKIE_SECURE` | `1` |
-| `CORS_ORIGIN` | `https://sandwich.etalas.com` |
+| `CORS_ORIGIN` | `https://spectr.id` |
 
 - [ ] **Step 3: Set Vercel domain in Vercel dashboard**
 
-Go to Vercel project → Settings → Domains → add `sandwich.etalas.com`. Copy the CNAME target value.
+Go to Vercel project → Settings → Domains → add `spectr.id`. Copy the CNAME target value.
 
 - [ ] **Step 4: Set Railway custom domain in Railway dashboard**
 
-Go to Railway service → Settings → Networking → add `api.sandwich.etalas.com`. Copy the CNAME target value.
+Go to Railway service → Settings → Networking → add `api.spectr.id`. Copy the CNAME target value.
 
 - [ ] **Step 5: Add DNS records**
 
 Ask DNS admin to add:
-- `sandwich.etalas.com` CNAME → Vercel CNAME value
-- `api.sandwich.etalas.com` CNAME → Railway CNAME value
+- `spectr.id` CNAME → Vercel CNAME value
+- `api.spectr.id` CNAME → Railway CNAME value
 
 - [ ] **Step 6: Commit `vercel.json`**
 
@@ -507,6 +507,6 @@ git push
 ```
 
 After Railway redeploys and DNS propagates, test:
-1. Open `https://sandwich.etalas.com` — loads the SPA
+1. Open `https://spectr.id` — loads the SPA
 2. Log in — cookie set with `Domain=.etalas.com`
-3. Any API call goes to `https://api.sandwich.etalas.com` — responds 200 with session cookie attached
+3. Any API call goes to `https://api.spectr.id` — responds 200 with session cookie attached

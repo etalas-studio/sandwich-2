@@ -112,7 +112,7 @@ export default function DocumentReaderPanel({
             />
           ) : (
             <div
-              className="text-sm px-6 py-6 sandwich-output"
+              className="text-sm px-6 py-6 spectr-output"
               style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
               dangerouslySetInnerHTML={{ __html: marked.parse(content) as string }}
             />

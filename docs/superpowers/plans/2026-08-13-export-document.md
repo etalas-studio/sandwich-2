@@ -1051,7 +1051,7 @@ Replace the header block:
 ```tsx
         <div className="mb-8">
           <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#f91814' }}>
-            SANDWICH · shared brief
+            Spectr · shared brief
           </p>
           <h1 className="text-2xl font-semibold" style={{ color: '#111827' }}>{conversation.title}</h1>
         </div>
@@ -1063,7 +1063,7 @@ With:
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#f91814' }}>
-              SANDWICH · shared brief
+              Spectr · shared brief
             </p>
             <h1 className="text-2xl font-semibold" style={{ color: '#111827' }}>{conversation.title}</h1>
           </div>

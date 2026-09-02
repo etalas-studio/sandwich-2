@@ -286,7 +286,7 @@ These are core generation logic — they belong with the engine.
 
 **Interfaces:**
 - Produces: `generation/orchestrate.ts` exporting `stageInstruction`, `detectDeliverableType`, `detectPreviewIntent`, `detectRefineIntent`, `detectCancelIntent`, `hasLogoAndColorDetails`, `INITIAL_STAGE`, `type PipelineStage`
-- Produces: `generation/prompts.ts` exporting `SANDWICH_PRD_GUIDE`, `SANDWICH_QUOTATION_GUIDE`, `SANDWICH_SPECS_GUIDE`, `GETOKUI_PROTOTYPE_GUIDE`
+- Produces: `generation/prompts.ts` exporting `Spectr_PRD_GUIDE`, `Spectr_QUOTATION_GUIDE`, `Spectr_SPECS_GUIDE`, `GETOKUI_PROTOTYPE_GUIDE`
 
 - [ ] **Step 1: Create generation folder**
 
@@ -706,9 +706,9 @@ import { openConversationSession, sessionExists } from "../projects/sessions.js"
 import { createToolBudget, TOOL_BUDGETS } from "./budget.js";
 import { buildReferenceBlock } from "../notifications/references.js";
 import {
-  SANDWICH_PRD_GUIDE,
-  SANDWICH_QUOTATION_GUIDE,
-  SANDWICH_SPECS_GUIDE,
+  Spectr_PRD_GUIDE,
+  Spectr_QUOTATION_GUIDE,
+  Spectr_SPECS_GUIDE,
   GETOKUI_PROTOTYPE_GUIDE,
 } from "./prompts.js";
 import { stageInstruction } from "./orchestrate.js";

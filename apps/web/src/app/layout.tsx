@@ -7,8 +7,8 @@ import '@fontsource-variable/geist'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sandwich.etalas.com'),
-  title: 'SANDWICH',
+  metadataBase: new URL('https://spectr.id'),
+  title: 'Spectr',
   description: 'From a messy brief to an execution-ready spec.',
 }
 

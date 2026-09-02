@@ -16,7 +16,7 @@
 - Runtime entrypoint is `dist/web-server.js`; `dist/` is gitignored and rebuilt. Only `dist/` matters at runtime.
 - `tsc` compiles `.ts` only — it does NOT copy `.json`. Vendored JSON must be copied to `dist/` explicitly.
 - The existing build pass in `apps/server/prototype/engine.ts` must remain **behaviorally unchanged**; glowup is added strictly after it, with a snapshot fallback.
-- The getokui reference DNA expresses values as Tailwind classes. SANDWICH prototypes use plain CSS (no Tailwind) — glowup must translate Tailwind tokens to CSS equivalents.
+- The getokui reference DNA expresses values as Tailwind classes. Spectr prototypes use plain CSS (no Tailwind) — glowup must translate Tailwind tokens to CSS equivalents.
 - Glowup is **style only**: keep the prototype's own copy, demo data, CRUD logic (localStorage), Chart.js usage, and file layout intact.
 
 ---
@@ -407,7 +407,7 @@ export interface GlowupPromptInput {
 
 export function buildGlowupSystemPrompt(input: GlowupPromptInput): string {
   return [
-    `You are SANDWICH's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
+    `You are Spectr's design-polish pass ("glowup"). A first agent already generated a working multi-page static prototype from the client brief below. Your job is to improve its DESIGN QUALITY only — spacing, color, typography, hierarchy, composition, motion, iconography — while KEEPING its content, copy, data, and functionality intact.`,
     ``,
     `## Client Brief (for reference matching)`,
     input.brief,

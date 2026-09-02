@@ -93,14 +93,14 @@ export function registerAuthRoutes(router: Router, deps: HttpDeps): void {
       try {
         await sendEmail({
           to: user.email,
-          subject: "Satu langkah lagi — verifikasi email kamu di SANDWICH",
-          text: `Hei, selamat datang di SANDWICH!\n\nKamu hampir selesai. Klik link berikut untuk verifikasi email dan mulai gunakan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di SANDWICH, abaikan email ini saja.\n\n— Tim SANDWICH`,
+          subject: "Satu langkah lagi — verifikasi email kamu di Spectr",
+          text: `Hei, selamat datang di Spectr!\n\nKamu hampir selesai. Klik link berikut untuk verifikasi email dan mulai gunakan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di Spectr, abaikan email ini saja.\n\n— Tim Spectr`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
-  <p>Hei, selamat datang di SANDWICH! 👋</p>
+  <p>Hei, selamat datang di Spectr! 👋</p>
   <p>Kamu hampir selesai. Klik tombol di bawah untuk verifikasi email dan mulai gunakan akun kamu.</p>
   <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Verifikasi Email Saya →</a></p>
-  <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di SANDWICH, abaikan email ini saja.</p>
-  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+  <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 24 jam. Kalau kamu tidak mendaftar di Spectr, abaikan email ini saja.</p>
+  <p style="color:#6b7280;font-size:13px">— Tim Spectr</p>
 </div>`,
         });
       } catch (err) {
@@ -163,14 +163,14 @@ export function registerAuthRoutes(router: Router, deps: HttpDeps): void {
         const link = resetLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Reset password kamu — SANDWICH",
-          text: `Hei, kami terima permintaan reset password untuk akun kamu.\n\nKlik link berikut untuk atur password baru:\n\n${link}\n\nLink ini berlaku selama 1 jam. Kalau kamu tidak meminta ini, abaikan saja email ini — password kamu tetap aman.\n\n— Tim SANDWICH`,
+          subject: "Reset password kamu — Spectr",
+          text: `Hei, kami terima permintaan reset password untuk akun kamu.\n\nKlik link berikut untuk atur password baru:\n\n${link}\n\nLink ini berlaku selama 1 jam. Kalau kamu tidak meminta ini, abaikan saja email ini — password kamu tetap aman.\n\n— Tim Spectr`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
   <p>Hei, kami terima permintaan reset password untuk akun kamu.</p>
   <p>Klik tombol di bawah untuk atur password baru.</p>
   <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Reset Password Saya →</a></p>
   <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 1 jam. Kalau kamu tidak meminta ini, abaikan saja email ini — password kamu tetap aman.</p>
-  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+  <p style="color:#6b7280;font-size:13px">— Tim Spectr</p>
 </div>`,
         });
       } catch (err) {
@@ -268,14 +268,14 @@ export function registerAuthRoutes(router: Router, deps: HttpDeps): void {
         const link = verificationLink(token);
         await sendEmail({
           to: user.email,
-          subject: "Ini link verifikasi baru kamu — SANDWICH",
-          text: `Hei, ini link verifikasi baru yang kamu minta.\n\nKlik link berikut untuk verifikasi email dan aktifkan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak merasa meminta ini, abaikan saja.\n\n— Tim SANDWICH`,
+          subject: "Ini link verifikasi baru kamu — Spectr",
+          text: `Hei, ini link verifikasi baru yang kamu minta.\n\nKlik link berikut untuk verifikasi email dan aktifkan akun kamu:\n\n${link}\n\nLink ini berlaku selama 24 jam. Kalau kamu tidak merasa meminta ini, abaikan saja.\n\n— Tim Spectr`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827">
   <p>Hei, ini link verifikasi baru yang kamu minta.</p>
   <p>Klik tombol di bawah untuk verifikasi email dan aktifkan akun kamu.</p>
   <p style="margin:28px 0"><a href="${link}" style="background:#f91814;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;display:inline-block">Verifikasi Email Saya →</a></p>
   <p style="color:#6b7280;font-size:13px">Link ini berlaku selama 24 jam. Kalau kamu tidak merasa meminta ini, abaikan saja.</p>
-  <p style="color:#6b7280;font-size:13px">— Tim SANDWICH</p>
+  <p style="color:#6b7280;font-size:13px">— Tim Spectr</p>
 </div>`,
         });
       } catch (err) {

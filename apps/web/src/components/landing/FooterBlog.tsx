@@ -4,7 +4,7 @@ import { Footer } from './Footer'
 export function FooterBlog() {
   return (
     <Footer
-      navPipeline="Why SANDWICH"
+      navPipeline="Why Spectr"
       navHow="How It Works"
       navDeliverables="Deliverables"
       navComparison="Comparison"

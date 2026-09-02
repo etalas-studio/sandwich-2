@@ -1,8 +1,8 @@
 {
-  "name": "sandwich",
+  "name": "spectr",
   "version": "0.1.0",
   "private": true,
-  "description": "SANDWICH — from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
+  "description": "Spectr — from a messy brief to an execution-ready spec: PRD, prototype, MOM, and quotation in one AI pipeline, with chat follow-ups.",
   "type": "module",
   "engines": {
     "node": ">=22"

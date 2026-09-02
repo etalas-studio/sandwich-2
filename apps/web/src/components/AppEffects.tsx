@@ -25,9 +25,9 @@ export default function AppEffects() {
 
   useEffect(() => {
     if (state?.status === 'authenticated') {
-      const pending = localStorage.getItem('sandwich_pending_plan')
+      const pending = localStorage.getItem('spectr_pending_plan')
       if (pending === 'pro') {
-        localStorage.removeItem('sandwich_pending_plan')
+        localStorage.removeItem('spectr_pending_plan')
         router.replace('/pay?plan=pro')
       }
     }

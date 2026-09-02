@@ -25,17 +25,17 @@ export default function Page() {
         </h1>
         <p className="text-sm text-zinc-600 leading-relaxed mb-8 max-w-md">
           {lang === 'id'
-            ? 'Ada pertanyaan soal SANDWICH, billing, atau data kamu? Kirim email ke kami, biasanya kami balas dalam 1-2 hari kerja.'
-            : "Questions about SANDWICH, billing, or your data? Email us, we usually reply within 1-2 business days."}
+            ? 'Ada pertanyaan soal Spectr, billing, atau data kamu? Kirim email ke kami, biasanya kami balas dalam 1-2 hari kerja.'
+            : "Questions about Spectr, billing, or your data? Email us, we usually reply within 1-2 business days."}
         </p>
 
         <a
-          href="mailto:support@etalas.ai"
+          href="mailto:support@spectr.id"
           className="inline-flex items-center gap-2.5 rounded-2xl px-5 py-4 bg-white"
           style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}
         >
           <iconify-icon icon="solar:letter-linear" width="18" style={{ color: '#f91814' }} />
-          <span className="text-sm font-semibold" style={{ color: '#111827' }}>support@etalas.ai</span>
+          <span className="text-sm font-semibold" style={{ color: '#111827' }}>support@spectr.id</span>
         </a>
 
         <p className="text-xs text-zinc-500 mt-8">

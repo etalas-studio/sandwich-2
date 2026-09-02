@@ -31,7 +31,7 @@ function buildAttrs(cookieValue: string, maxAge: number, secure: boolean): strin
   if (secure) {
     attrs.push("Secure");
     // Share cookie across subdomains in production
-    attrs.push("Domain=.etalas.com");
+    attrs.push("Domain=.spectr.id");
   }
   return attrs;
 }

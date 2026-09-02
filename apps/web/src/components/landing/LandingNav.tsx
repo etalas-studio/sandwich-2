@@ -10,7 +10,7 @@ const pillClass = 'bg-black/5 ring-black/10 text-neutral-900/90 hover:bg-black/1
 const groupRingClass = 'ring-black/5'
 
 const NAV_LINKS_EN = [
-  { id: 'why', label: 'Why SANDWICH' },
+  { id: 'why', label: 'Why Spectr' },
   { id: 'pipeline', label: 'How It Works' },
   { id: 'deliverables', label: 'Deliverables' },
   { id: 'comparison', label: 'Comparison' },
@@ -18,7 +18,7 @@ const NAV_LINKS_EN = [
   { id: 'faq', label: 'FAQ' },
 ]
 const NAV_LINKS_ID = [
-  { id: 'why', label: 'Kenapa SANDWICH' },
+  { id: 'why', label: 'Kenapa Spectr' },
   { id: 'pipeline', label: 'Cara Kerja' },
   { id: 'deliverables', label: 'Deliverables' },
   { id: 'comparison', label: 'Perbandingan' },
@@ -49,7 +49,7 @@ export function LandingNav({ onLoginClick }: LandingNavProps = {}) {
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}
           >
             <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
-            <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>SANDWICH</span>
+            <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>Spectr</span>
           </a>
 
           <nav className="hidden md:flex gap-2 items-center">

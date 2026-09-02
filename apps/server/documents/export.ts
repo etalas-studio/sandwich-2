@@ -55,7 +55,7 @@ export function sanitizeFilename(title: string, extension: string): string {
     .replace(/\s+/g, "-")
     .slice(0, 60)
     .replace(/^-+|-+$/g, "");
-  return `${base || "sandwich"}.${extension}`;
+  return `${base || "spectr"}.${extension}`;
 }
 
 export function parseQueryParam(url: string | undefined, key: string): string | null {
