@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22"
   },
+  "config": {
+    "puppeteer_skip_download": "true"
+  },
   "scripts": {
     "postinstall": "npm --prefix apps/web install",
     "build": "tsc -p tsconfig.json && node scripts/copy-getokui.mjs && node scripts/copy-doc-references.mjs && node scripts/copy-pdf-assets.mjs && npm --prefix apps/web run build",
