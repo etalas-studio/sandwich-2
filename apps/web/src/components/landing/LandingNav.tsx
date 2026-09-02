@@ -48,7 +48,7 @@ export function LandingNav({ onLoginClick }: LandingNavProps = {}) {
             className={`flex items-center gap-2 pl-2 pr-3 shrink-0 rounded-full ring-1 backdrop-blur-md transition-colors duration-300 bg-black/5 ring-black/10 hover:bg-black/10`}
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}
           >
-            <span className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold" style={{ backgroundColor: ACCENT, color: '#ffffff' }}>S</span>
+            <img src="/logo.png" alt="Spectr" className="h-7 w-auto brightness-0" />
             <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>Spectr</span>
           </a>
 

@@ -65,8 +65,8 @@ export default function Page() {
           heading: { en: 'Changes and contact', id: 'Perubahan dan kontak' },
           body: [
             {
-              en: 'We may update these terms as the product evolves; material changes will be reflected here with an updated date. Questions? Email support@spectr.id.',
-              id: 'Kami dapat memperbarui syarat ini seiring perkembangan produk; perubahan signifikan akan tercermin di sini dengan tanggal yang diperbarui. Ada pertanyaan? Email support@spectr.id.',
+              en: 'We may update these terms as the product evolves; material changes will be reflected here with an updated date. Questions? Email hello@etalas.com.',
+              id: 'Kami dapat memperbarui syarat ini seiring perkembangan produk; perubahan signifikan akan tercermin di sini dengan tanggal yang diperbarui. Ada pertanyaan? Email hello@etalas.com.',
             },
           ],
         },

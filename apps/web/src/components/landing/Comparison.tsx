@@ -28,37 +28,38 @@ export function Comparison(props: ComparisonProps) {
           <p className="mt-4 md:text-lg text-base leading-relaxed" style={{ color: LIGHT_TEXT_MUTED }}>{props.desc}</p>
         </div>
 
-        <div className="mt-14 w-full overflow-hidden rounded-3xl ring-1 ring-black/5">
-          <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-black/5">
-            <div className="px-6 py-4" />
-            <div className="px-6 py-4 flex items-center gap-2 border-l border-black/5" style={{ background: `${ACCENT}08` }}>
-              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: ACCENT }}>S</div>
-              <span className="text-xs font-semibold" style={{ color: ACCENT }}>{props.colSandwich}</span>
+        <div className="mt-14 w-full overflow-x-auto rounded-3xl ring-1 ring-black/5">
+          <div className="min-w-[600px]">
+            <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-black/5">
+              <div className="px-6 py-4" />
+              <div className="px-6 py-4 flex items-center gap-2 border-l border-black/5" style={{ background: `${ACCENT}08` }}>
+                <img src="/logo.png" alt="Spectr" className="h-5 w-auto brightness-0" />
+                <span className="text-xs font-semibold" style={{ color: ACCENT }}>{props.colSandwich}</span>
+              </div>
+              <div className="px-6 py-4 flex items-center gap-2 border-l border-black/5">
+                <span className="text-xs font-semibold" style={{ color: '#b0b7c3' }}>{props.colManual}</span>
+              </div>
             </div>
-            <div className="px-6 py-4 flex items-center gap-2 border-l border-black/5">
-              <span className="text-xs font-semibold" style={{ color: '#b0b7c3' }}>{props.colManual}</span>
-            </div>
+            {props.rows.map((row, i) => (
+              <div key={row.aspect} className="grid grid-cols-[1fr_1fr_1fr] border-b border-black/5 last:border-b-0" style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                <div className="px-6 py-5 flex items-center">
+                  <span className="text-sm" style={{ color: LIGHT_TEXT_SECONDARY }}>{row.aspect}</span>
+                </div>
+                <div className="px-6 py-5 flex items-center gap-2.5 border-l border-black/5" style={{ background: `${ACCENT}05` }}>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: `${ACCENT}18` }}>
+                    <iconify-icon icon="solar:check-linear" width="10" style={{ color: ACCENT }} />
+                  </div>
+                  <span className="text-sm font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>{row.sandwich}</span>
+                </div>
+                <div className="px-6 py-5 flex items-center gap-2.5 border-l border-black/5">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-neutral-100">
+                    <iconify-icon icon="solar:minus-linear" width="10" style={{ color: '#c4c9d4' }} />
+                  </div>
+                  <span className="text-sm" style={{ color: '#b0b7c3' }}>{row.manual}</span>
+                </div>
+              </div>
+            ))}
           </div>
-
-          {props.rows.map((row, i) => (
-            <div key={row.aspect} className="grid grid-cols-[1fr_1fr_1fr] border-b border-black/5 last:border-b-0" style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-              <div className="px-6 py-5 flex items-center">
-                <span className="text-sm" style={{ color: LIGHT_TEXT_SECONDARY }}>{row.aspect}</span>
-              </div>
-              <div className="px-6 py-5 flex items-center gap-2.5 border-l border-black/5" style={{ background: `${ACCENT}05` }}>
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: `${ACCENT}18` }}>
-                  <iconify-icon icon="solar:check-linear" width="10" style={{ color: ACCENT }} />
-                </div>
-                <span className="text-sm font-medium" style={{ color: LIGHT_TEXT_PRIMARY }}>{row.sandwich}</span>
-              </div>
-              <div className="px-6 py-5 flex items-center gap-2.5 border-l border-black/5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-neutral-100">
-                  <iconify-icon icon="solar:minus-linear" width="10" style={{ color: '#c4c9d4' }} />
-                </div>
-                <span className="text-sm" style={{ color: '#b0b7c3' }}>{row.manual}</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>

@@ -226,7 +226,7 @@ const STRINGS = {
   footer_privacy: { en: 'Privacy Policy', id: 'Kebijakan Privasi' },
   footer_terms: { en: 'Terms of Service', id: 'Syarat & Ketentuan' },
   footer_refund: { en: 'Refund Policy', id: 'Kebijakan Refund' },
-  footer_contact: { en: 'Contact', id: 'Kontak' },
+  footer_contact: { en: 'Contact Us', id: 'Hubungi Kami' },
 
   // ── Legal ──
   legal_back: { en: 'Back to home', id: 'Kembali ke beranda' },
