@@ -1,3 +1,5 @@
 'use client'
-import LoginPage from '../../components/LoginPage'
-export default function Page() { return <LoginPage /> }
+import LandingPage from '../../components/LandingPage'
+export default function Page() {
+  return <LandingPage initialLoginOpen />
+}

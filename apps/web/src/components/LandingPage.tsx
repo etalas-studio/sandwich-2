@@ -34,7 +34,7 @@ const HERO_SUGGESTIONS = (lang: 'en' | 'id') => [
   { label: 'Specs', prompt: lang === 'id' ? 'Buatkan specs dan task breakdown untuk fitur ini' : 'Create specs and a task breakdown for this feature' },
 ]
 
-export default function LandingPage() {
+export default function LandingPage({ initialLoginOpen = false, initialRegisterOpen = false }: { initialLoginOpen?: boolean; initialRegisterOpen?: boolean } = {}) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
   const router = useRouter()
@@ -60,13 +60,17 @@ export default function LandingPage() {
   }))
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
-  const [registerModalOpen, setRegisterModalOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(initialLoginOpen)
+  const openLogin = () => { setLoginModalOpen(true); router.push('/login') }
+  const closeLogin = () => { setLoginModalOpen(false); router.push('/') }
+  const [registerModalOpen, setRegisterModalOpen] = useState(initialRegisterOpen)
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
-  const goToRegister = () => setRegisterModalOpen(true)
+  const openRegister = () => { setRegisterModalOpen(true); router.push('/register') }
+  const closeRegister = () => { setRegisterModalOpen(false); router.push('/') }
+  const goToRegister = openRegister
 
   // Persist the typed brief so it survives the redirect (the dashboard
   // PromptBox reads `spectr_draft` on mount), then route the user either
@@ -77,7 +81,7 @@ export default function LandingPage() {
     } catch { /* ignore storage failures */ }
     trackPostHog('landing_prompt_submitted')
     const isAuthed = authState.status === 'authenticated'
-    if (isAuthed) { router.push('/dashboard') } else { setRegisterModalOpen(true) }
+    if (isAuthed) { router.push('/dashboard') } else { openRegister() }
   }
 
   const pipelineSteps = [
@@ -109,7 +113,7 @@ export default function LandingPage() {
         onToggleLang={() => setLang(lang === 'en' ? 'id' : 'en')}
         onNavClick={scrollToSection}
         onGetStartedClick={goToRegister}
-        onLoginClick={() => setLoginModalOpen(true)}
+        onLoginClick={() => openLogin()}
         onSecondaryClick={() => scrollToSection('pipeline')}
         onPromptSubmit={handlePromptSubmit}
         heroPromptPlaceholder={t('hero_prompt_placeholder')}
@@ -220,14 +224,14 @@ export default function LandingPage() {
       />
       {loginModalOpen && (
         <LoginModal
-          onClose={() => setLoginModalOpen(false)}
-          onSwitchToRegister={() => { setLoginModalOpen(false); setRegisterModalOpen(true) }}
+          onClose={() => closeLogin()}
+          onSwitchToRegister={() => { closeLogin(); openRegister() }}
         />
       )}
       {registerModalOpen && (
         <RegisterModal
-          onClose={() => setRegisterModalOpen(false)}
-          onSwitchToLogin={() => { setRegisterModalOpen(false); setLoginModalOpen(true) }}
+          onClose={() => closeRegister()}
+          onSwitchToLogin={() => { closeRegister(); openLogin() }}
         />
       )}
     </div>

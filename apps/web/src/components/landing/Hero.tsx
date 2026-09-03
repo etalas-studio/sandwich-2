@@ -135,7 +135,10 @@ export function Hero(props: HeroProps) {
   const pillClass = scrolled
     ? 'bg-black/5 ring-black/10 text-neutral-900/90 hover:bg-black/10 hover:ring-black/20'
     : 'bg-white/5 ring-white/10 text-white/90 hover:bg-white/10 hover:ring-white/20'
-  const groupRingClass = scrolled ? 'ring-black/5' : 'ring-white/5'
+  const groupRingClass = scrolled
+    ? 'ring-black/5 bg-white/80 backdrop-blur-md'
+    : 'ring-white/5 bg-white/10 backdrop-blur-md'
+  const actionsGroupClass = groupRingClass
 
   return (
     <div className="relative h-screen overflow-hidden" style={{ backgroundColor: '#020617' }}>
@@ -182,7 +185,7 @@ export function Hero(props: HeroProps) {
             </nav>
           </div>
 
-          <div className={`hidden md:flex ring-1 rounded-full pt-1 pr-1 pb-1 pl-1 gap-x-2 gap-y-2 items-center transition-colors duration-300 ${groupRingClass}`}>
+          <div className={`hidden md:flex ring-1 rounded-full pt-1 pr-1 pb-1 pl-1 gap-x-2 gap-y-2 items-center transition-colors duration-300 ${actionsGroupClass}`}>
             <button
               onClick={props.onToggleLang}
               className={`inline-flex items-center gap-2 transition-colors duration-300 text-sm font-medium ring-1 rounded-full pt-2 pr-3.5 pb-2 pl-3.5 backdrop-blur-sm ${pillClass}`}
@@ -257,7 +260,7 @@ export function Hero(props: HeroProps) {
 
       {/* Hero content */}
       <main className="z-20 flex h-[calc(100vh-80px)] relative items-center">
-        <section className="md:px-8 w-full max-w-6xl mr-auto ml-auto pr-6 pl-6 text-center">
+        <section className="md:px-8 w-full max-w-6xl mr-auto ml-auto pr-6 pl-6 text-center pt-52">
           <h1 className="leading-tight tracking-tight" style={{ fontSize: 'clamp(1.5rem, 5vw, 4rem)' }}>
             <span
               className="block"

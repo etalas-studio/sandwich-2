@@ -1,4 +1,5 @@
 'use client'
-import { Suspense } from 'react'
-import RegisterPage from '../../components/RegisterPage'
-export default function Page() { return <Suspense><RegisterPage /></Suspense> }
+import LandingPage from '../../components/LandingPage'
+export default function Page() {
+  return <LandingPage initialRegisterOpen />
+}
