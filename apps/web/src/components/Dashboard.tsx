@@ -135,8 +135,11 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
       if (ev.type === 'done') {
         const output = ev.text ?? ''
         if (output) {
-          // Normal completion — the backend sent the result text + document ref.
-          setMessages(m => [...m, { role: 'ai', isDone: true, output, document: ev.document }])
+          // Replace any in-progress live bubble with the final committed bubble.
+          setMessages(m => {
+            const withoutLive = m.filter(msg => msg.isDone || msg.isError || msg.role === 'user')
+            return [...withoutLive, { role: 'ai', isDone: true, output, document: ev.document }]
+          })
           setStreaming(false)
           onDone?.(output)
         } else {
@@ -458,6 +461,9 @@ function ChatView({
 
   const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
     updateLocalConversation(conversationId, { content: output, status: 'done' })
+    // Reload turns so the completed response is in DB-backed state before the
+    // next send wipes liveMessages — fixes previous response disappearing on follow-up.
+    void reloadTurns()
   }, () => { setIsReloading(true); void reloadTurns()?.finally(() => setIsReloading(false)) })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
