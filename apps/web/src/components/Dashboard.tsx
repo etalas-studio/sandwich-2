@@ -706,8 +706,10 @@ function ChatView({
                         </p>
                       )}
                       {liveMsg ? (
-                        <div className="text-sm break-words overflow-x-hidden spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
-                          dangerouslySetInnerHTML={{ __html: marked.parse(liveMsg.liveText!) as string }} />
+                        <div className="text-sm break-words overflow-x-hidden spectr-output stream-live" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85', whiteSpace: 'pre-wrap' }}>
+                          {liveMsg.liveText}
+                          <span className="stream-cursor" />
+                        </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
@@ -875,6 +877,12 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
 
   return (
     <div className="w-full rounded-2xl" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
+      <style>{`
+        @keyframes streamFadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .stream-live { animation: streamFadeIn 0.15s ease-out; }
+        .stream-cursor { display: inline-block; width: 2px; height: 1em; background: currentColor; margin-left: 1px; vertical-align: text-bottom; animation: cursorBlink 0.7s step-end infinite; }
+      `}</style>
       {projectId && projectTitle && (
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-2xl" style={{ backgroundColor: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
           <p className="text-xs truncate" style={{ color: '#6b7280' }}>
