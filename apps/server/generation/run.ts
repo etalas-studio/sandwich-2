@@ -128,8 +128,9 @@ export async function runTextGeneration(opts: {
   stage: PipelineStage;
   pendingType: DocumentType | null;
   refineInstruction?: string | null;
+  onChunk?: (delta: string) => void;
 }): Promise<{ text: string; wroteFile: boolean }> {
-  const { projectDir, conversationId, history, signal, stage, pendingType, refineInstruction } = opts;
+  const { projectDir, conversationId, history, signal, stage, pendingType, refineInstruction, onChunk } = opts;
   const pi = await import("@earendil-works/pi-coding-agent");
   const { resolveModel } = await import("../model-runtime.js");
 
@@ -191,7 +192,9 @@ export async function runTextGeneration(opts: {
       event.type === "message_update" &&
       event.assistantMessageEvent?.type === "text_delta"
     ) {
-      responseText += event.assistantMessageEvent.delta;
+      const delta = event.assistantMessageEvent.delta ?? "";
+      responseText += delta;
+      onChunk?.(delta);
       return;
     }
 

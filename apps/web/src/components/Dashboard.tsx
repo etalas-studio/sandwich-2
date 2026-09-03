@@ -77,6 +77,7 @@ interface ChatMessage {
   isDone?: boolean
   isError?: boolean
   output?: string
+  liveText?: string     // accumulated streaming chunks (not yet committed)
   conversationId?: string
   document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }
 }
@@ -119,6 +120,16 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
     const handleEvent = (ev: { type: string; stage?: string; text?: string; document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }; conversation?: { output?: string | null } }): 'continue' | 'done' => {
       if (ev.type === 'stage_start' && ev.stage) {
         setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
+        return 'continue'
+      }
+      if (ev.type === 'output_chunk' && ev.text) {
+        setMessages(m => {
+          const last = m[m.length - 1]
+          if (last && last.role === 'ai' && !last.isDone && !last.isError) {
+            return [...m.slice(0, -1), { ...last, liveText: (last.liveText ?? '') + ev.text }]
+          }
+          return [...m, { role: 'ai', liveText: ev.text }]
+        })
         return 'continue'
       }
       if (ev.type === 'done') {
@@ -683,21 +694,30 @@ function ChatView({
                   return null
                 })}
 
-                {/* Loading state — shown while streaming or reloading turns after fast response */}
-                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (
-                  <div className="flex flex-col gap-2">
-                    {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
-                      <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                        {m.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage!]) : m.stage}
-                      </p>
-                    ))}
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
+                {/* Loading state — bouncing dots until first chunk, then live text */}
+                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (() => {
+                  const liveMsg = [...msgs].reverse().find(m => m.liveText)
+                  const stageMsg = msgs.filter(m => m.stage).slice(-1)[0]
+                  return (
+                    <div className="flex flex-col gap-2">
+                      {stageMsg && !liveMsg && (
+                        <p className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                          {stageMsg.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[stageMsg.stage!]) : stageMsg.stage}
+                        </p>
+                      )}
+                      {liveMsg ? (
+                        <div className="text-sm break-words overflow-x-hidden spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                          dangerouslySetInnerHTML={{ __html: marked.parse(liveMsg.liveText!) as string }} />
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </div>
             )
           })}
