@@ -163,7 +163,7 @@ export async function runTextGeneration(opts: {
   let budgetVerdict: "ok" | "ceiling" | "stalled" = "ok";
   let lastEventType = "(none)";
   const runTag = `[text convId=${conversationId} stage=${stage} relPath=${relPath ?? "none"}]`;
-  console.log(`${runTag} starting`);
+  console.log(`${runTag} starting resume=${resume}`);
   const guardBudget = (v: "ok" | "ceiling" | "stalled") => {
     if (v !== "ok" && budgetVerdict === "ok") {
       budgetVerdict = v;
@@ -180,7 +180,11 @@ export async function runTextGeneration(opts: {
   }) => {
     if (signal.aborted) return;
     lastEventType = event.type;
-    console.debug(`${runTag} event=${event.type} toolCalls=${budget.toolCalls}`);
+    if (event.type !== "message_update") {
+      console.log(`${runTag} event=${event.type} toolCalls=${budget.toolCalls}`);
+    } else {
+      console.debug(`${runTag} event=${event.type} toolCalls=${budget.toolCalls}`);
+    }
     guardBudget(budget.onEvent(event.type, Date.now()));
 
     if (
@@ -241,6 +245,7 @@ export async function runTextGeneration(opts: {
   }
   const prompt = parts.join("\n\n");
 
+  console.log(`${runTag} prompt chars=${prompt.length} parts=${parts.length}`);
   const poll = setInterval(() => guardBudget(budget.check(Date.now())), 5_000);
   try {
     const promptPromise = session.prompt(prompt);
