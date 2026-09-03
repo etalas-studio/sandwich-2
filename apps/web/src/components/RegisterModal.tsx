@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 import SetupForm from './SetupForm'
@@ -32,15 +32,17 @@ export function RegisterModal({ onClose, onSwitchToLogin }: RegisterModalProps) 
       style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <SetupForm
-        onSubmit={register}
-        login={login}
-        error={registerError}
-        isPending={registerPending}
-        onBack={onClose}
-        onSwitchToLogin={onSwitchToLogin}
-        modal
-      />
+      <Suspense fallback={null}>
+        <SetupForm
+          onSubmit={register}
+          login={login}
+          error={registerError}
+          isPending={registerPending}
+          onBack={onClose}
+          onSwitchToLogin={onSwitchToLogin}
+          modal
+        />
+      </Suspense>
     </div>
   )
 }
