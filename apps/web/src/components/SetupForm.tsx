@@ -108,7 +108,7 @@ export default function SetupForm({
               <iconify-icon icon="solar:close-linear" width="18" />
             </button>
           )}
-          <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: interTight, color: titleColor }}>
+          <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: "'Instrument Serif', serif", color: titleColor }}>
             {tr("setup_verify_sent_title")}
           </h1>
           <p className="text-sm text-center mb-6" style={{ color: modal ? "rgba(255,255,255,0.6)" : "#6b7280" }}>{tr("setup_verify_sent_desc")}</p>
@@ -142,7 +142,7 @@ export default function SetupForm({
           </div>
         </div>
 
-        <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: interTight, color: titleColor }}>
+        <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: "'Instrument Serif', serif", color: titleColor }}>
           {tr("setup_title")}
         </h1>
         <p className="text-sm text-center mb-7" style={{ color: modal ? "rgba(255,255,255,0.6)" : "#6b7280" }}>

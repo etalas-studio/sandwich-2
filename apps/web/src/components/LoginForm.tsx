@@ -72,7 +72,7 @@ export default function LoginForm({ onSubmit, error, isPending, onBack, onSwitch
           </div>
         </div>
 
-        <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: interTight, color: modal ? '#ffffff' : '#111827' }}>{tr('login_title')}</h1>
+        <h1 className="text-2xl text-center font-bold tracking-tight mb-1.5" style={{ fontFamily: "'Instrument Serif', serif", color: modal ? '#ffffff' : '#111827' }}>{tr('login_title')}</h1>
         <p className="text-sm text-center mb-7" style={{ color: modal ? 'rgba(255,255,255,0.6)' : '#6b7280' }}>{tr('login_subtitle')}</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
