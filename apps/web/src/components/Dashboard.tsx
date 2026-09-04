@@ -639,7 +639,7 @@ function ChatView({
                     <div key={i} className="group relative flex flex-col gap-3">
                       {m.document.type !== 'prototype' && (
                         <div className="text-sm spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
-                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
+                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
                       )}
                       {m.document.type === 'prototype' && (
                         <p className="text-sm" style={{ color: 'rgba(0,0,0,0.65)', lineHeight: '1.7' }}>
@@ -682,7 +682,7 @@ function ChatView({
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       </div>
                       <div className="text-sm break-words overflow-x-hidden spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
-                        dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
+                        dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/<think>[\s\S]*?<\/think>/g, '').trim()) as string }} />
                       {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
@@ -712,10 +712,8 @@ function ChatView({
                         </p>
                       )}
                       {liveMsg ? (
-                        <div className="text-sm break-words overflow-x-hidden spectr-output stream-live" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85', whiteSpace: 'pre-wrap' }}>
-                          {liveMsg.liveText}
-                          <span className="stream-cursor" />
-                        </div>
+                        <div className="text-sm break-words overflow-x-hidden spectr-output stream-live" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                          dangerouslySetInnerHTML={{ __html: (marked.parse((liveMsg.liveText ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim()) as string) + '<span class="stream-cursor"></span>' }} />
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
