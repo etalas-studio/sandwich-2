@@ -70,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav */}
-        <nav className="flex flex-col gap-0.5">
+        <nav className="flex flex-col">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = pathname === href
             return (
@@ -80,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
                 style={active
                   ? { backgroundColor: '#3b82f6', color: '#ffffff', fontWeight: 500 }
-                  : { color: 'rgba(0,0,0,0.5)' }
+                  : { color: '#374151' }
                 }
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
