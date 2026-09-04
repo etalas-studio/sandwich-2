@@ -19,6 +19,7 @@ import { Footer } from './landing/Footer'
 import { LoginModal } from './LoginModal'
 import { RegisterModal } from './RegisterModal'
 import { ForgotPasswordModal } from './ForgotPasswordModal'
+import { ResetPasswordModal } from './ResetPasswordModal'
 import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
@@ -35,7 +36,7 @@ const HERO_SUGGESTIONS = (lang: 'en' | 'id') => [
   { label: 'Specs', prompt: lang === 'id' ? 'Buatkan specs dan task breakdown untuk fitur ini' : 'Create specs and a task breakdown for this feature' },
 ]
 
-export default function LandingPage({ initialLoginOpen = false, initialRegisterOpen = false, initialForgotPasswordOpen = false }: { initialLoginOpen?: boolean; initialRegisterOpen?: boolean; initialForgotPasswordOpen?: boolean } = {}) {
+export default function LandingPage({ initialLoginOpen = false, initialRegisterOpen = false, initialForgotPasswordOpen = false, initialResetPasswordOpen = false }: { initialLoginOpen?: boolean; initialRegisterOpen?: boolean; initialForgotPasswordOpen?: boolean; initialResetPasswordOpen?: boolean } = {}) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
   const router = useRouter()
@@ -68,6 +69,8 @@ export default function LandingPage({ initialLoginOpen = false, initialRegisterO
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(initialForgotPasswordOpen)
   const openForgotPassword = () => { setForgotPasswordModalOpen(true); router.push('/forgot-password') }
   const closeForgotPassword = () => { setForgotPasswordModalOpen(false); router.push('/') }
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(initialResetPasswordOpen)
+  const closeResetPassword = () => { setResetPasswordModalOpen(false); router.push('/') }
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -241,6 +244,9 @@ export default function LandingPage({ initialLoginOpen = false, initialRegisterO
       )}
       {forgotPasswordModalOpen && (
         <ForgotPasswordModal onClose={() => closeForgotPassword()} />
+      )}
+      {resetPasswordModalOpen && (
+        <ResetPasswordModal onClose={() => closeResetPassword()} />
       )}
     </div>
   )

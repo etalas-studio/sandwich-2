@@ -1,4 +1,8 @@
 'use client'
-import { Suspense } from 'react'
-import ResetPasswordPage from '../../components/ResetPasswordPage'
-export default function Page() { return <Suspense><ResetPasswordPage /></Suspense> }
+import dynamic from 'next/dynamic'
+
+const LandingPage = dynamic(() => import('../../components/LandingPage'), { ssr: false })
+
+export default function Page() {
+  return <LandingPage initialResetPasswordOpen />
+}
