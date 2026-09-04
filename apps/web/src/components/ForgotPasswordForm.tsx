@@ -55,10 +55,20 @@ export default function ForgotPasswordForm({ onBack, modal }: { onBack?: () => v
 
   return (
     <div
-      className={modal ? 'w-full max-w-sm' : 'min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10'}
+      className={modal ? 'w-full max-w-sm' : 'min-h-screen flex flex-col items-center justify-center antialiased px-4 py-10 relative'}
       style={modal ? { fontFamily: interTight } : { fontFamily: interTight, backgroundColor: '#F4EBE1' }}
     >
-      <div className="w-full max-w-sm rounded-3xl p-8" style={cardStyle}>
+      <div className="w-full max-w-sm rounded-3xl p-8 relative" style={cardStyle}>
+        {modal && (
+          <button onClick={handleBack} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full transition hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.6)' }} aria-label="Close">
+            <iconify-icon icon="solar:close-linear" width="18" />
+          </button>
+        )}
+        <div className="flex justify-center mb-6">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#3b82f6' }}>
+            <iconify-icon icon="solar:letter-bold" width="24" className="text-white" />
+          </div>
+        </div>
         <h1 className="text-2xl text-center tracking-tight mb-1.5 font-semibold" style={{ color: titleColor }}>{tr('forgot_title')}</h1>
         <p className="text-sm text-center mb-7" style={{ color: subtitleColor ?? 'rgba(0,0,0,0.45)' }}>{tr('forgot_subtitle')}</p>
 
