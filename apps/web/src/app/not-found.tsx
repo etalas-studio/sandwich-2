@@ -28,8 +28,8 @@ function NotFoundOverlay() {
           <rect x="42" y="40" width="28" height="2.5" rx="1.25" fill="rgba(255,255,255,0.25)" />
           <rect x="42" y="48" width="20" height="2.5" rx="1.25" fill="rgba(255,255,255,0.15)" />
           <rect x="42" y="56" width="24" height="2.5" rx="1.25" fill="rgba(255,255,255,0.15)" />
-          <line x1="44" y1="66" x2="56" y2="78" stroke="rgba(239,68,68,0.8)" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="56" y1="66" x2="44" y2="78" stroke="rgba(239,68,68,0.8)" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="44" y1="66" x2="56" y2="78" stroke="rgba(99,102,241,0.9)" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="56" y1="66" x2="44" y2="78" stroke="rgba(99,102,241,0.9)" strokeWidth="2.5" strokeLinecap="round" />
           <circle cx="88" cy="38" r="10" stroke="rgba(255,255,255,0.5)" strokeWidth="2" fill="rgba(255,255,255,0.05)" />
           <line x1="95" y1="45" x2="103" y2="53" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" />
           <text x="84" y="43" fontSize="10" fill="rgba(255,255,255,0.6)" fontWeight="700" fontFamily="sans-serif">?</text>
@@ -37,7 +37,7 @@ function NotFoundOverlay() {
 
         <p
           className="text-7xl font-bold tracking-tight mb-2"
-          style={{ color: 'rgba(239,68,68,0.9)', fontFamily: "'Instrument Serif', serif", letterSpacing: '-0.04em' }}
+          style={{ color: 'rgba(99,102,241,0.95)', fontFamily: "'Instrument Serif', serif", letterSpacing: '-0.04em' }}
         >
           404
         </p>
