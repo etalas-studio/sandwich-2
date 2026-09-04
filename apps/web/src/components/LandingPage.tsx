@@ -18,6 +18,7 @@ import { ClosingCta } from './landing/ClosingCta'
 import { Footer } from './landing/Footer'
 import { LoginModal } from './LoginModal'
 import { RegisterModal } from './RegisterModal'
+import { ForgotPasswordModal } from './ForgotPasswordModal'
 import { FONT_SANS, LIGHT_BG, LIGHT_TEXT_MUTED } from './landing/tokens'
 
 const CONTACT_TITLE = { en: 'Contact', id: 'Kontak' }
@@ -34,7 +35,7 @@ const HERO_SUGGESTIONS = (lang: 'en' | 'id') => [
   { label: 'Specs', prompt: lang === 'id' ? 'Buatkan specs dan task breakdown untuk fitur ini' : 'Create specs and a task breakdown for this feature' },
 ]
 
-export default function LandingPage({ initialLoginOpen = false, initialRegisterOpen = false }: { initialLoginOpen?: boolean; initialRegisterOpen?: boolean } = {}) {
+export default function LandingPage({ initialLoginOpen = false, initialRegisterOpen = false, initialForgotPasswordOpen = false }: { initialLoginOpen?: boolean; initialRegisterOpen?: boolean; initialForgotPasswordOpen?: boolean } = {}) {
   const { lang, setLang, t } = useLanguage()
   const { state: authState } = useAuth()
   const router = useRouter()
@@ -64,6 +65,9 @@ export default function LandingPage({ initialLoginOpen = false, initialRegisterO
   const openLogin = () => { setLoginModalOpen(true); router.push('/login') }
   const closeLogin = () => { setLoginModalOpen(false); router.push('/') }
   const [registerModalOpen, setRegisterModalOpen] = useState(initialRegisterOpen)
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(initialForgotPasswordOpen)
+  const openForgotPassword = () => { setForgotPasswordModalOpen(true); router.push('/forgot-password') }
+  const closeForgotPassword = () => { setForgotPasswordModalOpen(false); router.push('/') }
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -226,6 +230,7 @@ export default function LandingPage({ initialLoginOpen = false, initialRegisterO
         <LoginModal
           onClose={() => closeLogin()}
           onSwitchToRegister={() => { closeLogin(); openRegister() }}
+          onForgotPassword={() => { closeLogin(); openForgotPassword() }}
         />
       )}
       {registerModalOpen && (
@@ -233,6 +238,9 @@ export default function LandingPage({ initialLoginOpen = false, initialRegisterO
           onClose={() => closeRegister()}
           onSwitchToLogin={() => { closeRegister(); openLogin() }}
         />
+      )}
+      {forgotPasswordModalOpen && (
+        <ForgotPasswordModal onClose={() => closeForgotPassword()} />
       )}
     </div>
   )

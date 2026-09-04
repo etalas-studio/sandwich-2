@@ -8,9 +8,10 @@ import LoginForm from './LoginForm'
 interface LoginModalProps {
   onClose: () => void
   onSwitchToRegister?: () => void
+  onForgotPassword?: () => void
 }
 
-export function LoginModal({ onClose, onSwitchToRegister }: LoginModalProps) {
+export function LoginModal({ onClose, onSwitchToRegister, onForgotPassword }: LoginModalProps) {
   const { state, login, loginError, loginPending } = useAuth()
   const router = useRouter()
 
@@ -41,7 +42,7 @@ export function LoginModal({ onClose, onSwitchToRegister }: LoginModalProps) {
         isPending={loginPending}
         onBack={onClose}
         onSwitchToRegister={onSwitchToRegister ?? (() => router.push('/register'))}
-        onForgotPassword={() => router.push('/forgot-password')}
+        onForgotPassword={onForgotPassword ?? (() => router.push('/forgot-password'))}
         modal
       />
     </div>
