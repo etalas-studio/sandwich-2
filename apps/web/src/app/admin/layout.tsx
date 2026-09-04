@@ -86,20 +86,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             )
           })}
-        </nav>
 
-        {/* Bottom: back link + user */}
-        <div className="mt-auto border-t pt-3" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
+          <div className="my-2 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm mb-1 transition-colors"
-            style={{ color: 'rgba(0,0,0,0.4)' }}
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
+            style={{ color: '#374151' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
           >
-            <iconify-icon icon="solar:arrow-left-linear" width="15" />
-            Dashboard
+            <iconify-icon icon="solar:eye-linear" width="16" />
+            User Dashboard
           </Link>
+
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
+            style={{ color: '#374151' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
+          >
+            <iconify-icon icon="solar:home-2-linear" width="16" />
+            Landing Page
+          </Link>
+        </nav>
+
+        {/* Bottom: user pill */}
+        <div className="mt-auto border-t pt-3" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
 
           {/* User pill */}
           <button
