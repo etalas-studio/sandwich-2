@@ -3,13 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Users, Settings, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 const NAV = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/config', label: 'Configuration', icon: Settings },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: 'solar:widget-2-linear' },
+  { href: '/admin/users', label: 'Users', icon: 'solar:users-group-rounded-linear' },
+  { href: '/admin/config', label: 'Configuration', icon: 'solar:settings-linear' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -57,10 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="mb-7 px-2 flex items-center gap-2">
           <img src="/logo.png" alt="Spectr" className="h-6 w-auto brightness-0" />
           <div>
-            <span
-              className="text-sm font-semibold tracking-widest uppercase"
-              style={{ color: '#111827', fontFamily: "'Instrument Serif', serif" }}
-            >
+            <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: '#111827', fontFamily: "'Instrument Serif', serif" }}>
               Spectr
             </span>
             <div className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.35)' }}>
@@ -71,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Nav */}
         <nav className="flex flex-col">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, label, icon }) => {
             const active = pathname === href
             return (
               <Link
@@ -85,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                <iconify-icon icon={icon} width="16" />
                 {label}
               </Link>
             )
@@ -101,11 +97,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
           >
-            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+            <iconify-icon icon="solar:arrow-left-linear" width="15" />
             Dashboard
           </Link>
 
-          {/* User pill — same as user dashboard */}
+          {/* User pill */}
           <button
             onClick={() => setShowAccountMenu(true)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors"
@@ -140,9 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(248,113,113,0.08)')}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
+                    <iconify-icon icon="solar:logout-2-linear" width="15" />
                     {loggingOut ? 'Signing out…' : 'Sign out'}
                   </button>
                 </div>
