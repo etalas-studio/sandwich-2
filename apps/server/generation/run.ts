@@ -39,6 +39,7 @@ function buildMessages(
     `You help clients turn ideas and briefs into structured product documents.`,
     `Reply in the same language as the client (Indonesian or English).`,
     `Your working directory holds BRIEF.md (the consolidated brief, clarifying Q&A, and attachment summaries) and any deliverables generated so far — read them with your tools when you need context.`,
+    `Format all chat replies in markdown so they render cleanly in the UI: use **bold** for key terms or decisions, bullet lists for grouped items or options, numbered lists for sequential steps, and headers (## or ###) only when the reply is long enough to need navigation. Keep paragraphs short (2–3 sentences max). Never write walls of text. Do not use preamble like "Great!" or "Of course!".`,
   ];
 
   let system: string;
@@ -128,8 +129,9 @@ export async function runTextGeneration(opts: {
   stage: PipelineStage;
   pendingType: DocumentType | null;
   refineInstruction?: string | null;
+  onChunk?: (delta: string) => void;
 }): Promise<{ text: string; wroteFile: boolean }> {
-  const { projectDir, conversationId, history, signal, stage, pendingType, refineInstruction } = opts;
+  const { projectDir, conversationId, history, signal, stage, pendingType, refineInstruction, onChunk } = opts;
   const pi = await import("@earendil-works/pi-coding-agent");
   const { resolveModel } = await import("../model-runtime.js");
 
@@ -191,7 +193,9 @@ export async function runTextGeneration(opts: {
       event.type === "message_update" &&
       event.assistantMessageEvent?.type === "text_delta"
     ) {
-      responseText += event.assistantMessageEvent.delta;
+      const delta = event.assistantMessageEvent.delta ?? "";
+      responseText += delta;
+      onChunk?.(delta);
       return;
     }
 
@@ -275,7 +279,7 @@ export async function runTextGeneration(opts: {
       console.error(`${runTag} session ended without writing ${relPath} — toolCalls=${budget.toolCalls} lastEvent=${lastEventType} errorMessage=${errorMessage || "(none)"}`);
       throw new Error(`text generation did not write ${relPath}`);
     }
-    return { text: responseText, wroteFile };
+    return { text: responseText.replace(/<think>[\s\S]*?<\/think>/g, "").trim(), wroteFile };
   } catch (err) {
     session.dispose();
     throw err;

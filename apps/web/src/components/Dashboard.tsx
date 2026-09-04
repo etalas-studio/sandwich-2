@@ -77,6 +77,7 @@ interface ChatMessage {
   isDone?: boolean
   isError?: boolean
   output?: string
+  liveText?: string     // accumulated streaming chunks (not yet committed)
   conversationId?: string
   document?: { id: string; type?: string; title?: string; versionNo?: number; previewUrl?: string | null }
 }
@@ -121,11 +122,24 @@ function usePipelineStream(conversationId: string | null, regenNonce: number, au
         setMessages(m => [...m, { role: 'ai', stage: ev.stage }])
         return 'continue'
       }
+      if (ev.type === 'output_chunk' && ev.text) {
+        setMessages(m => {
+          const last = m[m.length - 1]
+          if (last && last.role === 'ai' && !last.isDone && !last.isError) {
+            return [...m.slice(0, -1), { ...last, liveText: (last.liveText ?? '') + ev.text }]
+          }
+          return [...m, { role: 'ai', liveText: ev.text }]
+        })
+        return 'continue'
+      }
       if (ev.type === 'done') {
         const output = ev.text ?? ''
         if (output) {
-          // Normal completion — the backend sent the result text + document ref.
-          setMessages(m => [...m, { role: 'ai', isDone: true, output, document: ev.document }])
+          // Replace any in-progress live bubble with the final committed bubble.
+          setMessages(m => {
+            const withoutLive = m.filter(msg => msg.isDone || msg.isError || msg.role === 'user')
+            return [...withoutLive, { role: 'ai', isDone: true, output, document: ev.document }]
+          })
           setStreaming(false)
           onDone?.(output)
         } else {
@@ -447,6 +461,9 @@ function ChatView({
 
   const { messages: liveMessages, streaming } = usePipelineStream(conversationId, regenNonce, autoRun, regenerateRef, (output) => {
     updateLocalConversation(conversationId, { content: output, status: 'done' })
+    // Reload turns so the completed response is in DB-backed state before the
+    // next send wipes liveMessages — fixes previous response disappearing on follow-up.
+    void reloadTurns()
   }, () => { setIsReloading(true); void reloadTurns()?.finally(() => setIsReloading(false)) })
   const [followUp, setFollowUp] = useState('')
   const [attachments, setAttachments] = useState<AttachedFile[]>([])
@@ -622,7 +639,7 @@ function ChatView({
                     <div key={i} className="group relative flex flex-col gap-3">
                       {m.document.type !== 'prototype' && (
                         <div className="text-sm spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
-                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
+                          dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/\[Buka prototype\]\([^)]+\)/g, '').trim()) as string }} />
                       )}
                       {m.document.type === 'prototype' && (
                         <p className="text-sm" style={{ color: 'rgba(0,0,0,0.65)', lineHeight: '1.7' }}>
@@ -665,7 +682,7 @@ function ChatView({
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       </div>
                       <div className="text-sm break-words overflow-x-hidden spectr-output" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
-                        dangerouslySetInnerHTML={{ __html: marked.parse(m.output) as string }} />
+                        dangerouslySetInnerHTML={{ __html: marked.parse(m.output.replace(/<think>[\s\S]*?<\/think>/g, '').trim()) as string }} />
                       {/* Spectr logo + hover actions */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5" style={{ color: 'rgba(0,0,0,0.25)' }}>
@@ -683,21 +700,30 @@ function ChatView({
                   return null
                 })}
 
-                {/* Loading state — shown while streaming or reloading turns after fast response */}
-                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (
-                  <div className="flex flex-col gap-2">
-                    {msgs.filter(m => m.stage).slice(-1).map((m, i) => (
-                      <p key={i} className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                        {m.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[m.stage!]) : m.stage}
-                      </p>
-                    ))}
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
+                {/* Loading state — bouncing dots until first chunk, then live text */}
+                {isLast && (streaming || isReloading) && !msgs.some(m => m.isDone || m.isError) && (() => {
+                  const liveMsg = [...msgs].reverse().find(m => m.liveText)
+                  const stageMsg = msgs.filter(m => m.stage).slice(-1)[0]
+                  return (
+                    <div className="flex flex-col gap-2">
+                      {stageMsg && !liveMsg && (
+                        <p className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                          {stageMsg.stage! in STAGE_LABEL_KEYS ? tr(STAGE_LABEL_KEYS[stageMsg.stage!]) : stageMsg.stage}
+                        </p>
+                      )}
+                      {liveMsg ? (
+                        <div className="text-sm break-words overflow-x-hidden spectr-output stream-live" style={{ color: 'rgba(0,0,0,0.8)', lineHeight: '1.85' }}
+                          dangerouslySetInnerHTML={{ __html: (marked.parse((liveMsg.liveText ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim()) as string) + '<span class="stream-cursor"></span>' }} />
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'rgba(0,0,0,0.25)', animationDelay: '300ms' }} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </div>
             )
           })}
@@ -855,6 +881,12 @@ function PromptBox({ defaultType = 'general', onSuccess, usage, projectId, proje
 
   return (
     <div className="w-full rounded-2xl" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
+      <style>{`
+        @keyframes streamFadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .stream-live { animation: streamFadeIn 0.15s ease-out; }
+        .stream-cursor { display: inline-block; width: 2px; height: 1em; background: currentColor; margin-left: 1px; vertical-align: text-bottom; animation: cursorBlink 0.7s step-end infinite; }
+      `}</style>
       {projectId && projectTitle && (
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-2xl" style={{ backgroundColor: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
           <p className="text-xs truncate" style={{ color: '#6b7280' }}>

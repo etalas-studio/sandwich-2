@@ -73,7 +73,7 @@ export interface DocumentRef {
 }
 
 export interface ConversationRunEvent {
-  type: "stage_start" | "stage_end" | "output" | "error" | "done";
+  type: "stage_start" | "stage_end" | "output" | "output_chunk" | "error" | "done";
   stage?: string;
   text?: string;
   document?: DocumentRef;
@@ -476,6 +476,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
                 stage,
                 pendingType: type,
                 refineInstruction,
+                onChunk: (delta) => broadcast({ type: "output_chunk", text: delta }),
               });
               if (!r.wroteFile) throw new Error(`${DELIVERABLE_LABEL[type]} tidak berhasil dibuat.`);
             }
@@ -525,6 +526,7 @@ export function registerGenerationRoutes(router: Router, deps: HttpDeps): void {
             stage,
             pendingType,
             refineInstruction,
+            onChunk: (delta) => broadcast({ type: "output_chunk", text: delta }),
           });
           if (!r.text) throw new Error("Model returned no response. Try again.");
           return {
