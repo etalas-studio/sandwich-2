@@ -3,15 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, ChevronDown, LayoutDashboard, Users, Settings, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, Users, Settings, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
 
 const NAV = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const pathname = usePathname()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
 
   useEffect(() => {
     if (!isLoading && state.status === 'unauthenticated') {
@@ -53,23 +47,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }
 
-  const initials = (state.username ?? state.email ?? '?')
-    .slice(0, 2)
-    .toUpperCase()
+  const username = state.username ?? state.email ?? '?'
+  const initial = username.charAt(0).toUpperCase()
 
   return (
-    <div className="flex min-h-screen bg-neutral-950 text-neutral-100">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-neutral-800/60 px-3 py-5">
+    <div className="flex min-h-screen text-neutral-800" style={{ backgroundColor: '#f8fafc' }}>
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(0,0,0,0.08)' }}>
         {/* Brand */}
-        <div className="mb-7 px-2">
-          <span
-            className="text-lg tracking-wide text-white"
-            style={{ fontFamily: "'Bowlby One', sans-serif" }}
-          >
-            Spectr
-          </span>
-          <div className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
-            Admin
+        <div className="mb-7 px-2 flex items-center gap-2">
+          <img src="/logo.png" alt="Spectr" className="h-6 w-auto brightness-0" />
+          <div>
+            <span
+              className="text-sm font-semibold tracking-widest uppercase"
+              style={{ color: '#111827', fontFamily: "'Instrument Serif', serif" }}
+            >
+              Spectr
+            </span>
+            <div className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.35)' }}>
+              Admin
+            </div>
           </div>
         </div>
 
@@ -81,11 +77,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  active
-                    ? 'bg-neutral-800 text-neutral-100'
-                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
-                }`}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
+                style={active
+                  ? { backgroundColor: '#3b82f6', color: '#ffffff', fontWeight: 500 }
+                  : { color: 'rgba(0,0,0,0.5)' }
+                }
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {label}
@@ -95,46 +93,62 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Bottom: back link + user */}
-        <div className="mt-auto space-y-1">
+        <div className="mt-auto border-t pt-3" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-600 transition-colors hover:text-neutral-400"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm mb-1 transition-colors"
+            style={{ color: 'rgba(0,0,0,0.4)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
           >
             <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
             Dashboard
           </Link>
 
-          {/* User info + logout */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-neutral-900 outline-none">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs font-medium text-neutral-300">
-                {initials}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-medium text-neutral-200">
-                  {state.username}
-                </div>
-                <div className="truncate text-[10px] text-neutral-500">
-                  {state.email}
-                </div>
-              </div>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-neutral-600" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-52 bg-neutral-900 border-neutral-800">
-              <div className="px-2 py-1.5 text-xs text-neutral-500">
-                {state.email}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="gap-2 text-sm text-neutral-300 hover:text-white focus:text-white cursor-pointer"
+          {/* User pill — same as user dashboard */}
+          <button
+            onClick={() => setShowAccountMenu(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors"
+            style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.08)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)')}
+          >
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#3b82f6' }}>
+              {initial}
+            </div>
+            <p className="text-xs font-medium truncate" style={{ color: '#111827' }}>{username}</p>
+          </button>
+
+          {showAccountMenu && (
+            <div className="fixed inset-0 z-50" onClick={() => setShowAccountMenu(false)}>
+              <style>{`@keyframes slideUp { from { transform: translateY(4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+              <div
+                className="absolute bottom-16 left-3 w-[200px] rounded-xl overflow-hidden"
+                style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', animation: 'slideUp 0.15s ease-out', boxShadow: '0 12px 32px rgba(0,0,0,0.12)' }}
+                onClick={e => e.stopPropagation()}
               >
-                <LogOut className="h-3.5 w-3.5" />
-                {loggingOut ? 'Signing out…' : 'Sign out'}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#111827' }}>{username}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.4)' }}>{state.email}</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={() => { setShowAccountMenu(false); void handleLogout() }}
+                    disabled={loggingOut}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors text-left disabled:opacity-50"
+                    style={{ color: '#f87171' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(248,113,113,0.08)')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    {loggingOut ? 'Signing out…' : 'Sign out'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
